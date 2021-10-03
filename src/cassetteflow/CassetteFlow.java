@@ -54,7 +54,7 @@ public class CassetteFlow {
     // stores the cassette ID to the mp3ids
     public HashMap<String, ArrayList<String>> cassetteDB = new HashMap<>();
     
-    private static String CASSETTE_DB_FILENAME = MP3_DIR_NAME + File.separator + TAPE_FILE_DIR_NAME + File.separator + "cassetteDB.txt"; 
+    private static String CASSETTE_DB_FILENAME = MP3_DIR_NAME + File.separator + TAPE_FILE_DIR_NAME + File.separator + "tapeDB.txt"; 
     
     
     // store tje MP3Info object is a list for convinience
@@ -390,6 +390,8 @@ public class CassetteFlow {
             Logger.getLogger(CassetteFlow.class.getName()).log(Level.SEVERE, null, ex);
         }
         
+        process.destroy();
+        
         System.out.println("\nDone Encoding Command: " + command);
     }
     
@@ -540,7 +542,7 @@ public class CassetteFlow {
             // must be running on the rpi4 reterminal
             MP3_DIR_NAME = "/home/pi/Music";
             MP3_DB_FILENAME = MP3_DIR_NAME + File.separator + "mp3InfoDB.txt";
-            CASSETTE_DB_FILENAME = MP3_DIR_NAME + File.separator + TAPE_FILE_DIR_NAME + File.separator + "cassetteDB.txt";
+            CASSETTE_DB_FILENAME = MP3_DIR_NAME + File.separator + TAPE_FILE_DIR_NAME + File.separator + "tapeDB.txt";
             LOG_FILE_NAME = MP3_DIR_NAME + File.separator + TAPE_FILE_DIR_NAME + File.separator + "tape.log"; 
         }
         

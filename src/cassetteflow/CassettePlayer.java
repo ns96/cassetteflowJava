@@ -67,6 +67,9 @@ public class CassettePlayer implements LogFileTailerListener {
     // has been read in.
     private int dataErrors = 0;
     
+    // used to indicate if the minimodem program is running
+    private boolean decoding;
+    
     public CassettePlayer(CassetteFlowFrame cassetteFlowFrame, CassetteFlow cassetteFlow, String logfile) {
         this(cassetteFlow, logfile);
         this.cassetteFlowFrame = cassetteFlowFrame;
@@ -88,8 +91,15 @@ public class CassettePlayer implements LogFileTailerListener {
         // call minimodem to do encoding
         String command = "minimodem -r 1200";
         final Process process = Runtime.getRuntime().exec(command);
-                
-        System.out.println("\nReading data from minimodem ...");
+        
+        String message = "\nReading data from minimodem ...";
+        System.out.println(message);
+        
+        if(cassetteFlowFrame != null) {
+            cassetteFlowFrame.printToConsole(message, false);
+        }
+        
+        decoding = true;
         
         Thread soutThread = new Thread("Standard Output Reader") {
             @Override
@@ -102,9 +112,19 @@ public class CassettePlayer implements LogFileTailerListener {
                         
                         if (line != null) {
                             newLogFileLine(line);
-                            System.out.println(line);
+                            
+                            if(cassetteFlowFrame != null) {
+                                cassetteFlowFrame.printToConsole(line, true);
+                            }
+                        }
+                        
+                        if(!decoding) {
+                            process.destroy();
+                            break;
                         }
                     }
+                    
+                    reader.close();
                 } catch (Exception ex) {
                     Logger.getLogger(CassettePlayer.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -123,9 +143,17 @@ public class CassettePlayer implements LogFileTailerListener {
                         
                         if (line != null) {
                             newLogFileLine(line);
-                            System.out.println(line);
+                            if(cassetteFlowFrame != null) {
+                                cassetteFlowFrame.printToConsole(line, true);
+                            }
+                        }
+                        
+                        if(!decoding) {
+                            break;
                         }
                     }
+                    
+                    readerErr.close();
                 } catch (Exception ex) {
                     Logger.getLogger(CassettePlayer.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -150,7 +178,9 @@ public class CassettePlayer implements LogFileTailerListener {
     @Override
     public synchronized void newLogFileLine(String line) {
         if(line != null) {
-            if(line.length() == 29 && validCharacters(line)) {
+            line = line.trim();
+            
+            if(line.length() == 28 && validCharacters(line)) {
                 //System.out.println("Line record: " + line);
                 
                 if(!downloading) {
@@ -230,7 +260,7 @@ public class CassettePlayer implements LogFileTailerListener {
      * @param line 
      */
     public void processRecord(String line) {        
-        String[] sa = line.trim().split("_");
+        String[] sa = line.split("_");
         String tapeId = sa[0];
         String track = sa[1];
         String mp3Id = sa[2];
@@ -423,7 +453,11 @@ public class CassettePlayer implements LogFileTailerListener {
             player = null;
         }
         
-        tailer.stopTailing();
+        if(tailer != null) {
+            tailer.stopTailing();
+        }
+        
+        decoding  = false;
     }
     
     /**

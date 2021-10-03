@@ -116,23 +116,17 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
     }
     
     public void setPlayingMP3Info(final String info) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                trackInfoTextArea.setText(info);
-            }
+        SwingUtilities.invokeLater(() -> {
+            trackInfoTextArea.setText(info);
         });
     }
     
     public void setPlaybackInfo(final String info, boolean append) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                if(!append) {
-                    playbackInfoTextArea.setText(info);
-                } else {
-                    playbackInfoTextArea.append(info + "\n");
-                }
+        SwingUtilities.invokeLater(() -> {
+            if(!append) {
+                playbackInfoTextArea.setText(info);
+            } else {
+                playbackInfoTextArea.append(info + "\n");
             }
         });
     }
@@ -188,6 +182,22 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         encodeProgressBar.setIndeterminate(false);
         createButton.setEnabled(true);
         createDownloadButton.setEnabled(true);
+    }
+    
+    /**
+     * Print information to the main console
+     * 
+     * @param text
+     * @param append 
+     */
+    public void printToConsole(String text, boolean append) {
+        SwingUtilities.invokeLater(() -> {
+            if(!append) {
+                consoleTextArea.setText(text);
+            } else {
+                consoleTextArea.append(text + "\n");
+            }
+        });
     }
     
     /**
@@ -254,6 +264,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         stopDecodeButton = new javax.swing.JButton();
         directDecodeCheckBox = new javax.swing.JCheckBox();
         jPanel5 = new javax.swing.JPanel();
+        jPanel7 = new javax.swing.JPanel();
+        jScrollPane8 = new javax.swing.JScrollPane();
+        consoleTextArea = new javax.swing.JTextArea();
         exitButton = new javax.swing.JButton();
         setMP3DirectoryButton = new javax.swing.JButton();
         createButton = new javax.swing.JButton();
@@ -261,7 +274,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         mp3CountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 0.5 (10/03/2021)");
+        setTitle("CassetteFlow v 0.5.1 (10/03/2021)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 
@@ -292,7 +305,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 243, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 270, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(trackALabel)
@@ -321,7 +334,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 247, Short.MAX_VALUE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 272, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(trackBLabel)
@@ -550,6 +563,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
 
         jTabbedPane1.addTab("ENCODE", jPanel1);
 
+        logfileTextField.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
         logfileTextField.setText("C:\\\\mp3files\\\\TapeFiles\\\\tape.log");
 
         logfileButton.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
@@ -655,7 +669,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel6)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 104, Short.MAX_VALUE))
+                        .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 118, Short.MAX_VALUE))
                     .addComponent(jScrollPane4)))
         );
 
@@ -669,10 +683,29 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 408, Short.MAX_VALUE)
+            .addGap(0, 418, Short.MAX_VALUE)
         );
 
         jTabbedPane1.addTab("ESP32 LyraT", jPanel5);
+
+        consoleTextArea.setColumns(20);
+        consoleTextArea.setFont(new java.awt.Font("Monospaced", 0, 24)); // NOI18N
+        consoleTextArea.setRows(5);
+        consoleTextArea.setText("Output Console:");
+        jScrollPane8.setViewportView(consoleTextArea);
+
+        javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
+        jPanel7.setLayout(jPanel7Layout);
+        jPanel7Layout.setHorizontalGroup(
+            jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 936, Short.MAX_VALUE)
+        );
+        jPanel7Layout.setVerticalGroup(
+            jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 418, Short.MAX_VALUE)
+        );
+
+        jTabbedPane1.addTab("Output Console", jPanel7);
 
         exitButton.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         exitButton.setText("Exit");
@@ -1268,6 +1301,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
     private javax.swing.JButton addMP3Button;
     private javax.swing.JButton clearMP3ListButton;
     private javax.swing.JButton clearSelectionButton;
+    private javax.swing.JTextArea consoleTextArea;
     private javax.swing.JButton createButton;
     private javax.swing.JButton createDownloadButton;
     private javax.swing.JCheckBox directDecodeCheckBox;
@@ -1286,6 +1320,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
     private javax.swing.JPanel jPanel6;
+    private javax.swing.JPanel jPanel7;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
@@ -1293,6 +1328,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane5;
     private javax.swing.JScrollPane jScrollPane6;
     private javax.swing.JScrollPane jScrollPane7;
+    private javax.swing.JScrollPane jScrollPane8;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JButton logfileButton;
     private javax.swing.JTextField logfileTextField;
