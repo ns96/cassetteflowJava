@@ -347,14 +347,14 @@ public class CassetteFlow {
         if(sideA != null && !sideA.isEmpty()) {
             file = new File(saveDirectoryName + File.separator + "Tape_" + tapeID + "A" + ".txt");
             waveFile = new File(saveDirectoryName + File.separator + "Tape_" + tapeID + "A-1200" + ".wav");
-            data = createInputFileForSide(file, tapeID, sideA, muteTime, forDownload);
+            data = createInputFileForSide(file, tapeID + "A", sideA, muteTime, forDownload);
             runMinimodem(waveFile, data);
         }
         
         if(sideB != null && !sideB.isEmpty()) {
             file = new File(saveDirectoryName + File.separator + "Tape_" + tapeID + "B" + ".txt");
             waveFile = new File(saveDirectoryName + File.separator + "Tape_" + tapeID + "B-1200" + ".wav");
-            data = createInputFileForSide(file, tapeID, sideB, muteTime, forDownload);
+            data = createInputFileForSide(file, tapeID + "B", sideB, muteTime, forDownload);
             runMinimodem(waveFile, data);
         }
         

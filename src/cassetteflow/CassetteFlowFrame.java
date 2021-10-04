@@ -263,7 +263,15 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         jLabel6 = new javax.swing.JLabel();
         stopDecodeButton = new javax.swing.JButton();
         directDecodeCheckBox = new javax.swing.JCheckBox();
+        mmdelayTextField = new javax.swing.JTextField();
         jPanel5 = new javax.swing.JPanel();
+        lyraTHostTextField = new javax.swing.JTextField();
+        lyraTConnectButton = new javax.swing.JButton();
+        lyraTDisconnectButton = new javax.swing.JButton();
+        jScrollPane9 = new javax.swing.JScrollPane();
+        jTextArea1 = new javax.swing.JTextArea();
+        jLabel5 = new javax.swing.JLabel();
+        startServerCheckBox = new javax.swing.JCheckBox();
         jPanel7 = new javax.swing.JPanel();
         jScrollPane8 = new javax.swing.JScrollPane();
         consoleTextArea = new javax.swing.JTextArea();
@@ -274,7 +282,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         mp3CountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 0.5.1 (10/03/2021)");
+        setTitle("CassetteFlow v 0.5.2 (10/04/2021)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 
@@ -296,7 +304,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 593, Short.MAX_VALUE)
+            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 586, Short.MAX_VALUE)
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addComponent(sideALabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -325,7 +333,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 593, Short.MAX_VALUE)
+            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 586, Short.MAX_VALUE)
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addComponent(sideBLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -358,7 +366,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         jPanel6Layout.setHorizontalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jScrollPane7)
-            .addComponent(sideNLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 593, Short.MAX_VALUE)
+            .addComponent(sideNLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 586, Short.MAX_VALUE)
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -477,7 +485,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(directoryTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 328, Short.MAX_VALUE)
+                    .addComponent(directoryTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 321, Short.MAX_VALUE)
                     .addComponent(jScrollPane1)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(playButton)
@@ -563,7 +571,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
 
         jTabbedPane1.addTab("ENCODE", jPanel1);
 
-        logfileTextField.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+        logfileTextField.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         logfileTextField.setText("C:\\\\mp3files\\\\TapeFiles\\\\tape.log");
 
         logfileButton.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
@@ -575,7 +583,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         });
 
         startDecodeButton.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        startDecodeButton.setText("Start Decoding");
+        startDecodeButton.setText("Start");
         startDecodeButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 startDecodeButtonActionPerformed(evt);
@@ -610,7 +618,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         jLabel6.setText("Playback Information");
 
         stopDecodeButton.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        stopDecodeButton.setText("Stop Decoding");
+        stopDecodeButton.setText("Stop");
         stopDecodeButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 stopDecodeButtonActionPerformed(evt);
@@ -620,6 +628,14 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         directDecodeCheckBox.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         directDecodeCheckBox.setSelected(true);
         directDecodeCheckBox.setText("Minimodem");
+
+        mmdelayTextField.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        mmdelayTextField.setText("225");
+        mmdelayTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mmdelayTextFieldActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -633,12 +649,14 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
                     .addComponent(tracksLabel))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane5, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                    .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 588, Short.MAX_VALUE)
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(logfileButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(directDecodeCheckBox)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(mmdelayTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 106, Short.MAX_VALUE)
                         .addComponent(startDecodeButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(stopDecodeButton))
@@ -657,7 +675,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
                     .addComponent(logfileButton)
                     .addComponent(startDecodeButton)
                     .addComponent(stopDecodeButton)
-                    .addComponent(directDecodeCheckBox))
+                    .addComponent(directDecodeCheckBox)
+                    .addComponent(mmdelayTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel4)
@@ -675,15 +694,66 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
 
         jTabbedPane1.addTab("DECODE", jPanel2);
 
+        lyraTHostTextField.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        lyraTHostTextField.setText("http://127.0.0.1:8192/");
+
+        lyraTConnectButton.setText("CONNECT");
+        lyraTConnectButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                lyraTConnectButtonActionPerformed(evt);
+            }
+        });
+
+        lyraTDisconnectButton.setText("DISCONNECT");
+        lyraTDisconnectButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                lyraTDisconnectButtonActionPerformed(evt);
+            }
+        });
+
+        jTextArea1.setColumns(20);
+        jTextArea1.setRows(5);
+        jScrollPane9.setViewportView(jTextArea1);
+
+        jLabel5.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        jLabel5.setText("LyraT Host");
+
+        startServerCheckBox.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        startServerCheckBox.setText("Start Test Server");
+        startServerCheckBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                startServerCheckBoxActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
         jPanel5.setLayout(jPanel5Layout);
         jPanel5Layout.setHorizontalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 936, Short.MAX_VALUE)
+            .addGroup(jPanel5Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel5)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(lyraTHostTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 304, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(startServerCheckBox)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 212, Short.MAX_VALUE)
+                .addComponent(lyraTConnectButton)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(lyraTDisconnectButton))
+            .addComponent(jScrollPane9)
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 418, Short.MAX_VALUE)
+            .addGroup(jPanel5Layout.createSequentialGroup()
+                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lyraTHostTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lyraTConnectButton)
+                    .addComponent(lyraTDisconnectButton)
+                    .addComponent(jLabel5)
+                    .addComponent(startServerCheckBox))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 250, Short.MAX_VALUE)
+                .addComponent(jScrollPane9, javax.swing.GroupLayout.PREFERRED_SIZE, 142, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         jTabbedPane1.addTab("ESP32 LyraT", jPanel5);
@@ -698,7 +768,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         jPanel7.setLayout(jPanel7Layout);
         jPanel7Layout.setHorizontalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 936, Short.MAX_VALUE)
+            .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 922, Short.MAX_VALUE)
         );
         jPanel7Layout.setVerticalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -746,7 +816,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jTabbedPane1)
+            .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 927, Short.MAX_VALUE)
             .addGroup(layout.createSequentialGroup()
                 .addComponent(setMP3DirectoryButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -1202,8 +1272,12 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         
         if(directDecodeCheckBox.isSelected()) {
             try {
-                cassettePlayer.startMinimodem();
-            } catch (IOException ex) {
+                // get the delay used to synchronized the playback time indicated
+                // from the data on cassette vs the actual playback time from mp3
+                int delay = Integer.parseInt(mmdelayTextField.getText());
+                
+                cassettePlayer.startMinimodem(delay);
+            } catch (Exception ex) {
                 String message = "Error Decoding With Minimodem";
                     JOptionPane.showMessageDialog(this, message, "Minimodem Error", JOptionPane.ERROR_MESSAGE);
                 Logger.getLogger(CassetteFlowFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -1296,6 +1370,22 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
     private void moveTrackDownButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_moveTrackDownButtonActionPerformed
         moveTrackPosition(0);
     }//GEN-LAST:event_moveTrackDownButtonActionPerformed
+
+    private void mmdelayTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mmdelayTextFieldActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_mmdelayTextFieldActionPerformed
+
+    private void lyraTConnectButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lyraTConnectButtonActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_lyraTConnectButtonActionPerformed
+
+    private void lyraTDisconnectButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lyraTDisconnectButtonActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_lyraTDisconnectButtonActionPerformed
+
+    private void startServerCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startServerCheckBoxActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_startServerCheckBoxActionPerformed
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addMP3Button;
@@ -1313,6 +1403,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
@@ -1329,9 +1420,15 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane6;
     private javax.swing.JScrollPane jScrollPane7;
     private javax.swing.JScrollPane jScrollPane8;
+    private javax.swing.JScrollPane jScrollPane9;
     private javax.swing.JTabbedPane jTabbedPane1;
+    private javax.swing.JTextArea jTextArea1;
     private javax.swing.JButton logfileButton;
     private javax.swing.JTextField logfileTextField;
+    private javax.swing.JButton lyraTConnectButton;
+    private javax.swing.JButton lyraTDisconnectButton;
+    private javax.swing.JTextField lyraTHostTextField;
+    private javax.swing.JTextField mmdelayTextField;
     private javax.swing.JButton moveTrackDownButton;
     private javax.swing.JButton moveTrackUpButton;
     private javax.swing.JLabel mp3CountLabel;
@@ -1351,6 +1448,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
     private javax.swing.JList<String> sideNJList;
     private javax.swing.JLabel sideNLabel;
     private javax.swing.JButton startDecodeButton;
+    private javax.swing.JCheckBox startServerCheckBox;
     private javax.swing.JButton stopButton;
     private javax.swing.JButton stopDecodeButton;
     private javax.swing.JTextField tapeIDTextField;

@@ -87,7 +87,7 @@ public class CassettePlayer implements LogFileTailerListener {
      * 
      * @throws IOException 
      */
-    public void startMinimodem() throws IOException {
+    public void startMinimodem(final int delay) throws IOException {
         // call minimodem to do encoding
         String command = "minimodem -r 1200";
         final Process process = Runtime.getRuntime().exec(command);
@@ -101,6 +101,7 @@ public class CassettePlayer implements LogFileTailerListener {
         
         decoding = true;
         
+        // start thread to read from csssette tape
         Thread soutThread = new Thread("Standard Output Reader") {
             @Override
             public void run() {
@@ -122,6 +123,9 @@ public class CassettePlayer implements LogFileTailerListener {
                             process.destroy();
                             break;
                         }
+                        
+                        // Take a pause to keep timing of tape inline with mp3 playback time
+                        Thread.sleep(delay);
                     }
                     
                     reader.close();
@@ -180,7 +184,7 @@ public class CassettePlayer implements LogFileTailerListener {
         if(line != null) {
             line = line.trim();
             
-            if(line.length() == 28 && validCharacters(line)) {
+            if(line.length() == 29 && validCharacters(line)) {
                 //System.out.println("Line record: " + line);
                 
                 if(!downloading) {
@@ -270,8 +274,8 @@ public class CassettePlayer implements LogFileTailerListener {
         int totalTime = 0;
         try {
             totalTime = Integer.parseInt(sa[4]);
-        } catch(NumberFormatException nfe) {
-            System.out.println("Invalid Total time: " + sa[4]);
+        } catch(Exception nfe) {
+            System.out.println("Invalid Record @ Total Time");
             dataErrors++;
             return;
         }
