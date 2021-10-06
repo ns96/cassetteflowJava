@@ -67,6 +67,8 @@ public class CassettePlayer implements LogFileTailerListener {
     // has been read in.
     private int dataErrors = 0;
     
+    private Process process = null;
+    
     // used to indicate if the minimodem program is running
     private boolean decoding;
     
@@ -90,7 +92,12 @@ public class CassettePlayer implements LogFileTailerListener {
     public void startMinimodem(final int delay) throws IOException {
         // call minimodem to do encoding
         String command = "minimodem -r 1200";
-        final Process process = Runtime.getRuntime().exec(command);
+        
+        // kill any previous process
+        if(process != null) process.destroy();
+        
+        // start new process
+        process = Runtime.getRuntime().exec(command);
         
         String message = "\nReading data from minimodem ...";
         System.out.println(message);
@@ -120,7 +127,6 @@ public class CassettePlayer implements LogFileTailerListener {
                         }
                         
                         if(!decoding) {
-                            process.destroy();
                             break;
                         }
                         
@@ -462,6 +468,11 @@ public class CassettePlayer implements LogFileTailerListener {
         }
         
         decoding  = false;
+        
+        // stop the minimodem program
+        if(process != null) {
+            process.destroy();
+        }
     }
     
     /**

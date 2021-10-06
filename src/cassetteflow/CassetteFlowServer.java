@@ -27,6 +27,8 @@ public class CassetteFlowServer {
     private final int DECODE = 1;
     private int currentMode = ENCODE;
     
+    private HttpServer server;
+    
     /**
      * Main constructor which starts the server
      * @throws IOException 
@@ -34,7 +36,7 @@ public class CassetteFlowServer {
     public CassetteFlowServer() throws IOException {
         ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor)Executors.newFixedThreadPool(10);
         
-        HttpServer server = HttpServer.create(new InetSocketAddress("localhost", 8192), 0);
+        server = HttpServer.create(new InetSocketAddress("localhost", 8192), 0);
         
         server.createContext("/", new SetModeHandler());
         server.createContext("/mp3db", new getMp3DBHandler());
@@ -50,6 +52,13 @@ public class CassetteFlowServer {
         server.start();
         
         System.out.println("Cassette Flow Server Started ...");
+    }
+    
+    /**
+     * Stop the http server
+     */
+    public void stop() {
+        server.stop(0);
     }
     
     /**
