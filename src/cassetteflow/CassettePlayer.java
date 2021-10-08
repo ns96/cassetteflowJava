@@ -47,8 +47,10 @@ public class CassettePlayer implements LogFileTailerListener {
     private String currentMp3Id = "";
     private String mp3Filename = "";
     private int startTime = -1;
-    private int mp3PlayTime = -1;
+    private int mp3TotalPlayTime = -1;
     private int currentPlayTime = -1;
+    
+    private int playtimeDiff = 0; // track the difference between the mp3 playtime and current PlayTime
     
     // keep track of the total log lines which have been process so far
     private int logLineCount = 0;
@@ -69,8 +71,13 @@ public class CassettePlayer implements LogFileTailerListener {
     
     private Process process = null;
     
+    private BufferedReader miniModemReader;
+    
     // used to indicate if the minimodem program is running
     private boolean decoding;
+    
+    // vairiable to track when we are paused to allowing clearing the buffer
+    private boolean paused = false;
     
     public CassettePlayer(CassetteFlowFrame cassetteFlowFrame, CassetteFlow cassetteFlow, String logfile) {
         this(cassetteFlow, logfile);
@@ -87,9 +94,10 @@ public class CassettePlayer implements LogFileTailerListener {
     /**
      * Grab data directly from minimodem
      * 
+     * @param delay
      * @throws IOException 
      */
-    public void startMinimodem(final int delay) throws IOException {
+    public void startMinimodem(int delay) throws IOException {
         // call minimodem to do encoding
         String command = "minimodem -r 1200";
         
@@ -112,13 +120,14 @@ public class CassettePlayer implements LogFileTailerListener {
         Thread soutThread = new Thread("Standard Output Reader") {
             @Override
             public void run() {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                miniModemReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                
                 String line;
                 try {
                     while (true) {
-                        line = reader.readLine();
+                        line = miniModemReader.readLine();
                         
-                        if (line != null) {
+                        if (line != null && !paused) {
                             newLogFileLine(line);
                             
                             if(cassetteFlowFrame != null) {
@@ -130,11 +139,14 @@ public class CassettePlayer implements LogFileTailerListener {
                             break;
                         }
                         
-                        // Take a pause to keep timing of tape inline with mp3 playback time
-                        Thread.sleep(delay);
+                        // Take a pause to keep timing of tape inline with mp3 
+                        // playback time
+                        if(delay > 0) {
+                            Thread.sleep(delay);
+                        }
                     }
                     
-                    reader.close();
+                    miniModemReader.close();
                 } catch (Exception ex) {
                     Logger.getLogger(CassettePlayer.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -221,9 +233,22 @@ public class CassettePlayer implements LogFileTailerListener {
                         cassetteFlowFrame.setPlaybackInfo(stopMessage + "\n", false);
                     } 
                 }
+                
+                // check to make sure we close the minimodem read
+                if(miniModemReader != null) {
+                    paused = true;
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(CassettePlayer.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    
+                    paused = false;
+                }
 
                 currentMp3Id = "";
                 currentPlayTime = -1;
+                playtimeDiff = 0;
                 
                 if(cassetteFlowFrame != null) {
                     cassetteFlowFrame.setPlaybackInfo(stopMessage, true);
@@ -326,7 +351,7 @@ public class CassettePlayer implements LogFileTailerListener {
                 if(mp3Info != null) {
                     File mp3File = mp3Info.getFile();
                     mp3Filename = mp3File.getName();
-                    mp3PlayTime = mp3Info.getLength();
+                    mp3TotalPlayTime = mp3Info.getLength();
                 
                     /*** start thread to begin music playback ***/
                     playMP3(mp3File);
@@ -378,12 +403,13 @@ public class CassettePlayer implements LogFileTailerListener {
             
             // get the actual playback time from the mp3 player
             int mp3Time = player.getPosition()/1000 + startTime + 1;
+            playtimeDiff = mp3Time - currentPlayTime;
             
             String timeFromMp3 = String.format("%04d", mp3Time);
             
             if(cassetteFlowFrame != null) {
                 String message = mp3Filename + " [" + track + "]\n"
-                        + "Playtime From Tape: " + String.format("%04d", currentPlayTime) + " / " + String.format("%04d", mp3PlayTime) + "\n"
+                        + "Playtime From Tape: " + String.format("%04d", currentPlayTime) + " / " + String.format("%04d", mp3TotalPlayTime) + "\n"
                         + "Playtime From MP3 : " + timeFromMp3 + "\n"
                         + "Tape Counter: " + totalTime;
                 cassetteFlowFrame.setPlaybackInfo(message, false);
@@ -392,7 +418,7 @@ public class CassettePlayer implements LogFileTailerListener {
                 //    mp3PlayTime + " | MP3 Time: " + timeFromMp3 + " | Tape Counter: " + totalTime + " ]";
                 
                 String message = "Tape Time: " + currentPlayTime + "/" + 
-                    mp3PlayTime + " | MP3 Time: " + timeFromMp3 + " | Tape Counter: " + totalTime + " ]";
+                    mp3TotalPlayTime + " | MP3 Time: " + timeFromMp3 + " | Tape Counter: " + totalTime + " ]";
                 System.out.print(message + "\r");
             }
         }                       
