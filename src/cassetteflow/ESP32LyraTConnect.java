@@ -30,10 +30,20 @@ public class ESP32LyraTConnect {
             return null;
         }
     }
-    
+        
     public String setModeDecode() {
         try {
             String url = host + "?mode=decode";
+            return sendGet(url);
+        } catch (IOException ex) {
+            Logger.getLogger(ESP32LyraTConnect.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+    }
+    
+        public String setModePass() {
+        try {
+            String url = host + "?mode=pass";
             return sendGet(url);
         } catch (IOException ex) {
             Logger.getLogger(ESP32LyraTConnect.class.getName()).log(Level.SEVERE, null, ex);

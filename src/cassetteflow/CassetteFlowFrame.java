@@ -33,6 +33,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
     
     private CassettePlayer cassettePlayer;
     
+    private ESP32LyraTConnect lyraTConnect;
+    
     private ArrayList<MP3Info> sideAList = new ArrayList<>();
     
     private ArrayList<MP3Info> sideBList = new ArrayList<>();
@@ -104,11 +106,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
                 tracksLabel.setText(cassetteID + " Tracks");
                 tapeInfoTextArea.setText("");
                 
-                ArrayList<String> mp3Ids = cassetteFlow.cassetteDB.get(cassetteID);
+                ArrayList<String> mp3Ids = cassetteFlow.tapeDB.get(cassetteID);
                 
                 if(mp3Ids != null) {
                    for(int i = 0; i < mp3Ids.size(); i++) {
-                       MP3Info mp3Info = cassetteFlow.mp3sMap.get(mp3Ids.get(i));
+                       MP3Info mp3Info = cassetteFlow.mp3InfoDB.get(mp3Ids.get(i));
                        String trackCount = String.format("%02d", (i + 1));
                        tapeInfoTextArea.append("[" + trackCount + "] " + mp3Info + "\n");
                    }
@@ -324,7 +326,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         mp3CountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 0.7.0 (10/07/2021)");
+        setTitle("CassetteFlow v 0.7.1 (10/09/2021)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 
@@ -680,7 +682,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         directDecodeCheckBox.setText("Minimodem");
 
         mmdelayTextField.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
-        mmdelayTextField.setText("235");
+        mmdelayTextField.setText("0");
         mmdelayTextField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 mmdelayTextFieldActionPerformed(evt);
@@ -778,6 +780,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
 
         lyraTLoadDBButton.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         lyraTLoadDBButton.setText("Load Tape and MP3 Databases");
+        lyraTLoadDBButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                lyraTLoadDBButtonActionPerformed(evt);
+            }
+        });
 
         jLabel7.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         jLabel7.setText("LyraT Output Console:");
@@ -786,10 +793,20 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         lyraTDecodeRadioButton.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         lyraTDecodeRadioButton.setSelected(true);
         lyraTDecodeRadioButton.setText("Decode");
+        lyraTDecodeRadioButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                lyraTDecodeRadioButtonActionPerformed(evt);
+            }
+        });
 
         buttonGroup1.add(lyraTEncodeRadioButton);
         lyraTEncodeRadioButton.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         lyraTEncodeRadioButton.setText("Encode");
+        lyraTEncodeRadioButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                lyraTEncodeRadioButtonActionPerformed(evt);
+            }
+        });
 
         lyraTGetInfoButton.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         lyraTGetInfoButton.setText("Get Information");
@@ -818,6 +835,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         buttonGroup1.add(lyraTPassRadioButton);
         lyraTPassRadioButton.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         lyraTPassRadioButton.setText("Pass");
+        lyraTPassRadioButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                lyraTPassRadioButtonActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
         jPanel5.setLayout(jPanel5Layout);
@@ -1403,7 +1425,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         
         // remove records from the list and hash map
         cassetteFlow.mp3sList.clear();
-        cassetteFlow.mp3sMap.clear();
+        cassetteFlow.mp3InfoDB.clear();
     }//GEN-LAST:event_clearMP3ListButtonActionPerformed
 
     private void createDownloadButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createDownloadButtonActionPerformed
@@ -1551,7 +1573,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         if(startServerCheckBox.isSelected()) {
             try {
                 cassetteFlowServer = new CassetteFlowServer();
-                lyraTConsoleTextArea.append("\nCassette Flow Server Start ...\n");
+                cassetteFlowServer.setCassetteFlow(cassetteFlow);
+                
+                lyraTConsoleTextArea.append("Local Cassette Flow Server Started ...\n\n");
             } catch (IOException ex) {
                 Logger.getLogger(CassetteFlowFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -1564,22 +1588,71 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_startServerCheckBoxActionPerformed
 
     private void lyraTDisconnectButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lyraTDisconnectButtonActionPerformed
-        // TODO add your handling code here:
+        if(lyraTConnect != null) {
+            lyraTConnect = null;
+            lyraTConsoleTextArea.append("Disconnected From Cassette Flow Server\n\n");
+        }
     }//GEN-LAST:event_lyraTDisconnectButtonActionPerformed
 
     private void lyraTConnectButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lyraTConnectButtonActionPerformed
-        // TODO add your handling code here:
+        if(lyraTConnect == null) {
+            String host = lyraTHostTextField.getText();
+            lyraTConnect = new ESP32LyraTConnect(host);
+            
+            // try getting informtion to see if we connected
+            String info = lyraTConnect.getInfo();
+            if(info != null) {
+                lyraTConsoleTextArea.append("Connected to Cassette Flow Server @ " + host + "\n\n");
+            } else {
+                lyraTConsoleTextArea.append("Error Connecting to Cassette Flow Server @ " + host + "\n\n");
+                lyraTConnect= null;
+            }
+        }
     }//GEN-LAST:event_lyraTConnectButtonActionPerformed
 
     private void viewTapeDBButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_viewTapeDBButtonActionPerformed
         TapeDatabaseFrame tapeDBFrame = new TapeDatabaseFrame();
-        tapeDBFrame.pack();
+        tapeDBFrame.setTitle("Tape Database (Local Drive)");
+        
+        tapeDBFrame.setTapeDB(cassetteFlow.tapeDB);
+        tapeDBFrame.setMP3InfoDB(cassetteFlow.mp3InfoDB);
+        
         tapeDBFrame.setVisible(true);
     }//GEN-LAST:event_viewTapeDBButtonActionPerformed
 
     private void clearConsoleButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearConsoleButtonActionPerformed
         consoleTextArea.setText("Output Console >\n");
     }//GEN-LAST:event_clearConsoleButtonActionPerformed
+
+    private void lyraTLoadDBButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lyraTLoadDBButtonActionPerformed
+        if(lyraTConnect == null) return;
+        
+        String mp3DBText = lyraTConnect.getMP3DB();
+        String tapeDBText = lyraTConnect.getTapeDB();
+        
+        lyraTConsoleTextArea.append(mp3DBText + "\n\n" + tapeDBText);
+    }//GEN-LAST:event_lyraTLoadDBButtonActionPerformed
+
+    private void lyraTDecodeRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lyraTDecodeRadioButtonActionPerformed
+        if(lyraTConnect == null) return;
+        
+        String response = lyraTConnect.setModeDecode();
+        lyraTConsoleTextArea.append("Set Decode Mode >> " + response + "\n");
+    }//GEN-LAST:event_lyraTDecodeRadioButtonActionPerformed
+
+    private void lyraTEncodeRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lyraTEncodeRadioButtonActionPerformed
+        if(lyraTConnect == null) return;
+        
+        String response = lyraTConnect.setModeEncode();
+        lyraTConsoleTextArea.append("Set Encode Mode >> " + response + "\n");
+    }//GEN-LAST:event_lyraTEncodeRadioButtonActionPerformed
+
+    private void lyraTPassRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lyraTPassRadioButtonActionPerformed
+        if(lyraTConnect == null) return;
+        
+        String response = lyraTConnect.setModePass();
+        lyraTConsoleTextArea.append("Set Pass Through Mode >> " + response + "\n");
+    }//GEN-LAST:event_lyraTPassRadioButtonActionPerformed
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addMP3Button;

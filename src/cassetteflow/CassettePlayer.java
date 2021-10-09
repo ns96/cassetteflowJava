@@ -221,7 +221,7 @@ public class CassettePlayer implements LogFileTailerListener {
                 
                 logLineCount++;
                 stopRecords = 0;
-            } else if(line.contains("### NOCARRIER")) {
+            } else if(line.contains("### NOCARRIER")) {                
                 String stopMessage = "Playback Stopped {# errors " + dataErrors +  "/" + logLineCount + "} ...";
                 
                 // make sure we stop any previous players
@@ -235,7 +235,7 @@ public class CassettePlayer implements LogFileTailerListener {
                 }
                 
                 // check to make sure we close the minimodem read
-                if(miniModemReader != null) {
+                if(miniModemReader != null && stopRecords == 0) {
                     paused = true;
                     try {
                         Thread.sleep(2000);
@@ -345,7 +345,7 @@ public class CassettePlayer implements LogFileTailerListener {
                 currentMp3Id = mp3Id;
                 startTime = Integer.parseInt(playTimeS);
                 
-                MP3Info mp3Info = cassetteFlow.mp3sMap.get(mp3Id);
+                MP3Info mp3Info = cassetteFlow.mp3InfoDB.get(mp3Id);
                 String message;
                 
                 if(mp3Info != null) {
@@ -430,11 +430,11 @@ public class CassettePlayer implements LogFileTailerListener {
      * @param tapeId 
      */
     private void printTracks(String tapeId) {
-        ArrayList<String> mp3Ids = cassetteFlow.cassetteDB.get(tapeId);
+        ArrayList<String> mp3Ids = cassetteFlow.tapeDB.get(tapeId);
                 
         if (mp3Ids != null) {
             for (int i = 0; i < mp3Ids.size(); i++) {
-                MP3Info mp3Info = cassetteFlow.mp3sMap.get(mp3Ids.get(i));
+                MP3Info mp3Info = cassetteFlow.mp3InfoDB.get(mp3Ids.get(i));
                 String trackCount = String.format("%02d", (i + 1));
                 System.out.println("[" + trackCount + "] " + mp3Info);
             }
@@ -511,7 +511,7 @@ public class CassettePlayer implements LogFileTailerListener {
          
         // first check to see the files have already been downloaded by checking an
         // entry in the cassette database
-        if(cassetteFlow.cassetteDB.containsKey(indexFileId)) {
+        if(cassetteFlow.tapeDB.containsKey(indexFileId)) {
             downloading = false;
             
             if(cassetteFlowFrame != null) {
@@ -572,8 +572,8 @@ public class CassettePlayer implements LogFileTailerListener {
             in.close();
             
             // store two entries in the tape database
-            cassetteFlow.cassetteDB.put(tapeID, mp3List);
-            cassetteFlow.cassetteDB.put(indexFileId, mp3List);
+            cassetteFlow.tapeDB.put(tapeID, mp3List);
+            cassetteFlow.tapeDB.put(indexFileId, mp3List);
             
             message = "\n" + mp3Count + " Files Downloaded ...";
             

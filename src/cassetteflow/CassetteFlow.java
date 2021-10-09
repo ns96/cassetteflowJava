@@ -49,15 +49,15 @@ public class CassetteFlow {
     public static String LOG_FILE_NAME = MP3_DIR_NAME + File.separator + TAPE_FILE_DIR_NAME + File.separator + "tape.log"; 
     
     // stores the mp3info object keyed by the 10 character hash
-    public HashMap<String, MP3Info> mp3sMap = new HashMap<>();
+    public HashMap<String, MP3Info> mp3InfoDB = new HashMap<>();
     
     // stores the cassette ID to the mp3ids
-    public HashMap<String, ArrayList<String>> cassetteDB = new HashMap<>();
+    public HashMap<String, ArrayList<String>> tapeDB = new HashMap<>();
     
     private static String CASSETTE_DB_FILENAME = MP3_DIR_NAME + File.separator + TAPE_FILE_DIR_NAME + File.separator + "tapeDB.txt"; 
     
     
-    // store tje MP3Info object is a list for convinience
+    // store the MP3Info object is a list for convinience
     public ArrayList<MP3Info> mp3sList = new ArrayList<>();
     
     // private 
@@ -77,19 +77,20 @@ public class CassetteFlow {
         loadMP3Files(MP3_DIR_NAME);
         
         File file = new File(CASSETTE_DB_FILENAME);
-        loadCassetteDB(file);
+        loadTapeDB(file);
     }
     
     /**
-     * The the MP3 map as a tab delimited file
+     * Save the MP3 map as a tab delimited file. Not currently used other than
+     * to provide examples of how this should look
      */
     private void saveMP3InfoDB() {
         try {
             FileWriter writer = new FileWriter(MP3_DB_FILENAME);
             
-            for(String key: mp3sMap.keySet()) {
-                MP3Info mp3Info = mp3sMap.get(key);
-                String line = key + "\t" + mp3Info.getLength() + "\t" + mp3Info.getFile() + "\n";
+            for(String key: mp3InfoDB.keySet()) {
+                MP3Info mp3Info = mp3InfoDB.get(key);
+                String line = key + "\t" + mp3Info.getLength() + "\t" + mp3Info.getFile().getName() + "\n";
                 writer.write(line);
             }
             
@@ -100,12 +101,28 @@ public class CassetteFlow {
     }
     
     /**
+     * Get the mp3 info database has a string. Used for testing the cassette flow server
+     * @return 
+     */
+    public String getMP3InfoDBAsString() {
+        StringBuilder sb = new StringBuilder();
+        
+        for (String key : mp3InfoDB.keySet()) {
+            MP3Info mp3Info = mp3InfoDB.get(key);
+            String line = key + "\t" + mp3Info.getLength() + "\t" + mp3Info.getFile().getName() + "\n";
+            sb.append(line);
+        }
+        
+        return sb.toString();
+    }
+    
+    /**
      * Saves the cassette data which stores info on tape IDs and their associated mp3 ids
      * 
      * @param file
      * @throws IOException 
      */
-    public void saveCassetteDB(File file) throws IOException {
+    public void saveTapeDB(File file) throws IOException {
         try {
             /**ObjectOutputStream oos = new ObjectOutputStream(fos);
             oos.writeObject(cassetteDB);
@@ -113,8 +130,8 @@ public class CassetteFlow {
             */
             FileWriter writer = new FileWriter(file);
             
-            for(String key: cassetteDB.keySet()) {
-                String line = key + "\t" + String.join("\t", cassetteDB.get(key)) + "\n";
+            for(String key: tapeDB.keySet()) {
+                String line = key + "\t" + String.join("\t", tapeDB.get(key)) + "\n";
                 writer.write(line);
             }
             
@@ -129,7 +146,7 @@ public class CassetteFlow {
      * 
      * @param file 
      */
-    public void loadCassetteDB(File file) {
+    public void loadTapeDB(File file) {
         try {
             if(file.exists()) {
                 /*FileInputStream fis = new FileInputStream(file);
@@ -151,14 +168,14 @@ public class CassetteFlow {
                         mp3Ids.add(sa[i]);
                     }
                     
-                    cassetteDB.put(key, mp3Ids);
+                    tapeDB.put(key, mp3Ids);
                 }
                 reader.close();
                 
                 
                 System.out.println("\nCassette database file loaded ... ");
-                for(String key: cassetteDB.keySet()) {
-                    ArrayList<String> mp3Ids = cassetteDB.get(key);
+                for(String key: tapeDB.keySet()) {
+                    ArrayList<String> mp3Ids = tapeDB.get(key);
                     System.out.println(key + " >> " + mp3Ids);
                 }
             }
@@ -167,7 +184,7 @@ public class CassetteFlow {
         }
     }
     
-    public void addToCassetteDB(String tapeID, ArrayList<MP3Info> sideAList, ArrayList<MP3Info> sideBList) {
+    public void addToTapeDB(String tapeID, ArrayList<MP3Info> sideAList, ArrayList<MP3Info> sideBList) {
         // save information for side A
         ArrayList<String> mp3Ids = new ArrayList<>();
         
@@ -177,7 +194,7 @@ public class CassetteFlow {
                 mp3Ids.add(mp3Info.getHash10C());
             }
         
-            cassetteDB.put(tapeID + "A", mp3Ids);
+            tapeDB.put(tapeID + "A", mp3Ids);
         }
         
         if(sideBList != null) {
@@ -188,16 +205,32 @@ public class CassetteFlow {
                 mp3Ids.add(mp3Info.getHash10C());
             }
         
-            cassetteDB.put(tapeID + "B", mp3Ids);
+            tapeDB.put(tapeID + "B", mp3Ids);
         }
         
         // save the database file now
         try {
             File file = new File(CASSETTE_DB_FILENAME);
-            saveCassetteDB(file);
+            saveTapeDB(file);
         } catch(IOException ioe) {
             ioe.printStackTrace();
         }
+    }
+    
+    /**
+     * Return the tape database as a string. Used my the cassetteflow server
+     * 
+     * @return 
+     */
+    public String getTapeDBAsString() {
+        StringBuilder sb = new StringBuilder();
+
+        for (String key : tapeDB.keySet()) {
+            String line = key + "\t" + String.join("\t", tapeDB.get(key)) + "\n";
+            sb.append(line);
+        }
+        
+        return sb.toString();
     }
     
     /**
@@ -230,7 +263,7 @@ public class CassetteFlow {
             }
             
             // save to the tape data base
-            addToCassetteDB(tapeID, sideA, sideB);
+            addToTapeDB(tapeID, sideA, sideB);
             
             return true;
         } catch(IOException ioe) {
@@ -359,7 +392,7 @@ public class CassetteFlow {
         }
         
         // save to the tape data base
-        addToCassetteDB(tapeID, sideA, sideB);
+        addToTapeDB(tapeID, sideA, sideB);
         
         cassetteFlowFrame.setEncodingDone();
     }
@@ -484,7 +517,7 @@ public class CassetteFlow {
                 addMP3FileToDatabase(file);
             }
             
-            // save the database as a text delimited text file
+            // save the database as a tab delimited text file
             saveMP3InfoDB();
         } catch (Exception e) {
             System.err.println(e.getMessage());
@@ -504,7 +537,7 @@ public class CassetteFlow {
 
         MP3Info mp3Info = new MP3Info(file, sha10hex, length, lengthAsTime);
         mp3sList.add(mp3Info);
-        mp3sMap.put(sha10hex, mp3Info);
+        mp3InfoDB.put(sha10hex, mp3Info);
 
         System.out.println(sha10hex + " -- " + file.getName() + " : " + length);
     }
@@ -555,6 +588,7 @@ public class CassetteFlow {
         }
         
         CassetteFlow cassetteFlow = new CassetteFlow();
+        
         if(DEBUG || (args.length > 0 && cla.equals("cli"))) {
             CassettePlayer cassettePlayer = new CassettePlayer(cassetteFlow, LOG_FILE_NAME);
             cassettePlayer.startLogTailer();

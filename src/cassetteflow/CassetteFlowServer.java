@@ -25,9 +25,13 @@ import java.util.logging.Logger;
 public class CassetteFlowServer {
     private final int ENCODE = 0;
     private final int DECODE = 1;
+    private final int PASS = 2;
+    
     private int currentMode = ENCODE;
     
     private HttpServer server;
+    
+    private CassetteFlow cassetteFlow;
     
     /**
      * Main constructor which starts the server
@@ -52,6 +56,10 @@ public class CassetteFlowServer {
         server.start();
         
         System.out.println("Cassette Flow Server Started ...");
+    }
+    
+    public void setCassetteFlow(CassetteFlow cassetteFlow) {
+        this.cassetteFlow = cassetteFlow;
     }
     
     /**
@@ -99,7 +107,7 @@ public class CassetteFlowServer {
             String query = he.getRequestURI().getQuery();
             
             Map params = splitQuery(query);
-            String response = "Setting the mode: " + params;
+            String response = "Set Mode: " + params;
             
             sendResponse(he, response);
         }
@@ -109,7 +117,7 @@ public class CassetteFlowServer {
     private class getMp3DBHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange he) throws IOException {
-            String response = "Getting the mp3 database";
+            String response = cassetteFlow.getMP3InfoDBAsString();
             sendResponse(he, response);
         }
     }
@@ -118,7 +126,7 @@ public class CassetteFlowServer {
     private class getTapeDBHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange he) throws IOException {
-            String response = "Getting the tape database";
+            String response = cassetteFlow.getTapeDBAsString();
             sendResponse(he, response);
         }
     }
@@ -127,7 +135,7 @@ public class CassetteFlowServer {
     private class getInfoHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange he) throws IOException {
-            String response = "Getting current info";
+            String response = "Getting Info ...";
             sendResponse(he, response);
         }
     }
@@ -191,7 +199,9 @@ public class CassetteFlowServer {
     
     public static void main(String[] args) {
         try {
+            CassetteFlow cf = new CassetteFlow();
             CassetteFlowServer cfs = new CassetteFlowServer();
+            cfs.setCassetteFlow(cf);
         } catch (IOException ex) {
             ex.printStackTrace();
         }
