@@ -301,8 +301,9 @@ public class CassettePlayer implements LogFileTailerListener {
         String mp3Id = sa[2];
         String playTimeS = sa[3];
         
-        // get the total time on the tape
+        // get the total time from the tape data
         int totalTime = 0;
+        
         try {
             totalTime = Integer.parseInt(sa[4]);
         } catch(Exception nfe) {
@@ -411,7 +412,7 @@ public class CassettePlayer implements LogFileTailerListener {
                 String message = mp3Filename + " [" + track + "]\n"
                         + "Playtime From Tape: " + String.format("%04d", currentPlayTime) + " / " + String.format("%04d", mp3TotalPlayTime) + "\n"
                         + "Playtime From MP3 : " + timeFromMp3 + "\n"
-                        + "Tape Counter: " + totalTime;
+                        + "Tape Counter: " + totalTime + " (" + cassetteFlow.getTimeString(totalTime) + ")";
                 cassetteFlowFrame.setPlaybackInfo(message, false);
             } else {
                 //String message = "[ " + mp3Filename + " {" + track + "} Time: " + currentPlayTime + "/" + 
