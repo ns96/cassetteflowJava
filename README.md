@@ -18,3 +18,9 @@ cassette tapes, as well has decoding data from cassettes.
 ![Main GUI 1](gui01.png)
 ![Main GUI 2](gui02.png)
 ![Data Flow](dataflow.png)
+
+## Installation and Running
+Since this project is in very early development, I haven't put together a 
+binary release as yet. However, if you a familiar with Java programming, it 
+should be pretty straight forward to compile/run it. The difficult part, 
+if you are on Windows, in getting the Minimodem program installed under Cygwin. 
