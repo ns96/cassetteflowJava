@@ -1,6 +1,7 @@
 package cassetteflow;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import okhttp3.Headers;
@@ -19,6 +20,58 @@ public class ESP32LyraTConnect {
     
     public ESP32LyraTConnect(String host) {
         this.host = host;
+    }
+    
+    /**
+     * Create input files 
+     * @param tapeID
+     * @param sideA
+     * @param sideB
+     * @param muteTime
+     * @param tapeLength
+     * @return 
+     */
+    public String createInputFiles(String tapeLength, String tapeID, ArrayList<MP3Info> sideA, ArrayList<MP3Info> sideB, String muteTime) {  
+        String response = "";
+        
+        if (sideA != null && sideA.size() >= 1) {
+            String data = "tapeID" + getData(sideA);
+            String r = create("A", tapeLength, muteTime, data);
+            
+            if(r == null) {
+                return "ERROR";
+            } else {
+                response = r + "\n"; 
+            }
+        }
+
+        if (sideB != null && sideB.size() >= 1) {
+            String data = "tapeID" + getData(sideB);
+            String r = create("B", tapeLength, muteTime, data);
+            
+            if(r == null) {
+                return "ERROR";
+            } else {
+                response += r; 
+            }
+        }
+        
+        return response;
+    }
+    
+    /**
+     * Return the mp3 files as comma seperate string
+     * @param sideN
+     * @return 
+     */
+    private String getData(ArrayList<MP3Info> sideN) {
+        String data = "";
+        
+        for(MP3Info mp3Info: sideN) {
+            data += "," + mp3Info.getHash10C();
+        }
+        
+        return data;
     }
     
     public String setModeEncode() {

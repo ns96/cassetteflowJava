@@ -135,7 +135,16 @@ public class CassetteFlowServer {
     private class getInfoHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange he) throws IOException {
-            String response = "Getting Info ...";
+            String mode;
+            if(currentMode == DECODE) {
+                mode = "DECODE";
+            } else if(currentMode == ENCODE) {
+                mode = "ENCODE";
+            } else {
+                mode = "PASS THROUGH";
+            }
+            
+            String response = mode + ": " + cassetteFlow.getCurrentLineRecord();
             sendResponse(he, response);
         }
     }
@@ -144,7 +153,7 @@ public class CassetteFlowServer {
     private class getRawHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange he) throws IOException {
-            String response = "Getting raw data ...";
+            String response = cassetteFlow.getCurrentLineRecord();
             sendResponse(he, response);
         }
     }

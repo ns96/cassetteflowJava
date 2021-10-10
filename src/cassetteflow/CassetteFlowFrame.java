@@ -91,7 +91,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         this.cassetteFlow = cassetteFlow;
         directoryTextField.setText(CassetteFlow.MP3_DIR_NAME);
         logfileTextField.setText(CassetteFlow.LOG_FILE_NAME);
-        addMP3FilesToList();
+        addMP3InfoToJList();
     }
     
     /**
@@ -138,12 +138,12 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
     }
     
     /**
-     * Add the mp3s file information to the list
+     * Add the mp3s file information to the jlist
      */
-    private void addMP3FilesToList() {
+    private void addMP3InfoToJList() {
         DefaultListModel model = (DefaultListModel) mp3JList.getModel();
 
-        for (MP3Info mp3Info: cassetteFlow.mp3sList) {
+        for (MP3Info mp3Info: cassetteFlow.mp3InfoList) {
             try {
                 System.out.println("MP3 File: " + mp3Info);
                 model.addElement(mp3Info);
@@ -152,7 +152,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
             }
         }
         
-        mp3CountLabel.setText(cassetteFlow.mp3sList.size() + " MP3s files loaded ...");
+        mp3CountLabel.setText(cassetteFlow.mp3InfoList.size() + " MP3s files loaded ...");
     }
     
     /**
@@ -302,7 +302,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         lyraTConsoleTextArea = new javax.swing.JTextArea();
         jLabel5 = new javax.swing.JLabel();
         startServerCheckBox = new javax.swing.JCheckBox();
-        lyraTLoadDBButton = new javax.swing.JButton();
+        lyraTServerTestDBButton = new javax.swing.JButton();
         jLabel7 = new javax.swing.JLabel();
         lyraTDecodeRadioButton = new javax.swing.JRadioButton();
         lyraTEncodeRadioButton = new javax.swing.JRadioButton();
@@ -778,11 +778,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
             }
         });
 
-        lyraTLoadDBButton.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
-        lyraTLoadDBButton.setText("Load Tape and MP3 Databases");
-        lyraTLoadDBButton.addActionListener(new java.awt.event.ActionListener() {
+        lyraTServerTestDBButton.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        lyraTServerTestDBButton.setText("Run Test On Server");
+        lyraTServerTestDBButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                lyraTLoadDBButtonActionPerformed(evt);
+                lyraTServerTestDBButtonActionPerformed(evt);
             }
         });
 
@@ -810,12 +810,27 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
 
         lyraTGetInfoButton.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         lyraTGetInfoButton.setText("Get Information");
+        lyraTGetInfoButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                lyraTGetInfoButtonActionPerformed(evt);
+            }
+        });
 
         lyraTGetRawButton.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         lyraTGetRawButton.setText("Get Line Records");
+        lyraTGetRawButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                lyraTGetRawButtonActionPerformed(evt);
+            }
+        });
 
         lyraTCreateButton.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         lyraTCreateButton.setText("Create Input File(s)");
+        lyraTCreateButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                lyraTCreateButtonActionPerformed(evt);
+            }
+        });
 
         lyraTEncodeAButton.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         lyraTEncodeAButton.setText("Encode A");
@@ -860,7 +875,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                         .addComponent(lyraTStopButton, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(lyraTLoadDBButton, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(lyraTServerTestDBButton, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(lyraTGetInfoButton, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(lyraTGetRawButton, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(lyraTCreateButton, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -903,7 +918,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel5Layout.createSequentialGroup()
-                        .addComponent(lyraTLoadDBButton)
+                        .addComponent(lyraTServerTestDBButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(lyraTGetInfoButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1141,7 +1156,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
             // clear the current JList
             DefaultListModel model = (DefaultListModel) mp3JList.getModel();
             model.clear();
-            addMP3FilesToList();
+            addMP3InfoToJList();
         } else {
             cassetteFlow.setDownloadServerRoot(mp3Directory);
         }
@@ -1315,7 +1330,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_shuffleButtonActionPerformed
 
     private void createButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createButtonActionPerformed
-        if (directEncodeCheckBox.isSelected()) {
+        if(lyraTConnect != null) {
+            lyraTCreateButtonActionPerformed(null);
+        } else if (directEncodeCheckBox.isSelected()) {
             directEncode(false);
         } else {
             try {
@@ -1424,12 +1441,14 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         model.clear();
         
         // remove records from the list and hash map
-        cassetteFlow.mp3sList.clear();
+        cassetteFlow.mp3InfoList.clear();
         cassetteFlow.mp3InfoDB.clear();
     }//GEN-LAST:event_clearMP3ListButtonActionPerformed
 
     private void createDownloadButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createDownloadButtonActionPerformed
-        if (directEncodeCheckBox.isSelected()) {
+        if(lyraTConnect != null) {
+            System.out.println("Creation of Download Input Files Not supported on LyraT ...");
+        } else if (directEncodeCheckBox.isSelected()) {
             directEncode(true);
         } else {
             try {
@@ -1603,13 +1622,37 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
             String info = lyraTConnect.getInfo();
             if(info != null) {
                 lyraTConsoleTextArea.append("Connected to Cassette Flow Server @ " + host + "\n\n");
+                loadLyraTDatabases();
             } else {
                 lyraTConsoleTextArea.append("Error Connecting to Cassette Flow Server @ " + host + "\n\n");
                 lyraTConnect= null;
             }
         }
     }//GEN-LAST:event_lyraTConnectButtonActionPerformed
-
+    
+    /**
+     * Load the database from lyraT
+     */
+    private void loadLyraTDatabases() {
+        try {
+            if(lyraTConnect == null) return;
+            
+            String mp3DBText = lyraTConnect.getMP3DB();
+            cassetteFlow.createMP3InfoDBFromString(mp3DBText);
+            
+            String tapeDBText = lyraTConnect.getTapeDB();
+            cassetteFlow.createTapeDBFromString(tapeDBText);
+            
+            // update the UI now
+            addMP3InfoToJList();
+            directoryTextField.setText("MP3s ON REMOTE LyraT");
+            
+            lyraTConsoleTextArea.append(mp3DBText + "\n\n" + tapeDBText);
+        } catch (Exception ex) {
+            Logger.getLogger(CassetteFlowFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
     private void viewTapeDBButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_viewTapeDBButtonActionPerformed
         TapeDatabaseFrame tapeDBFrame = new TapeDatabaseFrame();
         tapeDBFrame.setTitle("Tape Database (Local Drive)");
@@ -1624,14 +1667,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         consoleTextArea.setText("Output Console >\n");
     }//GEN-LAST:event_clearConsoleButtonActionPerformed
 
-    private void lyraTLoadDBButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lyraTLoadDBButtonActionPerformed
-        if(lyraTConnect == null) return;
-        
-        String mp3DBText = lyraTConnect.getMP3DB();
-        String tapeDBText = lyraTConnect.getTapeDB();
-        
-        lyraTConsoleTextArea.append(mp3DBText + "\n\n" + tapeDBText);
-    }//GEN-LAST:event_lyraTLoadDBButtonActionPerformed
+    private void lyraTServerTestDBButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lyraTServerTestDBButtonActionPerformed
+
+    }//GEN-LAST:event_lyraTServerTestDBButtonActionPerformed
 
     private void lyraTDecodeRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lyraTDecodeRadioButtonActionPerformed
         if(lyraTConnect == null) return;
@@ -1653,6 +1691,39 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         String response = lyraTConnect.setModePass();
         lyraTConsoleTextArea.append("Set Pass Through Mode >> " + response + "\n");
     }//GEN-LAST:event_lyraTPassRadioButtonActionPerformed
+
+    private void lyraTGetInfoButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lyraTGetInfoButtonActionPerformed
+        if(lyraTConnect == null) return;
+        
+        String response = lyraTConnect.getInfo();
+        lyraTConsoleTextArea.append(response + "\n");
+    }//GEN-LAST:event_lyraTGetInfoButtonActionPerformed
+
+    private void lyraTGetRawButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lyraTGetRawButtonActionPerformed
+        if(lyraTConnect == null) return;
+        
+        String response = lyraTConnect.getRawData();
+        lyraTConsoleTextArea.append(response + "\n");
+    }//GEN-LAST:event_lyraTGetRawButtonActionPerformed
+
+    private void lyraTCreateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lyraTCreateButtonActionPerformed
+        if(lyraTConnect == null) return;
+        
+        int muteTime = Integer.parseInt(muteJTextField.getText());
+        String tapeID = checkInputLength(tapeIDTextField.getText(), 4);
+        String tapeLength = tapeLengthComboBox.getSelectedItem().toString();
+        
+        if (tapeID != null) {
+            String response = lyraTConnect.createInputFiles(tapeLength, tapeID, sideAList, sideBList, "" + muteTime);
+            
+            if(!response.equals("ERROR")) {
+                lyraTConsoleTextArea.append("\n" + response + "\n");
+                cassetteFlow.addToTapeDB("LyraT_" + tapeID, sideAList, sideBList, false);
+            } else {
+                
+            }
+        }
+    }//GEN-LAST:event_lyraTCreateButtonActionPerformed
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addMP3Button;
@@ -1706,10 +1777,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
     private javax.swing.JButton lyraTGetInfoButton;
     private javax.swing.JButton lyraTGetRawButton;
     private javax.swing.JTextField lyraTHostTextField;
-    private javax.swing.JButton lyraTLoadDBButton;
     private javax.swing.JRadioButton lyraTPassRadioButton;
     private javax.swing.JButton lyraTPlaySideAButton;
     private javax.swing.JButton lyraTPlaySideBButton;
+    private javax.swing.JButton lyraTServerTestDBButton;
     private javax.swing.JButton lyraTStopButton;
     private javax.swing.JTextField mmdelayTextField;
     private javax.swing.JButton moveTrackDownButton;

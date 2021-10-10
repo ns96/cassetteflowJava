@@ -79,6 +79,8 @@ public class CassettePlayer implements LogFileTailerListener {
     // vairiable to track when we are paused to allowing clearing the buffer
     private boolean paused = false;
     
+    private String currentLineRecord;
+    
     public CassettePlayer(CassetteFlowFrame cassetteFlowFrame, CassetteFlow cassetteFlow, String logfile) {
         this(cassetteFlow, logfile);
         this.cassetteFlowFrame = cassetteFlowFrame;
@@ -86,9 +88,19 @@ public class CassettePlayer implements LogFileTailerListener {
     
     public CassettePlayer(CassetteFlow cassetteFlow, String logfile) {
         this.cassetteFlow = cassetteFlow;
+        cassetteFlow.setCassettePlayer(this);
+        
         this.logfile = logfile;
         
         DOWNLOAD_DIR = CassetteFlow.MP3_DIR_NAME + File.separator + "downloads";
+    }
+    
+    /**
+     * Return the current line record
+     * @return 
+     */
+    public String getCurrentLineRecord() {
+        return currentLineRecord;
     }
     
     /**
@@ -206,7 +218,7 @@ public class CassettePlayer implements LogFileTailerListener {
                 //System.out.println("Line record: " + line);
                 
                 if(!downloading) {
-                    processRecord(line);
+                    currentLineRecord = processRecord(line);
                 } else {
                     if(logLineCount%10 == 0) {
                         String message = logLineCount + " -- MP3 Downloads in progress. \nPlease stop cassette playback ...";
@@ -261,6 +273,8 @@ public class CassettePlayer implements LogFileTailerListener {
                 }
                 
                 stopRecords++;
+                
+                currentLineRecord = "PLAYBACK STOPPED # " + stopRecords; 
             }
         }
     }
@@ -294,7 +308,7 @@ public class CassettePlayer implements LogFileTailerListener {
      * 
      * @param line 
      */
-    public void processRecord(String line) {        
+    public String processRecord(String line) {        
         String[] sa = line.split("_");
         String tapeId = sa[0];
         String track = sa[1];
@@ -309,7 +323,7 @@ public class CassettePlayer implements LogFileTailerListener {
         } catch(Exception nfe) {
             System.out.println("Invalid Record @ Total Time");
             dataErrors++;
-            return;
+            return "DATA ERROR";
         }
         
         // check to see what tape is playing
@@ -336,7 +350,7 @@ public class CassettePlayer implements LogFileTailerListener {
                 };
                 thread.start();
                 
-                return;
+                return "DOWNLOADING";
             }
         }
         
@@ -385,7 +399,7 @@ public class CassettePlayer implements LogFileTailerListener {
                 
                 System.out.println("Mute Section ...");
                 muteRecords++;
-                return;
+                return line;
             }
         }
         
@@ -395,7 +409,7 @@ public class CassettePlayer implements LogFileTailerListener {
         } catch(NumberFormatException nfe) {
             System.out.println("Invalid play time: " + playTimeS);
             dataErrors++;
-            return;
+            return "ERROR";
         }
         
         //System.out.println("Line Data: " + playTime + " >> " + line);
@@ -422,7 +436,9 @@ public class CassettePlayer implements LogFileTailerListener {
                     mp3TotalPlayTime + " | MP3 Time: " + timeFromMp3 + " | Tape Counter: " + totalTime + " ]";
                 System.out.print(message + "\r");
             }
-        }                       
+        }
+        
+        return line;
     }
     
     /**

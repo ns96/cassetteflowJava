@@ -51,16 +51,13 @@ public class CassetteFlow {
     // stores the mp3info object keyed by the 10 character hash
     public HashMap<String, MP3Info> mp3InfoDB = new HashMap<>();
     
+    // also store the MP3Info object is a list for convinience
+    public ArrayList<MP3Info> mp3InfoList = new ArrayList<>();
+    
     // stores the cassette ID to the mp3ids
     public HashMap<String, ArrayList<String>> tapeDB = new HashMap<>();
     
-    private static String CASSETTE_DB_FILENAME = MP3_DIR_NAME + File.separator + TAPE_FILE_DIR_NAME + File.separator + "tapeDB.txt"; 
-    
-    
-    // store the MP3Info object is a list for convinience
-    public ArrayList<MP3Info> mp3sList = new ArrayList<>();
-    
-    // private 
+    private static String CASSETTE_DB_FILENAME = MP3_DIR_NAME + File.separator + TAPE_FILE_DIR_NAME + File.separator + "tapeDB.txt";   
     
     // the location of mp3 files
     public String downloadServerRoot = "http://192.168.1.14/~pi/mp3/";
@@ -69,6 +66,8 @@ public class CassetteFlow {
     private static final boolean DEBUG = false;
     
     private static CassetteFlowFrame cassetteFlowFrame;
+    
+    private CassettePlayer cassettePlayer;
     
     /**
      * Default constructor that just loads the mp3 files and cassette map database
@@ -79,6 +78,22 @@ public class CassetteFlow {
         File file = new File(CASSETTE_DB_FILENAME);
         loadTapeDB(file);
     }
+    
+    /**
+     * Set the current cassette player
+     * @param cassettePlayer 
+     */
+    public void setCassettePlayer(CassettePlayer cassettePlayer) {
+        this.cassettePlayer = cassettePlayer;
+    }
+    
+    public String getCurrentLineRecord() {
+        if(cassettePlayer != null) {
+            return cassettePlayer.getCurrentLineRecord();
+        } else {
+            return "NO PLAYER";
+        }
+    } 
     
     /**
      * Save the MP3 map as a tab delimited file. Not currently used other than
@@ -114,6 +129,33 @@ public class CassetteFlow {
         }
         
         return sb.toString();
+    }
+    
+    /**
+     * Method to create the mp3 db as a String
+     * 
+     * @param data 
+     */
+    public void createMP3InfoDBFromString(String data) throws Exception {
+        HashMap<String, MP3Info> remoteDB = new HashMap<>();
+        ArrayList<MP3Info> remoteList = new ArrayList<>();
+
+        for (String line : data.split("\n")) {
+            String[] sa = line.split("\t");
+
+            String id = sa[0];
+            int playtime = Integer.parseInt(sa[1]);
+            String playtimeString = getTimeString(playtime);
+            File file = new File(sa[2]);
+
+            MP3Info mp3Info = new MP3Info(file, id, playtime, playtimeString);
+            remoteDB.put(id, mp3Info);
+            remoteList.add(mp3Info);
+        }
+
+        // update the objects in the cassett flow frame
+        mp3InfoDB = remoteDB;
+        mp3InfoList = remoteList;
     }
     
     /**
@@ -184,7 +226,30 @@ public class CassetteFlow {
         }
     }
     
-    public void addToTapeDB(String tapeID, ArrayList<MP3Info> sideAList, ArrayList<MP3Info> sideBList) {
+    /**
+     * Method to create the tape db as a String
+     * 
+     * @param data 
+     */
+    public void createTapeDBFromString(String data) throws Exception {
+        HashMap<String, ArrayList<String>> remoteDB = new HashMap<>();
+        
+        for (String line : data.split("\n")) {
+            String[] sa = line.split("\t");
+            String key = "LyraT_" + sa[0];
+
+            ArrayList<String> mp3Ids = new ArrayList<>();
+            for (int i = 1; i < sa.length; i++) {
+                mp3Ids.add(sa[i]);
+            }
+
+            remoteDB.put(key, mp3Ids);
+        }
+        
+        tapeDB = remoteDB;
+    }
+    
+    public void addToTapeDB(String tapeID, ArrayList<MP3Info> sideAList, ArrayList<MP3Info> sideBList, boolean save) {
         // save information for side A
         ArrayList<String> mp3Ids = new ArrayList<>();
         
@@ -208,12 +273,14 @@ public class CassetteFlow {
             tapeDB.put(tapeID + "B", mp3Ids);
         }
         
-        // save the database file now
-        try {
-            File file = new File(CASSETTE_DB_FILENAME);
-            saveTapeDB(file);
-        } catch(IOException ioe) {
-            ioe.printStackTrace();
+        // save the database file if required
+        if(save) {
+            try {
+                File file = new File(CASSETTE_DB_FILENAME);
+                saveTapeDB(file);
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+            }
         }
     }
     
@@ -242,6 +309,7 @@ public class CassetteFlow {
      * @param sideB
      * @param muteTime
      * @param forDownload specifies if this is for mp3 which are to be downloaded
+     * 
      * @return indicates if the input file(s) were successfully created
      */
     public boolean createInputFiles(String directoryName, String tapeID, ArrayList<MP3Info> sideA, ArrayList<MP3Info> sideB, int muteTime, boolean forDownload) {
@@ -263,7 +331,7 @@ public class CassetteFlow {
             }
             
             // save to the tape data base
-            addToTapeDB(tapeID, sideA, sideB);
+            addToTapeDB(tapeID, sideA, sideB, true);
             
             return true;
         } catch(IOException ioe) {
@@ -392,7 +460,7 @@ public class CassetteFlow {
         }
         
         // save to the tape data base
-        addToTapeDB(tapeID, sideA, sideB);
+        addToTapeDB(tapeID, sideA, sideB, true);
         
         cassetteFlowFrame.setEncodingDone();
     }
@@ -464,7 +532,7 @@ public class CassetteFlow {
      * @return shuffle list containing the mp3 objects
      */
     public ArrayList<MP3Info> shuffleMP3List() {
-         ArrayList<MP3Info> mp3sListCopy = (ArrayList<MP3Info>) mp3sList.clone();
+         ArrayList<MP3Info> mp3sListCopy = (ArrayList<MP3Info>) mp3InfoList.clone();
          Collections.shuffle(mp3sListCopy);
          return mp3sListCopy;
     }
@@ -536,7 +604,7 @@ public class CassetteFlow {
         String lengthAsTime = getTimeString(length);
 
         MP3Info mp3Info = new MP3Info(file, sha10hex, length, lengthAsTime);
-        mp3sList.add(mp3Info);
+        mp3InfoList.add(mp3Info);
         mp3InfoDB.put(sha10hex, mp3Info);
 
         System.out.println(sha10hex + " -- " + file.getName() + " : " + length);
