@@ -14,8 +14,16 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Properties;
+import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.DataLine;
+import javax.sound.sampled.LineEvent;
 import javax.swing.SwingUtilities;
 import javazoom.jl.decoder.Bitstream;
 import javazoom.jl.decoder.Header;
@@ -57,26 +65,78 @@ public class CassetteFlow {
     // stores the cassette ID to the mp3ids
     public HashMap<String, ArrayList<String>> tapeDB = new HashMap<>();
     
-    private static String CASSETTE_DB_FILENAME = MP3_DIR_NAME + File.separator + TAPE_FILE_DIR_NAME + File.separator + "tapeDB.txt";   
+    public static String TAPE_DB_FILENAME = MP3_DIR_NAME + File.separator + TAPE_FILE_DIR_NAME + File.separator + "tapeDB.txt";   
     
-    // the location of mp3 files
+    // the location of mp3 files on the server
     public String downloadServerRoot = "http://192.168.1.14/~pi/mp3/";
+    
+    // The IP address of the LyraT host
+    public String LYRA_T_HOST = "http://127.0.0.1:8192/";
     
     // debug flag
     private static final boolean DEBUG = false;
     
+    // used when running in desktop mode
     private static CassetteFlowFrame cassetteFlowFrame;
     
     private CassettePlayer cassettePlayer;
+    
+    // store program properties
+    private Properties properties = new Properties();
+    
+    private String propertiesFilename = "cassetteFlow.properties";
+    
+    // used to stop realtime encoding
+    private boolean stopEncoding = false;
+    
+    // the number of times to replicate a data line in the input files
+    private int replicate = 4;
+    
+    // used when doing realtime encoding to keep track total track time
+    private int timeTotal = 1;
     
     /**
      * Default constructor that just loads the mp3 files and cassette map database
      */
     public CassetteFlow() {
+        loadProperties();
+        
         loadMP3Files(MP3_DIR_NAME);
         
-        File file = new File(CASSETTE_DB_FILENAME);
+        File file = new File(TAPE_DB_FILENAME);
         loadTapeDB(file);
+    }
+    
+    /**
+     * Load the default properties
+     */
+    private void loadProperties() {
+        // try loading the properties
+        try (FileReader fileReader = new FileReader(propertiesFilename)) {
+            properties.load(fileReader);
+            
+            downloadServerRoot = properties.getProperty("download.server");
+            LYRA_T_HOST = properties.getProperty("lyraT.host");
+            setDefaultMP3Directory(properties.getProperty("mp3.directory"));
+        } catch (IOException e) {
+            String mp3Directory = System.getProperty("user.home");
+            setDefaultMP3Directory(mp3Directory);
+        }
+    }
+    
+    /**
+     * Save the default properties file
+     */
+    public void saveProperties() {
+        try (FileWriter output = new FileWriter(propertiesFilename)) {
+            properties.put("mp3.directory", MP3_DIR_NAME);
+            properties.put("download.server", downloadServerRoot);
+            properties.put("lyraT.host", LYRA_T_HOST);
+            
+            properties.store(output, "CassetteFlow Defaults");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
     
     /**
@@ -184,11 +244,11 @@ public class CassetteFlow {
     }
     
     /**
-     * Saves the cassette data which stores info on tape IDs and their associated mp3 ids
+     * Loads the cassette data which stores info on tape IDs and their associated mp3 ids
      * 
      * @param file 
      */
-    public void loadTapeDB(File file) {
+    private void loadTapeDB(File file) {
         try {
             if(file.exists()) {
                 /*FileInputStream fis = new FileInputStream(file);
@@ -216,6 +276,7 @@ public class CassetteFlow {
                 
                 
                 System.out.println("\nCassette database file loaded ... ");
+                
                 for(String key: tapeDB.keySet()) {
                     ArrayList<String> mp3Ids = tapeDB.get(key);
                     System.out.println(key + " >> " + mp3Ids);
@@ -276,7 +337,7 @@ public class CassetteFlow {
         // save the database file if required
         if(save) {
             try {
-                File file = new File(CASSETTE_DB_FILENAME);
+                File file = new File(TAPE_DB_FILENAME);
                 saveTapeDB(file);
             } catch (IOException ioe) {
                 ioe.printStackTrace();
@@ -340,6 +401,17 @@ public class CassetteFlow {
         }
     }
     
+    /**
+     * Create the input files for the mp3 tracks
+     * 
+     * @param inputFile
+     * @param tapeID
+     * @param sideN
+     * @param muteTime
+     * @param forDownload
+     * @return
+     * @throws IOException 
+     */
     public String createInputFileForSide(File inputFile, String tapeID, ArrayList<MP3Info> sideN, int muteTime, boolean forDownload) throws IOException {
         System.out.println("Creating Cassette Tape Input: " + inputFile + ", " + tapeID + ", " +  muteTime);
         System.out.println(sideN);
@@ -350,9 +422,8 @@ public class CassetteFlow {
         // used for creating an input file which will download mp3s from the server
         String tapeHashCode;
         FileWriter myWriter2 = null;
-        
-        int replicate = 4;
-        int timeTotal = 0;
+
+        timeTotal = 0;
         int mp3Count = 0;
         
         // if this is for a download file, specify that in the first 10 seconds of data
@@ -496,6 +567,125 @@ public class CassetteFlow {
         System.out.println("\nDone Encoding Command: " + command);
     }
     
+    /**
+     * Encode directly using minimodem without first creating a wave file
+     * 
+     * @param tapeID
+     * @param sideN
+     * @param muteTime
+     * @param forDownload Currently not used
+     */
+    public void realTimeEncode(String tapeID, ArrayList<MP3Info> sideN, int muteTime, 
+            boolean forDownload, String saveDirectoryName) throws IOException, InterruptedException {
+        stopEncoding = false;
+        int mp3Count = 1;
+
+        for(MP3Info mp3Info: sideN) {
+            String data = createInputDataForMP3(tapeID, mp3Info, mp3Count);
+            
+            System.out.println("\nSending data to Minimodem for encoding: [ " + mp3Count + " ] Time: " + mp3Info.getLengthAsTime());
+            
+            long startTime = System.currentTimeMillis();
+            String filename = saveDirectoryName + File.separator + "track_" + mp3Count + ".wav";
+            String command = "minimodem --tx 1150 -f " + filename;
+            Process process = Runtime.getRuntime().exec(command);
+            OutputStreamWriter writer = new OutputStreamWriter(process.getOutputStream());
+            writer.write(data, 0, data.length());
+            writer.close();
+            process.waitFor();
+            process.destroy();
+            long endTime = System.currentTimeMillis();
+            
+            long encodeTime = endTime - startTime;
+            System.out.println("Total Encode Time: " + encodeTime + " milliseconds");
+            System.out.println("\nDone Encoding Track [ " + mp3Count + " ] Total Tape Time: " + timeTotal + " seconds"); 
+            
+            // playback the wav file and wait for it to be done
+            // https://stackoverflow.com/questions/557903/how-can-i-wait-for-a-java-sound-clip-to-finish-playing-back
+            System.out.println("\nPlaying Wav file: [ " + mp3Count + " ] " + filename); 
+            
+            CountDownLatch syncLatch = new CountDownLatch(1);
+            try {
+                AudioInputStream inputStream = AudioSystem.getAudioInputStream(new File(filename));
+                AudioFormat format = inputStream.getFormat();
+                DataLine.Info info = new DataLine.Info(Clip.class, format);
+                final Clip sound = (Clip)AudioSystem.getLine(info); 
+                
+                // Listener which allow method return once sound is completed
+                sound.addLineListener(e -> {
+                    if (e.getType() == LineEvent.Type.STOP) {
+                        sound.close();
+                        syncLatch.countDown();
+                    }
+                });
+                
+                sound.open(inputStream);
+                sound.start();
+            } catch(Exception e) {
+                System.out.println("Error Playing Sound " + filename);
+                e.printStackTrace();
+            }
+            syncLatch.await();
+            
+            // add the mute delay to total time
+            timeTotal += muteTime;
+            
+            // increment mp3Count
+            mp3Count++;
+            
+            if(stopEncoding) {
+                System.out.println("Real Time Encoding Stopped ...");
+                break;
+            }
+            
+            // sleep for the decired mute time to allow for blacnk in the tape
+            System.out.println("Mutting For " + muteTime + " seconds ...");
+            
+            int delay = muteTime*1000;
+            if(encodeTime < delay) {
+                Thread.sleep(delay);
+            }
+        }
+        
+        cassetteFlowFrame.setEncodingDone();
+    }
+    
+    /**
+     * Create the input data for an mp3 track
+     * @param tapeID
+     * @param mp3Info
+     * @param mp3Count
+     * @return
+     * @throws IOException 
+     */
+    public String createInputDataForMP3(String tapeID, MP3Info mp3Info, int mp3Count) {
+        StringBuilder builder = new StringBuilder();
+
+        String trackString = String.format("%02d", mp3Count);
+        String mp3Id = tapeID + "_" + trackString + "_" + mp3Info.getHash10C();
+
+        for (int i = 0; i < mp3Info.getLength(); i++) {
+            String timeString = String.format("%04d", i);
+            String timeTotalString = String.format("%04d", timeTotal);
+            String line = mp3Id + "_" + timeString + "_" + timeTotalString + "\n";
+
+            for (int j = 0; j < replicate; j++) { // replicate record N times
+                builder.append(line);
+            }
+
+            timeTotal += 1;
+        }
+
+        return builder.toString();
+    }
+    
+    /**
+     * Stop real time encoding
+     */
+    void stopEncoding() {
+        stopEncoding = true;
+    }
+    
     public ArrayList<MP3Info> getRandomMP3List(int maxTime, int muteTime) {
         // get a shuffle list of mp3s
         ArrayList<MP3Info> shuffledMp3s = shuffleMP3List();
@@ -564,7 +754,7 @@ public class CassetteFlow {
      * @param directory
      * @return 
      */
-    public void loadMP3Files(String directory) {
+    public final void loadMP3Files(String directory) {
         // try-catch block to handle exceptions
         try {
             File dir = new File(directory);
@@ -587,6 +777,12 @@ public class CassetteFlow {
             
             // save the database as a tab delimited text file
             saveMP3InfoDB();
+            
+            // see if to set this the mp3 directory as the default
+            if(files.length > 0 && !properties.containsKey("mp3.directory")) {
+                setDefaultMP3Directory(directory);
+                saveProperties();
+            }
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
@@ -634,19 +830,30 @@ public class CassetteFlow {
     }
     
     /**
+     * Set the default MP3 directory
+     * 
+     * @param mp3Directory
+     */
+    public void setDefaultMP3Directory(String mp3Directory) {
+        MP3_DIR_NAME = mp3Directory;
+        MP3_DB_FILENAME = MP3_DIR_NAME + File.separator + "mp3InfoDB.txt";
+        TAPE_DB_FILENAME = MP3_DIR_NAME + File.separator + TAPE_FILE_DIR_NAME + File.separator + "tapeDB.txt";
+        LOG_FILE_NAME = MP3_DIR_NAME + File.separator + TAPE_FILE_DIR_NAME + File.separator + "tape.log";
+    }
+    
+    /**
+     * Set the IP address of the lyraT host
+     * @param host 
+     */
+    public void setLyraTHost(String host) {
+        LYRA_T_HOST = host;
+        saveProperties();
+    }
+    
+    /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) {
-        // check to make sure the mp3 directory exists. Hardcode for now, but will fix later 
-        File mp3Dir = new File(MP3_DIR_NAME);
-        if(!mp3Dir.exists()) {
-            // must be running on the rpi4 reterminal
-            MP3_DIR_NAME = "/home/pi/Music";
-            MP3_DB_FILENAME = MP3_DIR_NAME + File.separator + "mp3InfoDB.txt";
-            CASSETTE_DB_FILENAME = MP3_DIR_NAME + File.separator + TAPE_FILE_DIR_NAME + File.separator + "tapeDB.txt";
-            LOG_FILE_NAME = MP3_DIR_NAME + File.separator + TAPE_FILE_DIR_NAME + File.separator + "tape.log"; 
-        }
-        
+    public static void main(String[] args) {        
         // get any command line arguments
         final String cla;
         if(args.length > 0) {

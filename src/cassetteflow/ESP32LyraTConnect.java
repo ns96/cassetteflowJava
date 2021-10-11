@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import okhttp3.Headers;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -154,9 +153,9 @@ public class ESP32LyraTConnect {
         }
     }
     
-    public String start() {
+    public String start(String side) {
         try {
-            String url = host + "start?side=A";
+            String url = host + "start?side=" + side;
             return sendGet(url);
         } catch (IOException ex) {
             Logger.getLogger(ESP32LyraTConnect.class.getName()).log(Level.SEVERE, null, ex);
@@ -164,9 +163,9 @@ public class ESP32LyraTConnect {
         }
     }
     
-    public String play() {
+    public String play(String side) {
         try {
-            String url = host + "play?side=B";
+            String url = host + "play?side=" + side;
             return sendGet(url);
         } catch (IOException ex) {
             Logger.getLogger(ESP32LyraTConnect.class.getName()).log(Level.SEVERE, null, ex);
@@ -205,18 +204,122 @@ public class ESP32LyraTConnect {
         }
     }
     
+    /**
+     * Test the connection and HTTP API of cassetteFlow server
+     * 
+     * @return Results of the test
+     * @throws java.lang.Exception
+     */
+    public String runTest() throws Exception {
+        StringBuilder sb = new StringBuilder();
+        String response;
+        String message;
+        
+        response = setModeEncode();
+        if(response != null) {
+            message = "PASS -- Encode Mode: " + response;
+        } else {
+            message = "FAIL -- Encode Mode";
+        }
+        sb.append(message).append("\n\n");
+        System.out.println(message);
+        
+        response = setModeDecode();
+        if(response != null) {
+            message = "PASS -- Decode Mode: " + response;
+        } else {
+            message = "FAIL -- Decode Mode";
+        }
+        sb.append(message).append("\n\n");
+        System.out.println(message);
+        
+        response = setModePass();
+        if(response != null) {
+            message = "PASS -- Pass Through Mode: " + response;
+        } else {
+            message = "FAIL -- Pass Through Mode";
+        }
+        sb.append(message).append("\n\n");
+        System.out.println(message);
+        
+        response = getMP3DB();
+        if(response != null) {
+            message = "PASS -- Get MP3 Database:\n" + response;
+        } else {
+            message = "FAIL -- Get MP3 Database";
+        }
+        sb.append(message).append("\n\n");
+        System.out.println(message);
+        
+        response = getTapeDB();
+        if(response != null) {
+            message = "PASS -- Get Tape Database:\n" + response;
+        } else {
+            message = "FAIL -- Get Tape Database";
+        }
+        sb.append(message).append("\n\n");
+        System.out.println(message);
+        
+        response = getInfo();
+        if(response != null) {
+            message = "PASS -- Get Info: " + response;
+        } else {
+            message = "FAIL -- Get Info";
+        }
+        sb.append(message).append("\n\n");
+        System.out.println(message);
+        
+        response = getRawData();
+        if(response != null) {
+            message = "PASS -- Get Line Record: " + response;
+        } else {
+            message = "FAIL -- Get Line Record";
+        }
+        sb.append(message).append("\n\n");
+        System.out.println(message);
+        
+        response = create("N", "120", "4", "tapeId,mp3id_1,mp3id_2,mp3id_3,mp3id_4");
+        if(response != null) {
+            message = "PASS -- Create: " + response;
+        } else {
+            message = "FAIL -- Creat";
+        }
+        sb.append(message).append("\n\n");
+        System.out.println(message);
+        
+        response = start("N");
+        if(response != null) {
+            message = "PASS -- Start Encode: " + response;
+        } else {
+            message = "FAIL -- Start Encode";
+        }
+        sb.append(message).append("\n\n");
+        System.out.println(message);
+        
+        response = play("N");
+        if(response != null) {
+            message = "PASS -- Play Side: " + response;
+        } else {
+            message = "FAIL -- Play Side";
+        }
+        sb.append(message).append("\n\n");
+        System.out.println(message);
+        
+        response = stop();
+        if(response != null) {
+            message = "PASS -- Stop Encode/Play: " + response;
+        } else {
+            message = "FAIL -- Stop Encode/Play";
+        }
+        sb.append(message).append("\n\n");
+        System.out.println(message);
+        
+        return sb.toString();
+    }
+    
     // main method for testing
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
         ESP32LyraTConnect lyraT = new ESP32LyraTConnect("http://localhost:8192/");
-        System.out.println(lyraT.setModeEncode());
-        System.out.println(lyraT.setModeDecode());
-        System.out.println(lyraT.getMP3DB());
-        System.out.println(lyraT.getTapeDB());
-        System.out.println(lyraT.getInfo());
-        System.out.println(lyraT.getRawData());
-        System.out.println(lyraT.create("B", "120", "4", "tapeId,mp3id_1,mp3id_2,mp3id_3,mp3id_4"));
-        System.out.println(lyraT.start());
-        System.out.println(lyraT.play());
-        System.out.println(lyraT.stop());
+        lyraT.runTest();
     }
 }
