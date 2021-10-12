@@ -111,7 +111,7 @@ public class CassettePlayer implements LogFileTailerListener {
      */
     public void startMinimodem(int delay) throws IOException {
         // call minimodem to do encoding
-        String command = "minimodem -r 1200";
+        String command = "minimodem -r " + cassetteFlow.BAUDE_RATE;
         
         // kill any previous process
         if(process != null) process.destroy();

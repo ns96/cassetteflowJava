@@ -94,6 +94,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         this.cassetteFlow = cassetteFlow;
         directoryTextField.setText(CassetteFlow.MP3_DIR_NAME);
         logfileTextField.setText(CassetteFlow.LOG_FILE_NAME);
+        baudRateTextField.setText(CassetteFlow.BAUDE_RATE);
         addMP3InfoToJList();
     }
     
@@ -177,6 +178,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         }
     }
     
+    /**
+     * Encode using minimodem, but just create the wav file and don't play it
+     * 
+     * @param forDownload 
+     */
     private void directEncode(boolean forDownload) {
         directEncode(forDownload, false);
     }
@@ -205,11 +211,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
                 try {
                     if(realTime) {
                         if(side == 0) {
-                            cassetteFlow.realTimeEncode(tapeID, sideAList, muteTime, forDownload, saveDirectoryName);
+                            cassetteFlow.realTimeEncode(tapeID + "A", sideAList, muteTime, forDownload, saveDirectoryName);
                             cassetteFlow.addToTapeDB(tapeID, sideAList, null, true);
                         } else if(side == 1) {
-                            cassetteFlow.realTimeEncode(tapeID, sideBList, muteTime, forDownload, saveDirectoryName);
-                            cassetteFlow.addToTapeDB(tapeID, sideBList, null, true);
+                            cassetteFlow.realTimeEncode(tapeID + "B", sideBList, muteTime, forDownload, saveDirectoryName);
+                            cassetteFlow.addToTapeDB(tapeID, null, sideBList, true);
                         }
                     } else {
                         cassetteFlow.directEncode(saveDirectoryName, tapeID, sideAList, sideBList, muteTime, forDownload);
@@ -230,7 +236,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         encodeProgressBar.setIndeterminate(false);
         createButton.setEnabled(true);
         createDownloadButton.setEnabled(true);
-        realtimeEncodeButton.setEnabled(false);
+        realtimeEncodeButton.setEnabled(true);
     }
     
     /**
@@ -242,7 +248,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
     public void printToConsole(String text, boolean append) {
         SwingUtilities.invokeLater(() -> {
             if(!append) {
-                consoleTextArea.setText(text);
+                consoleTextArea.setText(text + "\n");
             } else {
                 consoleTextArea.append(text + "\n");
             }
@@ -342,6 +348,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         jScrollPane8 = new javax.swing.JScrollPane();
         consoleTextArea = new javax.swing.JTextArea();
         clearConsoleButton = new javax.swing.JButton();
+        baudRateButton = new javax.swing.JButton();
+        baudRateTextField = new javax.swing.JTextField();
         exitButton = new javax.swing.JButton();
         addMP3DirectoryButton = new javax.swing.JButton();
         createButton = new javax.swing.JButton();
@@ -349,7 +357,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         mp3CountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 0.7.2 (10/11/2021)");
+        setTitle("CassetteFlow v 0.7.5 (10/12/2021)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 
@@ -1024,24 +1032,39 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
             }
         });
 
+        baudRateButton.setText("Set Minimodem Baud Rate");
+        baudRateButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                baudRateButtonActionPerformed(evt);
+            }
+        });
+
+        baudRateTextField.setText("1200");
+
         javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
         jPanel7.setLayout(jPanel7Layout);
         jPanel7Layout.setHorizontalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 922, Short.MAX_VALUE)
             .addGroup(jPanel7Layout.createSequentialGroup()
-                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(baudRateButton)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(baudRateTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(clearConsoleButton))
         );
         jPanel7Layout.setVerticalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel7Layout.createSequentialGroup()
-                .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 387, Short.MAX_VALUE)
+                .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 386, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(clearConsoleButton))
+                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(clearConsoleButton)
+                    .addComponent(baudRateButton)
+                    .addComponent(baudRateTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
         );
 
-        jTabbedPane1.addTab("Output Console", jPanel7);
+        jTabbedPane1.addTab("Setup / Output Console", jPanel7);
 
         exitButton.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         exitButton.setText("Exit");
@@ -1873,10 +1896,20 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         realTimeEncoding = true;
         directEncode(false, true);
     }//GEN-LAST:event_realtimeEncodeButtonActionPerformed
+
+    private void baudRateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_baudRateButtonActionPerformed
+        try {
+            String baud = baudRateTextField.getText().trim();
+            Integer.parseInt(baud);
+            cassetteFlow.BAUDE_RATE = baud;
+        } catch(NumberFormatException nfe) { }
+    }//GEN-LAST:event_baudRateButtonActionPerformed
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addMP3DirectoryButton;
     private javax.swing.JButton addMP3ToTapeListButton;
+    private javax.swing.JButton baudRateButton;
+    private javax.swing.JTextField baudRateTextField;
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JButton clearConsoleButton;
     private javax.swing.JButton clearMP3ListButton;
