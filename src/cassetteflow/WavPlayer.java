@@ -1,14 +1,25 @@
 package cassetteflow;
 
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.DataLine;
 import javax.sound.sampled.Line;
+import javax.sound.sampled.LineEvent;
+import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.Mixer;
 import javax.sound.sampled.Mixer.Info;
 import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.TargetDataLine;
+import javax.sound.sampled.UnsupportedAudioFileException;
 
 
 /**
@@ -25,24 +36,164 @@ public class WavPlayer {
     // Param for capture (output) device.
     public static Line.Info captureLine = new Line.Info(TargetDataLine.class);
     
+    // The sound clip object
+    private Clip sound;
+    
+    // size of the byte buffer used to read/write the audio stream
+    private static final int BUFFER_SIZE = 4096;
+    
+    // used to stop the playback of long wav file
+    private boolean stopPlay;
+    
+    /**
+     * Method to play a wave file uning the default out
+     * 
+     * @param filename
+     * @throws LineUnavailableException
+     * @throws IOException
+     * @throws InterruptedException
+     * @throws UnsupportedAudioFileException 
+     */
+    public void playWithDefaultOutput(String filename) throws LineUnavailableException, IOException, InterruptedException, UnsupportedAudioFileException {
+        CountDownLatch syncLatch = new CountDownLatch(1);
+
+        AudioInputStream inputStream = AudioSystem.getAudioInputStream(new File(filename));
+        AudioFormat format = inputStream.getFormat();
+        DataLine.Info info = new DataLine.Info(Clip.class, format);
+
+        sound = (Clip) AudioSystem.getLine(info);
+
+        // Listener which allow method return once sound is completed
+        sound.addLineListener(e -> {
+            if (e.getType() == LineEvent.Type.STOP) {
+                sound.close();
+                syncLatch.countDown();
+            }
+        });
+
+        sound.open(inputStream);
+        sound.start();
+
+        syncLatch.await();
+    }
+    
+    /**
+     * Play a sound using the specific output ad wait for the sound to finish playing
+     * https://stackoverflow.com/questions/557903/how-can-i-wait-for-a-java-sound-clip-to-finish-playing-back
+     * 
+     * @param filename
+     * @param info
+     * @throws UnsupportedAudioFileException
+     * @throws IOException
+     * @throws LineUnavailableException
+     * @throws InterruptedException 
+     */
+    public void play(String filename, Mixer.Info info) throws UnsupportedAudioFileException, IOException, LineUnavailableException, InterruptedException {
+        CountDownLatch syncLatch = new CountDownLatch(1);
+        
+        AudioInputStream inputStream = AudioSystem.getAudioInputStream(new File(filename));
+        System.out.println(String.format("Playing through [%s] \nDescription [%s]\n\n", info.getName(), info.getDescription()));
+    
+        sound = AudioSystem.getClip(info);
+        
+        // Listener which allow method return once sound is completed
+        sound.addLineListener(e -> {
+            if (e.getType() == LineEvent.Type.STOP) {
+                sound.close();
+                syncLatch.countDown();
+            }
+        });
+        
+        sound.open(inputStream);
+        sound.start();
+        
+        syncLatch.await();   
+    }
+    
+    /**
+     * Plays a big wav by streaming it from the disk instead of using Clip
+     * instead of using clip
+     * 
+     * https://www.codejava.net/coding/how-to-play-back-audio-in-java-with-examples
+     * 
+     * @param wavFile
+     * @param info 
+     * @throws javax.sound.sampled.UnsupportedAudioFileException 
+     * @throws java.io.IOException 
+     * @throws javax.sound.sampled.LineUnavailableException 
+     */
+    public void playBigWav(File wavFile, Mixer.Info info) throws UnsupportedAudioFileException, IOException, LineUnavailableException {
+        stopPlay = false;
+        
+        AudioInputStream audioStream = AudioSystem.getAudioInputStream(wavFile);
+        AudioFormat format = audioStream.getFormat();
+
+        SourceDataLine audioLine = AudioSystem.getSourceDataLine(format, info);
+
+        audioLine.open(format);
+        audioLine.start();
+
+        System.out.println("Playback started ...");
+
+        byte[] bytesBuffer = new byte[BUFFER_SIZE];
+        int bytesRead = -1;
+
+        while ((bytesRead = audioStream.read(bytesBuffer)) != -1) {
+            audioLine.write(bytesBuffer, 0, bytesRead);
+            
+            if(stopPlay) {
+                System.out.println("Playback stopped.");
+                break;
+            }
+        }
+
+        audioLine.drain();
+        audioLine.close();
+        audioStream.close();
+
+        System.out.println("Playback completed.");
+    }
+    
+    /**
+     * Get the audio output devices
+     * 
+     * @return 
+     */
+    public static HashMap<String, Mixer.Info> getOutputDevices() {
+        return getDevices(playbackLine);
+    }
+    
     /**
      * Get either the playback or listening devices 
      * @param supportedLine
      * @return 
      */
-    public List<Info> getDevices(final Line.Info supportedLine) {
-        List<Info> result = new ArrayList();
-
+    public static HashMap<String, Mixer.Info> getDevices(final Line.Info supportedLine) {
+        HashMap<String, Mixer.Info> result = new HashMap<>();
+        //result.put("Default", null);
+        
         Info[] infoList = AudioSystem.getMixerInfo();
-        for (Info info : infoList) {
+        for (Mixer.Info info : infoList) {
             Mixer mixer = AudioSystem.getMixer(info);
             if (mixer.isLineSupported(supportedLine)) {
-                result.add(info);
-                System.out.println(String.format("Name [%s] \n Description [%s]\n\n", info.getName(), info.getDescription()));
+                String key = info.getName();
+                result.put(key, info);
+                System.out.println(String.format("Name [%s] \nDescription [%s]\n", info.getName(), info.getDescription()));
             }
         }
 
         return result;
+    }
+    
+    /**
+     * Stop the wav playback
+     */
+    public void stop() {
+        stopPlay = true;
+        
+        if(sound != null) {
+            sound.stop();
+        }
     }
     
     /**
@@ -51,7 +202,15 @@ public class WavPlayer {
      * @param args 
      */
     public static void main(String[] args) {
-       WavPlayer wavPlayer = new WavPlayer();
-       wavPlayer.getDevices(playbackLine);
+        try {
+            WavPlayer wavPlayer = new WavPlayer();
+            HashMap<String, Mixer.Info> mixerOutput = WavPlayer.getDevices(playbackLine);
+            
+            //String wavFile = "‪C:\\mp3files\\TapeFiles\\track_1-1200.wav";
+            String wavFilename = "C:\\mp3files\\TapeFiles\\Tape_0U90A-1200.wav";
+            wavPlayer.playBigWav(new File(wavFilename), mixerOutput.get("Speakers (2- USB Audio Device)"));
+        } catch (Exception ex) {
+            Logger.getLogger(WavPlayer.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }

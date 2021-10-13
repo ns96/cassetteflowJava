@@ -7,14 +7,17 @@ package cassetteflow;
 
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
+import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.sound.sampled.Mixer;
 import javax.swing.DefaultListModel;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -22,6 +25,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import javazoom.jl.player.Player;
 
 /**
@@ -54,6 +58,15 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
     
     // used to check to see we are using minimodem to do realtime encoding
     private boolean realTimeEncoding = false;
+       
+    // keep track of the currenet seconds for long running task
+    private int encodeSeconds;
+    
+    // holds the resently encoded wav files if any
+    private File[] wavFiles;
+    
+    // stores the audio output channels
+    HashMap<String, Mixer.Info> mixerOutput;
     
     /**
      * Creates new form CassetteFlowFrame
@@ -68,8 +81,19 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         
         model = new DefaultListModel();
         sideBJList.setModel(model);
+        
+        // add the audio outputs to the combo box
+        audioOutputComboBox.removeAllItems();
+        
+        mixerOutput = WavPlayer.getOutputDevices();
+        for(String key: mixerOutput.keySet()) {
+            audioOutputComboBox.addItem(key);
+        }
     }
     
+    /**
+     * Used to put the program in full screen
+     */
     public void initFullScreen() {
        GraphicsEnvironment env = GraphicsEnvironment
                 .getLocalGraphicsEnvironment();
@@ -200,31 +224,63 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         // only continue if we have a valid tape ID
         if(tapeID == null) return;
         
+        // set the wavFiles array to null
+        wavFiles = null;
+        
         encodeProgressBar.setIndeterminate(true);
         createButton.setEnabled(false);
         realtimeEncodeButton.setEnabled(false);
+        playEncodedWavButton.setEnabled(false);
         createDownloadButton.setEnabled(false);
+        
+        // get the correct label to update
+        final JLabel infoLabel = (side == 0)? trackALabel : trackBLabel;
+        
+        // start the swing timer to show how long the encode is running for
+        encodeSeconds = 0;
+        final Timer timer = new Timer(1000, (ActionEvent e) -> {
+            encodeSeconds++;
+            String timeString = cassetteFlow.getTimeString(encodeSeconds);
+            infoLabel.setText("Encode Timer: " + timeString);
+        });
+        timer.start();
         
         final JFrame frame = this;
         Thread thread = new Thread("Encode Thread") {
             public void run() {
                 try {
                     if(realTime) {
+                        Mixer.Info soundOutput = mixerOutput.get(audioOutputComboBox.getSelectedItem());
+                        
+                        boolean completed;
                         if(side == 0) {
-                            cassetteFlow.realTimeEncode(tapeID + "A", sideAList, muteTime, forDownload, saveDirectoryName);
-                            cassetteFlow.addToTapeDB(tapeID, sideAList, null, true);
+                            completed = cassetteFlow.realTimeEncode(tapeID + "A", sideAList, muteTime, forDownload, saveDirectoryName, soundOutput);
+                            
+                            if(completed) {
+                                cassetteFlow.addToTapeDB(tapeID, sideAList, null, true);
+                            }
                         } else if(side == 1) {
-                            cassetteFlow.realTimeEncode(tapeID + "B", sideBList, muteTime, forDownload, saveDirectoryName);
-                            cassetteFlow.addToTapeDB(tapeID, null, sideBList, true);
+                            completed = cassetteFlow.realTimeEncode(tapeID + "B", sideBList, muteTime, forDownload, saveDirectoryName, soundOutput);
+                            
+                            if(completed) {
+                                cassetteFlow.addToTapeDB(tapeID, null, sideBList, true);
+                            }
                         }
                     } else {
-                        cassetteFlow.directEncode(saveDirectoryName, tapeID, sideAList, sideBList, muteTime, forDownload);
+                        // just generate the text and wav files
+                        wavFiles = cassetteFlow.directEncode(saveDirectoryName, tapeID, sideAList, sideBList, muteTime, forDownload);
                     }
+                    
+                    // stop the timer
+                    timer.stop();
+                    infoLabel.setText("");
                 } catch (Exception ex) {
                     String message = "Error Encoding With Minimodem";
                     JOptionPane.showMessageDialog(frame, message, "Minimodem Error", JOptionPane.ERROR_MESSAGE);
 
                     Logger.getLogger(CassetteFlowFrame.class.getName()).log(Level.SEVERE, null, ex);
+                    
+                    wavFiles = null;
                     setEncodingDone();
                 }
             }
@@ -237,6 +293,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         createButton.setEnabled(true);
         createDownloadButton.setEnabled(true);
         realtimeEncodeButton.setEnabled(true);
+        playEncodedWavButton.setEnabled(true);
     }
     
     /**
@@ -350,14 +407,17 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         clearConsoleButton = new javax.swing.JButton();
         baudRateButton = new javax.swing.JButton();
         baudRateTextField = new javax.swing.JTextField();
+        jLabel8 = new javax.swing.JLabel();
+        audioOutputComboBox = new javax.swing.JComboBox<>();
         exitButton = new javax.swing.JButton();
         addMP3DirectoryButton = new javax.swing.JButton();
         createButton = new javax.swing.JButton();
         createDownloadButton = new javax.swing.JButton();
         mp3CountLabel = new javax.swing.JLabel();
+        playEncodedWavButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 0.7.5 (10/12/2021)");
+        setTitle("CassetteFlow v 0.7.6 (10/13/2021)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 
@@ -371,8 +431,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
 
         jScrollPane2.setViewportView(sideAJList);
 
+        sideALabel.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
         sideALabel.setText("Side A track Info goes here ...");
 
+        trackALabel.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        trackALabel.setForeground(java.awt.Color.red);
         trackALabel.setText(" ");
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
@@ -381,9 +444,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 586, Short.MAX_VALUE)
             .addGroup(jPanel3Layout.createSequentialGroup()
-                .addComponent(sideALabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(trackALabel, javax.swing.GroupLayout.PREFERRED_SIZE, 126, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(sideALabel, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(trackALabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -400,8 +463,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
 
         jScrollPane3.setViewportView(sideBJList);
 
+        sideBLabel.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
         sideBLabel.setText("Side B track Info goes here ...");
 
+        trackBLabel.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        trackBLabel.setForeground(java.awt.Color.red);
         trackBLabel.setText(" ");
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
@@ -410,9 +476,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 586, Short.MAX_VALUE)
             .addGroup(jPanel4Layout.createSequentialGroup()
-                .addComponent(sideBLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(trackBLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(sideBLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(trackBLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1041,6 +1107,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
 
         baudRateTextField.setText("1200");
 
+        jLabel8.setText("Audio Output: ");
+
+        audioOutputComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Default" }));
+
         javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
         jPanel7.setLayout(jPanel7Layout);
         jPanel7Layout.setHorizontalGroup(
@@ -1050,6 +1120,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
                 .addComponent(baudRateButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(baudRateTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jLabel8)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(audioOutputComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(clearConsoleButton))
         );
@@ -1061,7 +1135,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
                 .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(clearConsoleButton)
                     .addComponent(baudRateButton)
-                    .addComponent(baudRateTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(baudRateTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel8)
+                    .addComponent(audioOutputComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
         );
 
         jTabbedPane1.addTab("Setup / Output Console", jPanel7);
@@ -1083,7 +1159,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         });
 
         createButton.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        createButton.setText("Create Input Files");
+        createButton.setText("Encode");
         createButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 createButtonActionPerformed(evt);
@@ -1091,7 +1167,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         });
 
         createDownloadButton.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        createDownloadButton.setText("Create HTTP Input Files");
+        createDownloadButton.setText("Encode HTTP");
         createDownloadButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 createDownloadButtonActionPerformed(evt);
@@ -1100,6 +1176,14 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
 
         mp3CountLabel.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         mp3CountLabel.setText("0 MP3s");
+
+        playEncodedWavButton.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        playEncodedWavButton.setText("Play Encoded");
+        playEncodedWavButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                playEncodedWavButtonActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -1110,10 +1194,12 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
                 .addComponent(addMP3DirectoryButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(mp3CountLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGap(18, 18, 18)
+                .addGap(109, 109, 109)
                 .addComponent(createDownloadButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(createButton)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(playEncodedWavButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(exitButton))
         );
@@ -1127,7 +1213,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
                     .addComponent(createDownloadButton)
                     .addComponent(createButton)
                     .addComponent(exitButton)
-                    .addComponent(mp3CountLabel)))
+                    .addComponent(mp3CountLabel)
+                    .addComponent(playEncodedWavButton)))
         );
 
         setBounds(0, 0, 943, 535);
@@ -1891,7 +1978,12 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         String response = lyraTConnect.stop();
         lyraTConsoleTextArea.append("Stopping encoding/playing >> " + response + "\n");
     }//GEN-LAST:event_lyraTStopButtonActionPerformed
-
+    
+    /**
+     * Do realtime encoding of data
+     * 
+     * @param evt 
+     */
     private void realtimeEncodeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_realtimeEncodeButtonActionPerformed
         realTimeEncoding = true;
         directEncode(false, true);
@@ -1905,9 +1997,74 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         } catch(NumberFormatException nfe) { }
     }//GEN-LAST:event_baudRateButtonActionPerformed
     
+    /**
+     * Directly playback generated encode wav file
+     * @param evt 
+     */
+    private void playEncodedWavButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_playEncodedWavButtonActionPerformed
+        if(wavFiles != null) {
+            realTimeEncoding = true;
+            int side = tapeJTabbedPane.getSelectedIndex();
+            
+            encodeProgressBar.setIndeterminate(true);
+            createButton.setEnabled(false);
+            realtimeEncodeButton.setEnabled(false);
+            playEncodedWavButton.setEnabled(false);
+            createDownloadButton.setEnabled(false);
+            
+            // get the correct label to update
+            final JLabel infoLabel = (side == 0) ? trackALabel : trackBLabel;
+
+            // start the swing timer to show how long the playback is running for
+            encodeSeconds = 0;
+            final Timer timer = new Timer(1000, (ActionEvent e) -> {
+                encodeSeconds++;
+                String timeString = cassetteFlow.getTimeString(encodeSeconds);
+                infoLabel.setText("Playback Timer: " + timeString);
+            });
+            timer.start();
+
+            final JFrame frame = this;
+            Thread thread = new Thread("Playback Thread") {
+                @Override
+                public void run() {
+                    File wavFile = null;
+                    
+                    try {
+                        Mixer.Info soundOutput = mixerOutput.get(audioOutputComboBox.getSelectedItem().toString());
+                        
+                        if (side == 0 && wavFiles[side] != null) {
+                            wavFile = wavFiles[side];
+                            cassetteFlow.playEncodedWav(wavFile, soundOutput);
+                        } else if (side == 1 && wavFiles[side] != null) {
+                            wavFile = wavFiles[side];
+                            cassetteFlow.playEncodedWav(wavFile, soundOutput);
+                        }
+
+                        // stop the timer
+                        timer.stop();
+                        infoLabel.setText("");
+                    } catch (Exception ex) {
+                        String message = "Error Playing back Encoded Wav file: " + wavFile.getName();
+                        JOptionPane.showMessageDialog(frame, message, "Minimodem Error", JOptionPane.ERROR_MESSAGE);
+
+                        Logger.getLogger(CassetteFlowFrame.class.getName()).log(Level.SEVERE, null, ex);
+
+                        setEncodingDone();
+                    }
+                }
+            };
+            thread.start();
+        } else {
+            String message = "No Encoded Wav Files Found ...";
+            JOptionPane.showMessageDialog(this, message, "Playback Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_playEncodedWavButtonActionPerformed
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addMP3DirectoryButton;
     private javax.swing.JButton addMP3ToTapeListButton;
+    private javax.swing.JComboBox<String> audioOutputComboBox;
     private javax.swing.JButton baudRateButton;
     private javax.swing.JTextField baudRateTextField;
     private javax.swing.ButtonGroup buttonGroup1;
@@ -1930,6 +2087,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
@@ -1972,6 +2130,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
     private javax.swing.JList<String> mp3JList;
     private javax.swing.JTextField muteJTextField;
     private javax.swing.JButton playButton;
+    private javax.swing.JButton playEncodedWavButton;
     private javax.swing.JButton playSideButton;
     private javax.swing.JTextArea playbackInfoTextArea;
     private javax.swing.JButton realtimeEncodeButton;

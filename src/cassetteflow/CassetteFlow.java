@@ -24,6 +24,9 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.LineEvent;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.Mixer;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.SwingUtilities;
 import javazoom.jl.decoder.Bitstream;
 import javazoom.jl.decoder.Header;
@@ -93,6 +96,9 @@ public class CassetteFlow {
     
     // used when doing realtime encoding to keep track total track time
     private int timeTotal = 0;
+    
+    // The wav file player
+    private WavPlayer wavPlayer;
     
     // debug flag
     private static final boolean DEBUG = false;
@@ -520,32 +526,42 @@ public class CassetteFlow {
      * @param sideB
      * @param muteTime
      * @param forDownload 
+     * @return  The encoded file objects
      */
-    public void directEncode(String saveDirectoryName, String tapeID, ArrayList<MP3Info> sideA, 
+    public File[] directEncode(String saveDirectoryName, String tapeID, ArrayList<MP3Info> sideA, 
             ArrayList<MP3Info> sideB, int muteTime, boolean forDownload) throws IOException {
         
+        // list to stored array list
+        File[] wavFiles = new File[2];
+        wavFiles[0] = null;
+        wavFiles[1] = null;
+        
         File file;
-        File waveFile;
+        File wavFile;
         String data;
         
         if(sideA != null && !sideA.isEmpty()) {
             file = new File(saveDirectoryName + File.separator + "Tape_" + tapeID + "A" + ".txt");
-            waveFile = new File(saveDirectoryName + File.separator + "Tape_" + tapeID + "A-" + BAUDE_RATE + ".wav");
+            wavFile = new File(saveDirectoryName + File.separator + "Tape_" + tapeID + "A-" + BAUDE_RATE + ".wav");
             data = createInputFileForSide(file, tapeID + "A", sideA, muteTime, forDownload);
-            runMinimodem(waveFile, data);
+            runMinimodem(wavFile, data);
+            wavFiles[0] = wavFile;
         }
         
         if(sideB != null && !sideB.isEmpty()) {
             file = new File(saveDirectoryName + File.separator + "Tape_" + tapeID + "B" + ".txt");
-            waveFile = new File(saveDirectoryName + File.separator + "Tape_" + tapeID + "B-" + BAUDE_RATE + ".wav");
+            wavFile = new File(saveDirectoryName + File.separator + "Tape_" + tapeID + "B-" + BAUDE_RATE + ".wav");
             data = createInputFileForSide(file, tapeID + "B", sideB, muteTime, forDownload);
-            runMinimodem(waveFile, data);
+            runMinimodem(wavFile, data);
+            wavFiles[1] = wavFile;
         }
         
         // save to the tape data base
         addToTapeDB(tapeID, sideA, sideB, true);
         
         cassetteFlowFrame.setEncodingDone();
+        
+        return wavFiles;
     }
     
     /**
@@ -594,15 +610,21 @@ public class CassetteFlow {
      * @param muteTime
      * @param forDownload Currently not used
      * @param saveDirectoryName
+     * @param soundOutput
+     * @return Indicate if encode completed or was stopped
      */
-    public void realTimeEncode(String tapeID, ArrayList<MP3Info> sideN, int muteTime, 
-            boolean forDownload, String saveDirectoryName) throws IOException, InterruptedException {
+    public boolean realTimeEncode(String tapeID, ArrayList<MP3Info> sideN, int muteTime, 
+            boolean forDownload, String saveDirectoryName, Mixer.Info soundOutput) throws IOException, InterruptedException {
+        
+        boolean completed = true;
         stopEncoding = false;
         timeTotal = 0;
         
         int mp3Count = 1;
         
         String message;
+        
+        wavPlayer = new WavPlayer();
         
         for(MP3Info mp3Info: sideN) {
             String data = createInputDataForMP3(tapeID, mp3Info, mp3Count);
@@ -635,39 +657,20 @@ public class CassetteFlow {
             System.out.println(message); 
             
             // playback the wav file and wait for it to be done
-            // https://stackoverflow.com/questions/557903/how-can-i-wait-for-a-java-sound-clip-to-finish-playing-back
             message = "\nPlaying Wav File: " + filename;
             cassetteFlowFrame.printToConsole(message, true);
             System.out.println(message);
             
-            /**/
-            CountDownLatch syncLatch = new CountDownLatch(1);
             try {
-                AudioInputStream inputStream = AudioSystem.getAudioInputStream(new File(filename));
-                AudioFormat format = inputStream.getFormat();
-                DataLine.Info info = new DataLine.Info(Clip.class, format);
-                
-                final Clip sound = (Clip)AudioSystem.getLine(info); 
-                
-                // Listener which allow method return once sound is completed
-                sound.addLineListener(e -> {
-                    if (e.getType() == LineEvent.Type.STOP) {
-                        sound.close();
-                        syncLatch.countDown();
-                    }
-                });
-                
-                sound.open(inputStream);
-                sound.start();
-            } catch(Exception e) {
+                wavPlayer.play(filename, soundOutput);
+            } catch(IOException | InterruptedException | LineUnavailableException | UnsupportedAudioFileException e) {
                 message = "Error Playing Wav: " + filename + "\n" + e.getMessage();
                 cassetteFlowFrame.printToConsole(message, true);
                 System.out.println(message);
                 e.printStackTrace();
+                completed = false;
                 break;
             }
-            syncLatch.await();
-            //*/
             
             // TO-DO -- Delete the Wav file here
             
@@ -675,6 +678,7 @@ public class CassetteFlow {
                 message = "\nReal Time Encoding Stopped ...";
                 cassetteFlowFrame.printToConsole(message, true);
                 System.out.println(message);
+                completed = false;
                 break;
             }
             
@@ -704,6 +708,55 @@ public class CassetteFlow {
         System.out.println(message);
         
         cassetteFlowFrame.setEncodingDone();
+        
+        return completed;
+    }
+    
+    /**
+     * Play the encoded wav file
+     * 
+     * @param wavFile
+     * @param soundOutput
+     * @return indicate if we stopped it prematurely
+     * 
+     * @throws IOException
+     * @throws InterruptedException 
+     */
+    public boolean playEncodedWav(File wavFile, Mixer.Info soundOutput) throws IOException, InterruptedException {
+        boolean completed = true;
+        stopEncoding = false;
+        
+        String message = "Playing Encoded Wav: " + wavFile.getName();
+        cassetteFlowFrame.printToConsole(message, false);
+        System.out.println("\n" + message);
+        
+        wavPlayer = new WavPlayer();
+        try {
+            wavPlayer.playBigWav(wavFile, soundOutput);
+        } catch (IOException | LineUnavailableException | UnsupportedAudioFileException e) {
+            message = "Error Playing Wav: " + wavFile.getName() + "\n" + e.getMessage();
+            cassetteFlowFrame.printToConsole(message, true);
+            System.out.println(message);
+            
+            e.printStackTrace();
+            completed = false;
+        }
+
+        if (stopEncoding) {
+            message = "\nPlaying of Encoded Wav Stopped ...";
+            cassetteFlowFrame.printToConsole(message, true);
+            System.out.println(message);
+            completed = false;
+        }
+
+        // indicate that the encoding is done
+        message = "\nPlaying of Encoded of Wav Done ...";
+        cassetteFlowFrame.printToConsole(message, true);
+        System.out.println(message);
+        
+        cassetteFlowFrame.setEncodingDone();
+        
+        return completed;
     }
     
     /**
@@ -740,6 +793,11 @@ public class CassetteFlow {
      */
     void stopEncoding() {
         stopEncoding = true;
+        
+        if(wavPlayer != null) {
+            wavPlayer.stop();
+            wavPlayer = null;
+        }
     }
     
     public ArrayList<MP3Info> getRandomMP3List(int maxTime, int muteTime) {
