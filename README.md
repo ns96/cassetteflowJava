@@ -24,7 +24,7 @@ pretty good, even close to CD quality.
 ![Main GUI 2](gui02.png)
 ![Data Flow 1](dataflow01.png)
 ![Data Flow 2](dataflow02.png)
-![LyraT](lyraT01.png)
+![LyraT](LyraT01.png)
 
 ## Installation and Running
 Since this project is in very early development, I haven't put together a 
