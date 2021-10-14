@@ -170,7 +170,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
      */
     private void addMP3InfoToJList() {
         DefaultListModel model = (DefaultListModel) mp3JList.getModel();
-
+        
+        // sort the list of mp3s before displaying
+        Collections.sort(cassetteFlow.mp3InfoList, (o1, o2) -> o1.toString().compareTo(o2.toString()));
+        
         for (MP3Info mp3Info: cassetteFlow.mp3InfoList) {
             try {
                 System.out.println("MP3 File: " + mp3Info);
@@ -213,6 +216,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
     
     /**
      * A way to directly encode the data directly to a wav file or in real time
+     * which involves playing back the wav file after creation.
      */
     private void directEncode(boolean forDownload, boolean realTime) {
         int side = tapeJTabbedPane.getSelectedIndex();
@@ -242,6 +246,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
             encodeSeconds++;
             String timeString = cassetteFlow.getTimeString(encodeSeconds);
             infoLabel.setText("Encode Timer: " + timeString);
+            
+            if(encodeSeconds % 60 == 0) {
+                consoleTextArea.append(".");
+            }
         });
         timer.start();
         
@@ -417,7 +425,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         playEncodedWavButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 0.7.6 (10/13/2021)");
+        setTitle("CassetteFlow v 0.7.8 (10/14/2021)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 
@@ -444,9 +452,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 586, Short.MAX_VALUE)
             .addGroup(jPanel3Layout.createSequentialGroup()
-                .addComponent(sideALabel, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(trackALabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(sideALabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(trackALabel, javax.swing.GroupLayout.PREFERRED_SIZE, 201, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -476,9 +484,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 586, Short.MAX_VALUE)
             .addGroup(jPanel4Layout.createSequentialGroup()
-                .addComponent(sideBLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(sideBLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(trackBLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(trackBLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)

@@ -662,8 +662,9 @@ public class CassetteFlow {
             System.out.println(message);
             
             try {
-                wavPlayer.play(filename, soundOutput);
-            } catch(IOException | InterruptedException | LineUnavailableException | UnsupportedAudioFileException e) {
+                File wavFile = new File(filename);
+                wavPlayer.playBigWav(wavFile, soundOutput);
+            } catch(IOException | LineUnavailableException | UnsupportedAudioFileException e) {
                 message = "Error Playing Wav: " + filename + "\n" + e.getMessage();
                 cassetteFlowFrame.printToConsole(message, true);
                 System.out.println(message);
