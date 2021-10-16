@@ -15,22 +15,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Properties;
-import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
-import javax.sound.sampled.DataLine;
-import javax.sound.sampled.LineEvent;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.Mixer;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.SwingUtilities;
 import javazoom.jl.decoder.Bitstream;
 import javazoom.jl.decoder.Header;
-import org.apache.commons.codec.digest.DigestUtils;
 
 /**
  * A simple program for creating input files for the cassette flow encoding
@@ -71,10 +63,10 @@ public class CassetteFlow {
     public static String TAPE_DB_FILENAME = MP3_DIR_NAME + File.separator + TAPE_FILE_DIR_NAME + File.separator + "tapeDB.txt";   
     
     // the location of mp3 files on the server
-    public String downloadServerRoot = "http://192.168.1.14/~pi/mp3/";
+    public static String DOWNLOAD_SERVER = "http://192.168.1.14/~pi/mp3/";
     
     // The IP address of the LyraT host
-    public String LYRA_T_HOST = "http://127.0.0.1:8192/";
+    public static String LYRA_T_HOST = "http://127.0.0.1:8192/";
     
     public static String BAUDE_RATE = "1200";
     
@@ -123,9 +115,11 @@ public class CassetteFlow {
         try (FileReader fileReader = new FileReader(propertiesFilename)) {
             properties.load(fileReader);
             
-            downloadServerRoot = properties.getProperty("download.server");
+            DOWNLOAD_SERVER = properties.getProperty("download.server");
             LYRA_T_HOST = properties.getProperty("lyraT.host");
             BAUDE_RATE = properties.getProperty("baude.rate", "1200");
+            LOG_FILE_NAME = properties.getProperty("minimodem.log.file", "");
+            
             setDefaultMP3Directory(properties.getProperty("mp3.directory"));
         } catch (IOException e) {
             String mp3Directory = System.getProperty("user.home");
@@ -139,9 +133,10 @@ public class CassetteFlow {
     public void saveProperties() {
         try (FileWriter output = new FileWriter(propertiesFilename)) {
             properties.put("mp3.directory", MP3_DIR_NAME);
-            properties.put("download.server", downloadServerRoot);
+            properties.put("download.server", DOWNLOAD_SERVER);
             properties.put("lyraT.host", LYRA_T_HOST);
             properties.put("baud.rate", BAUDE_RATE);
+            properties.put("minimodem.log.file", LOG_FILE_NAME);
             
             properties.store(output, "CassetteFlow Defaults");
         } catch (IOException e) {
@@ -215,7 +210,7 @@ public class CassetteFlow {
 
             String id = sa[0];
             int playtime = Integer.parseInt(sa[1]);
-            String playtimeString = getTimeString(playtime);
+            String playtimeString = CassetteFlowUtil.getTimeString(playtime);
             File file = new File(sa[2]);
 
             MP3Info mp3Info = new MP3Info(file, id, playtime, playtimeString);
@@ -307,8 +302,8 @@ public class CassetteFlow {
         
         for (String line : data.split("\n")) {
             String[] sa = line.split("\t");
-            String key = "LyraT_" + sa[0];
-
+            String key = sa[0];
+            
             ArrayList<String> mp3Ids = new ArrayList<>();
             for (int i = 1; i < sa.length; i++) {
                 mp3Ids.add(sa[i]);
@@ -447,7 +442,7 @@ public class CassetteFlow {
         // if this is for a download file, specify that in the first 10 seconds of data
         // when this text is decoded the mp3s will be downloaded
         if(forDownload) {
-            tapeHashCode = get10CharacterHash(tapeID + sideN.toString());
+            tapeHashCode = CassetteFlowUtil.get10CharacterHash(tapeID + sideN.toString());
             String filename = inputFile.getParent() + File.separator + "Tape_" + tapeHashCode + ".tsv";
             
             // add the header to the download file indicating the TapeID
@@ -627,13 +622,13 @@ public class CassetteFlow {
         wavPlayer = new WavPlayer();
         
         for(MP3Info mp3Info: sideN) {
+            long startTime = System.currentTimeMillis();
+            
             String data = createInputDataForMP3(tapeID, mp3Info, mp3Count);
             
             message = "Minimodem Encoding: " + tapeID + " Track [ " + mp3Count + " ] ( " + mp3Info.getLengthAsTime() + " )";
             cassetteFlowFrame.printToConsole(message, false);
             System.out.println("\n" + message);
-            
-            long startTime = System.currentTimeMillis();
             
             String filename = saveDirectoryName + File.separator + "track_" + mp3Count + "-" + BAUDE_RATE + ".wav";
             String command = "minimodem --tx " + BAUDE_RATE + " -f " + filename;
@@ -646,8 +641,8 @@ public class CassetteFlow {
             process.destroy();
             
             long endTime = System.currentTimeMillis();
-            
             long encodeTime = endTime - startTime;
+            
             message = "Minimodem Encode Time: " + encodeTime + " milliseconds";
             cassetteFlowFrame.printToConsole(message, true);
             System.out.println(message);
@@ -683,9 +678,6 @@ public class CassetteFlow {
                 break;
             }
             
-            // add the mute delay to total time
-            timeTotal += muteTime;
-            
             // increment mp3Count
             mp3Count++;
             
@@ -699,7 +691,10 @@ public class CassetteFlow {
             int delay = muteTime*1000 - (int)encodeTime;
             
             if(delay > 0) {
+                timeTotal += muteTime;
                 Thread.sleep(delay);
+            } else {
+                timeTotal += encodeTime;
             }
         }
         
@@ -766,14 +761,25 @@ public class CassetteFlow {
      * @param mp3Info
      * @param mp3Count
      * @return
-     * @throws IOException 
      */
     public String createInputDataForMP3(String tapeID, MP3Info mp3Info, int mp3Count) {
         StringBuilder builder = new StringBuilder();
 
         String trackString = String.format("%02d", mp3Count);
         String mp3Id = tapeID + "_" + trackString + "_" + mp3Info.getHash10C();
+        
+        // add a 1 second mute record to allow loading of mp3 correctly?
+        for (int i = 0; i < 1; i++) {
+            timeTotal += 1;
+            String timeTotalString = String.format("%04d", timeTotal);
+            String line = mp3Id + "_000M_" + timeTotalString + "\n";
 
+            for (int j = 0; j < replicate; j++) { // replicate record N times
+                builder.append(line);
+            }
+        }
+        
+        // add line records for each second of sound
         for (int i = 0; i < mp3Info.getLength(); i++) {
             String timeString = String.format("%04d", i);
             String timeTotalString = String.format("%04d", timeTotal);
@@ -827,7 +833,7 @@ public class CassetteFlow {
             }
         }
         
-        System.out.println("\n" + tapeList.size() + " Tracks -- Play Time: " + getTimeString(totalTime));
+        System.out.println("\n" + tapeList.size() + " Tracks -- Play Time: " + CassetteFlowUtil.getTimeString(totalTime));
         
         return tapeList;
     }
@@ -910,9 +916,9 @@ public class CassetteFlow {
      */
     public void addMP3FileToDatabase(File file) {
         String filename = file.getName();
-        String sha10hex = get10CharacterHash(filename);
+        String sha10hex = CassetteFlowUtil.get10CharacterHash(filename);
         int length = getMP3Length(file);
-        String lengthAsTime = getTimeString(length);
+        String lengthAsTime = CassetteFlowUtil.getTimeString(length);
 
         MP3Info mp3Info = new MP3Info(file, sha10hex, length, lengthAsTime);
         mp3InfoList.add(mp3Info);
@@ -920,28 +926,16 @@ public class CassetteFlow {
 
         System.out.println(sha10hex + " -- " + file.getName() + " : " + length);
     }
-    
-    public String get10CharacterHash(String string) {
-        String sha256hex = DigestUtils.sha256Hex(string);
-        return sha256hex.substring(0, 10);
-    }
-    
-    public String getTimeString(int totalSecs) {
-        int hours = totalSecs / 3600;
-        int minutes = (totalSecs % 3600) / 60;
-        int seconds = totalSecs % 60;
-
-        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
-    }
-    
+        
     /**
      * Method to set the download server where the mp3 for download are stored
      * 
      * This is predominantly for testing purposes
      * @param url 
      */
-    public void setDownloadServerRoot(String url) {
-        this.downloadServerRoot = url;
+    public void setDownloadServer(String url) {
+        this.DOWNLOAD_SERVER = url;
+        saveProperties();
     }
     
     /**
@@ -962,6 +956,16 @@ public class CassetteFlow {
      */
     public void setLyraTHost(String host) {
         LYRA_T_HOST = host;
+        saveProperties();
+    }
+    
+    /**
+     * Set the minimodem log file
+     * 
+     * @param logfileName 
+     */
+    public void setMinimodemLogFile(String logfileName) {
+        LOG_FILE_NAME = logfileName;
         saveProperties();
     }
     

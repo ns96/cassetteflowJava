@@ -95,13 +95,13 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
      * Used to put the program in full screen
      */
     public void initFullScreen() {
-       GraphicsEnvironment env = GraphicsEnvironment
-                .getLocalGraphicsEnvironment();
+       GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
         GraphicsDevice device = env.getDefaultScreenDevice();
         isFullScreen = device.isFullScreenSupported();
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setUndecorated(isFullScreen);
         setResizable(!isFullScreen);
+        
         if (isFullScreen) {
             // Full-screen mode
             device.setFullScreenWindow(this);
@@ -114,11 +114,18 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         }
     }
     
+    /**
+     * Set the main cassette flow object then show default values in UI
+     * 
+     * @param cassetteFlow 
+     */
     public void setCassetteFlow(CassetteFlow cassetteFlow) {
         this.cassetteFlow = cassetteFlow;
         directoryTextField.setText(CassetteFlow.MP3_DIR_NAME);
         logfileTextField.setText(CassetteFlow.LOG_FILE_NAME);
         baudRateTextField.setText(CassetteFlow.BAUDE_RATE);
+        lyraTHostTextField.setText(CassetteFlow.LYRA_T_HOST);
+        mp3DownloadServerTextField.setText(CassetteFlow.DOWNLOAD_SERVER);
         addMP3InfoToJList();
     }
     
@@ -183,7 +190,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
             }
         }
         
-        mp3CountLabel.setText(cassetteFlow.mp3InfoList.size() + " MP3s files loaded ...");
+        if(lyraTConnect == null) {
+            mp3CountLabel.setText(cassetteFlow.mp3InfoList.size() + " MP3s files loaded ...");
+        } else {
+            mp3CountLabel.setText(cassetteFlow.mp3InfoList.size() + " LyraT files loaded ...");
+        }
     }
     
     /**
@@ -244,10 +255,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         encodeSeconds = 0;
         final Timer timer = new Timer(1000, (ActionEvent e) -> {
             encodeSeconds++;
-            String timeString = cassetteFlow.getTimeString(encodeSeconds);
+            String timeString = CassetteFlowUtil.getTimeString(encodeSeconds);
             infoLabel.setText("Encode Timer: " + timeString);
             
-            if(encodeSeconds % 60 == 0) {
+            if(encodeSeconds % 20 == 0) {
                 consoleTextArea.append(".");
             }
         });
@@ -258,7 +269,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
             public void run() {
                 try {
                     if(realTime) {
-                        Mixer.Info soundOutput = mixerOutput.get(audioOutputComboBox.getSelectedItem());
+                        Mixer.Info soundOutput = mixerOutput.get(audioOutputComboBox.getSelectedItem().toString());
                         
                         boolean completed;
                         if(side == 0) {
@@ -278,10 +289,6 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
                         // just generate the text and wav files
                         wavFiles = cassetteFlow.directEncode(saveDirectoryName, tapeID, sideAList, sideBList, muteTime, forDownload);
                     }
-                    
-                    // stop the timer
-                    timer.stop();
-                    infoLabel.setText("");
                 } catch (Exception ex) {
                     String message = "Error Encoding With Minimodem";
                     JOptionPane.showMessageDialog(frame, message, "Minimodem Error", JOptionPane.ERROR_MESSAGE);
@@ -291,11 +298,53 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
                     wavFiles = null;
                     setEncodingDone();
                 }
+                
+                // stop the timer and clear info label
+                timer.stop();
+                infoLabel.setText("");
             }
         };
         thread.start();
     } 
     
+    /**
+     * Load the information for the tape
+     * 
+     * @param tapeID
+     * @param sideAList
+     * @param sideBList 
+     */
+    void loadTapeInformation(String tapeID, ArrayList<MP3Info> sideA, ArrayList<MP3Info> sideB, int tapeLength) {
+        tapeIDTextField.setText(tapeID);
+        
+        // set the tape type based base on length
+        if(tapeLength < 65) {
+            tapeLengthComboBox.setSelectedIndex(0);
+        } else if(tapeLength < 95) {
+            tapeLengthComboBox.setSelectedIndex(1);
+        } else if(tapeLength < 115) {
+            tapeLengthComboBox.setSelectedIndex(2);
+        } else {
+            tapeLengthComboBox.setSelectedIndex(3);
+        }
+        
+        // now load the mp3s
+        if(sideA != null) {
+            sideAList = sideA;
+            addTracksToTapeJList(sideAList, sideAJList);
+            calculateTotalTime(sideAList, sideALabel);
+        }
+        
+        if(sideB != null) {
+            sideBList = sideB;
+            addTracksToTapeJList(sideBList, sideBJList);
+            calculateTotalTime(sideBList, sideBLabel);
+        }
+    }
+    
+    /**
+     * Used to indicate that the encoding completed
+     */
     public void setEncodingDone() {
         encodeProgressBar.setIndeterminate(false);
         createButton.setEnabled(true);
@@ -417,6 +466,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         baudRateTextField = new javax.swing.JTextField();
         jLabel8 = new javax.swing.JLabel();
         audioOutputComboBox = new javax.swing.JComboBox<>();
+        setMP3DownloadServerButton = new javax.swing.JButton();
+        mp3DownloadServerTextField = new javax.swing.JTextField();
         exitButton = new javax.swing.JButton();
         addMP3DirectoryButton = new javax.swing.JButton();
         createButton = new javax.swing.JButton();
@@ -425,7 +476,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         playEncodedWavButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 0.7.8 (10/14/2021)");
+        setTitle("CassetteFlow v 0.7.12 (10/16/2021)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 
@@ -751,15 +802,15 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         jTabbedPane1.addTab("ENCODE", jPanel1);
 
         logfileTextField.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
-        logfileTextField.setText("C:\\\\mp3files\\\\TapeFiles\\\\tape.log");
+        logfileTextField.setText("logfile");
+        logfileTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                logfileTextFieldActionPerformed(evt);
+            }
+        });
 
         logfileButton.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         logfileButton.setText("Set Logfile");
-        logfileButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                logfileButtonActionPerformed(evt);
-            }
-        });
 
         startDecodeButton.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         startDecodeButton.setText("Start");
@@ -1106,7 +1157,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
             }
         });
 
-        baudRateButton.setText("Set Minimodem Baud Rate");
+        baudRateButton.setText("Set Baud Rate");
         baudRateButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 baudRateButtonActionPerformed(evt);
@@ -1119,20 +1170,33 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
 
         audioOutputComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Default" }));
 
+        setMP3DownloadServerButton.setText("Set MP3 Server");
+        setMP3DownloadServerButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                setMP3DownloadServerButtonActionPerformed(evt);
+            }
+        });
+
+        mp3DownloadServerTextField.setText("http://");
+
         javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
         jPanel7.setLayout(jPanel7Layout);
         jPanel7Layout.setHorizontalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 922, Short.MAX_VALUE)
+            .addComponent(jScrollPane8)
             .addGroup(jPanel7Layout.createSequentialGroup()
                 .addComponent(baudRateButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(baudRateTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(baudRateTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jLabel8)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(audioOutputComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(setMP3DownloadServerButton)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(mp3DownloadServerTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 374, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(clearConsoleButton))
         );
         jPanel7Layout.setVerticalGroup(
@@ -1145,7 +1209,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
                     .addComponent(baudRateButton)
                     .addComponent(baudRateTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel8)
-                    .addComponent(audioOutputComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(audioOutputComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(setMP3DownloadServerButton)
+                    .addComponent(mp3DownloadServerTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
         );
 
         jTabbedPane1.addTab("Setup / Output Console", jPanel7);
@@ -1322,7 +1388,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
             warning = " (*** Max Time Exceeded ***)";
         }
         
-        sideLabel.setText("Play Time: " + cassetteFlow.getTimeString(totalTime) + " " + warning);
+        sideLabel.setText("Play Time: " + CassetteFlowUtil.getTimeString(totalTime) + " " + warning);
     }
     
     private int getMaxTapeTime() {
@@ -1342,16 +1408,14 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
     
     private void directoryTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_directoryTextFieldActionPerformed
         String mp3Directory = directoryTextField.getText();
-        if(!mp3Directory.startsWith("http://")) {
+        if(!mp3Directory.isEmpty()) {
             cassetteFlow.loadMP3Files(mp3Directory);
         
             // clear the current JList
             DefaultListModel model = (DefaultListModel) mp3JList.getModel();
             model.clear();
             addMP3InfoToJList();
-        } else {
-            cassetteFlow.setDownloadServerRoot(mp3Directory);
-        }
+        } 
     }//GEN-LAST:event_directoryTextFieldActionPerformed
 
     private void removeMP3ButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removeMP3ButtonActionPerformed
@@ -1379,11 +1443,16 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         
         if(index != -1) {
             mp3List.remove(index);
-            model.remove(index);
+            addTracksToTapeJList(mp3List, jlist);
             calculateTotalTime(mp3List, sideLabel);
         }
     }//GEN-LAST:event_removeMP3ButtonActionPerformed
-
+    
+    /**
+     * Try playing the indicated mp3
+     * 
+     * @param evt 
+     */
     private void playButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_playButtonActionPerformed
         List selectedMp3s = mp3JList.getSelectedValuesList();
         
@@ -1524,7 +1593,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
             }
         }
         
-        sideLabel.setText("Play Time: " + cassetteFlow.getTimeString(totalTime));
+        sideLabel.setText("Play Time: " + CassetteFlowUtil.getTimeString(totalTime));
     }//GEN-LAST:event_shuffleButtonActionPerformed
 
     private void createButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createButtonActionPerformed
@@ -1701,29 +1770,21 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         playbackInfoTextArea.setText("Starting decoding process ...\n");
         startDecodeButton.setEnabled(false);
     }//GEN-LAST:event_startDecodeButtonActionPerformed
-
-    private void logfileButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logfileButtonActionPerformed
-        File logDir = new File(logfileTextField.getText());
-
-        // default to user directory
-        JFileChooser fileChooser = new JFileChooser(logDir.getParent());
-
-        int result = fileChooser.showOpenDialog(CassetteFlowFrame.this);
-        if (result == JFileChooser.APPROVE_OPTION) {
-            File file = fileChooser.getSelectedFile();
-            if(file.exists()) {
-                logfileTextField.setText(file.toString());
-            }
-        }
-    }//GEN-LAST:event_logfileButtonActionPerformed
     
-    private void addItemsToJList(ArrayList<MP3Info> mp3List, JList jlist) {
+    /**
+     * Add mp3 tracks to a tape side
+     * 
+     * @param mp3List
+     * @param jlist 
+     */
+    private void addTracksToTapeJList(ArrayList<MP3Info> mp3List, JList jlist) {
         DefaultListModel model = (DefaultListModel) jlist.getModel();
         model.clear();
         
         int trackCount = 1;
-        for(MP3Info mp3Info: mp3List) {
-            String trackName = "[" + trackCount + "] " + mp3Info;
+
+        for(MP3Info mp3Info: mp3List) {     
+            String trackName = "[" + String.format("%02d", trackCount) + "] " + mp3Info;
             model.addElement(trackName);
             trackCount++;
         }
@@ -1753,13 +1814,13 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         if(direction == 1) { // move the track up the list
             if(index >= 1) {
                 Collections.swap(mp3List, index, index - 1);
-                addItemsToJList(mp3List, jlist);
+                addTracksToTapeJList(mp3List, jlist);
                 jlist.setSelectedIndex(index - 1);
             }
         } else { // move it down the list
             if(index != -1 && index < (mp3List.size() - 1)) {
                 Collections.swap(mp3List, index, index + 1);
-                addItemsToJList(mp3List, jlist);
+                addTracksToTapeJList(mp3List, jlist);
                 jlist.setSelectedIndex(index + 1);
             }
         }
@@ -1821,13 +1882,24 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
             String info = lyraTConnect.getInfo();
             if(info != null) {
                 lyraTConsoleTextArea.append("Connected to Cassette Flow Server @ " + host + "\n\n");
+                
+                // clear the UI and databases
+                clearMP3ListButtonActionPerformed(null);
+                
+                // load the database from LyraT
                 loadLyraTDatabases();
                 
                 // save the host
                 cassetteFlow.setLyraTHost(host);
                 
                 // update the UI to indicate we are connect to the remote lyraT host
+                addMP3InfoToJList();
+                lyraTConsoleTextArea.append("Loaded MP3 Database ...\n\nLoaded Tape Database ...\n\n");
                 directoryTextField.setText("ESP32LyraT @ " + cassetteFlow.LYRA_T_HOST);
+                
+                // disable buttons which should not work when connected to LyraT
+                playButton.setEnabled(false);
+                playSideButton.setEnabled(false);
             } else {
                 lyraTConsoleTextArea.append("Error Connecting to Cassette Flow Server @ " + host + "\n\n");
                 lyraTConnect= null;
@@ -1847,12 +1919,6 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
             
             String tapeDBText = lyraTConnect.getTapeDB();
             cassetteFlow.createTapeDBFromString(tapeDBText);
-            
-            // update the UI now
-            addMP3InfoToJList();
-            
-            //lyraTConsoleTextArea.append(mp3DBText + "\n\n" + tapeDBText);
-            lyraTConsoleTextArea.append("Loaded MP3 Database ...\n\nLoaded Tape Database ...\n\n");
         } catch (Exception ex) {
             Logger.getLogger(CassetteFlowFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -1860,7 +1926,14 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
     
     private void viewTapeDBButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_viewTapeDBButtonActionPerformed
         TapeDatabaseFrame tapeDBFrame = new TapeDatabaseFrame();
-        tapeDBFrame.setTitle("Tape Database (Local Drive)");
+        
+        if(lyraTConnect == null) {
+            tapeDBFrame.setTitle("Tape Database (Local Drive)");
+        } else {
+            tapeDBFrame.setTitle("Tape Database LyraT@" + cassetteFlow.LYRA_T_HOST);
+        }
+        
+        tapeDBFrame.setCassetteFlowFrame(this);
         
         tapeDBFrame.setTapeDB(cassetteFlow.tapeDB);
         tapeDBFrame.setMP3InfoDB(cassetteFlow.mp3InfoDB);
@@ -2027,7 +2100,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
             encodeSeconds = 0;
             final Timer timer = new Timer(1000, (ActionEvent e) -> {
                 encodeSeconds++;
-                String timeString = cassetteFlow.getTimeString(encodeSeconds);
+                String timeString = CassetteFlowUtil.getTimeString(encodeSeconds);
                 infoLabel.setText("Playback Timer: " + timeString);
             });
             timer.start();
@@ -2068,6 +2141,15 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, message, "Playback Error", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_playEncodedWavButtonActionPerformed
+
+    private void logfileTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logfileTextFieldActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_logfileTextFieldActionPerformed
+
+    private void setMP3DownloadServerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_setMP3DownloadServerButtonActionPerformed
+        String mp3DownloadServer = mp3DownloadServerTextField.getText();
+        cassetteFlow.setDownloadServer(mp3DownloadServer);        
+    }//GEN-LAST:event_setMP3DownloadServerButtonActionPerformed
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addMP3DirectoryButton;
@@ -2135,6 +2217,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
     private javax.swing.JButton moveTrackDownButton;
     private javax.swing.JButton moveTrackUpButton;
     private javax.swing.JLabel mp3CountLabel;
+    private javax.swing.JTextField mp3DownloadServerTextField;
     private javax.swing.JList<String> mp3JList;
     private javax.swing.JTextField muteJTextField;
     private javax.swing.JButton playButton;
@@ -2144,6 +2227,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
     private javax.swing.JButton realtimeEncodeButton;
     private javax.swing.JButton removeAllButton;
     private javax.swing.JButton removeMP3Button;
+    private javax.swing.JButton setMP3DownloadServerButton;
     private javax.swing.JButton shuffleButton;
     private javax.swing.JList<String> sideAJList;
     private javax.swing.JLabel sideALabel;
@@ -2165,4 +2249,5 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
     private javax.swing.JLabel tracksLabel;
     private javax.swing.JButton viewTapeDBButton;
     // End of variables declaration//GEN-END:variables
+
 }

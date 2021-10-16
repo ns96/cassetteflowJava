@@ -40,7 +40,7 @@ public class CassetteFlowServer {
     public CassetteFlowServer() throws IOException {
         ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor)Executors.newFixedThreadPool(10);
         
-        server = HttpServer.create(new InetSocketAddress("localhost", 8192), 0);
+        server = HttpServer.create(new InetSocketAddress("0.0.0.0", 8192), 0);
         
         server.createContext("/", new SetModeHandler());
         server.createContext("/mp3db", new getMp3DBHandler());

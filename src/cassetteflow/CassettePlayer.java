@@ -307,6 +307,7 @@ public class CassettePlayer implements LogFileTailerListener {
      * correct mp3 file
      * 
      * @param line 
+     * @return  
      */
     public String processRecord(String line) {        
         String[] sa = line.split("_");
@@ -426,7 +427,7 @@ public class CassettePlayer implements LogFileTailerListener {
                 String message = mp3Filename + " [" + track + "]\n"
                         + "Playtime From Tape: " + String.format("%04d", currentPlayTime) + " / " + String.format("%04d", mp3TotalPlayTime) + "\n"
                         + "Playtime From MP3 : " + timeFromMp3 + "\n"
-                        + "Tape Counter: " + totalTime + " (" + cassetteFlow.getTimeString(totalTime) + ")";
+                        + "Tape Counter: " + totalTime + " (" + CassetteFlowUtil.getTimeString(totalTime) + ")";
                 cassetteFlowFrame.setPlaybackInfo(message, false);
             } else {
                 //String message = "[ " + mp3Filename + " {" + track + "} Time: " + currentPlayTime + "/" + 
@@ -541,7 +542,7 @@ public class CassettePlayer implements LogFileTailerListener {
         
         try {
             // first download the index file which lets us know which files to actual download
-            String indexUrl = cassetteFlow.downloadServerRoot + "tapes/Tape_" + indexFileId + ".tsv";
+            String indexUrl = cassetteFlow.DOWNLOAD_SERVER + "tapes/Tape_" + indexFileId + ".tsv";
             URL url = new URL(indexUrl);
             BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
 
@@ -562,7 +563,7 @@ public class CassettePlayer implements LogFileTailerListener {
                 String[] sa = inputLine.split("\t");
                 String mp3Id = sa[0];
                 String filename = sa[1];
-                String fileUrl = cassetteFlow.downloadServerRoot + encodeValue(filename);
+                String fileUrl = cassetteFlow.DOWNLOAD_SERVER + encodeValue(filename);
                 
                 // download the file now
                 if(mp3Id.startsWith("Tape ID")) {

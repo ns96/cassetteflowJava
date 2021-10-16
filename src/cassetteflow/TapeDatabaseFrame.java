@@ -8,6 +8,7 @@ package cassetteflow;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import javax.swing.DefaultListModel;
 
 /**
@@ -18,12 +19,25 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
     private HashMap<String, ArrayList<String>> tapeDB;
     
     private HashMap<String, MP3Info> mp3InfoDB;
+    
+    private CassetteFlowFrame cassetteFlowFrame;
+    
+    private int currentTapeLength = 0;
 
     /**
      * Creates new form TapeDatabaseFrame
      */
     public TapeDatabaseFrame() {
         initComponents();
+    }
+    
+    /**
+     * Set the cassette flow frame
+     * 
+     * @param cassetteFlowFrame 
+     */
+    public void setCassetteFlowFrame(CassetteFlowFrame cassetteFlowFrame) {
+        this.cassetteFlowFrame = cassetteFlowFrame;
     }
     
     /**
@@ -42,6 +56,18 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
         }
         
         tapeDBJList.setModel(model);
+    }
+    
+    private ArrayList<MP3Info> getMP3InfoList(String tapeId) {
+        ArrayList<MP3Info> mp3InfoList = new ArrayList<>();
+        
+        ArrayList<String> mp3Ids = tapeDB.get(tapeId);
+        for(String mp3Id: mp3Ids) {
+            MP3Info mp3Info = mp3InfoDB.get(mp3Id);
+            mp3InfoList.add(mp3Info);
+        }
+        
+        return mp3InfoList;
     }
     
     /**
@@ -67,6 +93,8 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
         closeButton = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         mp3JList = new javax.swing.JList<>();
+        loadTapeButton = new javax.swing.JButton();
+        totalTimeLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Tape Database (Local)");
@@ -92,12 +120,25 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
 
         jScrollPane2.setViewportView(mp3JList);
 
+        loadTapeButton.setText("Load Tape");
+        loadTapeButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                loadTapeButtonActionPerformed(evt);
+            }
+        });
+
+        totalTimeLabel.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        totalTimeLabel.setText("Total Time: 00:00:00 ");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addGap(0, 0, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(loadTapeButton)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(totalTimeLabel)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(closeButton))
             .addGroup(layout.createSequentialGroup()
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 182, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -111,7 +152,10 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 315, Short.MAX_VALUE)
                     .addComponent(jScrollPane2))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(closeButton))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(closeButton)
+                    .addComponent(loadTapeButton)
+                    .addComponent(totalTimeLabel)))
         );
 
         pack();
@@ -131,18 +175,50 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
             String key = tapeDBJList.getSelectedValue();
             
             DefaultListModel model = new DefaultListModel();
-            ArrayList<String> mp3List = tapeDB.get(key);
+            ArrayList<String> mp3IdList = tapeDB.get(key);
             
-            for (int i = 0; i < mp3List.size(); i++) {
-                MP3Info mp3Info = mp3InfoDB.get(mp3List.get(i));
+            int totalTime = 0;
+            for (int i = 0; i < mp3IdList.size(); i++) {
+                MP3Info mp3Info = mp3InfoDB.get(mp3IdList.get(i));
+                totalTime += mp3Info.getLength() + 4;
+                
                 String trackCount = String.format("%02d", (i + 1));
                 String trackName = "[" + trackCount + "] " + mp3Info;
                 model.addElement(trackName);
             }
             
+            // add the total time 
+            currentTapeLength = totalTime;
+            
+            // show to total play time
+            totalTimeLabel.setText("Play Time: " + CassetteFlowUtil.getTimeString(totalTime));
+            
+            // update the UI with mp3 info records
             mp3JList.setModel(model);
         }
     }//GEN-LAST:event_tapeDBJListValueChanged
+    
+    /**
+     * Load a tape and associated mp3 info objects to the main UI
+     * 
+     * @param evt 
+     */
+    private void loadTapeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadTapeButtonActionPerformed
+        String tapeID = tapeDBJList.getSelectedValue();
+        if(tapeID != null) {
+            // load both records to the CassetteFlowFrame
+            tapeID = tapeID.substring(0, tapeID.length() - 1);
+            String tapeIdA = tapeID + "A";
+            String tapeIdB = tapeID + "B";
+            
+            ArrayList<MP3Info> sideAList = getMP3InfoList(tapeIdA);
+            ArrayList<MP3Info> sideBList = getMP3InfoList(tapeIdB);
+            
+            // get an estimate of tape length
+            int tapeLength = (currentTapeLength/60)*2;
+            cassetteFlowFrame.loadTapeInformation(tapeID, sideAList, sideBList, tapeLength);
+        }
+    }//GEN-LAST:event_loadTapeButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -183,7 +259,9 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
     private javax.swing.JButton closeButton;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JButton loadTapeButton;
     private javax.swing.JList<String> mp3JList;
     private javax.swing.JList<String> tapeDBJList;
+    private javax.swing.JLabel totalTimeLabel;
     // End of variables declaration//GEN-END:variables
 }
