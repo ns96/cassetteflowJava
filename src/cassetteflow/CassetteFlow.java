@@ -695,13 +695,14 @@ public class CassetteFlow {
             cassetteFlowFrame.printToConsole(message, true);
             System.out.println(message);
             
-            int delay = muteTime*1000 - (int)encodeTime;
+            int encodeTimeSeconds = Math.round(encodeTime/1000);
+            int delay = muteTime - encodeTimeSeconds;
             
             if(delay > 0) {
                 timeTotal += muteTime;
                 Thread.sleep(delay);
             } else {
-                timeTotal += encodeTime;
+                timeTotal += encodeTimeSeconds;
             }
         }
         
@@ -777,7 +778,7 @@ public class CassetteFlow {
         
         // add a 1 second mute record to allow loading of mp3 correctly?
         for (int i = 0; i < 1; i++) {
-            timeTotal += 1;
+            timeTotal++;
             String timeTotalString = String.format("%04d", timeTotal);
             String line = mp3Id + "_000M_" + timeTotalString + "\n";
 
@@ -796,7 +797,7 @@ public class CassetteFlow {
                 builder.append(line);
             }
 
-            timeTotal += 1;
+            timeTotal++;
         }
 
         return builder.toString();

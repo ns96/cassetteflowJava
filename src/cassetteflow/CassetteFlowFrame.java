@@ -489,7 +489,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         playEncodedWavButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 0.7.18 (10/17/2021)");
+        setTitle("CassetteFlow v 0.7.19 (10/17/2021)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 
