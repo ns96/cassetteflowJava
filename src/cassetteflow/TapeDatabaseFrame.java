@@ -58,16 +58,26 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
         tapeDBJList.setModel(model);
     }
     
+    /**
+     * Given a tapeId get the mp3 info objects associated with this id
+     * 
+     * @param tapeId
+     * @return 
+     */
     private ArrayList<MP3Info> getMP3InfoList(String tapeId) {
         ArrayList<MP3Info> mp3InfoList = new ArrayList<>();
         
         ArrayList<String> mp3Ids = tapeDB.get(tapeId);
-        for(String mp3Id: mp3Ids) {
-            MP3Info mp3Info = mp3InfoDB.get(mp3Id);
-            mp3InfoList.add(mp3Info);
+        if(mp3Ids != null) {
+            for(String mp3Id: mp3Ids) {
+                MP3Info mp3Info = mp3InfoDB.get(mp3Id);
+                mp3InfoList.add(mp3Info);
+            }
+            
+            return mp3InfoList;
         }
         
-        return mp3InfoList;
+        return null;
     }
     
     /**

@@ -99,6 +99,13 @@ public class CassetteFlow {
      * Default constructor that just loads the mp3 files and cassette map database
      */
     public CassetteFlow() {
+        init();
+    }
+    
+    /**
+     * Do initial loading of mp3 and tape database
+     */
+    public void init() {
         loadProperties();
         
         loadMP3Files(MP3_DIR_NAME);

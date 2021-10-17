@@ -418,7 +418,7 @@ public class CassettePlayer implements LogFileTailerListener {
             currentPlayTime = playTime;
             
             // get the actual playback time from the mp3 player
-            int mp3Time = player.getPosition()/1000 + startTime + 1;
+            int mp3Time = player.getPosition()/1000 + startTime;
             playtimeDiff = mp3Time - currentPlayTime;
             
             String timeFromMp3 = String.format("%04d", mp3Time);
@@ -427,7 +427,8 @@ public class CassettePlayer implements LogFileTailerListener {
                 String message = mp3Filename + " [" + track + "]\n"
                         + "Playtime From Tape: " + String.format("%04d", currentPlayTime) + " / " + String.format("%04d", mp3TotalPlayTime) + "\n"
                         + "Playtime From MP3 : " + timeFromMp3 + "\n"
-                        + "Tape Counter: " + totalTime + " (" + CassetteFlowUtil.getTimeString(totalTime) + ")";
+                        + "Tape Counter: " + totalTime + " (" + CassetteFlowUtil.getTimeString(totalTime) + ")\n"
+                        + "Data Errors: " + dataErrors +  "/" + logLineCount;
                 cassetteFlowFrame.setPlaybackInfo(message, false);
             } else {
                 //String message = "[ " + mp3Filename + " {" + track + "} Time: " + currentPlayTime + "/" + 
@@ -483,6 +484,9 @@ public class CassettePlayer implements LogFileTailerListener {
 
                     FileInputStream mp3Stream = new FileInputStream(file);
                     player = new Player(mp3Stream);
+                    
+                    // allow time for mp3 to load file? Attempted to fix bug
+                    Thread.sleep(100);
                     
                     if(skipMS > 0) {
                         System.out.println("Milliseconds Skipped: " + skipMS);
