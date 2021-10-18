@@ -121,8 +121,11 @@ public class CassettePlayer implements LogFileTailerListener {
         
         // if we running on mac os then we need to stat pulseaudio as well
         if(CassetteFlow.isMacOs) {
-            processPulseaudio = Runtime.getRuntime().exec(commandPulseaudio);
-            System.out.println("Starting pulseaudio ...");
+            try {
+                processPulseaudio = Runtime.getRuntime().exec(commandPulseaudio);
+                Thread.sleep(1000);
+                System.out.println("Starting pulseaudio ...");
+            } catch (InterruptedException ex) { }
         }
         
         // start new process

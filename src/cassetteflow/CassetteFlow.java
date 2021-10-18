@@ -552,6 +552,15 @@ public class CassetteFlow {
         File wavFile;
         String data;
         
+        // if we running on mac os then we need to stat pulseaudio as well
+        if(CassetteFlow.isMacOs) {
+            try {
+                Runtime.getRuntime().exec("pulseaudio");
+                Thread.sleep(1000);
+                System.out.println("Starting pulseaudio ...");
+            } catch (InterruptedException ex) { }
+        }
+        
         if(sideA != null && !sideA.isEmpty()) {
             file = new File(saveDirectoryName + File.separator + "Tape_" + tapeID + "A" + ".txt");
             wavFile = new File(saveDirectoryName + File.separator + "Tape_" + tapeID + "A-" + BAUDE_RATE + ".wav");
@@ -637,6 +646,15 @@ public class CassetteFlow {
         String message;
         
         wavPlayer = new WavPlayer();
+        
+        // if we running on mac os then we need to stat pulseaudio as well
+        if(CassetteFlow.isMacOs) {
+            try {
+                Runtime.getRuntime().exec("pulseaudio");
+                Thread.sleep(1000);
+                System.out.println("Starting pulseaudio ...");
+            } catch (InterruptedException ex) { }
+        }
         
         for(MP3Info mp3Info: sideN) {
             long startTime = System.currentTimeMillis();
