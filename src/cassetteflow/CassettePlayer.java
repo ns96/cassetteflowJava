@@ -69,7 +69,9 @@ public class CassettePlayer implements LogFileTailerListener {
     // has been read in.
     private int dataErrors = 0;
     
-    private Process process = null;
+    private Process process = null; // minimodem process
+    
+    private Process processPulseaudio = null; // only used on mac
     
     private BufferedReader miniModemReader;
     
@@ -112,9 +114,16 @@ public class CassettePlayer implements LogFileTailerListener {
     public void startMinimodem(int delay) throws IOException {
         // call minimodem to do encoding
         String command = "minimodem -r " + cassetteFlow.BAUDE_RATE;
+        String commandPulseaudio = "pulseaudio";
         
         // kill any previous process
         if(process != null) process.destroy();
+        
+        // if we running on mac os then we need to stat pulseaudio as well
+        if(CassetteFlow.isMacOs) {
+            processPulseaudio = Runtime.getRuntime().exec(commandPulseaudio);
+            System.out.println("Starting pulseaudio ...");
+        }
         
         // start new process
         process = Runtime.getRuntime().exec(command);

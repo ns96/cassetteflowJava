@@ -95,10 +95,19 @@ public class CassetteFlow {
     // debug flag
     private static final boolean DEBUG = false;
     
+    // indicates if we are running on mac so we start pusle audio in addition
+    // to minimodem
+    public static boolean isMacOs = false;
+    
     /**
      * Default constructor that just loads the mp3 files and cassette map database
      */
     public CassetteFlow() {
+        // see if we running on mac os so we run minimodem correctly
+        String osName = System.getProperty("os.name").toLowerCase();
+        isMacOs = osName.startsWith("mac os");
+        System.out.println("\nRunning On: " + osName);
+        
         init();
     }
     
@@ -111,6 +120,7 @@ public class CassetteFlow {
         loadMP3Files(MP3_DIR_NAME);
         
         File file = new File(TAPE_DB_FILENAME);
+        
         loadTapeDB(file);
     }
     
