@@ -71,8 +71,6 @@ public class CassettePlayer implements LogFileTailerListener {
     
     private Process process = null; // minimodem process
     
-    private Process processPulseaudio = null; // only used on mac
-    
     private BufferedReader miniModemReader;
     
     // used to indicate if the minimodem program is running
@@ -122,7 +120,7 @@ public class CassettePlayer implements LogFileTailerListener {
         // if we running on mac os then we need to stat pulseaudio as well
         if(CassetteFlow.isMacOs) {
             try {
-                processPulseaudio = Runtime.getRuntime().exec(commandPulseaudio);
+                Runtime.getRuntime().exec(commandPulseaudio);
                 Thread.sleep(1000);
                 System.out.println("Starting pulseaudio ...");
             } catch (InterruptedException ex) { }
@@ -499,7 +497,7 @@ public class CassettePlayer implements LogFileTailerListener {
                     player = new Player(mp3Stream);
                     
                     // allow time for mp3 to load file? Attempted to fix bug
-                    Thread.sleep(100);
+                    Thread.sleep(200);
                     
                     if(skipMS > 0) {
                         System.out.println("Milliseconds Skipped: " + skipMS);

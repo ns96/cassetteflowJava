@@ -42,5 +42,11 @@ change to the folder where CassetteFlow was unpack then run
 "java -jar CassetteFlow.jar" no quotes. If everything installed correctly then 
 the program GUI should display on the screen.
 
+The installation of the Minimodem program can be skipped if you only want to 
+make regular audio tapes from the loaded MP3s. Just add the MP3s to the 
+"Tape Side" list, then press "Play Side" to automatically play all the MP3s with
+a 4 second blank section in between each track. Having these blank sections 
+will allow the AMS to be used on tape decks containing this functionality.  
+
 ## Using
 Coming soon

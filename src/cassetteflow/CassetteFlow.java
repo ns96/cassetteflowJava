@@ -633,6 +633,8 @@ public class CassetteFlow {
      * @param saveDirectoryName
      * @param soundOutput
      * @return Indicate if encode completed or was stopped
+     * @throws java.io.IOException
+     * @throws java.lang.InterruptedException
      */
     public boolean realTimeEncode(String tapeID, ArrayList<MP3Info> sideN, int muteTime, 
             boolean forDownload, String saveDirectoryName, Mixer.Info soundOutput) throws IOException, InterruptedException {
@@ -641,6 +643,7 @@ public class CassetteFlow {
         stopEncoding = false;
         timeTotal = 0;
         
+        // keep track of the mp3 being processed
         int mp3Count = 1;
         
         String message;
@@ -652,7 +655,7 @@ public class CassetteFlow {
             try {
                 Runtime.getRuntime().exec("pulseaudio");
                 Thread.sleep(1000);
-                System.out.println("Starting pulseaudio ...");
+                System.out.println("Started pulseaudio ...");
             } catch (InterruptedException ex) { }
         }
         
@@ -661,10 +664,13 @@ public class CassetteFlow {
             
             String data = createInputDataForMP3(tapeID, mp3Info, mp3Count);
             
+            // indicate the current track being procecessed 
+            cassetteFlowFrame.setSelectedIndexForSideJList(mp3Count - 1);
+            
             message = "Minimodem Encoding: " + tapeID + " Track [ " + mp3Count + " ] ( " + mp3Info.getLengthAsTime() + " )";
             cassetteFlowFrame.printToConsole(message, false);
             System.out.println("\n" + message);
-            
+                        
             String filename = saveDirectoryName + File.separator + "track_" + mp3Count + "-" + BAUDE_RATE + ".wav";
             String command = "minimodem --tx " + BAUDE_RATE + " -f " + filename;
             
