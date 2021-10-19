@@ -35,7 +35,7 @@ did not work correctly.
 2. Install Minimodem for your particular operating system [Linux](http://www.whence.com/minimodem/), 
 [Mac OS + Brew](https://brewinstall.org/install-minimodem-on-mac-with-brew/), or 
 [Windows 10 + Cygwin](https://github.com/kamalmostafa/minimodem/blob/master/README.windows).
-3. Download and unzip the [cassetteflow.zip](cassetteflow.zip) release and 
+3. Download and unzip the [CassetteFlow.zip](CassetteFlow.zip) release and 
 extract it to the folder of your choice.
 4. Open a Terminal window (On Windows, this must be the Cygwin Terminal), 
 change to the folder where CassetteFlow was unpack then run 
