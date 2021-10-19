@@ -254,7 +254,7 @@ public class CassettePlayer implements LogFileTailerListener {
                     player = null;
                     
                     if(cassetteFlowFrame != null) {
-                        cassetteFlowFrame.setPlaybackInfo(stopMessage + "\n", false);
+                        cassetteFlowFrame.setPlaybackInfo(stopMessage, false);
                     } 
                 }
                 
@@ -441,7 +441,8 @@ public class CassettePlayer implements LogFileTailerListener {
                         + "Playtime From MP3 : " + timeFromMp3 + "\n"
                         + "Tape Counter: " + totalTime + " (" + CassetteFlowUtil.getTimeString(totalTime) + ")\n"
                         + "Data Errors: " + dataErrors +  "/" + logLineCount;
-                cassetteFlowFrame.setPlaybackInfo(message, false);
+                
+                cassetteFlowFrame.setPlaybackInfo(message, false, "");
             } else {
                 //String message = "[ " + mp3Filename + " {" + track + "} Time: " + currentPlayTime + "/" + 
                 //    mp3PlayTime + " | MP3 Time: " + timeFromMp3 + " | Tape Counter: " + totalTime + " ]";

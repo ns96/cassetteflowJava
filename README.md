@@ -5,7 +5,7 @@ testbed for the CassetteFlow system, currently under development using the
 audio board.
 
 ## Introduction
-CassetteFlow is a somewhat impractical, but fun project to make use of ESP32-LyraT 
+CassetteFlow is a somewhat impractical project to make use of ESP32-LyraT 
 board, old school audio cassette tapes containing encoded data, and MP3 files in 
 an attempt to simulate digital music playback from an analog compact audio cassette. 
 Essentially, the data stored on the cassette will be used to control the playback 
@@ -26,8 +26,21 @@ pretty good, even close to CD quality.
 ![Data Flow 2](dataflow02.png)
 ![LyraT](LyraT01.png)
 
-## Installation and Running
-Since this project is in very early development, I haven't put together a 
-binary release as yet. However, if you a familiar with Java programming, it 
-should be pretty straight forward to compile/run it. The difficult part, 
-if you are on Windows, in getting the Minimodem program installed under Cygwin. 
+## Installation
+Here are key steps to install and run the program on Windows, Mac, or Linux.
+
+1. Install Oracle [JRE 8](https://www.java.com/en/download/manual.jsp) or above 
+(Tested with both Java 8 and 17). When using OpenJDK 8 on Raspian the MP3 player 
+did not work correctly.
+2. Install Minimodem for your particular operating system [Linux](http://www.whence.com/minimodem/), 
+[Mac OS + Brew](https://brewinstall.org/install-minimodem-on-mac-with-brew/), or 
+[Windows 10 + Cygwin](https://github.com/kamalmostafa/minimodem/blob/master/README.windows).
+3. Download and unzip the [cassetteflow.zip](cassetteflow.zip) release and 
+extract it to the folder of your choice.
+4. Open a Terminal window (On Windows, this must be the Cygwin Terminal), 
+change to the folder where CassetteFlow was unpack then run 
+"java -jar CassetteFlow.jar" no quotes. If everything installed correctly then 
+the program GUI should display on the screen.
+
+## Using
+Coming soon

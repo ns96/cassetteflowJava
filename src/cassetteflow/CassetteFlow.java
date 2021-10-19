@@ -686,6 +686,25 @@ public class CassetteFlow {
             cassetteFlowFrame.printToConsole(message, true);
             System.out.println(message); 
             
+            if(mp3Count > 1) {
+                // sleep for the desired mute time to allow for blank on the tape
+                // a blank on the tape allows for track skipping on decks that
+                // supported it
+                int encodeTimeSeconds = Math.round(encodeTime / 1000);
+                int delay = muteTime * 1000 - (int) encodeTime;
+                
+                int sleepTime = (encodeTimeSeconds > muteTime)?encodeTimeSeconds : muteTime;
+                message = "\nMute for " + sleepTime + " seconds ...";
+                cassetteFlowFrame.printToConsole(message, true);
+                System.out.println(message);
+                
+                if (delay > 0) {
+                    timeTotal += muteTime;
+                    Thread.sleep(delay);
+                } else {
+                    timeTotal += encodeTimeSeconds;
+                }
+            }
             // playback the wav file and wait for it to be done
             message = "\nPlaying Wav File: " + filename;
             cassetteFlowFrame.printToConsole(message, true);
@@ -715,23 +734,6 @@ public class CassetteFlow {
             
             // increment mp3Count
             mp3Count++;
-            
-            // sleep for the desired mute time to allow for blank on the tape
-            // a blank on the tape allows for track skipping on decks that
-            // supported it
-            message = "\nMute For " + muteTime + " seconds ...";
-            cassetteFlowFrame.printToConsole(message, true);
-            System.out.println(message);
-            
-            int encodeTimeSeconds = Math.round(encodeTime/1000);
-            int delay = muteTime - encodeTimeSeconds;
-            
-            if(delay > 0) {
-                timeTotal += muteTime;
-                Thread.sleep(delay);
-            } else {
-                timeTotal += encodeTimeSeconds;
-            }
         }
         
         // indicate that the encoding is done
