@@ -510,7 +510,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         playEncodedWavButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 0.7.24 (10/19/2021)");
+        setTitle("CassetteFlow v 0.7.25 (10/19/2021)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 
@@ -2103,6 +2103,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
     private void lyraTCreateAndEncodeInputFiles() {
         int side = tapeJTabbedPane.getSelectedIndex();
         
+        // set the lyra T into encode mode
+        lyraTEncodeRadioButton.doClick();
+        
         // create the input files
         lyraTCreateButtonActionPerformed(null);
         
@@ -2112,6 +2115,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         } else { // encde B side
             lyraTEncodeBButtonActionPerformed(null);
         }
+        
+        // start the thread which will continous get data from the 
+        // server to track the encoding.
+        
     }
     
     public void printToLyraTconsole(String text, boolean append) {

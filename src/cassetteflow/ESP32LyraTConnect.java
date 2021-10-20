@@ -34,7 +34,7 @@ public class ESP32LyraTConnect {
         String response = "";
         
         if (sideA != null && sideA.size() >= 1) {
-            String data = "tapeID" + getData(sideA);
+            String data = tapeID + getData(sideA);
             String r = create("A", tapeLength, muteTime, data);
             
             if(r == null) {
@@ -45,7 +45,7 @@ public class ESP32LyraTConnect {
         }
 
         if (sideB != null && sideB.size() >= 1) {
-            String data = "tapeID" + getData(sideB);
+            String data = tapeID + getData(sideB);
             String r = create("B", tapeLength, muteTime, data);
             
             if(r == null) {

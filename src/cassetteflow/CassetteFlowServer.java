@@ -9,6 +9,7 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.net.URLDecoder;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -32,6 +33,13 @@ public class CassetteFlowServer {
     private HttpServer server;
     
     private CassetteFlow cassetteFlow;
+    
+    // the tape ID for the input files to be created
+    private String tapeID;
+    
+    // array list for storing the mp3 ides associated with create request
+    private ArrayList<String> sideAList;
+    private ArrayList<String> sideBList;
     
     /**
      * Main constructor which starts the server
@@ -90,9 +98,10 @@ public class CassetteFlowServer {
     
     public synchronized void sendResponse(HttpExchange he, String response) {
         try {
-            he.sendResponseHeaders(200, response.length());
+            byte[] data = response.getBytes("UTF-8");
+            he.sendResponseHeaders(200, data.length);
             OutputStream os = he.getResponseBody();
-            os.write(response.getBytes());
+            os.write(data);
             os.flush();
             os.close();
         } catch (IOException ex) {
@@ -136,15 +145,19 @@ public class CassetteFlowServer {
         @Override
         public void handle(HttpExchange he) throws IOException {
             String mode;
+            String response;
             if(currentMode == DECODE) {
                 mode = "DECODE";
+                response = mode + ": " + cassetteFlow.getCurrentLineRecord();
             } else if(currentMode == ENCODE) {
                 mode = "ENCODE";
+                response = mode + ": " + cassetteFlow.encodeTapeID + "," + cassetteFlow.encodeMp3Count + 
+                        "," + cassetteFlow.encodeMp3ID;
             } else {
                 mode = "PASS THROUGH";
+                response = mode + ": Analog Audio Stream ...";
             }
             
-            String response = mode + ": " + cassetteFlow.getCurrentLineRecord();
             sendResponse(he, response);
         }
     }
@@ -165,9 +178,32 @@ public class CassetteFlowServer {
             String query = he.getRequestURI().getQuery();
             
             Map params = splitQuery(query);
-            String response = "Creating Input File: " + params;
+            extractInformation(params);
             
+            String response = "Creating Input File: " + params;
             sendResponse(he, response);
+        }
+        
+        /**
+         * Extract the data from the param string
+         * @param params 
+         */
+        private void extractInformation(Map params) {
+            String side = params.get("side").toString();
+            String data[] = params.get("data").toString().split(",");
+            
+            tapeID = data[0];
+            
+            ArrayList<String> mp3Ids = new ArrayList<>();
+            for(int i = 1; i < data.length; i++) {
+                mp3Ids.add(data[i]);
+            }
+            
+            if(side.equals("A")) {
+                sideAList = mp3Ids;
+            } else {
+                sideBList = mp3Ids;
+            }
         }
     }
         
@@ -181,6 +217,14 @@ public class CassetteFlowServer {
             String response = "Starting encoding of input file: " + params;
             
             sendResponse(he, response);
+        }
+        
+        /**
+         * Start the encoding for the indicate side of the tape
+         * @param side 
+         */
+        private void startEncoding(String side) {
+            
         }
     }
     
@@ -206,6 +250,18 @@ public class CassetteFlowServer {
         }
     }
     
+    /**
+     * Used by client to test encoding
+     */
+    public void testEncode() {
+        
+    }
+    
+    /**
+     * Method to run mirco server indepent 
+     * 
+     * @param args 
+     */
     public static void main(String[] args) {
         try {
             CassetteFlow cf = new CassetteFlow();

@@ -87,7 +87,10 @@ public class CassetteFlow {
     private int replicate = 4;
     
     // used when doing realtime encoding to keep track total track time
-    private int timeTotal = 0;
+    public int encodeTimeTotal = 0;
+    public int encodeMp3Count = 1;
+    public String encodeTapeID = "";
+    public String encodeMp3ID = "";
     
     // The wav file player
     private WavPlayer wavPlayer;
@@ -453,7 +456,7 @@ public class CassetteFlow {
         String tapeHashCode;
         FileWriter myWriter2 = null;
 
-        timeTotal = 0;
+        encodeTimeTotal = 0;
         int mp3Count = 0;
         
         // if this is for a download file, specify that in the first 10 seconds of data
@@ -491,8 +494,8 @@ public class CassetteFlow {
             // add line records to create a N second muted section before next song
             if(mp3Count >= 1) {
                 for(int i = 0; i < muteTime; i++) {
-                    timeTotal += 1;
-                    String timeTotalString = String.format("%04d", timeTotal);
+                    encodeTimeTotal += 1;
+                    String timeTotalString = String.format("%04d", encodeTimeTotal);
                     String line = mp3Id + "_000M_" + timeTotalString + "\n";
                     
                     for(int j = 0; j < replicate; j++) { // replicate record N times
@@ -504,7 +507,7 @@ public class CassetteFlow {
         
             for(int i = 0; i < mp3Info.getLength(); i++) {
                 String timeString = String.format("%04d", i);
-                String timeTotalString = String.format("%04d", timeTotal);
+                String timeTotalString = String.format("%04d", encodeTimeTotal);
                 String line = mp3Id + "_" + timeString + "_" + timeTotalString + "\n";
             
                 for(int j = 0; j < replicate; j++) { // replicate record N times
@@ -512,7 +515,7 @@ public class CassetteFlow {
                     builder.append(line);
                 }
                 
-                timeTotal += 1;
+                encodeTimeTotal += 1;
             }
     
             mp3Count += 1;
@@ -641,10 +644,9 @@ public class CassetteFlow {
         
         boolean completed = true;
         stopEncoding = false;
-        timeTotal = 0;
-        
-        // keep track of the mp3 being processed
-        int mp3Count = 1;
+        encodeTapeID = tapeID;
+        encodeTimeTotal = 0;
+        encodeMp3Count = 1;
         
         String message;
         
@@ -662,16 +664,17 @@ public class CassetteFlow {
         for(MP3Info mp3Info: sideN) {
             long startTime = System.currentTimeMillis();
             
-            String data = createInputDataForMP3(tapeID, mp3Info, mp3Count);
+            encodeMp3ID = mp3Info.getHash10C();
+            String data = createInputDataForMP3(tapeID, mp3Info, encodeMp3Count);
             
             // indicate the current track being procecessed 
-            cassetteFlowFrame.setSelectedIndexForSideJList(mp3Count - 1);
+            cassetteFlowFrame.setSelectedIndexForSideJList(encodeMp3Count - 1);
             
-            message = "Minimodem Encoding: " + tapeID + " Track [ " + mp3Count + " ] ( " + mp3Info.getLengthAsTime() + " )";
+            message = "Minimodem Encoding: " + tapeID + " Track [ " + encodeMp3Count + " ] ( " + mp3Info.getLengthAsTime() + " )";
             cassetteFlowFrame.printToConsole(message, false);
             System.out.println("\n" + message);
                         
-            String filename = saveDirectoryName + File.separator + "track_" + mp3Count + "-" + BAUDE_RATE + ".wav";
+            String filename = saveDirectoryName + File.separator + "track_" + encodeMp3Count + "-" + BAUDE_RATE + ".wav";
             String command = "minimodem --tx " + BAUDE_RATE + " -f " + filename;
             
             Process process = Runtime.getRuntime().exec(command);
@@ -688,11 +691,11 @@ public class CassetteFlow {
             cassetteFlowFrame.printToConsole(message, true);
             System.out.println(message);
             
-            message = "\nDone Encoding Track [ " + mp3Count + " ] Total Tape Time: " + timeTotal + " seconds";
+            message = "\nDone Encoding Track [ " + encodeMp3Count + " ] Total Tape Time: " + encodeTimeTotal + " seconds";
             cassetteFlowFrame.printToConsole(message, true);
             System.out.println(message); 
             
-            if(mp3Count > 1) {
+            if(encodeMp3Count > 1) {
                 // sleep for the desired mute time to allow for blank on the tape
                 // a blank on the tape allows for track skipping on decks that
                 // supported it
@@ -705,10 +708,10 @@ public class CassetteFlow {
                 System.out.println(message);
                 
                 if (delay > 0) {
-                    timeTotal += muteTime;
+                    encodeTimeTotal += muteTime;
                     Thread.sleep(delay);
                 } else {
-                    timeTotal += encodeTimeSeconds;
+                    encodeTimeTotal += encodeTimeSeconds;
                 }
             }
             // playback the wav file and wait for it to be done
@@ -739,11 +742,11 @@ public class CassetteFlow {
             }
             
             // increment mp3Count
-            mp3Count++;
+            encodeMp3Count++;
         }
         
         // indicate that the encoding is done
-        message = "\nEncoding of  " + (mp3Count - 1) + " Tracks Done ...";
+        message = "\nEncoding of  " + (encodeMp3Count - 1) + " Tracks Done ...";
         cassetteFlowFrame.printToConsole(message, true);
         System.out.println(message);
         
@@ -814,8 +817,8 @@ public class CassetteFlow {
         
         // add a 1 second mute record to allow loading of mp3 correctly?
         for (int i = 0; i < 1; i++) {
-            timeTotal++;
-            String timeTotalString = String.format("%04d", timeTotal);
+            encodeTimeTotal++;
+            String timeTotalString = String.format("%04d", encodeTimeTotal);
             String line = mp3Id + "_000M_" + timeTotalString + "\n";
 
             for (int j = 0; j < replicate; j++) { // replicate record N times
@@ -826,14 +829,14 @@ public class CassetteFlow {
         // add line records for each second of sound
         for (int i = 0; i < mp3Info.getLength(); i++) {
             String timeString = String.format("%04d", i);
-            String timeTotalString = String.format("%04d", timeTotal);
+            String timeTotalString = String.format("%04d", encodeTimeTotal);
             String line = mp3Id + "_" + timeString + "_" + timeTotalString + "\n";
 
             for (int j = 0; j < replicate; j++) { // replicate record N times
                 builder.append(line);
             }
 
-            timeTotal++;
+            encodeTimeTotal++;
         }
 
         return builder.toString();
