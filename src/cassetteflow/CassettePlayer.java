@@ -69,9 +69,13 @@ public class CassettePlayer implements LogFileTailerListener {
     // has been read in.
     private int dataErrors = 0;
     
-    private Process process = null; // minimodem process
-    
+    // variables used for calling minimodem
+    private String commandMinimodem = "minimodem -r " + cassetteFlow.BAUDE_RATE;
+    private String commandPulseaudio = "pulseaudio";
+    private Process process;
     private BufferedReader miniModemReader;
+    private BufferedReader miniModemErrReader;
+    private int readDelay = 0;
     
     // used to indicate if the minimodem program is running
     private boolean decoding;
@@ -110,9 +114,7 @@ public class CassettePlayer implements LogFileTailerListener {
      * @throws IOException 
      */
     public void startMinimodem(int delay) throws IOException {
-        // call minimodem to do encoding
-        String command = "minimodem -r " + cassetteFlow.BAUDE_RATE;
-        String commandPulseaudio = "pulseaudio";
+        readDelay = delay;
         
         // kill any previous process
         if(process != null) process.destroy();
@@ -127,7 +129,7 @@ public class CassettePlayer implements LogFileTailerListener {
         }
         
         // start new process
-        process = Runtime.getRuntime().exec(command);
+        process = Runtime.getRuntime().exec(commandMinimodem);
         
         String message = "\nReading data from minimodem ...";
         System.out.println(message);
@@ -147,13 +149,15 @@ public class CassettePlayer implements LogFileTailerListener {
                 String line;
                 try {
                     while (true) {
-                        line = miniModemReader.readLine();
-                        
-                        if (line != null && !paused) {
-                            newLogFileLine(line);
-                            
-                            if(cassetteFlowFrame != null) {
-                                cassetteFlowFrame.printToConsole(line, true);
+                        if(!paused) {
+                            line = miniModemReader.readLine();
+
+                            if (line != null && !paused) { //check for pause again
+                                newLogFileLine(line);
+
+                                if (cassetteFlowFrame != null) {
+                                    cassetteFlowFrame.printToConsole(line, true);
+                                }
                             }
                         }
                         
@@ -179,11 +183,16 @@ public class CassettePlayer implements LogFileTailerListener {
         Thread serrThread = new Thread("Standard Error Reader") {
             @Override
             public void run() {
-                BufferedReader readerErr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+                miniModemErrReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
                 String line;
                 try {
                     while (true) {
-                        line = readerErr.readLine();
+                        if(paused) {
+                            Thread.sleep(50);
+                            continue;
+                        }
+                        
+                        line = miniModemErrReader.readLine();
                         
                         if (line != null) {
                             newLogFileLine(line);
@@ -197,7 +206,7 @@ public class CassettePlayer implements LogFileTailerListener {
                         }
                     }
                     
-                    readerErr.close();
+                    miniModemErrReader.close();
                 } catch (Exception ex) {
                     Logger.getLogger(CassettePlayer.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -257,15 +266,25 @@ public class CassettePlayer implements LogFileTailerListener {
                 }
                 
                 // check to make sure we close the minimodem read
-                if(miniModemReader != null && stopRecords == 0) {
-                    paused = true;
+                if(miniModemReader != null && stopRecords == 0 && readDelay > 0) {
                     try {
-                        Thread.sleep(2000);
-                    } catch (InterruptedException ex) {
+                        paused = true;
+                        
+                        if(miniModemReader != null) miniModemReader.close();
+                        if(miniModemErrReader != null) miniModemErrReader.close();
+                        if(process != null) process.destroyForcibly();
+                        
+                        process = Runtime.getRuntime().exec(commandMinimodem);
+                        miniModemReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                        miniModemErrReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+                        
+                        // take a quick pause
+                        Thread.sleep(1000);
+                        
+                        paused = false;
+                    } catch (IOException | InterruptedException ex) {
                         Logger.getLogger(CassettePlayer.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                    
-                    paused = false;
                 }
 
                 currentMp3Id = "";

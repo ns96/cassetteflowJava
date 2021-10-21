@@ -720,8 +720,10 @@ public class CassetteFlow {
             System.out.println(message);
             
             try {
-                File wavFile = new File(filename);
-                wavPlayer.playBigWav(wavFile, soundOutput);
+                if(wavPlayer != null) { // check for null here since we could have stop encoding
+                    File wavFile = new File(filename);
+                    wavPlayer.playBigWav(wavFile, soundOutput);
+                }
             } catch(IOException | LineUnavailableException | UnsupportedAudioFileException e) {
                 message = "Error Playing Wav: " + filename + "\n" + e.getMessage();
                 cassetteFlowFrame.printToConsole(message, true);
