@@ -2,6 +2,7 @@ package cassetteflow;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import okhttp3.OkHttpClient;
@@ -14,11 +15,17 @@ import okhttp3.Response;
  * @author Nathan
  */
 public class ESP32LyraTConnect {
-    private final OkHttpClient httpClient = new OkHttpClient();
+    private final OkHttpClient httpClient;
     private String host;
     
     public ESP32LyraTConnect(String host) {
         this.host = host;
+        
+        httpClient = new OkHttpClient.Builder()
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .writeTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(20, TimeUnit.SECONDS)
+                .build();
     }
     
     /**
@@ -191,6 +198,8 @@ public class ESP32LyraTConnect {
      * @throws IOException 
      */
     public String sendGet(String url) throws IOException {
+        //System.out.println("LyraT GET Request: " + url);
+        
         Request request = new Request.Builder()
                 .url(url)
                 .addHeader("User-Agent", "OkHttp Bot")

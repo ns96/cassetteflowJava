@@ -108,6 +108,14 @@ public class CassettePlayer implements LogFileTailerListener {
     }
     
     /**
+     * Gets the decoing stats such as total errors
+     * @return 
+     */
+    public String getStats() {
+        return "Test ...";
+    }
+    
+    /**
      * Grab data directly from minimodem
      * 
      * @param delay

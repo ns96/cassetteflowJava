@@ -41,6 +41,9 @@ public class CassetteFlowServer {
     private ArrayList<String> sideAList;
     private ArrayList<String> sideBList;
     
+    // the mute time between tracks
+    private int mute = 0;
+    
     /**
      * Main constructor which starts the server
      * @throws IOException 
@@ -144,18 +147,15 @@ public class CassetteFlowServer {
     private class getInfoHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange he) throws IOException {
-            String mode;
             String response;
+            
             if(currentMode == DECODE) {
-                mode = "DECODE";
-                response = mode + ": " + cassetteFlow.getCurrentLineRecord();
+                response = "DECODE " + cassetteFlow.getCurrentLineRecord();
             } else if(currentMode == ENCODE) {
-                mode = "ENCODE";
-                response = mode + ": " + cassetteFlow.encodeTapeID + "," + cassetteFlow.encodeMp3Count + 
-                        "," + cassetteFlow.encodeMp3ID;
+                response = "ENCODE " + cassetteFlow.currentTapeID + " " + cassetteFlow.currentTimeTotal;
             } else {
-                mode = "PASS THROUGH";
-                response = mode + ": Analog Audio Stream ...";
+                response = "PASS THROUGH," + cassetteFlow.currentTapeID + "," + cassetteFlow.currentMp3Count + 
+                        "," + cassetteFlow.currentMp3ID;
             }
             
             sendResponse(he, response);
@@ -190,10 +190,12 @@ public class CassetteFlowServer {
          */
         private void extractInformation(Map params) {
             String side = params.get("side").toString();
+            mute = Integer.parseInt(params.get("mute").toString());
             String data[] = params.get("data").toString().split(",");
             
             tapeID = data[0];
             
+            // get the mp3 ids
             ArrayList<String> mp3Ids = new ArrayList<>();
             for(int i = 1; i < data.length; i++) {
                 mp3Ids.add(data[i]);
@@ -214,8 +216,11 @@ public class CassetteFlowServer {
             String query = he.getRequestURI().getQuery();
             
             Map params = splitQuery(query);
-            String response = "Starting encoding of input file: " + params;
+            String side = params.get("side").toString();
             
+            String message = startEncoding(side);
+            
+            String response = "Starting encoding of input file: " + params + " || " + message;
             sendResponse(he, response);
         }
         
@@ -223,8 +228,39 @@ public class CassetteFlowServer {
          * Start the encoding for the indicate side of the tape
          * @param side 
          */
-        private void startEncoding(String side) {
+        private String startEncoding(String side) {
+            final ArrayList<String> sideList = (side.equals("A")) ? sideAList : sideBList;
             
+            if(sideList != null) {
+                cassetteFlow.currentTapeID = tapeID;
+                
+                // test this in a thread
+                Thread thread = new Thread("Server Encoder Thread") {
+                    @Override
+                    public void run() {
+                        for(int i =0; i < sideList.size(); i++) {
+                            int trackNumber =  i + 1;
+                            String mp3Id = sideList.get(i);
+                            cassetteFlow.currentMp3Count = trackNumber;
+                            cassetteFlow.currentMp3ID = mp3Id;
+                            
+                            System.out.println("Server Encoding Track # " + trackNumber + " / " + mp3Id);  
+                            try {
+                                Thread.sleep(5000);
+                            } catch (InterruptedException ex) { }
+                        }
+                        
+                        // change the trackNumber to -1 to indicate we are done with encoding
+                        cassetteFlow.currentMp3Count = -1;
+                    }
+                };
+                thread.start();
+                
+                return "OK";
+            } else {
+                // indiicate to the client that something is wrong
+                return "ERROR -- Missing Input Data ...";
+            }
         }
     }
     

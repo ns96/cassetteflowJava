@@ -1,5 +1,6 @@
 package cassetteflow;
 
+import java.util.ArrayList;
 import org.apache.commons.codec.digest.DigestUtils;
 
 /**
@@ -29,5 +30,45 @@ public class CassetteFlowUtil {
     public static String get10CharacterHash(String string) {
         String sha256hex = DigestUtils.sha256Hex(string);
         return sha256hex.substring(0, 10);
+    }
+    
+    /**
+     * Return an int array containing the approximate total time a track
+     * should be playing/encoding at
+     * 
+     * @param sideList
+     * @return 
+     */
+    public static int[] getTimeForTracks(ArrayList<MP3Info> sideList, int mute) {
+        int[] timeForTracks = new int[sideList.size()];
+        int totalTime = 0;
+        
+        for(int i = 0; i < sideList.size(); i++) {
+            MP3Info info = sideList.get(i);
+            totalTime += info.getLength() + mute;
+            timeForTracks[i] = totalTime;
+        }
+        
+        return timeForTracks;
+    }
+    
+    /**
+     * Get the track number given a certain time
+     * 
+     * @param timeForTracks
+     * @param time
+     * @return 
+     */
+    public static int getTrackFromTime(int[] timeForTracks, int time) {
+        int track = 1;
+        for(int i = 0; i < timeForTracks.length; i++) {
+            if(time < timeForTracks[i]) {
+                break;
+            } else {
+                track++;
+            }
+        }
+        
+        return track;
     }
 }

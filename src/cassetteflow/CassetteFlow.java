@@ -44,7 +44,7 @@ public class CassetteFlow {
     public static String MP3_DIR_NAME = "c:\\mp3files";
     
     // store the mp3 id hashmap to a tab delimitted file
-    public static String MP3_DB_FILENAME = MP3_DIR_NAME + File.separator + "mp3InfoDB.txt";
+    public static String MP3_DB_FILENAME = MP3_DIR_NAME + File.separator + "mp3db.txt";
     
     // default directory where the text files to be encoded
     public static final String TAPE_FILE_DIR_NAME = "TapeFiles";
@@ -60,7 +60,7 @@ public class CassetteFlow {
     // stores the cassette ID to the mp3ids
     public HashMap<String, ArrayList<String>> tapeDB = new HashMap<>();
     
-    public static String TAPE_DB_FILENAME = MP3_DIR_NAME + File.separator + TAPE_FILE_DIR_NAME + File.separator + "tapeDB.txt";   
+    public static String TAPE_DB_FILENAME = MP3_DIR_NAME + File.separator + "tapedb.txt";   
     
     // the location of mp3 files on the server
     public static String DOWNLOAD_SERVER = "http://192.168.1.14/~pi/mp3/";
@@ -86,11 +86,11 @@ public class CassetteFlow {
     // the number of times to replicate a data line in the input files
     private int replicate = 4;
     
-    // used when doing realtime encoding to keep track total track time
-    public int encodeTimeTotal = 0;
-    public int encodeMp3Count = 1;
-    public String encodeTapeID = "";
-    public String encodeMp3ID = "";
+    // used when doing realtime encoding to keep track of progress
+    public int currentTimeTotal = 0;
+    public int currentMp3Count = 1;
+    public String currentTapeID = "";
+    public String currentMp3ID = "";
     
     // The wav file player
     private WavPlayer wavPlayer;
@@ -166,6 +166,7 @@ public class CassetteFlow {
     
     /**
      * Set the current cassette player
+     * 
      * @param cassettePlayer 
      */
     public void setCassettePlayer(CassettePlayer cassettePlayer) {
@@ -190,7 +191,10 @@ public class CassetteFlow {
             
             for(String key: mp3InfoDB.keySet()) {
                 MP3Info mp3Info = mp3InfoDB.get(key);
-                String line = key + "\t" + mp3Info.getLength() + "\t" + mp3Info.getFile().getName() + "\n";
+                
+                // add "/sdcard/" to the filename so they match those on the LyraT
+                String line = key + "\t" + mp3Info.getLength() + "\t/sdcard/" + mp3Info.getFile().getName() + "\n";
+                
                 writer.write(line);
             }
             
@@ -456,7 +460,7 @@ public class CassetteFlow {
         String tapeHashCode;
         FileWriter myWriter2 = null;
 
-        encodeTimeTotal = 0;
+        currentTimeTotal = 0;
         int mp3Count = 0;
         
         // if this is for a download file, specify that in the first 10 seconds of data
@@ -494,8 +498,8 @@ public class CassetteFlow {
             // add line records to create a N second muted section before next song
             if(mp3Count >= 1) {
                 for(int i = 0; i < muteTime; i++) {
-                    encodeTimeTotal += 1;
-                    String timeTotalString = String.format("%04d", encodeTimeTotal);
+                    currentTimeTotal += 1;
+                    String timeTotalString = String.format("%04d", currentTimeTotal);
                     String line = mp3Id + "_000M_" + timeTotalString + "\n";
                     
                     for(int j = 0; j < replicate; j++) { // replicate record N times
@@ -507,7 +511,7 @@ public class CassetteFlow {
         
             for(int i = 0; i < mp3Info.getLength(); i++) {
                 String timeString = String.format("%04d", i);
-                String timeTotalString = String.format("%04d", encodeTimeTotal);
+                String timeTotalString = String.format("%04d", currentTimeTotal);
                 String line = mp3Id + "_" + timeString + "_" + timeTotalString + "\n";
             
                 for(int j = 0; j < replicate; j++) { // replicate record N times
@@ -515,7 +519,7 @@ public class CassetteFlow {
                     builder.append(line);
                 }
                 
-                encodeTimeTotal += 1;
+                currentTimeTotal += 1;
             }
     
             mp3Count += 1;
@@ -644,9 +648,9 @@ public class CassetteFlow {
         
         boolean completed = true;
         stopEncoding = false;
-        encodeTapeID = tapeID;
-        encodeTimeTotal = 0;
-        encodeMp3Count = 1;
+        currentTapeID = tapeID;
+        currentTimeTotal = 0;
+        currentMp3Count = 1;
         
         String message;
         
@@ -664,17 +668,18 @@ public class CassetteFlow {
         for(MP3Info mp3Info: sideN) {
             long startTime = System.currentTimeMillis();
             
-            encodeMp3ID = mp3Info.getHash10C();
-            String data = createInputDataForMP3(tapeID, mp3Info, encodeMp3Count);
+            currentMp3ID = mp3Info.getHash10C();
+            String data = createInputDataForMP3(tapeID, mp3Info, currentMp3Count);
             
             // indicate the current track being procecessed 
-            cassetteFlowFrame.setSelectedIndexForSideJList(encodeMp3Count - 1);
+            if(cassetteFlowFrame != null)
+                cassetteFlowFrame.setSelectedIndexForSideJList(currentMp3Count - 1);
             
-            message = "Minimodem Encoding: " + tapeID + " Track [ " + encodeMp3Count + " ] ( " + mp3Info.getLengthAsTime() + " )";
-            cassetteFlowFrame.printToConsole(message, false);
+            message = "Minimodem Encoding: " + tapeID + " Track [ " + currentMp3Count + " ] ( " + mp3Info.getLengthAsTime() + " )";
+            printToGUIConsole(message, false);
             System.out.println("\n" + message);
                         
-            String filename = saveDirectoryName + File.separator + "track_" + encodeMp3Count + "-" + BAUDE_RATE + ".wav";
+            String filename = saveDirectoryName + File.separator + "track_" + currentMp3Count + "-" + BAUDE_RATE + ".wav";
             String command = "minimodem --tx " + BAUDE_RATE + " -f " + filename;
             
             Process process = Runtime.getRuntime().exec(command);
@@ -688,14 +693,14 @@ public class CassetteFlow {
             long encodeTime = endTime - startTime;
             
             message = "Minimodem Encode Time: " + encodeTime + " milliseconds";
-            cassetteFlowFrame.printToConsole(message, true);
+            printToGUIConsole(message, true);
             System.out.println(message);
             
-            message = "\nDone Encoding Track [ " + encodeMp3Count + " ] Total Tape Time: " + encodeTimeTotal + " seconds";
-            cassetteFlowFrame.printToConsole(message, true);
+            message = "\nDone Encoding Track [ " + currentMp3Count + " ] Total Tape Time: " + currentTimeTotal + " seconds";
+            printToGUIConsole(message, true);
             System.out.println(message); 
             
-            if(encodeMp3Count > 1) {
+            if(currentMp3Count > 1) {
                 // sleep for the desired mute time to allow for blank on the tape
                 // a blank on the tape allows for track skipping on decks that
                 // supported it
@@ -703,20 +708,21 @@ public class CassetteFlow {
                 int delay = muteTime * 1000 - (int) encodeTime;
                 
                 int sleepTime = (encodeTimeSeconds > muteTime)?encodeTimeSeconds : muteTime;
+                
                 message = "\nMute for " + sleepTime + " seconds ...";
-                cassetteFlowFrame.printToConsole(message, true);
+                printToGUIConsole(message, true);
                 System.out.println(message);
                 
                 if (delay > 0) {
-                    encodeTimeTotal += muteTime;
+                    currentTimeTotal += muteTime;
                     Thread.sleep(delay);
                 } else {
-                    encodeTimeTotal += encodeTimeSeconds;
+                    currentTimeTotal += encodeTimeSeconds;
                 }
             }
             // playback the wav file and wait for it to be done
             message = "\nPlaying Wav File: " + filename;
-            cassetteFlowFrame.printToConsole(message, true);
+            printToGUIConsole(message, true);
             System.out.println(message);
             
             try {
@@ -726,9 +732,11 @@ public class CassetteFlow {
                 }
             } catch(IOException | LineUnavailableException | UnsupportedAudioFileException e) {
                 message = "Error Playing Wav: " + filename + "\n" + e.getMessage();
-                cassetteFlowFrame.printToConsole(message, true);
+                printToGUIConsole(message, true);
                 System.out.println(message);
+                
                 e.printStackTrace();
+                
                 completed = false;
                 break;
             }
@@ -737,22 +745,23 @@ public class CassetteFlow {
             
             if(stopEncoding) {
                 message = "\nReal Time Encoding Stopped ...";
-                cassetteFlowFrame.printToConsole(message, true);
+                printToGUIConsole(message, true);
                 System.out.println(message);
                 completed = false;
                 break;
             }
             
             // increment mp3Count
-            encodeMp3Count++;
+            currentMp3Count++;
         }
         
         // indicate that the encoding is done
-        message = "\nEncoding of  " + (encodeMp3Count - 1) + " Tracks Done ...";
-        cassetteFlowFrame.printToConsole(message, true);
+        message = "\nEncoding of  " + (currentMp3Count - 1) + " Tracks Done ...";
+        printToGUIConsole(message, true);
         System.out.println(message);
         
-        cassetteFlowFrame.setEncodingDone();
+        if(cassetteFlowFrame != null)
+            cassetteFlowFrame.setEncodingDone();
         
         return completed;
     }
@@ -772,7 +781,7 @@ public class CassetteFlow {
         stopEncoding = false;
         
         String message = "Playing Encoded Wav: " + wavFile.getName();
-        cassetteFlowFrame.printToConsole(message, false);
+        printToGUIConsole(message, false);
         System.out.println("\n" + message);
         
         wavPlayer = new WavPlayer();
@@ -780,7 +789,7 @@ public class CassetteFlow {
             wavPlayer.playBigWav(wavFile, soundOutput);
         } catch (IOException | LineUnavailableException | UnsupportedAudioFileException e) {
             message = "Error Playing Wav: " + wavFile.getName() + "\n" + e.getMessage();
-            cassetteFlowFrame.printToConsole(message, true);
+            printToGUIConsole(message, true);
             System.out.println(message);
             
             e.printStackTrace();
@@ -789,17 +798,18 @@ public class CassetteFlow {
 
         if (stopEncoding) {
             message = "\nPlaying of Encoded Wav Stopped ...";
-            cassetteFlowFrame.printToConsole(message, true);
+            printToGUIConsole(message, true);
             System.out.println(message);
             completed = false;
         }
 
         // indicate that the encoding is done
         message = "\nPlaying of Encoded of Wav Done ...";
-        cassetteFlowFrame.printToConsole(message, true);
+        printToGUIConsole(message, true);
         System.out.println(message);
         
-        cassetteFlowFrame.setEncodingDone();
+        if(cassetteFlowFrame != null)
+            cassetteFlowFrame.setEncodingDone();
         
         return completed;
     }
@@ -819,8 +829,8 @@ public class CassetteFlow {
         
         // add a 1 second mute record to allow loading of mp3 correctly?
         for (int i = 0; i < 1; i++) {
-            encodeTimeTotal++;
-            String timeTotalString = String.format("%04d", encodeTimeTotal);
+            currentTimeTotal++;
+            String timeTotalString = String.format("%04d", currentTimeTotal);
             String line = mp3Id + "_000M_" + timeTotalString + "\n";
 
             for (int j = 0; j < replicate; j++) { // replicate record N times
@@ -831,14 +841,14 @@ public class CassetteFlow {
         // add line records for each second of sound
         for (int i = 0; i < mp3Info.getLength(); i++) {
             String timeString = String.format("%04d", i);
-            String timeTotalString = String.format("%04d", encodeTimeTotal);
+            String timeTotalString = String.format("%04d", currentTimeTotal);
             String line = mp3Id + "_" + timeString + "_" + timeTotalString + "\n";
 
             for (int j = 0; j < replicate; j++) { // replicate record N times
                 builder.append(line);
             }
 
-            encodeTimeTotal++;
+            currentTimeTotal++;
         }
 
         return builder.toString();
@@ -994,8 +1004,8 @@ public class CassetteFlow {
      */
     public void setDefaultMP3Directory(String mp3Directory) {
         MP3_DIR_NAME = mp3Directory;
-        MP3_DB_FILENAME = MP3_DIR_NAME + File.separator + "mp3InfoDB.txt";
-        TAPE_DB_FILENAME = MP3_DIR_NAME + File.separator + TAPE_FILE_DIR_NAME + File.separator + "tapeDB.txt";
+        MP3_DB_FILENAME = MP3_DIR_NAME + File.separator + "mp3db.txt";
+        TAPE_DB_FILENAME = MP3_DIR_NAME + File.separator + "tapedb.txt";
         LOG_FILE_NAME = MP3_DIR_NAME + File.separator + TAPE_FILE_DIR_NAME + File.separator + "tape.log";
     }
     
@@ -1016,6 +1026,18 @@ public class CassetteFlow {
     public void setMinimodemLogFile(String logfileName) {
         LOG_FILE_NAME = logfileName;
         saveProperties();
+    }
+    
+    /**
+     * If cassette flow GUI is available print to the GUI console
+     * 
+     * @param message
+     * @param append 
+     */
+    public void printToGUIConsole(String message, boolean append) {
+        if(cassetteFlowFrame != null) {
+            cassetteFlowFrame.printToConsole(message, append);
+        }
     }
     
     /**
