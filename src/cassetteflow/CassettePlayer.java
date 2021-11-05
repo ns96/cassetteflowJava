@@ -49,6 +49,7 @@ public class CassettePlayer implements LogFileTailerListener {
     private int startTime = -1;
     private int mp3TotalPlayTime = -1;
     private int currentPlayTime = -1;
+    private int currentTapeTime = -1;
     
     private int playtimeDiff = 0; // track the difference between the mp3 playtime and current PlayTime
     
@@ -70,8 +71,8 @@ public class CassettePlayer implements LogFileTailerListener {
     private int dataErrors = 0;
     
     // variables used for calling minimodem
-    private String commandMinimodem = "minimodem -r " + cassetteFlow.BAUDE_RATE;
-    private String commandPulseaudio = "pulseaudio";
+    private final String COMMAND_MINIMODEM = "minimodem -r " + cassetteFlow.BAUDE_RATE;
+    private final String COMMAND_PULSEAUDIO = "pulseaudio";
     private Process process;
     private BufferedReader miniModemReader;
     private BufferedReader miniModemErrReader;
@@ -130,14 +131,14 @@ public class CassettePlayer implements LogFileTailerListener {
         // if we running on mac os then we need to stat pulseaudio as well
         if(CassetteFlow.isMacOs) {
             try {
-                Runtime.getRuntime().exec(commandPulseaudio);
+                Runtime.getRuntime().exec(COMMAND_PULSEAUDIO);
                 Thread.sleep(1000);
                 System.out.println("Starting pulseaudio ...");
             } catch (InterruptedException ex) { }
         }
         
         // start new process
-        process = Runtime.getRuntime().exec(commandMinimodem);
+        process = Runtime.getRuntime().exec(COMMAND_MINIMODEM);
         
         String message = "\nReading data from minimodem ...";
         System.out.println(message);
@@ -260,6 +261,9 @@ public class CassettePlayer implements LogFileTailerListener {
                 
                 logLineCount++;
                 stopRecords = 0;
+                if(cassetteFlowFrame != null) {
+                    cassetteFlowFrame.setStopRecords(0, currentTapeTime);
+                }
             } else if(line.contains("### NOCARRIER")) {                
                 String stopMessage = "Playback Stopped {# errors " + dataErrors +  "/" + logLineCount + "} ...";
                 
@@ -282,7 +286,7 @@ public class CassettePlayer implements LogFileTailerListener {
                         if(miniModemErrReader != null) miniModemErrReader.close();
                         if(process != null) process.destroyForcibly();
                         
-                        process = Runtime.getRuntime().exec(commandMinimodem);
+                        process = Runtime.getRuntime().exec(COMMAND_MINIMODEM);
                         miniModemReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
                         miniModemErrReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
                         
@@ -312,6 +316,20 @@ public class CassettePlayer implements LogFileTailerListener {
                 stopRecords++;
                 
                 currentLineRecord = "PLAYBACK STOPPED # " + stopRecords; 
+                
+                // tell the UI the stop records so we can estimate the current
+                // track on the tape. This works for R2R
+                if(cassetteFlowFrame != null) {
+                    // check to see if there is actual audio data
+                    String sa[] = line.split(" ");
+                    
+                    if(!sa[4].equals("ampl=0.000")) {
+                        cassetteFlowFrame.setStopRecords(stopRecords, currentTapeTime);
+                    } else {
+                        //System.out.println("Line Record: " + line);
+                        cassetteFlowFrame.setStopRecords(0, currentTapeTime);
+                    }
+                }
             }
         }
     }
@@ -453,6 +471,7 @@ public class CassettePlayer implements LogFileTailerListener {
         //System.out.println("Line Data: " + playTime + " >> " + line);
         if(currentPlayTime != playTime && player != null) {
             currentPlayTime = playTime;
+            currentTapeTime = totalTime;
             
             // get the actual playback time from the mp3 player
             int mp3Time = player.getPosition()/1000 + startTime;

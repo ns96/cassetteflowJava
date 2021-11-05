@@ -9,8 +9,12 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -497,7 +501,13 @@ public class CassetteFlow {
             
             // add line records to create a N second muted section before next song
             if(mp3Count >= 1) {
-                for(int i = 0; i < muteTime; i++) {
+                currentTimeTotal += muteTime;
+                String timeTotalString = String.format("%04d", currentTimeTotal);
+                String line = mp3Id + "_00" + muteTime + "M_" + timeTotalString + "\n";
+                myWriter.write(line);
+                builder.append(line);
+                
+                /*for(int i = 0; i < muteTime; i++) {
                     currentTimeTotal += 1;
                     String timeTotalString = String.format("%04d", currentTimeTotal);
                     String line = mp3Id + "_000M_" + timeTotalString + "\n";
@@ -506,7 +516,7 @@ public class CassetteFlow {
                         myWriter.write(line);
                         builder.append(line);
                     }
-                }
+                }*/
             }
         
             for(int i = 0; i < mp3Info.getLength(); i++) {
@@ -550,7 +560,7 @@ public class CassetteFlow {
     public File[] directEncode(String saveDirectoryName, String tapeID, ArrayList<MP3Info> sideA, 
             ArrayList<MP3Info> sideB, int muteTime, boolean forDownload) throws IOException {
         
-        // list to stored array list
+        // an array to store the wave file
         File[] wavFiles = new File[2];
         wavFiles[0] = null;
         wavFiles[1] = null;
@@ -572,7 +582,8 @@ public class CassetteFlow {
             file = new File(saveDirectoryName + File.separator + "Tape_" + tapeID + "A" + ".txt");
             wavFile = new File(saveDirectoryName + File.separator + "Tape_" + tapeID + "A-" + BAUDE_RATE + ".wav");
             data = createInputFileForSide(file, tapeID + "A", sideA, muteTime, forDownload);
-            runMinimodem(wavFile, data);
+            runMiniModemAndMergeWav(wavFile, data, muteTime);
+            //runMinimodem(wavFile, data);
             wavFiles[0] = wavFile;
         }
         
@@ -580,7 +591,8 @@ public class CassetteFlow {
             file = new File(saveDirectoryName + File.separator + "Tape_" + tapeID + "B" + ".txt");
             wavFile = new File(saveDirectoryName + File.separator + "Tape_" + tapeID + "B-" + BAUDE_RATE + ".wav");
             data = createInputFileForSide(file, tapeID + "B", sideB, muteTime, forDownload);
-            runMinimodem(wavFile, data);
+            runMiniModemAndMergeWav(wavFile, data, muteTime);
+            //runMinimodem(wavFile, data);
             wavFiles[1] = wavFile;
         }
         
@@ -593,15 +605,68 @@ public class CassetteFlow {
     }
     
     /**
+     * Run mini modem and merge the resulting wav file into a single wav file
+     * 
+     * @param wavFile
+     * @param data
+     * @param muteTime 
+     */
+    public void runMiniModemAndMergeWav(File mergedWavFile, String data, int muteTime) throws IOException {
+        ArrayList<File> wavFiles = new ArrayList<>();
+        StringBuilder sb = new StringBuilder();
+        
+        // copy the 1 second blank wav if needed
+        String blankFilename = mergedWavFile.getParent() + File.separator + "blank_1s.wav";
+        File blankWavFile = new File(blankFilename);
+        if(!blankWavFile.exists()) {
+            InputStream source = getClass().getClassLoader().getResourceAsStream("sounds/blank_1s.wav");
+            Files.copy(source, Paths.get(blankFilename), StandardCopyOption.REPLACE_EXISTING);
+        }
+        
+        String[] sa = data.split("\n");
+        int track = 1;
+        String trackData;
+        File trackFile = new File(mergedWavFile.getParent() + File.separator + "track_" + track + ".wav");
+        
+        for(String line: sa) {
+            if(!line.contains("M_")) {
+                sb.append(line).append("\n");
+            } else {
+                trackData = sb.toString();
+                runMinimodem(trackFile, trackData);
+                wavFiles.add(trackFile);
+                
+                // add a blank files
+                for(int i = 0; i < muteTime; i++) {
+                    wavFiles.add(blankWavFile);
+                }
+                
+                track++;
+                trackFile = new File(mergedWavFile.getParent() + File.separator + "track_" + track + ".wav");
+                sb = new StringBuilder();
+            }
+        }
+        
+        // save the last set of data
+        trackData = sb.toString();
+        runMinimodem(trackFile, trackData);
+        wavFiles.add(trackFile);
+        
+        // merge the wave files now. This takes a lot of memory since the all the waves need
+        // to be loaded into memory
+        WavPlayer.mergeWavFiles(mergedWavFile, wavFiles);
+    }
+    
+    /**
      * Run minimodem to encode data
      * 
-     * @param waveFile
+     * @param wavFile
      * @param data
      * @throws IOException 
      */
-    private void runMinimodem(File waveFile, String data) throws IOException {
+    private void runMinimodem(File wavFile, String data) throws IOException {
         // call minimodem to do encoding
-        String command = "minimodem --tx " + BAUDE_RATE + " -f " + waveFile.toString().replace("\\", "/");
+        String command = "minimodem --tx " + BAUDE_RATE + " -f " + wavFile.toString().replace("\\", "/");
         Process process = Runtime.getRuntime().exec(command);
                 
         System.out.println("\nSending data to for encoding minimodem ...");

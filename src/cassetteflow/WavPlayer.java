@@ -3,10 +3,14 @@ package cassetteflow;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.SequenceInputStream;
+import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -193,6 +197,55 @@ public class WavPlayer {
         
         if(sound != null) {
             sound.stop();
+        }
+    }
+    
+    /**
+     * Merge all the files in the array list into a single wave file
+     * 
+     * @param mergeWavFile
+     * @param wavFiles 
+     */
+    public static void mergeWavFiles(File mergeWavFile, ArrayList<File> wavFiles) {
+        ArrayList<File> deleteFiles = new ArrayList<>();
+        
+        AudioInputStream appendedAIS = null;
+        
+        try {
+            for (int i = 0; i < wavFiles.size() - 1; i++) {
+                File wavFile2 = wavFiles.get(i + 1);
+                AudioInputStream clip2 = AudioSystem.getAudioInputStream(wavFile2);
+                
+                if(wavFile2.getName().contains("track_")) {
+                    deleteFiles.add(wavFile2);
+                }
+                
+                if (i == 0) {
+                    File wavFile1 = wavFiles.get(i);
+                    if(wavFile1.getName().contains("track_")) {
+                        deleteFiles.add(wavFile1);
+                    }
+                    
+                    AudioInputStream clip1 = AudioSystem.getAudioInputStream(wavFile1);
+                    appendedAIS = new AudioInputStream(new SequenceInputStream(clip1, clip2),
+                            clip1.getFormat(), clip1.getFrameLength() + clip2.getFrameLength());                    
+                    continue;
+                }
+
+                appendedAIS = new AudioInputStream(
+                        new SequenceInputStream(appendedAIS, clip2),
+                        appendedAIS.getFormat(), appendedAIS.getFrameLength() + clip2.getFrameLength());
+            }
+
+            AudioSystem.write(appendedAIS, AudioFileFormat.Type.WAVE, mergeWavFile);
+            appendedAIS.close();
+            
+            /* delete the track files now
+            for(File file: deleteFiles) {
+                Files.delete(file.toPath());
+            }*/
+        } catch (IOException | UnsupportedAudioFileException ex) {
+            ex.printStackTrace();
         }
     }
     
