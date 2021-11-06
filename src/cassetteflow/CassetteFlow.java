@@ -652,6 +652,11 @@ public class CassetteFlow {
         runMinimodem(trackFile, trackData);
         wavFiles.add(trackFile);
         
+        // add a blank record if only one file in the list
+        if(wavFiles.size() == 1) {
+            wavFiles.add(blankWavFile);
+        }
+        
         // merge the wave files now. This takes a lot of memory since the all the waves need
         // to be loaded into memory
         WavPlayer.mergeWavFiles(mergedWavFile, wavFiles);

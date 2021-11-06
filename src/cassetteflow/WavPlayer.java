@@ -208,6 +208,7 @@ public class WavPlayer {
      */
     public static void mergeWavFiles(File mergeWavFile, ArrayList<File> wavFiles) {
         ArrayList<File> deleteFiles = new ArrayList<>();
+        ArrayList<AudioInputStream> clips = new ArrayList<>();
         
         AudioInputStream appendedAIS = null;
         
@@ -218,17 +219,20 @@ public class WavPlayer {
                 
                 if(wavFile2.getName().contains("track_")) {
                     deleteFiles.add(wavFile2);
+                    clips.add(clip2);
                 }
                 
                 if (i == 0) {
                     File wavFile1 = wavFiles.get(i);
-                    if(wavFile1.getName().contains("track_")) {
-                        deleteFiles.add(wavFile1);
-                    }
                     
                     AudioInputStream clip1 = AudioSystem.getAudioInputStream(wavFile1);
                     appendedAIS = new AudioInputStream(new SequenceInputStream(clip1, clip2),
-                            clip1.getFormat(), clip1.getFrameLength() + clip2.getFrameLength());                    
+                            clip1.getFormat(), clip1.getFrameLength() + clip2.getFrameLength());
+
+                    if(wavFile1.getName().contains("track_")) {
+                        deleteFiles.add(wavFile1);
+                        clips.add(clip1);
+                    }
                     continue;
                 }
 
@@ -240,10 +244,15 @@ public class WavPlayer {
             AudioSystem.write(appendedAIS, AudioFileFormat.Type.WAVE, mergeWavFile);
             appendedAIS.close();
             
-            /* delete the track files now
-            for(File file: deleteFiles) {
-                Files.delete(file.toPath());
-            }*/
+            // sleep for 4 seconds to allow files to become unlocked so they can
+            // deleted
+            //Thread.sleep(4000);
+            
+            // try to delete the track files now. Doesn't work on windows!
+            for(int i = 0; i < deleteFiles.size(); i++) {
+                clips.get(i).close();
+                deleteFiles.get(i).delete();
+            }
         } catch (IOException | UnsupportedAudioFileException ex) {
             ex.printStackTrace();
         }

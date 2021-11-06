@@ -324,7 +324,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         encodeProgressBar.setIndeterminate(true);
         createButton.setEnabled(false);
         realtimeEncodeButton.setEnabled(false);
-        playEncodedWavButton.setEnabled(false);
+        //playEncodedWavButton.setEnabled(false);
         createDownloadButton.setEnabled(false);
         
         // get the correct label to update
@@ -431,7 +431,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         createButton.setEnabled(true);
         createDownloadButton.setEnabled(true);
         realtimeEncodeButton.setEnabled(true);
-        playEncodedWavButton.setEnabled(true);
+        //playEncodedWavButton.setEnabled(true);
     }
     
     /**
@@ -577,10 +577,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         createButton = new javax.swing.JButton();
         createDownloadButton = new javax.swing.JButton();
         mp3CountLabel = new javax.swing.JLabel();
-        playEncodedWavButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 0.8.3 (11/03/2021)");
+        setTitle("CassetteFlow v 0.8.4 (11/06/2021)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 
@@ -663,6 +662,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         });
         jScrollPane7.setViewportView(sideNJList);
 
+        sideNLabel.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
         sideNLabel.setText("MP3 Split Information Goes Here ...");
 
         javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
@@ -675,10 +675,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel6Layout.createSequentialGroup()
-                .addComponent(jScrollPane7, javax.swing.GroupLayout.PREFERRED_SIZE, 244, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 272, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(sideNLabel)
-                .addGap(0, 0, Short.MAX_VALUE))
+                .addContainerGap())
         );
 
         tapeJTabbedPane.addTab("MP3 Split", jPanel6);
@@ -906,11 +906,6 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
 
         logfileTextField.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         logfileTextField.setText("logfile");
-        logfileTextField.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                logfileTextFieldActionPerformed(evt);
-            }
-        });
 
         logfileButton.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         logfileButton.setText("Set Logfile");
@@ -1410,14 +1405,6 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         mp3CountLabel.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         mp3CountLabel.setText("0 MP3s");
 
-        playEncodedWavButton.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        playEncodedWavButton.setText("Play Encoded");
-        playEncodedWavButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                playEncodedWavButtonActionPerformed(evt);
-            }
-        });
-
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -1427,12 +1414,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
                 .addComponent(addMP3DirectoryButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(mp3CountLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGap(109, 109, 109)
+                .addGap(268, 268, 268)
                 .addComponent(createDownloadButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(createButton)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(playEncodedWavButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(exitButton))
         );
@@ -1446,8 +1431,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
                     .addComponent(createDownloadButton)
                     .addComponent(createButton)
                     .addComponent(exitButton)
-                    .addComponent(mp3CountLabel)
-                    .addComponent(playEncodedWavButton)))
+                    .addComponent(mp3CountLabel)))
         );
 
         setBounds(0, 0, 1003, 535);
@@ -2044,7 +2028,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
             playSideButton.setEnabled(true);
             realtimeEncodeButton.setEnabled(true);
             createDownloadButton.setEnabled(true);
-            playEncodedWavButton.setEnabled(true);
+            //playEncodedWavButton.setEnabled(true);
         }
     }//GEN-LAST:event_lyraTDisconnectButtonActionPerformed
 
@@ -2077,7 +2061,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
                 playSideButton.setEnabled(false);
                 realtimeEncodeButton.setEnabled(false);
                 createDownloadButton.setEnabled(false);
-                playEncodedWavButton.setEnabled(false);
+                //playEncodedWavButton.setEnabled(false);
             } else {
                 lyraTConsoleTextArea.append("Error Connecting to Cassette Flow Server @ " + host + "\n\n");
                 lyraTConnect= null;
@@ -2451,11 +2435,16 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         } catch(NumberFormatException nfe) { }
     }//GEN-LAST:event_baudRateButtonActionPerformed
     
+    private void setMP3DownloadServerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_setMP3DownloadServerButtonActionPerformed
+        String mp3DownloadServer = mp3DownloadServerTextField.getText();
+        cassetteFlow.setDownloadServer(mp3DownloadServer);        
+    }//GEN-LAST:event_setMP3DownloadServerButtonActionPerformed
+    
     /**
-     * Directly playback generated encode wav file
-     * @param evt 
+     * Functionality to playback an encoded wav file. Currently not used
+     * since this functionality is like real time encoding
      */
-    private void playEncodedWavButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_playEncodedWavButtonActionPerformed
+    private void playCurrentEncodedWavFile() {
         if(wavFiles != null) {
             realTimeEncoding = true;
             int side = tapeJTabbedPane.getSelectedIndex();
@@ -2463,7 +2452,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
             encodeProgressBar.setIndeterminate(true);
             createButton.setEnabled(false);
             realtimeEncodeButton.setEnabled(false);
-            playEncodedWavButton.setEnabled(false);
+            //playEncodedWavButton.setEnabled(false);
             createDownloadButton.setEnabled(false);
             
             // get the correct label to update
@@ -2513,17 +2502,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
             String message = "No Encoded Wav Files Found ...";
             JOptionPane.showMessageDialog(this, message, "Playback Error", JOptionPane.ERROR_MESSAGE);
         }
-    }//GEN-LAST:event_playEncodedWavButtonActionPerformed
-
-    private void logfileTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logfileTextFieldActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_logfileTextFieldActionPerformed
-
-    private void setMP3DownloadServerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_setMP3DownloadServerButtonActionPerformed
-        String mp3DownloadServer = mp3DownloadServerTextField.getText();
-        cassetteFlow.setDownloadServer(mp3DownloadServer);        
-    }//GEN-LAST:event_setMP3DownloadServerButtonActionPerformed
-
+    }
+    
     private void clearLyraTConsoleButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearLyraTConsoleButtonActionPerformed
         lyraTConsoleTextArea.setText("");
     }//GEN-LAST:event_clearLyraTConsoleButtonActionPerformed
@@ -2613,7 +2593,6 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
     private javax.swing.JList<String> mp3JList;
     private javax.swing.JTextField muteJTextField;
     private javax.swing.JButton playButton;
-    private javax.swing.JButton playEncodedWavButton;
     private javax.swing.JButton playSideButton;
     private javax.swing.JTextArea playbackInfoTextArea;
     private javax.swing.JComboBox<String> r2RComboBox;
