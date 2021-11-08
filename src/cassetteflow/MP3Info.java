@@ -13,6 +13,7 @@ public class MP3Info {
     private String Url;
     private int length;
     private String lengthAsTime;
+    private String parentDirectoryName = "";
     
     public MP3Info(File file, String hash10C, int length, String lengthAsTime) {
         this.file = file;
@@ -20,7 +21,11 @@ public class MP3Info {
         this.length = length;
         this.lengthAsTime = lengthAsTime; 
     }
-
+    
+    public void setParentDirectoryName(String parentDirectoryName) {
+        this.parentDirectoryName = parentDirectoryName;
+    }
+    
     public String getUrl() {
         return Url;
     }
@@ -44,9 +49,17 @@ public class MP3Info {
     public String getLengthAsTime() {
         return lengthAsTime;
     }
-
+    
+    public String getName() {
+        return file.getName() + " (" + lengthAsTime + ")";
+    }
+    
     @Override
     public String toString() {
-        return file.getName() + " (" + lengthAsTime + ")";
+        if(!parentDirectoryName.isEmpty()) {
+            return "[" + parentDirectoryName + "] " + file.getName() + " (" + lengthAsTime + ")";
+        } else {
+            return file.getName() + " (" + lengthAsTime + ")";
+        }
     }
 }

@@ -1,6 +1,8 @@
 package cassetteflow;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.regex.Pattern;
 import org.apache.commons.codec.digest.DigestUtils;
 
 /**
@@ -30,6 +32,25 @@ public class CassetteFlowUtil {
     public static String get10CharacterHash(String string) {
         String sha256hex = DigestUtils.sha256Hex(string);
         return sha256hex.substring(0, 10);
+    }
+    
+    /**
+     * Get the parent directory
+     * 
+     * @param file
+     * @return 
+     */
+    public static String getParentDirectoryName(File file) {
+        String parentName = "";
+        
+        String parentPath = file.getParent();
+        if(parentPath != null) {
+            String pattern = Pattern.quote(System.getProperty("file.separator"));
+            String[] sa = parentPath.split(pattern);
+            return sa[sa.length - 1];
+        }
+        
+        return parentName;
     }
     
     /**

@@ -124,7 +124,7 @@ public class CassetteFlow {
     public void init() {
         loadProperties();
         
-        loadMP3Files(MP3_DIR_NAME);
+        loadMP3Files(MP3_DIR_NAME, false);
         
         File file = new File(TAPE_DB_FILENAME);
         
@@ -1002,9 +1002,10 @@ public class CassetteFlow {
      * Method to get the mp3 files is a directory
      * 
      * @param directory
+     * @param storeParentDirectory
      * @return 
      */
-    public final void loadMP3Files(String directory) {
+    public final void loadMP3Files(String directory, boolean storeParentDirectory) {
         // try-catch block to handle exceptions
         try {
             File dir = new File(directory);
@@ -1022,7 +1023,7 @@ public class CassetteFlow {
 
             // Get the names of the files by using the .getName() method
             for (File file : files) {
-                addMP3FileToDatabase(file);
+                addMP3FileToDatabase(file, storeParentDirectory);
             }
             
             // save the database as a tab delimited text file
@@ -1034,7 +1035,7 @@ public class CassetteFlow {
                 saveProperties();
             }
         } catch (Exception e) {
-            System.err.println(e.getMessage());
+            e.printStackTrace();
         }
     }
     
@@ -1042,18 +1043,25 @@ public class CassetteFlow {
      * Add the MP3 to the database
      * 
      * @param file 
+     * @param storeParentDirectory 
      */
-    public void addMP3FileToDatabase(File file) {
+    public void addMP3FileToDatabase(File file, boolean storeParentDirectory) {
         String filename = file.getName();
         String sha10hex = CassetteFlowUtil.get10CharacterHash(filename);
         int length = getMP3Length(file);
         String lengthAsTime = CassetteFlowUtil.getTimeString(length);
 
         MP3Info mp3Info = new MP3Info(file, sha10hex, length, lengthAsTime);
+        
+        if(storeParentDirectory) {
+            String parentDirecotryName = CassetteFlowUtil.getParentDirectoryName(file);
+            mp3Info.setParentDirectoryName(parentDirecotryName);
+        }
+        
         mp3InfoList.add(mp3Info);
         mp3InfoDB.put(sha10hex, mp3Info);
-
-        System.out.println(sha10hex + " -- " + file.getName() + " : " + length);
+        
+        System.out.println(sha10hex + " -- " + mp3Info);
     }
         
     /**

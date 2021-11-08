@@ -176,7 +176,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
                    for(int i = 0; i < mp3Ids.size(); i++) {
                        MP3Info mp3Info = cassetteFlow.mp3InfoDB.get(mp3Ids.get(i));
                        String trackCount = String.format("%02d", (i + 1));
-                       tapeInfoTextArea.append("[" + trackCount + "] " + mp3Info + "\n");
+                       tapeInfoTextArea.append("[" + trackCount + "] " + mp3Info.getName() + "\n");
                    }
                 } else {
                    tapeInfoTextArea.setText("Invalid Tape ID ...");
@@ -207,11 +207,15 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
     
     /**
      * Used to estimate the current track during a FF or Rewind operation, especially on
-     * a R2R machine
+     * a R2R machine. 11/8/2021 Doesn't work correctly
      * 
      * @param stopRecords 
      */
     void setStopRecords(int stopRecords, int playTime) {
+        if(r2RComboBox.getSelectedIndex() == 0) {
+            return;
+        }
+        
         if(stopRecords > 0) {
             stopRecordsCounter++;
             
@@ -579,7 +583,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         mp3CountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 0.8.4 (11/06/2021)");
+        setTitle("CassetteFlow v 0.8.5 (11/08/2021)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 
@@ -1554,7 +1558,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
     private void directoryTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_directoryTextFieldActionPerformed
         String mp3Directory = directoryTextField.getText();
         if(!mp3Directory.isEmpty()) {
-            cassetteFlow.loadMP3Files(mp3Directory);
+            cassetteFlow.loadMP3Files(mp3Directory, true);
         
             // clear the current JList
             DefaultListModel model = (DefaultListModel) mp3JList.getModel();
@@ -1880,7 +1884,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
             cassettePlayer.stop();
             startDecodeButton.setEnabled(true);
         }
-
+        
+        // stop the thread which keeps track of stop records
+        trackStopRecords = false;
+        
         tapeInfoTextArea.setText("");
         trackInfoTextArea.setText("");
         playbackInfoTextArea.setText("Decoding process stopped ...");

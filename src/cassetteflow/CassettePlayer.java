@@ -429,7 +429,7 @@ public class CassettePlayer implements LogFileTailerListener {
             
                     /*** start thread to track playback ***/
                     message = "MP3 ID: " + mp3Id + "\n" + 
-                        mp3Info.toString() + "\n" + 
+                        mp3Info.getName() + "\n" + 
                         "Start Time @ " + startTime + " | Track Number: " + track;
                 } else {
                     message = "Playback Error.  Unknown MP3 ID: " + mp3Id; 
