@@ -322,6 +322,12 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         // only continue if we have a valid tape ID
         if(tapeID == null) return;
         
+        // check if to create save directory
+        File directory = new File(saveDirectoryName);
+        if (!directory.exists()){
+            directory.mkdir();
+        }
+        
         // set the wavFiles array to null
         wavFiles = null;
         
@@ -583,7 +589,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         mp3CountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 0.8.5 (11/08/2021)");
+        setTitle("CassetteFlow v 0.8.7 (11/12/2021)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 

@@ -1132,9 +1132,29 @@ public class CassetteFlow {
         
         CassetteFlow cassetteFlow = new CassetteFlow();
         
+        // check to see if to load other directories
+        if (args.length > 1) {
+            for (int i = 1; i < args.length; i++) {
+                String dirName = args[i];
+                File dir = new File(dirName);
+
+                System.out.println("Loading MP3s from " + dirName);
+
+                if (dir.isDirectory()) {
+                    cassetteFlow.loadMP3Files(dirName, true);
+                    System.out.println("Done with " + dirName);
+                }
+            }
+        }
+        
         if(DEBUG || (args.length > 0 && cla.equals("cli"))) {
-            CassettePlayer cassettePlayer = new CassettePlayer(cassetteFlow, LOG_FILE_NAME);
-            cassettePlayer.startLogTailer();
+            try {
+                CassettePlayer cassettePlayer = new CassettePlayer(cassetteFlow, LOG_FILE_NAME);
+                //cassettePlayer.startLogTailer();
+                cassettePlayer.startMinimodem(0);
+            } catch(IOException ex) {
+                ex.printStackTrace();
+            }
             
             // TEST CODE
             //cassettePlayer.startMP3Download("2ff38e2276");
