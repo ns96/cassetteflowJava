@@ -1,6 +1,10 @@
 package cassetteflow;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -17,6 +21,9 @@ import okhttp3.Response;
 public class ESP32LyraTConnect {
     private final OkHttpClient httpClient;
     private String host;
+    
+    // used to stop getting raw data
+    private boolean readRawData;
     
     public ESP32LyraTConnect(String host) {
         this.host = host;
@@ -140,14 +147,47 @@ public class ESP32LyraTConnect {
         }
     }
     
-    public String getRawData() {
-        try {
-            String url = host + "raw";
-            return sendGet(url);
-        } catch (IOException ex) {
-            Logger.getLogger(ESP32LyraTConnect.class.getName()).log(Level.SEVERE, null, ex);
-            return null;
-        }
+    /**
+     * Use a URL connection instead of the OKHTTP client since it was just too 
+     * hard to figure out how to continuously read from a HTTP client
+     * 
+     * @param recordProcessor
+     */
+    public void getRawData(RecordProcessorInterface recordProcessor) {
+        Thread thread = new Thread("LyraT Raw Data Thread") {
+            @Override
+            public void run() {
+                try {
+                    readRawData = true;
+
+                    URL url = new URL(host + "raw");
+                    URLConnection yc = url.openConnection();
+                    BufferedReader in = new BufferedReader(new InputStreamReader(
+                            yc.getInputStream()));
+
+                    String inputLine;
+                    while ((inputLine = in.readLine()) != null && readRawData) {
+                        if (recordProcessor != null) {
+                            recordProcessor.processLineRecord(inputLine);
+                        } else {
+                            System.out.println(inputLine);
+                        }
+                    }
+
+                    in.close();
+                } catch (IOException ex) {
+                    Logger.getLogger(ESP32LyraTConnect.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        };
+        thread.start();
+    }
+    
+    /**
+     * Stop read raw data
+     */
+    public void stopRawDataRead() {
+        readRawData = false;
     }
     
     public String create(String side, String tape, String mute, String data) {
@@ -278,6 +318,7 @@ public class ESP32LyraTConnect {
         sb.append(message).append("\n\n");
         System.out.println(message);
         
+        /*
         response = getRawData();
         if(response != null) {
             message = "PASS -- Get Line Record: " + response;
@@ -286,6 +327,7 @@ public class ESP32LyraTConnect {
         }
         sb.append(message).append("\n\n");
         System.out.println(message);
+        */
         
         response = create("N", "120", "4", "tapeId,mp3id_1,mp3id_2,mp3id_3,mp3id_4");
         if(response != null) {
@@ -328,7 +370,9 @@ public class ESP32LyraTConnect {
     
     // main method for testing
     public static void main(String[] args) throws Exception {
-        ESP32LyraTConnect lyraT = new ESP32LyraTConnect("http://localhost:8192/");
-        lyraT.runTest();
+        //ESP32LyraTConnect lyraT = new ESP32LyraTConnect("http://localhost:8192/");
+        ESP32LyraTConnect lyraT = new ESP32LyraTConnect("http://192.168.1.205/");
+        lyraT.getRawData(null);
+        //lyraT.runTest();
     }
 }

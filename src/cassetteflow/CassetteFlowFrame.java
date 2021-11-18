@@ -32,7 +32,7 @@ import javazoom.jl.player.Player;
  * Main User Interface for the cassette flow program
  * @author Nathan
  */
-public class CassetteFlowFrame extends javax.swing.JFrame {
+public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProcessorInterface {
     private CassetteFlow cassetteFlow;
     
     private CassettePlayer cassettePlayer;
@@ -211,7 +211,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
      * 
      * @param stopRecords 
      */
-    void setStopRecords(int stopRecords, int playTime) {
+    public void setStopRecords(int stopRecords, int playTime) {
         if(r2RComboBox.getSelectedIndex() == 0) {
             return;
         }
@@ -253,6 +253,15 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
             trackStopRecords = false;
             //System.out.println("No audio data ...");
         }
+    }
+    
+    /**
+     * Process a line record
+     * 
+     * @param lineRecord 
+     */
+    public void processLineRecord(String lineRecord) {
+        printToLyraTConsole("Line Record: " + lineRecord, true);
     }
     
     /**
@@ -589,7 +598,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         mp3CountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 0.8.7 (11/12/2021)");
+        setTitle("CassetteFlow v 0.8.8 (11/18/2021)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 
@@ -2242,36 +2251,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         // start the thread to read data from the lyraT
         lyraTGetRawButton.setEnabled(false);
         lyraTConsoleTextArea.append("\nReading of line records started ...\n\n");
-        
-        Thread thread = new Thread("LyraT Raw Data Thread") {
-            public void run() {
-                while(lyraTReadLineRecords) {
-                    String response = lyraTConnect.getRawData();
-                    printToLyraTconsole(response, true);
-                    
-                    if(response.startsWith("PLAYBACK STOPPED")) {
-                        if(response.contains("# 1")) {
-                            setPlaybackInfo(response, false);
-                        } else {
-                            setPlaybackInfo(response, true);
-                        }
-                        
-                        // reset this variable soe the start of mp3 can be rcorded
-                        lyraTCurrentMp3Id = "";
-                    } else {
-                        lyraTProcessRecord(response);
-                    }
-                    
-                    // pause a bit before reading next record
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException ex) {
-                        break;
-                    }
-                }
-            }
-        };
-        thread.start();
+
+        lyraTConnect.getRawData(this);
     }//GEN-LAST:event_lyraTGetRawButtonActionPerformed
 
     private void lyraTCreateAButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lyraTCreateAButtonActionPerformed
@@ -2372,7 +2353,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
         timer.start();
     }
     
-    public void printToLyraTconsole(String text, boolean append) {
+    public void printToLyraTConsole(String text, boolean append) {
         SwingUtilities.invokeLater(() -> {
             if(!append) {
                 lyraTConsoleTextArea.setText(text + "\n");
@@ -2522,10 +2503,13 @@ public class CassetteFlowFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_clearLyraTConsoleButtonActionPerformed
 
     private void lyraTStopRawButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lyraTStopRawButtonActionPerformed
+        if(lyraTConnect == null) return;
+        
+        lyraTConnect.stopRawDataRead();
         lyraTReadLineRecords = false;
         lyraTGetRawButton.setEnabled(true);
         
-        lyraTConsoleTextArea.append("\nReading of line records stopped ...");
+        lyraTConsoleTextArea.append("\nReading of line records stopped ...\n");
     }//GEN-LAST:event_lyraTStopRawButtonActionPerformed
 
     private void lyraTCreateBButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lyraTCreateBButtonActionPerformed

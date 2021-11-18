@@ -44,6 +44,8 @@ public class CassetteFlowServer {
     // the mute time between tracks
     private int mute = 0;
     
+    private boolean readRawData = false;
+    
     /**
      * Main constructor which starts the server
      * @throws IOException 
@@ -116,6 +118,7 @@ public class CassetteFlowServer {
     private class SetModeHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange he) throws IOException {
+            readRawData = false;
             String query = he.getRequestURI().getQuery();
             
             Map params = splitQuery(query);
@@ -129,6 +132,7 @@ public class CassetteFlowServer {
     private class getMp3DBHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange he) throws IOException {
+            readRawData = false;
             String response = cassetteFlow.getMP3InfoDBAsString();
             sendResponse(he, response);
         }
@@ -138,6 +142,7 @@ public class CassetteFlowServer {
     private class getTapeDBHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange he) throws IOException {
+            readRawData = false;
             String response = cassetteFlow.getTapeDBAsString();
             sendResponse(he, response);
         }
@@ -147,15 +152,20 @@ public class CassetteFlowServer {
     private class getInfoHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange he) throws IOException {
+            readRawData = false;
             String response;
             
-            if(currentMode == DECODE) {
-                response = "DECODE " + cassetteFlow.getCurrentLineRecord();
-            } else if(currentMode == ENCODE) {
-                response = "ENCODE " + cassetteFlow.currentTapeID + " " + cassetteFlow.currentTimeTotal;
-            } else {
-                response = "PASS THROUGH," + cassetteFlow.currentTapeID + "," + cassetteFlow.currentMp3Count + 
-                        "," + cassetteFlow.currentMp3ID;
+            switch (currentMode) {
+                case DECODE:
+                    response = "DECODE " + cassetteFlow.getCurrentLineRecord();
+                    break;
+                case ENCODE:
+                    response = "ENCODE " + cassetteFlow.currentTapeID + " " + cassetteFlow.currentTimeTotal;
+                    break;
+                default:
+                    response = "PASS THROUGH," + cassetteFlow.currentTapeID + "," + cassetteFlow.currentMp3Count +
+                            "," + cassetteFlow.currentMp3ID;
+                    break;
             }
             
             sendResponse(he, response);
@@ -166,8 +176,33 @@ public class CassetteFlowServer {
     private class getRawHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange he) throws IOException {
-            String response = cassetteFlow.getCurrentLineRecord();
-            sendResponse(he, response);
+            readRawData = true;
+            
+            Thread thread = new Thread("Server Raw Reader Thread") {
+                @Override
+                public void run() {
+                    try {
+                        he.sendResponseHeaders(200, 0); // specify a length of 0 to use chunking
+                        OutputStream os = he.getResponseBody();
+                        
+                        while (readRawData) {
+                            // the \r\n must be added for chunking to work
+                            String response = "\r\n" + cassetteFlow.getCurrentLineRecord();
+                            
+                            byte[] data = response.getBytes("UTF-8");
+                            os.write(data);
+                            os.flush();
+                            
+                            Thread.sleep(1000);
+                        }
+                        
+                        os.close();
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            };
+            thread.start();
         }
     }
     
@@ -175,6 +210,8 @@ public class CassetteFlowServer {
     private class createHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange he) throws IOException {
+            readRawData = false;
+            
             String query = he.getRequestURI().getQuery();
             
             Map params = splitQuery(query);
@@ -213,6 +250,8 @@ public class CassetteFlowServer {
     private class startHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange he) throws IOException {
+            readRawData = false;
+            
             String query = he.getRequestURI().getQuery();
             
             Map params = splitQuery(query);
@@ -268,6 +307,8 @@ public class CassetteFlowServer {
     private class playHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange he) throws IOException {
+            readRawData = false;
+            
             String query = he.getRequestURI().getQuery();
             
             Map params = splitQuery(query);
@@ -281,6 +322,8 @@ public class CassetteFlowServer {
     private class stopHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange he) throws IOException {
+            readRawData = false;
+            
             String response = "Stopping Encoding or Playing ...";
             sendResponse(he, response);
         }
