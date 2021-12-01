@@ -27,7 +27,7 @@ pretty good, even close to CD quality.
 ![LyraT](LyraT01.png)
 
 ## Installation
-Here are key steps to install and run the program on Windows, Mac, or Linux.
+Here are the key steps to install and run the program on Windows, Mac, or Linux.
 
 1. Install Oracle [JRE 8](https://www.java.com/en/download/manual.jsp) or above 
 (Tested with both Java 8 and 17). When using OpenJDK 8 on Raspian the MP3 player 
@@ -38,8 +38,8 @@ did not work correctly.
 3. Download and unzip the [CassetteFlow.zip](CassetteFlow.zip) release and 
 extract it to the folder of your choice.
 4. Open a Terminal window (On Windows, this must be the Cygwin Terminal), 
-change to the folder where CassetteFlow was unpack then run 
-"java -jar CassetteFlow.jar" no quotes. If everything installed correctly then 
+change to the folder where CassetteFlow was unpack, then run 
+"java -jar CassetteFlow.jar" no quotes. If everything installed correctly, then 
 the program GUI should display on the screen.
 
 The installation of the Minimodem program can be skipped if you only want to 
@@ -49,4 +49,4 @@ a 4 second blank section in between each track. Having these blank sections
 will allow the AMS to be used on tape decks containing this functionality.  
 
 ## Using
-Coming soon
+Coming Soon ...

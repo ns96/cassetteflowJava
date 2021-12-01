@@ -414,7 +414,14 @@ public class CassettePlayer implements LogFileTailerListener {
             if(!playTimeS.equals("000M")) {
                 muteRecords = 0;
                 currentMp3Id = mp3Id;
-                startTime = Integer.parseInt(playTimeS);
+                
+                try {
+                    startTime = Integer.parseInt(playTimeS);
+                } catch (NumberFormatException nfe) {
+                    System.out.println("Invalid Record @ Start Time");
+                    dataErrors++;
+                    return "DATA ERROR";
+                }
                 
                 MP3Info mp3Info = cassetteFlow.mp3InfoDB.get(mp3Id);
                 String message;
@@ -465,7 +472,7 @@ public class CassettePlayer implements LogFileTailerListener {
         } catch(NumberFormatException nfe) {
             System.out.println("Invalid play time: " + playTimeS);
             dataErrors++;
-            return "ERROR";
+            return "DATA ERROR";
         }
         
         //System.out.println("Line Data: " + playTime + " >> " + line);
@@ -542,12 +549,12 @@ public class CassettePlayer implements LogFileTailerListener {
                     FileInputStream mp3Stream = new FileInputStream(file);
                     player = new Player(mp3Stream);
                     
-                    // allow time for mp3 to load file? Attempted to fix bug
-                    Thread.sleep(200);
-                    
                     if(skipMS > 0) {
                         System.out.println("Milliseconds Skipped: " + skipMS);
                         player.skipMilliSeconds(skipMS);
+                        
+                        // Sleep for a bit in attempted to fix bug
+                        Thread.sleep(500);
                     }
                     
                     player.play();

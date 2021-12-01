@@ -172,7 +172,7 @@ public class CassetteFlowServer {
         }
     }
     
-    // class to handle getting information
+    // class to handle getting continous information
     private class getRawHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange he) throws IOException {
@@ -198,7 +198,7 @@ public class CassetteFlowServer {
                         
                         os.close();
                     } catch (Exception ex) {
-                        ex.printStackTrace();
+                        System.out.println("Connection closed ...");
                     }
                 }
             };
