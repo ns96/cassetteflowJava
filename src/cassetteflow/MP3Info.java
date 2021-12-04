@@ -13,13 +13,15 @@ public class MP3Info {
     private String Url;
     private int length;
     private String lengthAsTime;
+    private int bitRate;
     private String parentDirectoryName = "";
     
-    public MP3Info(File file, String hash10C, int length, String lengthAsTime) {
+    public MP3Info(File file, String hash10C, int length, String lengthAsTime, int bitRate) {
         this.file = file;
         this.hash10C = hash10C;
         this.length = length;
-        this.lengthAsTime = lengthAsTime; 
+        this.lengthAsTime = lengthAsTime;
+        this.bitRate = bitRate;
     }
     
     public void setParentDirectoryName(String parentDirectoryName) {
@@ -48,6 +50,10 @@ public class MP3Info {
     
     public String getLengthAsTime() {
         return lengthAsTime;
+    }
+    
+    public int getBitRate() {
+        return bitRate;
     }
     
     public String getName() {

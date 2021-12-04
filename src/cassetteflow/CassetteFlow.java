@@ -27,6 +27,9 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.SwingUtilities;
 import javazoom.jl.decoder.Bitstream;
 import javazoom.jl.decoder.Header;
+import org.jaudiotagger.audio.AudioFileIO;
+import org.jaudiotagger.audio.mp3.MP3AudioHeader;
+import org.jaudiotagger.audio.mp3.MP3File;
 
 /**
  * A simple program for creating input files for the cassette flow encoding
@@ -197,7 +200,7 @@ public class CassetteFlow {
                 MP3Info mp3Info = mp3InfoDB.get(key);
                 
                 // add "/sdcard/" to the filename so they match those on the LyraT
-                String line = key + "\t" + mp3Info.getLength() + "\t/sdcard/" + mp3Info.getFile().getName() + "\n";
+                String line = key + "\t" + mp3Info.getLength() + "\t" +  mp3Info.getBitRate() + "\t/sdcard/" + mp3Info.getFile().getName() + "\n";
                 
                 writer.write(line);
             }
@@ -217,7 +220,7 @@ public class CassetteFlow {
         
         for (String key : mp3InfoDB.keySet()) {
             MP3Info mp3Info = mp3InfoDB.get(key);
-            String line = key + "\t" + mp3Info.getLength() + "\t" + mp3Info.getFile().getName() + "\n";
+            String line = key + "\t" + mp3Info.getLength() + "\t" +  mp3Info.getBitRate() + "\t" + mp3Info.getFile().getName() + "\n";
             sb.append(line);
         }
         
@@ -239,9 +242,10 @@ public class CassetteFlow {
             String id = sa[0];
             int playtime = Integer.parseInt(sa[1]);
             String playtimeString = CassetteFlowUtil.getTimeString(playtime);
-            File file = new File(sa[2]);
+            int bitRate = Integer.parseInt(sa[2]);
+            File file = new File(sa[3]);
 
-            MP3Info mp3Info = new MP3Info(file, id, playtime, playtimeString);
+            MP3Info mp3Info = new MP3Info(file, id, playtime, playtimeString, bitRate);
             remoteDB.put(id, mp3Info);
             remoteList.add(mp3Info);
         }
@@ -981,21 +985,30 @@ public class CassetteFlow {
      * Method to return the length in seconds of the mp3
      * 
      * @param file
-     * @return 
+     * @return the file length and bit rate
      */
-    public int getMP3Length(File file) {
+    public int[] getMP3LengthAndBitRate(File file) {
+        int[] info = {-1,-1};
+        
         try {
-            FileInputStream fileIS = new FileInputStream(file);
+            /**FileInputStream fileIS = new FileInputStream(file);
             Bitstream bitstream = new Bitstream(fileIS);
             Header h = bitstream.readFrame();
             
             long tn = fileIS.getChannel().size();
 
-            return (int)h.total_ms((int) tn)/1000;
+            return (int)h.total_ms((int) tn)/1000;*/
+            
+            MP3File mp3 = (MP3File) AudioFileIO.read(file);
+            MP3AudioHeader audioHeader = mp3.getMP3AudioHeader();
+            info[0] = audioHeader.getTrackLength();
+            info[1] = (int)audioHeader.getBitRateAsNumber()*1000;
+            //System.out.println("Length/Rate " + info[0] + " | " + info[1]);
         } catch(Exception ex) {
             ex.printStackTrace();
-            return -1;
         }
+        
+        return info;
     }
     
     /**
@@ -1048,10 +1061,12 @@ public class CassetteFlow {
     public void addMP3FileToDatabase(File file, boolean storeParentDirectory) {
         String filename = file.getName();
         String sha10hex = CassetteFlowUtil.get10CharacterHash(filename);
-        int length = getMP3Length(file);
+        int[] ia = getMP3LengthAndBitRate(file);
+        int length = ia[0];
+        int bitRate = ia[1];
         String lengthAsTime = CassetteFlowUtil.getTimeString(length);
 
-        MP3Info mp3Info = new MP3Info(file, sha10hex, length, lengthAsTime);
+        MP3Info mp3Info = new MP3Info(file, sha10hex, length, lengthAsTime, bitRate);
         
         if(storeParentDirectory) {
             String parentDirecotryName = CassetteFlowUtil.getParentDirectoryName(file);

@@ -28,7 +28,7 @@ public class CassetteFlowServer {
     private final int DECODE = 1;
     private final int PASS = 2;
     
-    private int currentMode = ENCODE;
+    private int currentMode = DECODE;
     
     private HttpServer server;
     
