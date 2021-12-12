@@ -29,6 +29,8 @@
               <EmptySpace max="-2" attributes="0"/>
               <Component id="totalTimeLabel" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="32767" attributes="0"/>
+              <Component id="syncButton" min="-2" max="-2" attributes="0"/>
+              <EmptySpace max="-2" attributes="0"/>
               <Component id="closeButton" min="-2" max="-2" attributes="0"/>
           </Group>
           <Group type="102" attributes="0">
@@ -50,6 +52,7 @@
                   <Component id="closeButton" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="loadTapeButton" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="totalTimeLabel" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="syncButton" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
           </Group>
       </Group>
@@ -126,6 +129,14 @@
         </Property>
         <Property name="text" type="java.lang.String" value="Total Time: 00:00:00 "/>
       </Properties>
+    </Component>
+    <Component class="javax.swing.JButton" name="syncButton">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Merge With Local DB"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="syncButtonActionPerformed"/>
+      </Events>
     </Component>
   </SubComponents>
 </Form>

@@ -8,7 +8,6 @@ package cassetteflow;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import javax.swing.DefaultListModel;
 
 /**
@@ -105,6 +104,7 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
         mp3JList = new javax.swing.JList<>();
         loadTapeButton = new javax.swing.JButton();
         totalTimeLabel = new javax.swing.JLabel();
+        syncButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Tape Database (Local)");
@@ -140,6 +140,13 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
         totalTimeLabel.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
         totalTimeLabel.setText("Total Time: 00:00:00 ");
 
+        syncButton.setText("Merge With Local DB");
+        syncButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                syncButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -149,6 +156,8 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(totalTimeLabel)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(syncButton)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(closeButton))
             .addGroup(layout.createSequentialGroup()
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 182, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -165,7 +174,8 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(closeButton)
                     .addComponent(loadTapeButton)
-                    .addComponent(totalTimeLabel)))
+                    .addComponent(totalTimeLabel)
+                    .addComponent(syncButton)))
         );
 
         pack();
@@ -229,6 +239,14 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
             cassetteFlowFrame.loadTapeInformation(tapeID, sideAList, sideBList, tapeLength);
         }
     }//GEN-LAST:event_loadTapeButtonActionPerformed
+    
+    /**
+     * This merges the records from the lyraT board into the local tapeDB
+     * @param evt 
+     */
+    private void syncButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_syncButtonActionPerformed
+        cassetteFlowFrame.mergeCurrentTapeDBToLocal();
+    }//GEN-LAST:event_syncButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -271,6 +289,7 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JButton loadTapeButton;
     private javax.swing.JList<String> mp3JList;
+    private javax.swing.JButton syncButton;
     private javax.swing.JList<String> tapeDBJList;
     private javax.swing.JLabel totalTimeLabel;
     // End of variables declaration//GEN-END:variables

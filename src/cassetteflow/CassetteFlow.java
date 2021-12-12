@@ -4,7 +4,6 @@ import com.formdev.flatlaf.FlatDarculaLaf;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
@@ -25,8 +24,6 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.Mixer;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.SwingUtilities;
-import javazoom.jl.decoder.Bitstream;
-import javazoom.jl.decoder.Header;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.audio.mp3.MP3AudioHeader;
 import org.jaudiotagger.audio.mp3.MP3File;
@@ -131,7 +128,7 @@ public class CassetteFlow {
         
         File file = new File(TAPE_DB_FILENAME);
         
-        loadTapeDB(file);
+        tapeDB = loadTapeDB(file);
     }
     
     /**
@@ -285,7 +282,9 @@ public class CassetteFlow {
      * 
      * @param file 
      */
-    private void loadTapeDB(File file) {
+    private HashMap<String, ArrayList<String>> loadTapeDB(File file) {
+        HashMap<String, ArrayList<String>> localTapeDB = new HashMap<>();
+        
         try {
             if(file.exists()) {
                 /*FileInputStream fis = new FileInputStream(file);
@@ -307,21 +306,23 @@ public class CassetteFlow {
                         mp3Ids.add(sa[i]);
                     }
                     
-                    tapeDB.put(key, mp3Ids);
+                    localTapeDB.put(key, mp3Ids);
                 }
                 reader.close();
                 
                 
                 System.out.println("\nCassette database file loaded ... ");
                 
-                for(String key: tapeDB.keySet()) {
-                    ArrayList<String> mp3Ids = tapeDB.get(key);
+                for(String key: localTapeDB.keySet()) {
+                    ArrayList<String> mp3Ids = localTapeDB.get(key);
                     System.out.println(key + " >> " + mp3Ids);
                 }
             }
         } catch(Exception ex) {
             ex.printStackTrace();
         }
+        
+        return localTapeDB;
     }
     
     /**
@@ -345,6 +346,34 @@ public class CassetteFlow {
         }
         
         tapeDB = remoteDB;
+    }
+    
+    /**
+     * Merges the currently loaded tapedb to the version stored on the local disk
+     */
+    public void mergeCurrentTapeDBToLocal() {
+        try {
+            File file = new File(TAPE_DB_FILENAME);
+            HashMap<String, ArrayList<String>> localTapeDB = loadTapeDB(file);
+            
+            for(String key: tapeDB.keySet()) {
+                if(!localTapeDB.containsKey(key)) {
+                    localTapeDB.put(key, tapeDB.get(key));
+                }
+            }
+            
+            // save the local db file now
+            FileWriter writer = new FileWriter(file);
+            
+            for(String key: localTapeDB.keySet()) {
+                String line = key + "\t" + String.join("\t", tapeDB.get(key)) + "\n";
+                writer.write(line);
+            }
+            
+            writer.close();
+        } catch(IOException ex) {
+           ex.printStackTrace();
+        }
     }
     
     /**

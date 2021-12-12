@@ -230,6 +230,16 @@ public class ESP32LyraTConnect {
         }
     }
     
+    public String setEQ(String band) {
+        try {
+            String url = host + "eq?band=" + band;
+            return sendGet(url);
+        } catch (IOException ex) {
+            Logger.getLogger(ESP32LyraTConnect.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+    }
+    
     /**
      * Method to send a get request to the LyraT http server
      * 
