@@ -601,6 +601,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
 
         buttonGroup1 = new javax.swing.ButtonGroup();
         buttonGroup2 = new javax.swing.ButtonGroup();
+        buttonGroup3 = new javax.swing.ButtonGroup();
         jTabbedPane1 = new javax.swing.JTabbedPane();
         jPanel1 = new javax.swing.JPanel();
         directoryTextField = new javax.swing.JTextField();
@@ -695,6 +696,14 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         eqRadioButton6 = new javax.swing.JRadioButton();
         eqRadioButton7 = new javax.swing.JRadioButton();
         eqRadioButton8 = new javax.swing.JRadioButton();
+        jLabel9 = new javax.swing.JLabel();
+        speakerRadioButton = new javax.swing.JRadioButton();
+        bluetoothRadioButton = new javax.swing.JRadioButton();
+        bluetoothComboBox = new javax.swing.JComboBox<>();
+        jLabel10 = new javax.swing.JLabel();
+        volDownButton = new javax.swing.JButton();
+        volMuteButton = new javax.swing.JButton();
+        volUpButton = new javax.swing.JButton();
         jPanel7 = new javax.swing.JPanel();
         jScrollPane8 = new javax.swing.JScrollPane();
         consoleTextArea = new javax.swing.JTextArea();
@@ -1219,7 +1228,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         });
 
         jLabel7.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
-        jLabel7.setText("LyraT EQ Settings:");
+        jLabel7.setText("LyraT EQ+ Settings:");
 
         buttonGroup1.add(lyraTDecodeRadioButton);
         lyraTDecodeRadioButton.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
@@ -1337,7 +1346,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             }
         });
 
-        jPanel9.setLayout(new java.awt.GridLayout(2, 4));
+        jPanel9.setLayout(new java.awt.GridLayout(4, 4));
 
         buttonGroup2.add(eqRadioButton1);
         eqRadioButton1.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
@@ -1419,6 +1428,44 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             }
         });
         jPanel9.add(eqRadioButton8);
+
+        jLabel9.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        jLabel9.setText("SOUND OUTPUT");
+        jPanel9.add(jLabel9);
+
+        buttonGroup3.add(speakerRadioButton);
+        speakerRadioButton.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        speakerRadioButton.setText("SPEAKER");
+        speakerRadioButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                speakerRadioButtonActionPerformed(evt);
+            }
+        });
+        jPanel9.add(speakerRadioButton);
+
+        buttonGroup3.add(bluetoothRadioButton);
+        bluetoothRadioButton.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        bluetoothRadioButton.setText("BLUETOOTH");
+        jPanel9.add(bluetoothRadioButton);
+
+        bluetoothComboBox.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        bluetoothComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "BT Speaker 1", "BT Speaker 2", "BT Speaker 3" }));
+        jPanel9.add(bluetoothComboBox);
+
+        jLabel10.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        jLabel10.setText("VOLUME");
+        jPanel9.add(jLabel10);
+
+        volDownButton.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        volDownButton.setText("VOLUME DOWN");
+        jPanel9.add(volDownButton);
+
+        volMuteButton.setText("MUTE");
+        jPanel9.add(volMuteButton);
+
+        volUpButton.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        volUpButton.setText("VOLUME UP");
+        jPanel9.add(volUpButton);
 
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
         jPanel5.setLayout(jPanel5Layout);
@@ -2779,6 +2826,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         if(lyraTConnect == null) return;
         lyraTConnect.setEQ(EQConstants.BASS_BOOST);
     }//GEN-LAST:event_eqRadioButton8ActionPerformed
+
+    private void speakerRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_speakerRadioButtonActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_speakerRadioButtonActionPerformed
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addMP3DirectoryButton;
@@ -2786,8 +2837,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JComboBox<String> audioOutputComboBox;
     private javax.swing.JButton baudRateButton;
     private javax.swing.JTextField baudRateTextField;
+    private javax.swing.JComboBox<String> bluetoothComboBox;
+    private javax.swing.JRadioButton bluetoothRadioButton;
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.ButtonGroup buttonGroup2;
+    private javax.swing.ButtonGroup buttonGroup3;
     private javax.swing.JButton clearConsoleButton;
     private javax.swing.JButton clearLyraTConsoleButton;
     private javax.swing.JButton clearMP3ListButton;
@@ -2812,6 +2866,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JCheckBox filterShuffleCheckBox;
     private javax.swing.JTextField filterShuffleTextField;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -2819,6 +2874,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
+    private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
@@ -2881,6 +2937,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JLabel sideBLabel;
     private javax.swing.JList<String> sideNJList;
     private javax.swing.JLabel sideNLabel;
+    private javax.swing.JRadioButton speakerRadioButton;
     private javax.swing.JButton startDecodeButton;
     private javax.swing.JCheckBox startServerCheckBox;
     private javax.swing.JButton stopButton;
@@ -2894,6 +2951,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JTextArea trackInfoTextArea;
     private javax.swing.JLabel tracksLabel;
     private javax.swing.JButton viewTapeDBButton;
+    private javax.swing.JButton volDownButton;
+    private javax.swing.JButton volMuteButton;
+    private javax.swing.JButton volUpButton;
     // End of variables declaration//GEN-END:variables
 
 }
