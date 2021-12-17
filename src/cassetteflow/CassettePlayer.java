@@ -5,9 +5,12 @@
  */
 package cassetteflow;
 
+import com.goxr3plus.streamplayer.stream.StreamPlayer;
+import com.goxr3plus.streamplayer.stream.StreamPlayerEvent;
+import com.goxr3plus.streamplayer.stream.StreamPlayerException;
+import com.goxr3plus.streamplayer.stream.StreamPlayerListener;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -19,22 +22,20 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javazoom.jl.player.Player;
 
 /**
  * This class processes data on cassette tape for playback
  * 
  * @author Nathan
  */
-public class CassettePlayer implements LogFileTailerListener {
+public class CassettePlayer implements LogFileTailerListener, StreamPlayerListener {
     private CassetteFlow cassetteFlow;
     private CassetteFlowFrame cassetteFlowFrame;
     
-    private Player player = null;
-    
-    private Thread playerThread = null;
+    private StreamPlayer player = null;
         
     // used to read the log file outputted by the minimodem program
     // "minimodem -r 1200 &> >(tee -a tape.log)"
@@ -86,6 +87,9 @@ public class CassettePlayer implements LogFileTailerListener {
     
     private String currentLineRecord;
     
+    // keeps track of the current audio progress
+    private int audioProgress;
+    
     public CassettePlayer(CassetteFlowFrame cassetteFlowFrame, CassetteFlow cassetteFlow, String logfile) {
         this(cassetteFlow, logfile);
         this.cassetteFlowFrame = cassetteFlowFrame;
@@ -109,7 +113,7 @@ public class CassettePlayer implements LogFileTailerListener {
     }
     
     /**
-     * Gets the decoing stats such as total errors
+     * Gets the decoding stats such as total errors
      * @return 
      */
     public String getStats() {
@@ -269,8 +273,7 @@ public class CassettePlayer implements LogFileTailerListener {
                 
                 // make sure we stop any previous players
                 if (player != null) {
-                    player.close();
-                    player = null;
+                    player.stop();
                     
                     if(cassetteFlowFrame != null) {
                         cassetteFlowFrame.setPlaybackInfo(stopMessage, false);
@@ -432,6 +435,7 @@ public class CassettePlayer implements LogFileTailerListener {
                     mp3TotalPlayTime = mp3Info.getLength();
                 
                     /*** start thread to begin music playback ***/
+                    audioProgress = 0;
                     playMP3(mp3File);
             
                     /*** start thread to track playback ***/
@@ -481,7 +485,8 @@ public class CassettePlayer implements LogFileTailerListener {
             currentTapeTime = totalTime;
             
             // get the actual playback time from the mp3 player
-            int mp3Time = player.getPosition()/1000 + startTime;
+            //int mp3Time = player.get/1000 + startTime;
+            int mp3Time = audioProgress + startTime;
             playtimeDiff = mp3Time - currentPlayTime;
             
             String timeFromMp3 = String.format("%04d", mp3Time);
@@ -535,10 +540,26 @@ public class CassettePlayer implements LogFileTailerListener {
     private void playMP3(File file) {
         // make sure we stop any previous threads
         if (player != null) {
-            player.close();
-            player = null;
+            player.stop();
+        } else {
+            player = new StreamPlayer();
+            player.addStreamPlayerListener(this);
         }
+        
+        try {
+            player.open(file);
 
+            if (startTime > 0) {
+                System.out.println("Seconds Skipped: " + startTime);
+                player.seekTo(startTime);
+            }
+
+            player.play();
+        } catch(StreamPlayerException ex) {
+            ex.printStackTrace();
+        }
+        
+        /*
         playerThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -565,14 +586,14 @@ public class CassettePlayer implements LogFileTailerListener {
         }
         );
         playerThread.start();
+        */
     }
      
     // stop reading logfile and playing
     public void stop() {
         // make sure we stop any previous threads
         if (player != null) {
-            player.close();
-            player = null;
+            player.stop();
         }
         
         if(tailer != null) {
@@ -685,4 +706,15 @@ public class CassettePlayer implements LogFileTailerListener {
     private String encodeValue(String value) throws UnsupportedEncodingException {
         return URLEncoder.encode(value, StandardCharsets.UTF_8.toString()).replace("+", "%20");
     }
+
+    @Override
+    public void opened(Object o, Map<String, Object> map) { }
+
+    @Override
+    public void progress(int nEncodedBytes, long microsecondPosition, byte[] pcmData, Map<String, Object> map) {
+        audioProgress = (int) (microsecondPosition / 1000000);
+    }
+
+    @Override
+    public void statusUpdated(StreamPlayerEvent spe) { } 
 }

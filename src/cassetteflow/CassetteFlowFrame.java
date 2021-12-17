@@ -5,6 +5,7 @@
  */
 package cassetteflow;
 
+import com.goxr3plus.streamplayer.stream.StreamPlayer;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.event.ActionEvent;
@@ -45,7 +46,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     
     private ArrayList<MP3Info> sideNList = new ArrayList<>();
     
-    private Player player = null;
+    private  StreamPlayer player = null;
     
     private Thread playerThread = null;
     
@@ -387,7 +388,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         }
         
         if(lyraTConnect == null) {
-            mp3CountLabel.setText(cassetteFlow.mp3InfoList.size() + " MP3s files loaded ...");
+            mp3CountLabel.setText(cassetteFlow.mp3InfoList.size() + " Audio files loaded ...");
         } else {
             mp3CountLabel.setText(cassetteFlow.mp3InfoList.size() + " LyraT files loaded ...");
         }
@@ -723,7 +724,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         mp3CountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 0.8.17 (12/12/2021)");
+        setTitle("CassetteFlow v 0.9.0 (12/17/2021)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 
@@ -1660,7 +1661,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         });
 
         addMP3DirectoryButton.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        addMP3DirectoryButton.setText("Add MP3 Directory");
+        addMP3DirectoryButton.setText("Add Directory");
         addMP3DirectoryButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 addMP3DirectoryButtonActionPerformed(evt);
@@ -1835,7 +1836,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private void directoryTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_directoryTextFieldActionPerformed
         String mp3Directory = directoryTextField.getText();
         if(!mp3Directory.isEmpty()) {
-            cassetteFlow.loadMP3Files(mp3Directory, true);
+            cassetteFlow.loadAudioFiles(mp3Directory, true);
         
             // clear the current JList
             DefaultListModel model = (DefaultListModel) mp3JList.getModel();
@@ -1888,16 +1889,26 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             
             // make sure we stop any previous threads
             if(player != null) {
-                player.close();
-                player = null;
+                player.stop();
+            } else {
+                player = new StreamPlayer();
             }
             
+            try {
+                player.open(mp3Info.getFile());
+                player.play();
+            } catch (Exception e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(null, "Error playing mp3 file");
+            }
+            
+            /**
             playerThread = new Thread( new Runnable() {
                 @Override
                 public void run() {
                     try {
                         FileInputStream mp3Stream = new FileInputStream(mp3Info.getFile());
-                        player = new Player(mp3Stream);
+                        player.open(mp3Stream);
                         player.play();
                     } catch (Exception e) {
                         JOptionPane.showMessageDialog(null, "Error playing mp3 file");
@@ -1906,13 +1917,14 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             }
             );
             playerThread.start();
+            */
         }
     }//GEN-LAST:event_playButtonActionPerformed
 
     private void stopButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stopButtonActionPerformed
         if(player != null) {
-            player.close();
-            player = null;
+            player.stop();
+            player.reset();
             
             if(playSide) {
                 playSide = false;
@@ -2071,8 +2083,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
 
         // make sure we stop any previous threads
         if (player != null) {
-            player.close();
-            player = null;
+            player.stop();
+        } else {
+            player = new StreamPlayer();
         }
         
         playButton.setEnabled(false);
@@ -2105,24 +2118,42 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                     int track = 1;
                     
                     for(MP3Info mp3Info: mp3List) {
-                        jlist.setSelectedIndex(track -1);
-                        trackLabel.setText("Playing Track: " + String.format("%02d", track));
-                        System.out.println("Playing " + mp3Info + " on side: " + sideString);
-                        
-                        FileInputStream mp3Stream = new FileInputStream(mp3Info.getFile());
-                        player = new Player(mp3Stream);
-                        player.play(); // This is a blocking call
-                        
                         // check to see if playback was stopped
                         if(!playSide) {
+                            player.stop();
                             break;
+                        }
+                        
+                        jlist.setSelectedIndex(track -1);
+                        //trackLabel.setText("Playing Track: " + String.format("%02d", track));
+                        System.out.println("Playing " + mp3Info + " on side: " + sideString);
+                        
+                        // reset the player to free up resources here
+                        player.reset();
+                        
+                        player.open(mp3Info.getFile());
+                        player.play(); 
+                        
+                        // wait for playback to stop
+                        int loopCount = 0;
+                        while(player.isPlaying()) {
+                            //update display every second
+                            if(loopCount%10 == 0) {
+                                int playTime = loopCount/10;
+                                String message = "Playing Track: " + String.format("%02d", track) + 
+                                        " (" + CassetteFlowUtil.getTimeString(playTime) + ")";
+                                trackLabel.setText(message);
+                            }
+                            
+                            loopCount++;
+                            Thread.sleep(100);
                         }
                         
                         // pause a certain about of time to create a mute portion
                         Thread.sleep(muteTime*1000);
                         track++;
                     }
-                    
+                                        
                     // reable the play side button
                     playButton.setEnabled(true);
                     playSideButton.setEnabled(true);

@@ -24,7 +24,9 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.Mixer;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.SwingUtilities;
+import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
+import org.jaudiotagger.audio.AudioHeader;
 import org.jaudiotagger.audio.mp3.MP3AudioHeader;
 import org.jaudiotagger.audio.mp3.MP3File;
 
@@ -124,7 +126,7 @@ public class CassetteFlow {
     public void init() {
         loadProperties();
         
-        loadMP3Files(MP3_DIR_NAME, false);
+        loadAudioFiles(MP3_DIR_NAME, false);
         
         File file = new File(TAPE_DB_FILENAME);
         
@@ -1020,19 +1022,19 @@ public class CassetteFlow {
         int[] info = {-1,-1};
         
         try {
-            /**FileInputStream fileIS = new FileInputStream(file);
-            Bitstream bitstream = new Bitstream(fileIS);
-            Header h = bitstream.readFrame();
-            
-            long tn = fileIS.getChannel().size();
-
-            return (int)h.total_ms((int) tn)/1000;*/
-            
-            MP3File mp3 = (MP3File) AudioFileIO.read(file);
-            MP3AudioHeader audioHeader = mp3.getMP3AudioHeader();
-            info[0] = audioHeader.getTrackLength();
-            info[1] = (int)audioHeader.getBitRateAsNumber()*1000;
-            //System.out.println("Length/Rate " + info[0] + " | " + info[1]);
+            if(file.getName().toLowerCase().endsWith("mp3")) { 
+                MP3File mp3 = (MP3File) AudioFileIO.read(file);
+                MP3AudioHeader audioHeader = mp3.getMP3AudioHeader();
+                info[0] = audioHeader.getTrackLength();
+                info[1] = (int)audioHeader.getBitRateAsNumber()*1000;
+                //System.out.println("Length/Rate " + info[0] + " | " + info[1]);
+            } else {
+                // flac file?
+                AudioFile af = AudioFileIO.read(file);
+                AudioHeader audioHeader = af.getAudioHeader();
+                info[0] = audioHeader.getTrackLength();
+                info[1] = (int)audioHeader.getBitRateAsNumber()*1000;
+            }
         } catch(Exception ex) {
             ex.printStackTrace();
         }
@@ -1041,13 +1043,13 @@ public class CassetteFlow {
     }
     
     /**
-     * Method to get the mp3 files is a directory
+     * Method to get the mp3 of flac files is a directory
      * 
      * @param directory
      * @param storeParentDirectory
      * @return 
      */
-    public final void loadMP3Files(String directory, boolean storeParentDirectory) {
+    public final void loadAudioFiles(String directory, boolean storeParentDirectory) {
         // try-catch block to handle exceptions
         try {
             File dir = new File(directory);
@@ -1055,8 +1057,18 @@ public class CassetteFlow {
             FilenameFilter filter = new FilenameFilter() {
                 @Override
                 public boolean accept(File f, String name) {
-                    // We want to find only .mp3 files                   
-                    return name.toLowerCase().endsWith(".mp3");
+                    
+                    // We want to find only .mp3 or flac files                   
+                    boolean found;
+                    name = name.toLowerCase();
+                    
+                    if(name.endsWith(".mp3") || name.endsWith(".flac")) {
+                        found = true;
+                    } else {
+                        found = false;
+                    }
+                    
+                    return found; 
                 }
             };
 
@@ -1185,7 +1197,7 @@ public class CassetteFlow {
                 System.out.println("Loading MP3s from " + dirName);
 
                 if (dir.isDirectory()) {
-                    cassetteFlow.loadMP3Files(dirName, true);
+                    cassetteFlow.loadAudioFiles(dirName, true);
                     System.out.println("Done with " + dirName);
                 }
             }
