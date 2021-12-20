@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package cassetteflow;
 
 import com.goxr3plus.streamplayer.stream.StreamPlayer;
@@ -28,6 +23,8 @@ import java.util.logging.Logger;
 
 /**
  * This class processes data on cassette tape for playback
+ * it uses the https://github.com/goxr3plus/java-stream-player
+ * for all playback functionality
  * 
  * @author Nathan
  */
@@ -436,7 +433,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                 
                     /*** start thread to begin music playback ***/
                     audioProgress = 0;
-                    playMP3(mp3File);
+                    playAudio(mp3File, mp3Info.getLength());
             
                     /*** start thread to track playback ***/
                     message = "MP3 ID: " + mp3Id + "\n" + 
@@ -534,10 +531,11 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     }
     
     /**
-     * Play mp3 indicated by the file object in another thread
+     * Play mp3 or flac indicated by the file object in another thread
+     * 
      * @param file 
      */
-    private void playMP3(File file) {
+    private void playAudio(File file, int duration) {
         // make sure we stop any previous threads
         if (player != null) {
             player.stop();
@@ -551,7 +549,18 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
 
             if (startTime > 0) {
                 System.out.println("Seconds Skipped: " + startTime);
-                player.seekTo(startTime);
+                
+                if(file.getName().toLowerCase().contains(".mp3")) {
+                    player.seekTo(startTime);
+                } else {
+                    // must be FLAC so calling seekTo cause everything to crash!
+                    // but unfortunately this method doesn't work either
+                    long totalBytes = player.getTotalBytes();
+                    double percentage = (startTime * 100) / duration;
+                    long bytes = (long) (totalBytes * (percentage / 100));
+                    long bytesSkipped = player.seekBytes(bytes);
+                    System.out.println("Bytes Skipped: " + bytesSkipped + " / Requested: " + bytes);         
+                }             
             }
 
             player.play();

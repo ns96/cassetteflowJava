@@ -10,7 +10,6 @@ import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.event.ActionEvent;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,10 +26,10 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
-import javazoom.jl.player.Player;
 
 /**
  * Main User Interface for the cassette flow program
+ * 
  * @author Nathan
  */
 public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProcessorInterface {
@@ -92,6 +91,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private int stopRecordsTimer = 0;
     private int stopRecordsCounter = 0;
     private int stopRecordsCounterOld = 0;
+    private boolean playing;
     
     /**
      * Creates new form CassetteFlowFrame
@@ -724,7 +724,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         mp3CountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 0.9.0 (12/17/2021)");
+        setTitle("CassetteFlow v 0.9.4 (12/19/2021)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 
@@ -832,6 +832,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             String[] strings = { "MP3 File 1", "MP3 File 2" };
             public int getSize() { return strings.length; }
             public String getElementAt(int i) { return strings[i]; }
+        });
+        mp3JList.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+                mp3JListValueChanged(evt);
+            }
         });
         jScrollPane1.setViewportView(mp3JList);
 
@@ -1072,7 +1077,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         playbackInfoTextArea.setEditable(false);
         playbackInfoTextArea.setColumns(20);
         playbackInfoTextArea.setFont(new java.awt.Font("Arial", 0, 36)); // NOI18N
+        playbackInfoTextArea.setLineWrap(true);
         playbackInfoTextArea.setRows(5);
+        playbackInfoTextArea.setWrapStyleWord(true);
         jScrollPane5.setViewportView(playbackInfoTextArea);
 
         trackInfoTextArea.setEditable(false);
@@ -1885,7 +1892,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         
         if(selectedMp3s != null && selectedMp3s.size() >= 1) {
             final MP3Info mp3Info = (MP3Info) selectedMp3s.get(0);
-            System.out.println("\nPlaying MP3: " + mp3Info);
+            System.out.println("\nPlaying Audio: " + mp3Info);
             
             // make sure we stop any previous threads
             if(player != null) {
@@ -1895,36 +1902,56 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             }
             
             try {
+                playing = true;
+                
                 player.open(mp3Info.getFile());
                 player.play();
+                
+                playButton.setEnabled(false);
             } catch (Exception e) {
                 e.printStackTrace();
-                JOptionPane.showMessageDialog(null, "Error playing mp3 file");
+                JOptionPane.showMessageDialog(null, "Error audio file");
             }
             
-            /**
-            playerThread = new Thread( new Runnable() {
-                @Override
-                public void run() {
+            // start thread to keep track of if we playing sound
+            if(playerThread == null) {
+                playerThread = new Thread(() -> {
                     try {
-                        FileInputStream mp3Stream = new FileInputStream(mp3Info.getFile());
-                        player.open(mp3Stream);
-                        player.play();
-                    } catch (Exception e) {
-                        JOptionPane.showMessageDialog(null, "Error playing mp3 file");
-                    }
-                }
+                        int stopCount = 0;
+                        
+                        while(playing) {
+                            if(player.isStopped()) {
+                                stopCount++;
+                                if(stopCount > 10) {
+                                    System.out.println("Player Auto Stopped ...");
+                                    playing = false;
+                                    break;
+                                }
+                            } else {
+                                stopCount = 0;
+                            }
+                            
+                            Thread.sleep(1000);
+                        }
+                    } catch(InterruptedException ex) {}
+                    
+                    playButton.setEnabled(true);
+                });
+                playerThread.start();
             }
-            );
-            playerThread.start();
-            */
         }
+        
     }//GEN-LAST:event_playButtonActionPerformed
 
     private void stopButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stopButtonActionPerformed
         if(player != null) {
             player.stop();
             player.reset();
+            
+            if(playing) {
+                playing = false;
+                playButton.setEnabled(true);
+            }
             
             if(playSide) {
                 playSide = false;
@@ -2861,6 +2888,14 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private void speakerRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_speakerRadioButtonActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_speakerRadioButtonActionPerformed
+
+    private void mp3JListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_mp3JListValueChanged
+         int firstIndex = evt.getFirstIndex();
+         
+         if(firstIndex >= 0 && player != null && player.isPlaying()) {
+             playButtonActionPerformed(null);
+         }
+    }//GEN-LAST:event_mp3JListValueChanged
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addMP3DirectoryButton;
