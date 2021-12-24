@@ -801,7 +801,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         tapeJTabbedPane.addTab("Side B", jPanel4);
 
         sideNJList.setModel(new javax.swing.AbstractListModel<String>() {
-            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
+            String[] strings = { "Not Supported Yet" };
             public int getSize() { return strings.length; }
             public String getElementAt(int i) { return strings[i]; }
         });

@@ -553,8 +553,10 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                 if(file.getName().toLowerCase().contains(".mp3")) {
                     player.seekTo(startTime);
                 } else {
-                    // must be FLAC so calling seekTo cause everything to crash!
-                    // but unfortunately this method doesn't work either
+                    /** 12/20/2021 -- BUG
+                     * must be FLAC so calling seekTo cause everything to crash!
+                     * but unfortunately this method doesn't work either
+                     */
                     long totalBytes = player.getTotalBytes();
                     double percentage = (startTime * 100) / duration;
                     long bytes = (long) (totalBytes * (percentage / 100));
