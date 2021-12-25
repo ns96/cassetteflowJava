@@ -2511,14 +2511,16 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     
     private void viewTapeDBButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_viewTapeDBButtonActionPerformed
         TapeDatabaseFrame tapeDBFrame = new TapeDatabaseFrame();
+        boolean remoteDB = false;
         
         if(lyraTConnect == null) {
             tapeDBFrame.setTitle("Tape Database (" + CassetteFlow.TAPE_DB_FILENAME + ")");
         } else {
             tapeDBFrame.setTitle("Tape Database LyraT@" + cassetteFlow.LYRA_T_HOST);
+            remoteDB = true;
         }
         
-        tapeDBFrame.setCassetteFlowFrame(this);
+        tapeDBFrame.setCassetteFlowFrame(this, remoteDB);
         
         tapeDBFrame.setTapeDB(cassetteFlow.tapeDB);
         tapeDBFrame.setMP3InfoDB(cassetteFlow.mp3InfoDB);

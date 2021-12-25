@@ -22,6 +22,8 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
     private CassetteFlowFrame cassetteFlowFrame;
     
     private int currentTapeLength = 0;
+    
+    private boolean remoteDB = false;
 
     /**
      * Creates new form TapeDatabaseFrame
@@ -35,8 +37,9 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
      * 
      * @param cassetteFlowFrame 
      */
-    public void setCassetteFlowFrame(CassetteFlowFrame cassetteFlowFrame) {
+    public void setCassetteFlowFrame(CassetteFlowFrame cassetteFlowFrame, boolean remoteDB) {
         this.cassetteFlowFrame = cassetteFlowFrame;
+        syncButton.setEnabled(remoteDB);
     }
     
     /**
@@ -199,12 +202,18 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
             
             int totalTime = 0;
             for (int i = 0; i < mp3IdList.size(); i++) {
-                MP3Info mp3Info = mp3InfoDB.get(mp3IdList.get(i));
-                totalTime += mp3Info.getLength() + 4;
-                
+                String mp3Id = mp3IdList.get(i);
+                MP3Info mp3Info = mp3InfoDB.get(mp3Id);
                 String trackCount = String.format("%02d", (i + 1));
-                String trackName = "[" + trackCount + "] " + mp3Info;
-                model.addElement(trackName);
+                
+                if(mp3Info != null) {
+                    totalTime += mp3Info.getLength() + 4;
+                    String trackName = "[" + trackCount + "] " + mp3Info;
+                    model.addElement(trackName);
+                } else {
+                    String trackName =  "[" + trackCount + "] " + " Invalid ID -- No audio file loaded ...";
+                    model.addElement(trackName);
+                }
             }
             
             // add the total time 
