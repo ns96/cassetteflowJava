@@ -79,13 +79,18 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     // used to indicate if the minimodem program is running
     private boolean decoding;
     
-    // vairiable to track when we are paused to allowing clearing the buffer
+    // variable to track when we are paused to allowing clearing the buffer
     private boolean paused = false;
     
+    // the current line record
     private String currentLineRecord;
     
     // keeps track of the current audio progress
     private int audioProgress;
+    
+    // the speed factor to increase or decrease playback speed incase
+    // the tape deck is running slow/fast
+    private double speedFactor = 1.0;
     
     public CassettePlayer(CassetteFlowFrame cassetteFlowFrame, CassetteFlow cassetteFlow, String logfile) {
         this(cassetteFlow, logfile);
@@ -99,6 +104,15 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
         this.logfile = logfile;
         
         DOWNLOAD_DIR = CassetteFlow.MP3_DIR_NAME + File.separator + "downloads";
+    }
+    
+    /**
+     * Set the speed factor for playback
+     * 
+     * @param speedFactor 
+     */
+    public void setSpeedFactor(double speedFactor) {
+       this.speedFactor = speedFactor; 
     }
     
     /**
@@ -545,6 +559,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
         }
         
         try {
+            player.setSpeedFactor(speedFactor);
             player.open(file);
 
             if (startTime > 0) {
@@ -569,35 +584,6 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
         } catch(StreamPlayerException ex) {
             ex.printStackTrace();
         }
-        
-        /*
-        playerThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    // the millisconds to skip
-                    int skipMS = startTime * 1000;
-
-                    FileInputStream mp3Stream = new FileInputStream(file);
-                    player = new Player(mp3Stream);
-                    
-                    if(skipMS > 0) {
-                        System.out.println("Milliseconds Skipped: " + skipMS);
-                        player.skipMilliSeconds(skipMS);
-                        
-                        // Sleep for a bit in attempted to fix bug
-                        Thread.sleep(500);
-                    }
-                    
-                    player.play();
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-        }
-        );
-        playerThread.start();
-        */
     }
      
     // stop reading logfile and playing
