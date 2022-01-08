@@ -11,17 +11,20 @@ an attempt to simulate digital music playback from an analog compact audio casse
 Essentially, the data stored on the cassette will be used to control the playback 
 of MP3 files stored on the Desktop and hopefully the ESP32-LyraT board transparently. 
 So for all practical purposes, it would seem that a typical audio cassette is 
-outputting high quality digital audio. In order to accomplish this it makes use 
-of the excellent [Minimodem](https://github.com/kamalmostafa/minimodem) 
-program to encode the generate input files to wav files for recording onto 
-cassette tapes, as well has decoding data from cassettes.
+outputting high quality digital audio. Think of it has having the Playlist on the
+cassettes.  In order to accomplish this it makes use of the excellent 
+[Minimodem](https://github.com/kamalmostafa/minimodem) program to encode the generate 
+input files to wav files for recording onto cassette tapes, as well has decoding 
+data from cassettes.
 
 Please note that this project is not meant to as a way to get cassettes to sound 
 good. With the proper deck and tape type the audio from a cassette that sound 
-pretty good, even close to CD quality. 
+pretty good, even matching CD quality with proper tape type and deck. 
 
 ![Main GUI 1](gui01.png)
 ![Main GUI 2](gui02.png)
+![Main GUI 3](gui03.png)
+![Main GUI 4](gui04.png)
 ![Data Flow 1](dataflow01.png)
 ![Data Flow 2](dataflow02.png)
 ![LyraT](LyraT01.png)
@@ -43,10 +46,10 @@ change to the folder where CassetteFlow was unpack, then run
 the program GUI should display on the screen.
 
 The installation of the Minimodem program can be skipped if you only want to 
-make regular audio tapes from the loaded MP3s. Just add the MP3s to the 
-"Tape Side" list, then press "Play Side" to automatically play all the MP3s with
-a 4 second blank section in between each track. Having these blank sections 
+make regular audio tapes from the loaded MP3s or FLAC. Just add the audio files to 
+the "Tape Side" list, then press "Play Side" to automatically play all the files 
+with a 4 second blank section in between each track. Having these blank sections 
 will allow the AMS to be used on tape decks containing this functionality.  
 
 ## Using
-Coming Soon ...
+Coming soon ...

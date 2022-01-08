@@ -92,4 +92,28 @@ public class CassetteFlowUtil {
         
         return track;
     }
+    
+    /**
+     * Check to see if the length of an audio file is within
+     * 
+     * @param audioLength
+     * @param filterRange
+     * @return 
+     */
+    public static boolean withinFilterRange(int audioLength, String filterRange) {        
+        try {
+            // get the filter limit and convert to minutes
+            String[] sa = filterRange.split("-");
+            int filterLimitMin = Integer.parseInt(sa[0].trim())*60;
+            int filterLimitMax = Integer.parseInt(sa[1].trim())*60;
+            
+            if(audioLength >= filterLimitMin && audioLength <= filterLimitMax) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch(NumberFormatException nfe) {
+            return true;
+        }
+    } 
 }

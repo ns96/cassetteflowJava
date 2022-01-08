@@ -716,7 +716,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         setMP3DownloadServerButton = new javax.swing.JButton();
         mp3DownloadServerTextField = new javax.swing.JTextField();
         filterShuffleCheckBox = new javax.swing.JCheckBox();
-        filterShuffleTextField = new javax.swing.JTextField();
+        shuffleFilterTextField = new javax.swing.JTextField();
         jLabel11 = new javax.swing.JLabel();
         playbackSpeedTextField = new javax.swing.JTextField();
         exitButton = new javax.swing.JButton();
@@ -726,7 +726,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         mp3CountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 0.9.5 (12/28/2021)");
+        setTitle("CassetteFlow v 0.9.6 (01/08/2022)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 
@@ -1617,16 +1617,21 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         mp3DownloadServerTextField.setText("http://");
 
         filterShuffleCheckBox.setSelected(true);
-        filterShuffleCheckBox.setText("Shuffle Filter (min-max)");
+        filterShuffleCheckBox.setText("Shuffle Filter (min-max) minutes");
         filterShuffleCheckBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 filterShuffleCheckBoxActionPerformed(evt);
             }
         });
 
-        filterShuffleTextField.setColumns(4);
-        filterShuffleTextField.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
-        filterShuffleTextField.setText("5");
+        shuffleFilterTextField.setColumns(4);
+        shuffleFilterTextField.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        shuffleFilterTextField.setText("0-10");
+        shuffleFilterTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                shuffleFilterTextFieldActionPerformed(evt);
+            }
+        });
 
         jLabel11.setText("Playback Speed");
 
@@ -1648,7 +1653,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                     .addGroup(jPanel7Layout.createSequentialGroup()
                         .addComponent(filterShuffleCheckBox)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(filterShuffleTextField)))
+                        .addComponent(shuffleFilterTextField)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel7Layout.createSequentialGroup()
@@ -1671,7 +1676,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(filterShuffleCheckBox)
-                    .addComponent(filterShuffleTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(shuffleFilterTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel11)
                     .addComponent(playbackSpeedTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -2064,14 +2069,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         // check to see if we should limit the size of mp3s to add to shuffle
         // this will be set to mp3s of 600 seconds (10 minutes) or less if selected
         boolean filterShuffle = filterShuffleCheckBox.isSelected();
-        int filterLimit = 0;
-        
-        try {
-            // get the filter limit and convert to minutes
-            filterLimit = Integer.parseInt(filterShuffleTextField.getText())*60;
-        } catch(NumberFormatException nfe) {
-            filterShuffle = false;
-        }
+        String filterRange = shuffleFilterTextField.getText();
         
         DefaultListModel model;
         JLabel sideLabel;
@@ -2102,9 +2100,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         for(int i = 0; i < shuffledMp3s.size(); i++) {
             MP3Info mp3Info = shuffledMp3s.get(i);
             
-            // check to see if to exclude this mp3 if it's longer than specific 
-            // limit
-            if(filterShuffle && mp3Info.getLength() > filterLimit) continue;
+            // check to see if to exclude this audio files if it's not within the specific range
+            if(filterShuffle && !CassetteFlowUtil.withinFilterRange(mp3Info.getLength(), filterRange)) continue;
             
             // check to make sure we not duplicating mp3 on the A and B side as mp3
             if(side == 0) {
@@ -2136,7 +2133,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         
         sideLabel.setText("Play Time: " + CassetteFlowUtil.getTimeString(totalTime));
     }//GEN-LAST:event_shuffleButtonActionPerformed
-
+    
     private void createButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createButtonActionPerformed
         if(lyraTConnect != null) {
             lyraTCreateAndEncodeInputFiles();
@@ -2968,6 +2965,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private void filterShuffleCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_filterShuffleCheckBoxActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_filterShuffleCheckBoxActionPerformed
+
+    private void shuffleFilterTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_shuffleFilterTextFieldActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_shuffleFilterTextFieldActionPerformed
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addMP3DirectoryButton;
@@ -3002,7 +3003,6 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JRadioButton eqRadioButton8;
     private javax.swing.JButton exitButton;
     private javax.swing.JCheckBox filterShuffleCheckBox;
-    private javax.swing.JTextField filterShuffleTextField;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
@@ -3071,6 +3071,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JButton removeMP3Button;
     private javax.swing.JButton setMP3DownloadServerButton;
     private javax.swing.JButton shuffleButton;
+    private javax.swing.JTextField shuffleFilterTextField;
     private javax.swing.JList<String> sideAJList;
     private javax.swing.JLabel sideALabel;
     private javax.swing.JList<String> sideBJList;
