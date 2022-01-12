@@ -390,7 +390,7 @@ public class CassetteFlow {
         // save information for side A
         ArrayList<String> mp3Ids = new ArrayList<>();
         
-        if(sideAList != null) {
+        if(sideAList != null && !sideAList.isEmpty()) {
             // store track for side A
             for(MP3Info mp3Info: sideAList) {
                 mp3Ids.add(mp3Info.getHash10C());
@@ -399,7 +399,7 @@ public class CassetteFlow {
             tapeDB.put(tapeID + "A", mp3Ids);
         }
         
-        if(sideBList != null) {
+        if(sideBList != null && !sideBList.isEmpty()) {
             mp3Ids = new ArrayList<>();
             
             // store track for side B

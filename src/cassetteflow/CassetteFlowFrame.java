@@ -726,7 +726,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         mp3CountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 0.9.6 (01/08/2022)");
+        setTitle("CassetteFlow v 0.9.7 (01/12/2022)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 
@@ -1970,7 +1970,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 playButton.setEnabled(false);
             } catch (Exception e) {
                 e.printStackTrace();
-                JOptionPane.showMessageDialog(null, "Error audio file");
+                JOptionPane.showMessageDialog(null, "Error playing audio file");
             }
             
             // start thread to keep track of if we playing sound
@@ -2015,7 +2015,6 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             
             if(playSide) {
                 playSide = false;
-                playSideButton.setEnabled(true);
             }
         }
         
@@ -2155,7 +2154,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     }//GEN-LAST:event_createButtonActionPerformed
 
     private void playSideButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_playSideButtonActionPerformed
-        final int side = tapeJTabbedPane.getSelectedIndex(); 
+        final int side = tapeJTabbedPane.getSelectedIndex();
+        final String tapeID = tapeIDTextField.getText();
         final int muteTime = Integer.parseInt(muteJTextField.getText());
         
         System.out.println("\nPlaying Side " + side);
@@ -2167,8 +2167,14 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             player = new StreamPlayer();
         }
         
+        // disable some buttons in the UI
         playButton.setEnabled(false);
         playSideButton.setEnabled(false);
+        moveTrackUpButton.setEnabled(false);
+        moveTrackDownButton.setEnabled(false);
+        realtimeEncodeButton.setEnabled(false);
+        createDownloadButton.setEnabled(false);
+        createButton.setEnabled(false);
         playSide = true;
         
         playerThread = new Thread(new Runnable() {
@@ -2191,9 +2197,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                     trackLabel = trackBLabel;
                 }
                 
+                // save to the tape database
+                cassetteFlow.addToTapeDB(tapeID, sideAList, sideBList, true);
+                
+                // play the sound file now MP3 or FLAC
                 try {
-                    // check to see only to play the selected mp3 or all of it of none selected
-                    
                     int track = 1;
                     
                     for(MP3Info mp3Info: mp3List) {
@@ -2228,14 +2236,20 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                             Thread.sleep(100);
                         }
                         
-                        // pause a certain about of time to create a mute portion
+                        // pause a certain amount of time to create a mute section
                         Thread.sleep(muteTime*1000);
                         track++;
                     }
                                         
-                    // reable the play side button
+                    // re-enable the play side button and other buttons
                     playButton.setEnabled(true);
                     playSideButton.setEnabled(true);
+                    moveTrackUpButton.setEnabled(true);
+                    moveTrackDownButton.setEnabled(true);
+                    realtimeEncodeButton.setEnabled(true);
+                    createDownloadButton.setEnabled(true);
+                    createButton.setEnabled(true);
+                    
                     trackLabel.setText("");
                     playSide = false;
                 } catch (Exception e) {
@@ -2951,11 +2965,12 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     }//GEN-LAST:event_speakerRadioButtonActionPerformed
 
     private void mp3JListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_mp3JListValueChanged
-         int firstIndex = evt.getFirstIndex();
-         
-         if(firstIndex >= 0 && player != null && player.isPlaying()) {
-             playButtonActionPerformed(null);
-         }
+
+        int firstIndex = evt.getFirstIndex();
+
+        if (firstIndex >= 0 && !playSide && player != null && player.isPlaying()) {
+            playButtonActionPerformed(null);
+        }
     }//GEN-LAST:event_mp3JListValueChanged
 
     private void tapeLengthComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tapeLengthComboBoxActionPerformed
