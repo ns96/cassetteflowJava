@@ -4,7 +4,6 @@ package cassetteflow;
 import java.io.File;
 import java.io.IOException;
 import java.io.SequenceInputStream;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
@@ -245,7 +244,7 @@ public class WavPlayer {
             appendedAIS.close();
             
             // sleep for 4 seconds to allow files to become unlocked so they can
-            // deleted
+            // deleted -- 1/30/2022 -- Doesn't work on Windows
             //Thread.sleep(4000);
             
             // try to delete the track files now. Doesn't work on windows!

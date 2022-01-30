@@ -3,11 +3,11 @@ package cassetteflow;
 import java.io.File;
 
 /**
- * This class hold information about mp3 files such as file or url locations
+ * This class hold information about mp3 or flac files such as file or url locations
  * 
  * @author Nathan
  */
-public class MP3Info {
+public class AudioInfo {
     private String hash10C;
     private File file;
     private String Url;
@@ -16,7 +16,7 @@ public class MP3Info {
     private int bitRate;
     private String parentDirectoryName = "";
     
-    public MP3Info(File file, String hash10C, int length, String lengthAsTime, int bitRate) {
+    public AudioInfo(File file, String hash10C, int length, String lengthAsTime, int bitRate) {
         this.file = file;
         this.hash10C = hash10C;
         this.length = length;

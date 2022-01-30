@@ -133,7 +133,7 @@ public class CassetteFlowServer {
         @Override
         public void handle(HttpExchange he) throws IOException {
             readRawData = false;
-            String response = cassetteFlow.getMP3InfoDBAsString();
+            String response = cassetteFlow.getAudioInfoDBAsString();
             sendResponse(he, response);
         }
     }
@@ -163,8 +163,8 @@ public class CassetteFlowServer {
                     response = "ENCODE " + cassetteFlow.currentTapeID + " " + cassetteFlow.currentTimeTotal;
                     break;
                 default:
-                    response = "PASS THROUGH," + cassetteFlow.currentTapeID + "," + cassetteFlow.currentMp3Count +
-                            "," + cassetteFlow.currentMp3ID;
+                    response = "PASS THROUGH," + cassetteFlow.currentTapeID + "," + cassetteFlow.currentAudioCount +
+                            "," + cassetteFlow.currentAudioID;
                     break;
             }
             
@@ -280,8 +280,8 @@ public class CassetteFlowServer {
                         for(int i =0; i < sideList.size(); i++) {
                             int trackNumber =  i + 1;
                             String mp3Id = sideList.get(i);
-                            cassetteFlow.currentMp3Count = trackNumber;
-                            cassetteFlow.currentMp3ID = mp3Id;
+                            cassetteFlow.currentAudioCount = trackNumber;
+                            cassetteFlow.currentAudioID = mp3Id;
                             
                             System.out.println("Server Encoding Track # " + trackNumber + " / " + mp3Id);  
                             try {
@@ -290,7 +290,7 @@ public class CassetteFlowServer {
                         }
                         
                         // change the trackNumber to -1 to indicate we are done with encoding
-                        cassetteFlow.currentMp3Count = -1;
+                        cassetteFlow.currentAudioCount = -1;
                     }
                 };
                 thread.start();

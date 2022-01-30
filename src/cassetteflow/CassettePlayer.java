@@ -42,10 +42,10 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     
     // variables used to keep track of current playing mp3
     private String currentTapeId = "";
-    private String currentMp3Id = "";
-    private String mp3Filename = "";
+    private String currentAudioId = "";
+    private String audioFilename = "";
     private int startTime = -1;
-    private int mp3TotalPlayTime = -1;
+    private int audioTotalPlayTime = -1;
     private int currentPlayTime = -1;
     private int currentTapeTime = -1;
     
@@ -103,7 +103,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
         
         this.logfile = logfile;
         
-        DOWNLOAD_DIR = CassetteFlow.MP3_DIR_NAME + File.separator + "downloads";
+        DOWNLOAD_DIR = CassetteFlow.AUDIO_DIR_NAME + File.separator + "downloads";
     }
     
     /**
@@ -264,10 +264,10 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                     currentLineRecord = processRecord(line);
                 } else {
                     if(logLineCount%10 == 0) {
-                        String message = logLineCount + " -- MP3 Downloads in progress. \nPlease stop cassette playback ...";
+                        String message = logLineCount + " -- File Downloads in progress. \nPlease stop cassette playback ...";
                         
                         if(cassetteFlowFrame != null) {
-                            cassetteFlowFrame.setPlayingMP3Info(message);
+                            cassetteFlowFrame.setPlayingAudioInfo(message);
                         }
                         
                         System.out.println(message);
@@ -313,7 +313,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                     }
                 }
 
-                currentMp3Id = "";
+                currentAudioId = "";
                 currentPlayTime = -1;
                 playtimeDiff = 0;
                 
@@ -382,7 +382,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
         String[] sa = line.split("_");
         String tapeId = sa[0];
         String track = sa[1];
-        String mp3Id = sa[2];
+        String audioId = sa[2];
         String playTimeS = sa[3];
         
         // get the total time from the tape data
@@ -415,7 +415,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                 Thread thread = new Thread() {
                     @Override
                     public void run() {
-                        startMP3Download(mp3Id);
+                        startAudioDownload(audioId);
                     }
                 };
                 thread.start();
@@ -424,10 +424,10 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
             }
         }
         
-        if(!currentMp3Id.equals(mp3Id)) {
+        if(!currentAudioId.equals(audioId)) {
             if(!playTimeS.equals("000M")) {
                 muteRecords = 0;
-                currentMp3Id = mp3Id;
+                currentAudioId = audioId;
                 
                 try {
                     startTime = Integer.parseInt(playTimeS);
@@ -437,29 +437,29 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                     return "DATA ERROR";
                 }
                 
-                MP3Info mp3Info = cassetteFlow.mp3InfoDB.get(mp3Id);
+                AudioInfo audioInfo = cassetteFlow.audioInfoDB.get(audioId);
                 String message;
                 
-                if(mp3Info != null) {
-                    File mp3File = mp3Info.getFile();
-                    mp3Filename = mp3File.getName();
-                    mp3TotalPlayTime = mp3Info.getLength();
+                if(audioInfo != null) {
+                    File audioFile = audioInfo.getFile();
+                    audioFilename = audioFile.getName();
+                    audioTotalPlayTime = audioInfo.getLength();
                 
                     /*** start thread to begin music playback ***/
                     audioProgress = 0;
-                    playAudio(mp3File, mp3Info.getLength());
+                    playAudio(audioFile, audioInfo.getLength());
             
                     /*** start thread to track playback ***/
-                    message = "MP3 ID: " + mp3Id + "\n" + 
-                        mp3Info.getName() + "\n" + 
+                    message = "Audio ID: " + audioId + "\n" + 
+                        audioInfo.getName() + "\n" + 
                         "Start Time @ " + startTime + " | Track Number: " + track;
                 } else {
-                    message = "Playback Error.  Unknown MP3 ID: " + mp3Id; 
+                    message = "Playback Error.  Unknown Audio ID: " + audioId; 
                 }
                 
                 // print out the message
                 if(cassetteFlowFrame != null) {
-                    cassetteFlowFrame.setPlayingMP3Info(message);
+                    cassetteFlowFrame.setPlayingAudioInfo(message);
                 }
                 
                 System.out.println("\n" + message);
@@ -500,22 +500,22 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
             int mp3Time = audioProgress + startTime;
             playtimeDiff = mp3Time - currentPlayTime;
             
-            String timeFromMp3 = String.format("%04d", mp3Time);
+            String timeFromFile = String.format("%04d", mp3Time);
             
             if(cassetteFlowFrame != null) {
-                String message = mp3Filename + " [" + track + "]\n"
-                        + "Playtime From Tape: " + String.format("%04d", currentPlayTime) + " / " + String.format("%04d", mp3TotalPlayTime) + "\n"
-                        + "Playtime From MP3 : " + timeFromMp3 + "\n"
+                String message = audioFilename + " [" + track + "]\n"
+                        + "Playtime From Tape: " + String.format("%04d", currentPlayTime) + " / " + String.format("%04d", audioTotalPlayTime) + "\n"
+                        + "Playtime From File : " + timeFromFile + "\n"
                         + "Tape Counter: " + totalTime + " (" + CassetteFlowUtil.getTimeString(totalTime) + ")\n"
                         + "Data Errors: " + dataErrors +  "/" + logLineCount;
                 
                 cassetteFlowFrame.setPlaybackInfo(message, false, "");
             } else {
                 //String message = "[ " + mp3Filename + " {" + track + "} Time: " + currentPlayTime + "/" + 
-                //    mp3PlayTime + " | MP3 Time: " + timeFromMp3 + " | Tape Counter: " + totalTime + " ]";
+                //    mp3PlayTime + " | MP3 Time: " + timeFromFile + " | Tape Counter: " + totalTime + " ]";
                 
                 String message = "Tape Time: " + currentPlayTime + "/" + 
-                    mp3TotalPlayTime + " | MP3 Time: " + timeFromMp3 + " | Tape Counter: " + totalTime + " ]";
+                    audioTotalPlayTime + " | File Time:  " + timeFromFile + " | Tape Counter: " + totalTime + " ]";
                 System.out.print(message + "\r");
             }
         }
@@ -529,13 +529,13 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
      * @param tapeId 
      */
     private void printTracks(String tapeId) {
-        ArrayList<String> mp3Ids = cassetteFlow.tapeDB.get(tapeId);
+        ArrayList<String> audioIds = cassetteFlow.tapeDB.get(tapeId);
                 
-        if (mp3Ids != null) {
-            for (int i = 0; i < mp3Ids.size(); i++) {
-                MP3Info mp3Info = cassetteFlow.mp3InfoDB.get(mp3Ids.get(i));
+        if (audioIds != null) {
+            for (int i = 0; i < audioIds.size(); i++) {
+                AudioInfo audioInfo = cassetteFlow.audioInfoDB.get(audioIds.get(i));
                 String trackCount = String.format("%02d", (i + 1));
-                System.out.println("[" + trackCount + "] " + mp3Info);
+                System.out.println("[" + trackCount + "] " + audioInfo);
             }
             
             System.out.println("");
@@ -568,9 +568,9 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                 if(file.getName().toLowerCase().contains(".mp3")) {
                     player.seekTo(startTime);
                 } else {
-                    /** 12/20/2021 -- BUG
-                     * must be FLAC so calling seekTo cause everything to crash!
-                     * but unfortunately this method doesn't work either
+                    /** 12/20/2021 -- BUG WITH StreamPlayer Library
+                     * must be FLAC so calling seekTo causes everything to crash!
+                     * Unfortunately this workaround doesn't work either
                      */
                     long totalBytes = player.getTotalBytes();
                     double percentage = (startTime * 100) / duration;
@@ -606,11 +606,12 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     }
     
     /**
-     * Download mp3 from a server and add to the mp3 and tape database
+     * Download mp3/flac from a server and add to the audio and tape database
+     * 1/30/2022 -- This is a work in progress
      * 
      * @param indexFileId 
      */
-    public void startMP3Download(String indexFileId) {
+    public void startAudioDownload(String indexFileId) {
          String message;
          
         // first check to see the files have already been downloaded by checking an
@@ -620,7 +621,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
             
             if(cassetteFlowFrame != null) {
                 message = "All files already downloaded\nWaiting for play data ...";
-                cassetteFlowFrame.setPlayingMP3Info(message);
+                cassetteFlowFrame.setPlayingAudioInfo(message);
             }
             
             return;
@@ -633,9 +634,9 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
             BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
 
             String inputLine;
-            int mp3Count = 0;
+            int fileCount = 0;
             
-            message = "Starting MP3 Downloads for " + indexUrl;
+            message = "Starting Audio File Downloads for " + indexUrl;
             System.out.println("\n" + message);
             
             if(cassetteFlowFrame != null) {
@@ -643,16 +644,16 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
             }
             
             String tapeID = "";
-            ArrayList<String> mp3List = new ArrayList<>();
+            ArrayList<String> audioList = new ArrayList<>();
             
             while ((inputLine = in.readLine()) != null) {                
                 String[] sa = inputLine.split("\t");
-                String mp3Id = sa[0];
+                String audioId = sa[0];
                 String filename = sa[1];
                 String fileUrl = cassetteFlow.DOWNLOAD_SERVER + encodeValue(filename);
                 
                 // download the file now
-                if(mp3Id.startsWith("Tape ID")) {
+                if(audioId.startsWith("Tape ID")) {
                     tapeID = filename;
                 } else  {
                     String localFilename = DOWNLOAD_DIR + File.separator + filename;
@@ -668,22 +669,22 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                     InputStream ins = new URL(fileUrl).openStream();
                     Files.copy(ins, Paths.get(localFilename), StandardCopyOption.REPLACE_EXISTING);
                     
-                    mp3List.add(mp3Id);
-                    mp3Count++;
+                    audioList.add(audioId);
+                    fileCount++;
                 } 
             }
             
             in.close();
             
             // store two entries in the tape database
-            cassetteFlow.tapeDB.put(tapeID, mp3List);
-            cassetteFlow.tapeDB.put(indexFileId, mp3List);
+            cassetteFlow.tapeDB.put(tapeID, audioList);
+            cassetteFlow.tapeDB.put(indexFileId, audioList);
             
-            message = "\n" + mp3Count + " Files Downloaded ...";
+            message = "\n" + fileCount + " Files Downloaded ...";
             
             if (cassetteFlowFrame != null) {
                 cassetteFlowFrame.setPlaybackInfo(message, true);
-                cassetteFlowFrame.setPlayingMP3Info("Resume cassette playback ...");
+                cassetteFlowFrame.setPlayingAudioInfo("Resume cassette playback ...");
             }
             
             System.out.println(message);

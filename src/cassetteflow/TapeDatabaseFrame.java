@@ -17,7 +17,7 @@ import javax.swing.DefaultListModel;
 public class TapeDatabaseFrame extends javax.swing.JFrame {
     private HashMap<String, ArrayList<String>> tapeDB;
     
-    private HashMap<String, MP3Info> mp3InfoDB;
+    private HashMap<String, AudioInfo> mp3InfoDB;
     
     private CassetteFlowFrame cassetteFlowFrame;
     
@@ -66,13 +66,13 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
      * @param tapeId
      * @return 
      */
-    private ArrayList<MP3Info> getMP3InfoList(String tapeId) {
-        ArrayList<MP3Info> mp3InfoList = new ArrayList<>();
+    private ArrayList<AudioInfo> getMP3InfoList(String tapeId) {
+        ArrayList<AudioInfo> mp3InfoList = new ArrayList<>();
         
         ArrayList<String> mp3Ids = tapeDB.get(tapeId);
         if(mp3Ids != null) {
             for(String mp3Id: mp3Ids) {
-                MP3Info mp3Info = mp3InfoDB.get(mp3Id);
+                AudioInfo mp3Info = mp3InfoDB.get(mp3Id);
                 mp3InfoList.add(mp3Info);
             }
             
@@ -87,7 +87,7 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
      * 
      * @param mp3InfoDB 
      */
-    public void setMP3InfoDB(HashMap<String, MP3Info> mp3InfoDB) {
+    public void setMP3InfoDB(HashMap<String, AudioInfo> mp3InfoDB) {
         this.mp3InfoDB = mp3InfoDB;
     }
     
@@ -203,7 +203,7 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
             int totalTime = 0;
             for (int i = 0; i < mp3IdList.size(); i++) {
                 String mp3Id = mp3IdList.get(i);
-                MP3Info mp3Info = mp3InfoDB.get(mp3Id);
+                AudioInfo mp3Info = mp3InfoDB.get(mp3Id);
                 String trackCount = String.format("%02d", (i + 1));
                 
                 if(mp3Info != null) {
@@ -240,8 +240,8 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
             String tapeIdA = tapeID + "A";
             String tapeIdB = tapeID + "B";
             
-            ArrayList<MP3Info> sideAList = getMP3InfoList(tapeIdA);
-            ArrayList<MP3Info> sideBList = getMP3InfoList(tapeIdB);
+            ArrayList<AudioInfo> sideAList = getMP3InfoList(tapeIdA);
+            ArrayList<AudioInfo> sideBList = getMP3InfoList(tapeIdB);
             
             // get an estimate of tape length
             int tapeLength = (currentTapeLength/60)*2;

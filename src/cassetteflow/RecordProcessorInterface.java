@@ -8,7 +8,7 @@ package cassetteflow;
 public interface RecordProcessorInterface {
     void setPlayingCassetteID(String cassetteID);
     
-    void setPlayingMP3Info(String info);
+    void setPlayingAudioInfo(String info);
     
     void setPlaybackInfo(String info, boolean append, String newLine);
     

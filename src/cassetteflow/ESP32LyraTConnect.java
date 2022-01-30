@@ -44,7 +44,7 @@ public class ESP32LyraTConnect {
      * @param tapeLength
      * @return 
      */
-    public String createInputFiles(String tapeLength, String tapeID, ArrayList<MP3Info> sideA, ArrayList<MP3Info> sideB, String muteTime) {  
+    public String createInputFiles(String tapeLength, String tapeID, ArrayList<AudioInfo> sideA, ArrayList<AudioInfo> sideB, String muteTime) {  
         String response = "";
         
         if (sideA != null && sideA.size() >= 1) {
@@ -77,10 +77,10 @@ public class ESP32LyraTConnect {
      * @param sideN
      * @return 
      */
-    private String getData(ArrayList<MP3Info> sideN) {
+    private String getData(ArrayList<AudioInfo> sideN) {
         String data = "";
         
-        for(MP3Info mp3Info: sideN) {
+        for(AudioInfo mp3Info: sideN) {
             data += "," + mp3Info.getHash10C();
         }
         
@@ -117,7 +117,7 @@ public class ESP32LyraTConnect {
         }
     }
     
-    public String getMP3DB() {
+    public String getAudioDB() {
         try {
             String url = host + "mp3db";
             return sendGet(url);
@@ -301,7 +301,7 @@ public class ESP32LyraTConnect {
         sb.append(message).append("\n\n");
         System.out.println(message);
         
-        response = getMP3DB();
+        response = getAudioDB();
         if(response != null) {
             message = "PASS -- Get MP3 Database:\n" + response;
         } else {

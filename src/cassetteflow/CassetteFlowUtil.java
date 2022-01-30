@@ -60,12 +60,12 @@ public class CassetteFlowUtil {
      * @param sideList
      * @return 
      */
-    public static int[] getTimeForTracks(ArrayList<MP3Info> sideList, int mute) {
+    public static int[] getTimeForTracks(ArrayList<AudioInfo> sideList, int mute) {
         int[] timeForTracks = new int[sideList.size()];
         int totalTime = 0;
         
         for(int i = 0; i < sideList.size(); i++) {
-            MP3Info info = sideList.get(i);
+            AudioInfo info = sideList.get(i);
             totalTime += info.getLength() + mute;
             timeForTracks[i] = totalTime;
         }
