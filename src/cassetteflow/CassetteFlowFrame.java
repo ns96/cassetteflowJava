@@ -702,9 +702,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         bluetoothRadioButton = new javax.swing.JRadioButton();
         bluetoothComboBox = new javax.swing.JComboBox<>();
         jLabel10 = new javax.swing.JLabel();
-        volDownButton = new javax.swing.JButton();
-        volMuteButton = new javax.swing.JButton();
-        volUpButton = new javax.swing.JButton();
+        lyraTVolDownButton = new javax.swing.JButton();
+        lyraTMuteToggleButton = new javax.swing.JToggleButton();
+        lyraTVolUpButton = new javax.swing.JButton();
         jPanel7 = new javax.swing.JPanel();
         jScrollPane8 = new javax.swing.JScrollPane();
         consoleTextArea = new javax.swing.JTextArea();
@@ -726,7 +726,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 0.9.8 (01/30/2022)");
+        setTitle("CassetteFlow v 0.9.9 (02/12/2022)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 
@@ -1461,6 +1461,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         buttonGroup3.add(bluetoothRadioButton);
         bluetoothRadioButton.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         bluetoothRadioButton.setText("BLUETOOTH");
+        bluetoothRadioButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                bluetoothRadioButtonActionPerformed(evt);
+            }
+        });
         jPanel9.add(bluetoothRadioButton);
 
         bluetoothComboBox.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
@@ -1471,16 +1476,32 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jLabel10.setText("VOLUME");
         jPanel9.add(jLabel10);
 
-        volDownButton.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
-        volDownButton.setText("VOLUME DOWN");
-        jPanel9.add(volDownButton);
+        lyraTVolDownButton.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        lyraTVolDownButton.setText("VOLUME DOWN");
+        lyraTVolDownButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                lyraTVolDownButtonActionPerformed(evt);
+            }
+        });
+        jPanel9.add(lyraTVolDownButton);
 
-        volMuteButton.setText("MUTE");
-        jPanel9.add(volMuteButton);
+        lyraTMuteToggleButton.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        lyraTMuteToggleButton.setText("MUTE");
+        lyraTMuteToggleButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                lyraTMuteToggleButtonActionPerformed(evt);
+            }
+        });
+        jPanel9.add(lyraTMuteToggleButton);
 
-        volUpButton.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
-        volUpButton.setText("VOLUME UP");
-        jPanel9.add(volUpButton);
+        lyraTVolUpButton.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        lyraTVolUpButton.setText("VOLUME UP");
+        lyraTVolUpButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                lyraTVolUpButtonActionPerformed(evt);
+            }
+        });
+        jPanel9.add(lyraTVolUpButton);
 
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
         jPanel5.setLayout(jPanel5Layout);
@@ -2319,7 +2340,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         // check to see if we connected to the lyraT board
         if(lyraTConnect != null) {
             // set the lyraT to decode if not done so already
-            lyraTConnect.setModeDecode();
+            //lyraTConnect.setModeDecode();
             lyraTGetDecodeRecord();
             startDecodeButton.setEnabled(false);
             return;
@@ -2596,7 +2617,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         tapeDBFrame.setCassetteFlowFrame(this, remoteDB);
         
         tapeDBFrame.setTapeDB(cassetteFlow.tapeDB);
-        tapeDBFrame.setMP3InfoDB(cassetteFlow.audioInfoDB);
+        tapeDBFrame.setAudioInfoDB(cassetteFlow.audioInfoDB);
         
         tapeDBFrame.setVisible(true);
     }//GEN-LAST:event_viewTapeDBButtonActionPerformed
@@ -2920,6 +2941,33 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private void shuffleFilterTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_shuffleFilterTextFieldActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_shuffleFilterTextFieldActionPerformed
+
+    private void lyraTMuteToggleButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lyraTMuteToggleButtonActionPerformed
+        if(lyraTConnect == null) return;
+        
+        if(lyraTMuteToggleButton.isSelected()) {
+            lyraTConnect.mute();
+            System.out.println("Button pressed ...");
+        } else {
+            lyraTConnect.mute();
+            System.out.println("Button unpressed ...");
+        }
+    }//GEN-LAST:event_lyraTMuteToggleButtonActionPerformed
+
+    private void bluetoothRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bluetoothRadioButtonActionPerformed
+        if(lyraTConnect == null) return;
+        
+    }//GEN-LAST:event_bluetoothRadioButtonActionPerformed
+
+    private void lyraTVolDownButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lyraTVolDownButtonActionPerformed
+        if(lyraTConnect == null) return;
+        lyraTConnect.changeVolume("-10");
+    }//GEN-LAST:event_lyraTVolDownButtonActionPerformed
+
+    private void lyraTVolUpButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lyraTVolUpButtonActionPerformed
+        if(lyraTConnect == null) return;
+        lyraTConnect.changeVolume("10");
+    }//GEN-LAST:event_lyraTVolUpButtonActionPerformed
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addAudioDirectoryButton;
@@ -3000,12 +3048,15 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JButton lyraTGetInfoButton;
     private javax.swing.JButton lyraTGetRawButton;
     private javax.swing.JTextField lyraTHostTextField;
+    private javax.swing.JToggleButton lyraTMuteToggleButton;
     private javax.swing.JRadioButton lyraTPassRadioButton;
     private javax.swing.JButton lyraTPlaySideAButton;
     private javax.swing.JButton lyraTPlaySideBButton;
     private javax.swing.JButton lyraTServerTestDBButton;
     private javax.swing.JButton lyraTStopButton;
     private javax.swing.JButton lyraTStopRawButton;
+    private javax.swing.JButton lyraTVolDownButton;
+    private javax.swing.JButton lyraTVolUpButton;
     private javax.swing.JTextField mmdelayTextField;
     private javax.swing.JButton moveTrackDownButton;
     private javax.swing.JButton moveTrackUpButton;
@@ -3043,9 +3094,6 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JTextArea trackInfoTextArea;
     private javax.swing.JLabel tracksLabel;
     private javax.swing.JButton viewTapeDBButton;
-    private javax.swing.JButton volDownButton;
-    private javax.swing.JButton volMuteButton;
-    private javax.swing.JButton volUpButton;
     // End of variables declaration//GEN-END:variables
 
 }

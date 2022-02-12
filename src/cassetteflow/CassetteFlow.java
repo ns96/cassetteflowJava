@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Properties;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sound.sampled.LineUnavailableException;
@@ -64,7 +65,7 @@ public class CassetteFlow {
     public ArrayList<AudioInfo> audioInfoList = new ArrayList<>();
     
     // stores the cassette ID to the mp3ids
-    public HashMap<String, ArrayList<String>> tapeDB = new HashMap<>();
+    public TreeMap<String, ArrayList<String>> tapeDB = new TreeMap<>();
     
     public static String TAPE_DB_FILENAME = AUDIO_DIR_NAME + File.separator + "tapedb.txt";   
     
@@ -287,8 +288,8 @@ public class CassetteFlow {
      * 
      * @param file 
      */
-    private HashMap<String, ArrayList<String>> loadTapeDB(File file) {
-        HashMap<String, ArrayList<String>> localTapeDB = new HashMap<>();
+    private TreeMap<String, ArrayList<String>> loadTapeDB(File file) {
+        TreeMap<String, ArrayList<String>> localTapeDB = new TreeMap<>();
         
         try {
             if(file.exists()) {
@@ -336,7 +337,7 @@ public class CassetteFlow {
      * @param data 
      */
     public void createTapeDBFromString(String data) throws Exception {
-        HashMap<String, ArrayList<String>> remoteDB = new HashMap<>();
+        TreeMap<String, ArrayList<String>> remoteDB = new TreeMap<>();
         
         for (String line : data.split("\n")) {
             String[] sa = line.split("\t");
@@ -359,7 +360,7 @@ public class CassetteFlow {
     public void mergeCurrentTapeDBToLocal() {
         try {
             File file = new File(TAPE_DB_FILENAME);
-            HashMap<String, ArrayList<String>> localTapeDB = loadTapeDB(file);
+            TreeMap<String, ArrayList<String>> localTapeDB = loadTapeDB(file);
             
             for(String key: tapeDB.keySet()) {
                 if(!localTapeDB.containsKey(key)) {

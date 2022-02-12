@@ -6,8 +6,8 @@
 package cassetteflow;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
+import java.util.TreeMap;
 import javax.swing.DefaultListModel;
 
 /**
@@ -15,9 +15,9 @@ import javax.swing.DefaultListModel;
  * @author Nathan
  */
 public class TapeDatabaseFrame extends javax.swing.JFrame {
-    private HashMap<String, ArrayList<String>> tapeDB;
+    private TreeMap<String, ArrayList<String>> tapeDB;
     
-    private HashMap<String, AudioInfo> mp3InfoDB;
+    private HashMap<String, AudioInfo> audioInfoDB;
     
     private CassetteFlowFrame cassetteFlowFrame;
     
@@ -45,15 +45,12 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
     /**
      * Set the tape database
      */
-    public void setTapeDB(HashMap<String, ArrayList<String>> tapeDB) {
+    public void setTapeDB(TreeMap<String, ArrayList<String>> tapeDB) {
         this.tapeDB = tapeDB;
         
         DefaultListModel model = new DefaultListModel();
         
-        Object[] keys = tapeDB.keySet().toArray();
-        Arrays.sort(keys);
-        
-        for(Object key: keys) {
+        for(Object key: tapeDB.keySet()) {
             model.addElement(key);
         }
         
@@ -61,34 +58,34 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
     }
     
     /**
-     * Given a tapeId get the mp3 info objects associated with this id
+     * Given a tapeId get the audio info objects associated with this id
      * 
      * @param tapeId
      * @return 
      */
-    private ArrayList<AudioInfo> getMP3InfoList(String tapeId) {
-        ArrayList<AudioInfo> mp3InfoList = new ArrayList<>();
+    private ArrayList<AudioInfo> getAudioInfoList(String tapeId) {
+        ArrayList<AudioInfo> audioInfoList = new ArrayList<>();
         
-        ArrayList<String> mp3Ids = tapeDB.get(tapeId);
-        if(mp3Ids != null) {
-            for(String mp3Id: mp3Ids) {
-                AudioInfo mp3Info = mp3InfoDB.get(mp3Id);
-                mp3InfoList.add(mp3Info);
+        ArrayList<String> audioIds = tapeDB.get(tapeId);
+        if(audioIds != null) {
+            for(String audioId: audioIds) {
+                AudioInfo audioInfo = audioInfoDB.get(audioId);
+                audioInfoList.add(audioInfo);
             }
             
-            return mp3InfoList;
+            return audioInfoList;
         }
         
         return null;
     }
     
     /**
-     * Set the MP3 Info database
+     * Set the Audio Info database
      * 
-     * @param mp3InfoDB 
+     * @param audioInfoDB 
      */
-    public void setMP3InfoDB(HashMap<String, AudioInfo> mp3InfoDB) {
-        this.mp3InfoDB = mp3InfoDB;
+    public void setAudioInfoDB(HashMap<String, AudioInfo> audioInfoDB) {
+        this.audioInfoDB = audioInfoDB;
     }
     
     /**
@@ -198,17 +195,17 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
             String key = tapeDBJList.getSelectedValue();
             
             DefaultListModel model = new DefaultListModel();
-            ArrayList<String> mp3IdList = tapeDB.get(key);
+            ArrayList<String> audioIdList = tapeDB.get(key);
             
             int totalTime = 0;
-            for (int i = 0; i < mp3IdList.size(); i++) {
-                String mp3Id = mp3IdList.get(i);
-                AudioInfo mp3Info = mp3InfoDB.get(mp3Id);
+            for (int i = 0; i < audioIdList.size(); i++) {
+                String audioId = audioIdList.get(i);
+                AudioInfo audioInfo = audioInfoDB.get(audioId);
                 String trackCount = String.format("%02d", (i + 1));
                 
-                if(mp3Info != null) {
-                    totalTime += mp3Info.getLength() + 4;
-                    String trackName = "[" + trackCount + "] " + mp3Info;
+                if(audioInfo != null) {
+                    totalTime += audioInfo.getLength() + 4;
+                    String trackName = "[" + trackCount + "] " + audioInfo;
                     model.addElement(trackName);
                 } else {
                     String trackName =  "[" + trackCount + "] " + " Invalid ID -- No audio file loaded ...";
@@ -228,7 +225,7 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_tapeDBJListValueChanged
     
     /**
-     * Load a tape and associated mp3 info objects to the main UI
+     * Load a tape and associated audio info objects to the main UI
      * 
      * @param evt 
      */
@@ -240,8 +237,8 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
             String tapeIdA = tapeID + "A";
             String tapeIdB = tapeID + "B";
             
-            ArrayList<AudioInfo> sideAList = getMP3InfoList(tapeIdA);
-            ArrayList<AudioInfo> sideBList = getMP3InfoList(tapeIdB);
+            ArrayList<AudioInfo> sideAList = getAudioInfoList(tapeIdA);
+            ArrayList<AudioInfo> sideBList = getAudioInfoList(tapeIdB);
             
             // get an estimate of tape length
             int tapeLength = (currentTapeLength/60)*2;

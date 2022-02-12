@@ -505,7 +505,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
             if(cassetteFlowFrame != null) {
                 String message = audioFilename + " [" + track + "]\n"
                         + "Playtime From Tape: " + String.format("%04d", currentPlayTime) + " / " + String.format("%04d", audioTotalPlayTime) + "\n"
-                        + "Playtime From File : " + timeFromFile + "\n"
+                        + "Playtime From File:  " + timeFromFile + "\n"
                         + "Tape Counter: " + totalTime + " (" + CassetteFlowUtil.getTimeString(totalTime) + ")\n"
                         + "Data Errors: " + dataErrors +  "/" + logLineCount;
                 

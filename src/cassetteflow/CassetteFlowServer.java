@@ -337,7 +337,7 @@ public class CassetteFlowServer {
     }
     
     /**
-     * Method to run mirco server indepent 
+     * Method to run mirco server independently
      * 
      * @param args 
      */
