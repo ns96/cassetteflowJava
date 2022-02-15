@@ -61,7 +61,7 @@ public class CassetteFlow {
     // stores the mp3info object keyed by the 10 character hash
     public HashMap<String, AudioInfo> audioInfoDB = new HashMap<>();
     
-    // also store the MP3Info object is a list for convinience
+    // also store the AudioInfo object in a list for convinience
     public ArrayList<AudioInfo> audioInfoList = new ArrayList<>();
     
     // stores the cassette ID to the mp3ids
@@ -1015,6 +1015,13 @@ public class CassetteFlow {
          ArrayList<AudioInfo> audioListCopy = (ArrayList<AudioInfo>) audioInfoList.clone();
          Collections.shuffle(audioListCopy);
          return audioListCopy;
+    }
+    
+    // copy and shuffle and audio list
+    public ArrayList<AudioInfo> shuffleAudioList(ArrayList<AudioInfo> audioList) {
+        ArrayList<AudioInfo> audioListCopy = (ArrayList<AudioInfo>) audioList.clone();
+        Collections.shuffle(audioListCopy);
+        return audioListCopy;
     }
     
     /**
