@@ -5,21 +5,27 @@ testbed for the CassetteFlow system, currently under development using the
 audio board.
 
 ## Introduction
-CassetteFlow is a somewhat impractical project to make use of ESP32-LyraT 
-board, old school audio cassette tapes containing encoded data, and MP3 files in 
-an attempt to simulate digital music playback from an analog compact audio cassette. 
-Essentially, the data stored on the cassette will be used to control the playback 
-of MP3 files stored on the Desktop and hopefully the ESP32-LyraT board transparently. 
-So for all practical purposes, it would seem that a typical audio cassette is 
-outputting high quality digital audio. Think of it has having the Playlist on the
-cassettes.  In order to accomplish this it makes use of the excellent 
-[Minimodem](https://github.com/kamalmostafa/minimodem) program to encode the generate 
-input files to wav files for recording onto cassette tapes, as well has decoding 
-data from cassettes.
+CassetteFlow is a project to make use of ESP32-LyraT board, old school audio 
+cassette tapes containing encoded data, and MP3/FLAC files in an attempt to 
+simulate digital music playback from an analog audio cassette or reel to reel (R2R). 
+Essentially, the data (track list and time code) stored on the cassette is used 
+to control the playback of MP3/FLAC files stored on the Desktop, RPi or 
+ESP32-LyraT board transparently. So for all practical purposes, it would seem 
+that a typical audio cassette or R2R is outputting high quality digital audio. 
+Think of it has having the Playlist on the cassettes instead of the audio. This 
+system is especially useful for bring new life into vintage tape decks which are 
+mechanically fine, but can no longer output decent analog audio, and wouldn't 
+be worth fixing.   
 
-Please note that this project is not meant to as a way to get cassettes to sound 
-good. With the proper deck and tape type the audio from a cassette that sound 
-pretty good, even matching CD quality with proper tape type and deck. 
+In order to accomplish this it makes use of the excellent 
+[Minimodem](https://github.com/kamalmostafa/minimodem) program to encode the 
+generate text input files to wav files for recording onto tape, as well has 
+decoding data from cassettes/R2R.
+
+Please note that this project is not meant to as a way to get cassettes/R2R to 
+sound good. With the proper deck, tape type, and NR technology the audio 
+can sound pretty good, even matching or coming close CD quality.  Such a setup 
+cost in todays day and age though :) 
 
 ![Main GUI 1](gui01.png)
 ![Main GUI 2](gui02.png)
