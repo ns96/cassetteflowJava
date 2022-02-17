@@ -748,7 +748,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 0.9.11 (02/16/2022)");
+        setTitle("CassetteFlow v 0.9.12 (02/17/2022)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 
@@ -2017,8 +2017,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             }
             
             try {
-                playing = true;
+                String outputMixerName = audioOutputComboBox.getSelectedItem().toString();
+                System.out.println("Mixer: " + outputMixerName);
                 
+                playing = true;
+                player.setMixerName(outputMixerName);
                 player.setSpeedFactor(speedFactor);
                 player.open(audioInfo.getFile());
                 player.play();
@@ -2401,7 +2404,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             speedFactor = Double.parseDouble(playbackSpeedTextField.getText());
         } catch (NumberFormatException nfe) { }
         
+        // get the mixer to output the audio two
+        String outputMixerName = audioOutputComboBox.getSelectedItem().toString();
+        
         cassettePlayer = new CassettePlayer(this, cassetteFlow, logfile);
+        cassettePlayer.setMixerName(outputMixerName);
         cassettePlayer.setSpeedFactor(speedFactor);
         
         if(directDecodeCheckBox.isSelected()) {

@@ -88,6 +88,9 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     // keeps track of the current audio progress
     private int audioProgress;
     
+    // the name of the output mixer to redirect the sound to other speakers
+    private String outputMixerName;
+    
     // the speed factor to increase or decrease playback speed incase
     // the tape deck is running slow/fast
     private double speedFactor = 1.0;
@@ -104,6 +107,15 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
         this.logfile = logfile;
         
         DOWNLOAD_DIR = CassetteFlow.AUDIO_DIR_NAME + File.separator + "downloads";
+    }
+    
+    /**
+     * Set the output mixer name to redirect audio to the selected speaker
+     * 
+     * @param outputMixerName 
+     */
+    void setMixerName(String outputMixerName) {
+        this.outputMixerName = outputMixerName;
     }
     
     /**
@@ -559,6 +571,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
         }
         
         try {
+            player.setMixerName(outputMixerName);
             player.setSpeedFactor(speedFactor);
             player.open(file);
 
