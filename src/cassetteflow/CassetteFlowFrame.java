@@ -292,7 +292,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         String[] sa = line.split("_");
         
         if(sa.length != 5) {
-            System.out.println("Invalid Record: " + line);
+            String message = "*Invalid Record: " + line;
+            printToConsole(message, true);
+            System.out.println(message);
             lyraTDataErrors++;
             return;
         }
@@ -308,7 +310,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         try {
             totalTime = Integer.parseInt(sa[4]);
         } catch(NumberFormatException ex) {
-            System.out.println("Invalid Record @ Total Time: " + line);
+            String message = "*Invalid Time Total: " + line;
+            printToConsole(message, true);
+            System.out.println(message);
             lyraTDataErrors++;
             return;
         }
@@ -329,26 +333,29 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 try {
                     lyraTStartTime = Integer.parseInt(playTimeS);
                 } catch (NumberFormatException nfe) {
-                    System.out.println("Invalid Record @ Start Time");
+                    String message = "*Invalid Start Time: " + line;
+                    printToConsole(message, true);
+                    System.out.println(message);
                     lyraTDataErrors++;
                 }
                 
-                AudioInfo mp3Info = cassetteFlow.audioInfoDB.get(audioId);
+                AudioInfo audioInfo = cassetteFlow.audioInfoDB.get(audioId);
                 String message;
                 
-                if(mp3Info != null) {
-                    File mp3File = mp3Info.getFile();
-                    lyraTAudioFilename = mp3File.getName();
-                    lyraTAudioTotalPlayTime = mp3Info.getLength();
+                if(audioInfo != null) {
+                    File audioFile = audioInfo.getFile();
+                    lyraTAudioFilename = audioFile.getName();
+                    lyraTAudioTotalPlayTime = audioInfo.getLength();
 
                     message = "Audio ID: " + audioId + "\n" + 
-                        mp3Info.getName() + "\n" + 
+                        audioInfo.getName() + "\n" + 
                         "Start Time @ " + lyraTStartTime + " | Track Number: " + track;
                     
                     setPlayingAudioInfo(message);
                 } else {
-                    //message = "Playback Error.  Unknown MP3 ID: " + mp3Id;
-                    System.out.println("Invalid Record @ AudioID: " + line);
+                    message = "*Invalid AudioID: " + line;
+                    printToConsole(message, true);
+                    System.out.println(message);
                     lyraTDataErrors++;
                 }
             } else {
@@ -366,7 +373,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         try {
             playTime = Integer.parseInt(playTimeS);
         } catch(NumberFormatException nfe) {
-            System.out.println("Invalid play time: " + playTimeS);
+            String message = "*Invalid Playtime: " + playTimeS;
+            System.out.println(message);
             lyraTDataErrors++;
         }
         
@@ -740,7 +748,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 0.9.10 (02/15/2022)");
+        setTitle("CassetteFlow v 0.9.11 (02/16/2022)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 
@@ -2438,7 +2446,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                     while(lyraTGetDecode) {
                         String response = lyraTConnect.getInfo();
                         String[] sa = response.split(" ");
-                    
+                        
+                        printToConsole(response, true);
+                        
                         if(sa.length > 1 && sa[1].contains("_")) {
                             stopCount = 0;
                             processLineRecord(sa[1]);
@@ -2925,12 +2935,16 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private void lyraTPlaySideAButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lyraTPlaySideAButtonActionPerformed
         if(lyraTConnect == null) return;
         
+        buttonGroup1.clearSelection();
+        
         String response = lyraTConnect.play("A");
         lyraTConsoleTextArea.append("Playing Side A >> " + response + "\n");
     }//GEN-LAST:event_lyraTPlaySideAButtonActionPerformed
 
     private void lyraTPlaySideBButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lyraTPlaySideBButtonActionPerformed
         if(lyraTConnect == null) return;
+        
+        buttonGroup1.clearSelection();
         
         String response = lyraTConnect.play("B");
         lyraTConsoleTextArea.append("Playing Side B >> " + response + "\n");

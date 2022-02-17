@@ -332,7 +332,7 @@ public class CassetteFlow {
     }
     
     /**
-     * Method to create the tape db as a String
+     * Method to create the tape db from a String
      * 
      * @param data 
      */
@@ -340,15 +340,21 @@ public class CassetteFlow {
         TreeMap<String, ArrayList<String>> remoteDB = new TreeMap<>();
         
         for (String line : data.split("\n")) {
-            String[] sa = line.split("\t");
-            String key = sa[0];
-            
-            ArrayList<String> audioIds = new ArrayList<>();
-            for (int i = 1; i < sa.length; i++) {
-                audioIds.add(sa[i]);
-            }
+            try {
+                String[] sa = line.split("\t");
+                String key = sa[0];
 
-            remoteDB.put(key, audioIds);
+                ArrayList<String> audioIds = new ArrayList<>();
+                for (int i = 1; i < sa.length; i++) {
+                    if(!sa[i].isEmpty()) {
+                        audioIds.add(sa[i]);
+                    }
+                }
+
+                remoteDB.put(key, audioIds);
+            } catch(Exception e) {
+                System.out.println("Error With TapeDB Line: " + line);
+            }
         }
         
         tapeDB = remoteDB;
