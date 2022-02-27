@@ -14,7 +14,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sound.sampled.Mixer;
@@ -117,6 +119,13 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         model = new DefaultListModel();
         sideBJList.setModel(model);
         
+        loadAudioOuputDevices();
+    }
+    
+    /**
+     * Load the audio output devices
+     */
+    private void loadAudioOuputDevices() {
         // add the audio outputs to the combo box
         audioOutputComboBox.removeAllItems();
         
@@ -209,12 +218,14 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         });
     }
     
+    @Override
     public void setPlayingAudioInfo(final String info) {
         SwingUtilities.invokeLater(() -> {
             trackInfoTextArea.setText(info);
         });
     }
     
+    @Override
     public void setPlaybackInfo(final String info, boolean append, String newLine) {
         SwingUtilities.invokeLater(() -> {
             if(!append) {
@@ -225,6 +236,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         });
     }
     
+    @Override
     public void setPlaybackInfo(final String info, boolean append) {
         setPlaybackInfo(info, append, "\n");
     }
@@ -667,6 +679,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         defaultButton = new javax.swing.JButton();
         realtimeEncodeButton = new javax.swing.JButton();
         filterAudioListButton = new javax.swing.JButton();
+        checkTrackListButton = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
         logfileTextField = new javax.swing.JTextField();
         logfileButton = new javax.swing.JButton();
@@ -741,6 +754,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         shuffleFilterTextField = new javax.swing.JTextField();
         jLabel11 = new javax.swing.JLabel();
         playbackSpeedTextField = new javax.swing.JTextField();
+        reloadAudioOutputsButton = new javax.swing.JButton();
         exitButton = new javax.swing.JButton();
         addAudioDirectoryButton = new javax.swing.JButton();
         createButton = new javax.swing.JButton();
@@ -748,7 +762,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 0.9.12 (02/17/2022)");
+        setTitle("CassetteFlow v 0.9.13 (02/27/2022)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 
@@ -989,6 +1003,13 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             }
         });
 
+        checkTrackListButton.setText("Check");
+        checkTrackListButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                checkTrackListButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -1018,6 +1039,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         .addComponent(moveTrackUpButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(moveTrackDownButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(checkTrackListButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(realtimeEncodeButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1088,7 +1111,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                     .addComponent(moveTrackUpButton)
                     .addComponent(moveTrackDownButton)
                     .addComponent(playSideButton)
-                    .addComponent(realtimeEncodeButton)))
+                    .addComponent(realtimeEncodeButton)
+                    .addComponent(checkTrackListButton)))
         );
 
         jTabbedPane1.addTab("ENCODE", jPanel1);
@@ -1690,6 +1714,13 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
 
         playbackSpeedTextField.setText("1.00");
 
+        reloadAudioOutputsButton.setText("Reload");
+        reloadAudioOutputsButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                reloadAudioOutputsButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
         jPanel7.setLayout(jPanel7Layout);
         jPanel7Layout.setHorizontalGroup(
@@ -1711,14 +1742,16 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel7Layout.createSequentialGroup()
                         .addComponent(audioOutputComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(reloadAudioOutputsButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 39, Short.MAX_VALUE)
                         .addComponent(setAudioDownloadServerButton))
                     .addGroup(jPanel7Layout.createSequentialGroup()
                         .addComponent(jLabel11)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(playbackSpeedTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(audioDownloadServerTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 437, Short.MAX_VALUE)
+                .addComponent(audioDownloadServerTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 337, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(clearConsoleButton))
         );
@@ -1740,7 +1773,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                     .addComponent(jLabel8)
                     .addComponent(audioOutputComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(setAudioDownloadServerButton)
-                    .addComponent(audioDownloadServerTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(audioDownloadServerTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(reloadAudioOutputsButton)))
         );
 
         jTabbedPane1.addTab("Setup / Output Console", jPanel7);
@@ -3137,6 +3171,56 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         }
     }//GEN-LAST:event_filterAudioListButtonActionPerformed
     
+    /**
+     * Reload the audio output devices
+     * 
+     * @param evt 
+     */
+    private void reloadAudioOutputsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_reloadAudioOutputsButtonActionPerformed
+        loadAudioOuputDevices();
+    }//GEN-LAST:event_reloadAudioOutputsButtonActionPerformed
+    
+    /**
+     * Check the track list in the A/B sides for duplicates
+     * 
+     * @param evt 
+     */
+    private void checkTrackListButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkTrackListButtonActionPerformed
+        String duplicates = "";
+        int duplicateCount = 0;
+        int totalTracks = 0;
+        
+        // use a set for quick way to spot the duplicates since a set does
+        // not allow duplicates
+        Set<AudioInfo> trackListSet = new HashSet<>();
+        
+        if(sideAList != null) {
+            for (AudioInfo audioInfo : sideAList) {
+                if (!trackListSet.add(audioInfo)) {
+                    duplicates += audioInfo.toString() + "\n";
+                    duplicateCount++;
+                }
+            }
+            totalTracks = sideAList.size();
+        }
+        
+        if(sideBList != null) {
+            for (AudioInfo audioInfo : sideBList) {
+                if (!trackListSet.add(audioInfo)) {
+                    duplicates += audioInfo.toString() + "\n";
+                    duplicateCount++;
+                }
+            }
+            
+            totalTracks += sideBList.size();
+        }
+        
+        String message = "Track Duplicates Found: " + duplicateCount  + "/" + totalTracks
+                 + "\n" + duplicates.trim();
+        
+        JOptionPane.showMessageDialog(this, message);
+    }//GEN-LAST:event_checkTrackListButtonActionPerformed
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addAudioDirectoryButton;
     private javax.swing.JButton addAudioToTapeListButton;
@@ -3151,6 +3235,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.ButtonGroup buttonGroup2;
     private javax.swing.ButtonGroup buttonGroup3;
+    private javax.swing.JButton checkTrackListButton;
     private javax.swing.JButton clearAudioListButton;
     private javax.swing.JButton clearConsoleButton;
     private javax.swing.JButton clearLyraTConsoleButton;
@@ -3238,6 +3323,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JLabel r2RLabel;
     private javax.swing.JTextField r2RTextField;
     private javax.swing.JButton realtimeEncodeButton;
+    private javax.swing.JButton reloadAudioOutputsButton;
     private javax.swing.JButton removeAllButton;
     private javax.swing.JButton removeAudioButton;
     private javax.swing.JButton setAudioDownloadServerButton;
