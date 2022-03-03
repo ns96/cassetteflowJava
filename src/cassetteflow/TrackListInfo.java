@@ -44,7 +44,7 @@ public class TrackListInfo {
             int trackNumber = Integer.parseInt(track);
             int trackTime = Integer.parseInt(time);
             trackNumbers.add(trackNumber);
-            trackTimes.add(trackNumber);
+            trackTimes.add(trackTime);
             trackTitles.add(title);
         } catch(NumberFormatException nfe) {}
     }
