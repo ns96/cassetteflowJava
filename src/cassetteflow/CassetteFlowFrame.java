@@ -762,7 +762,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 0.9.13 (02/27/2022)");
+        setTitle("CassetteFlow v 0.9.14 (03/02/2022)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 
@@ -1661,7 +1661,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         consoleTextArea.setColumns(20);
         consoleTextArea.setFont(new java.awt.Font("Monospaced", 0, 24)); // NOI18N
         consoleTextArea.setRows(5);
-        consoleTextArea.setText("Output Console:");
+        consoleTextArea.setText("Output Console:\n");
         jScrollPane8.setViewportView(consoleTextArea);
 
         clearConsoleButton.setText("Clear Console");
@@ -3085,11 +3085,17 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     }//GEN-LAST:event_speakerRadioButtonActionPerformed
 
     private void audioJListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_audioJListValueChanged
-
         int firstIndex = evt.getFirstIndex();
 
-        if (firstIndex >= 0 && !playSide && player != null && player.isPlaying()) {
-            playButtonActionPerformed(null);
+        if (firstIndex >= 0 && !evt.getValueIsAdjusting()) {
+            if(!playSide && player != null && player.isPlaying()) {
+                playButtonActionPerformed(null);
+            }
+            
+            List selectedAudio = audioJList.getSelectedValuesList();
+            AudioInfo audioInfo = (AudioInfo) selectedAudio.get(0);
+            String message = audioInfo.getHash10C() + ": " + audioInfo.getName();
+            printToConsole(message, true);
         }
     }//GEN-LAST:event_audioJListValueChanged
 

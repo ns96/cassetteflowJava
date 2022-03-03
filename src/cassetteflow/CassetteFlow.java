@@ -67,7 +67,11 @@ public class CassetteFlow {
     // stores the cassette ID to the mp3ids
     public TreeMap<String, ArrayList<String>> tapeDB = new TreeMap<>();
     
+    public HashMap<String, TrackListInfo> tracklistDB = new HashMap<>();
+    
     public static String TAPE_DB_FILENAME = AUDIO_DIR_NAME + File.separator + "tapedb.txt";   
+    
+    public static String TRACK_LIST_FILENAME = AUDIO_DIR_NAME + File.separator + "tracklist.txt";
     
     // the location of mp3 files on the server
     public static String DOWNLOAD_SERVER = "http://192.168.1.14/~pi/mp3/";
@@ -123,7 +127,7 @@ public class CassetteFlow {
     }
     
     /**
-     * Do initial loading of audio and tape database
+     * Do initial loading of audio, tape, and track database if needed
      */
     public void init() {
         loadProperties();
@@ -131,8 +135,10 @@ public class CassetteFlow {
         loadAudioFiles(AUDIO_DIR_NAME, false);
         
         File file = new File(TAPE_DB_FILENAME);
-        
         tapeDB = loadTapeDB(file);
+        
+        file = new File(TRACK_LIST_FILENAME);
+        tracklistDB = loadTrackListDB(file);
     }
     
     /**
@@ -329,6 +335,51 @@ public class CassetteFlow {
         }
         
         return localTapeDB;
+    }
+    
+    /**
+     * Load track list information for YouTube mixes from a file
+     * 
+     * @param file 
+     * @return  
+     */
+    public HashMap<String, TrackListInfo> loadTrackListDB(File file) {
+        HashMap<String, TrackListInfo> tracks = new HashMap<>();
+        
+        try {
+            if(file.exists()) {
+                FileReader reader = new FileReader(file);
+                BufferedReader bufferedReader = new BufferedReader(reader);
+ 
+                String line;
+ 
+                while ((line = bufferedReader.readLine()) != null) {
+                    // check to see if line is not empty
+                    if(line.trim().isEmpty() || line.startsWith("File")) {
+                        continue;
+                    }
+                    
+                    String[] sa = line.split("\t");
+                    String key = sa[0];
+                    
+                    if(!key.isEmpty()) {
+                        if(!tracks.containsKey(key)) {
+                            TrackListInfo trackListInfo = new TrackListInfo(sa[0], sa[1]);
+                            trackListInfo.addTrack(sa[2], sa[3], sa[4]);
+                            tracks.put(key, trackListInfo);
+                        } else {
+                            TrackListInfo trackListInfo = tracks.get(key);
+                            trackListInfo.addTrack(sa[2], sa[3], sa[4]);
+                        }
+                    }
+                }
+                reader.close();
+            }
+        } catch(Exception ex) {
+            ex.printStackTrace();
+        }
+        
+        return tracks;
     }
     
     /**
