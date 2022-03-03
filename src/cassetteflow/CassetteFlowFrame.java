@@ -203,13 +203,21 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 tracksLabel.setText(cassetteID + " Tracks");
                 tapeInfoTextArea.setText("");
                 
-                ArrayList<String> mp3Ids = cassetteFlow.tapeDB.get(cassetteID);
+                ArrayList<String> audioIds = cassetteFlow.tapeDB.get(cassetteID);
                 
-                if(mp3Ids != null) {
-                   for(int i = 0; i < mp3Ids.size(); i++) {
-                       AudioInfo mp3Info = cassetteFlow.audioInfoDB.get(mp3Ids.get(i));
+                if(audioIds != null) {
+                   for(int i = 0; i < audioIds.size(); i++) {
+                       String audioId = audioIds.get(i);
+                       
+                       AudioInfo audioInfo = cassetteFlow.audioInfoDB.get(audioId);
                        String trackCount = String.format("%02d", (i + 1));
-                       tapeInfoTextArea.append("[" + trackCount + "] " + mp3Info.getName() + "\n");
+                       tapeInfoTextArea.append("[" + trackCount + "] " + audioInfo.getName() + "\n");
+                       
+                       // see if there is additional track information if this is for a youtube mix
+                       if(cassetteFlow.tracklistDB.containsKey(audioId)) {
+                           TrackListInfo trackListInfo = cassetteFlow.tracklistDB.get(audioId);
+                           tapeInfoTextArea.append(trackListInfo.toString());
+                       }
                    }
                 } else {
                    tapeInfoTextArea.setText("Invalid Tape ID ...");
@@ -762,7 +770,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 0.9.14 (03/02/2022)");
+        setTitle("CassetteFlow v 0.9.15 (03/03/2022)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 

@@ -95,6 +95,9 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     // the tape deck is running slow/fast
     private double speedFactor = 1.0;
     
+    // used to display tracks from long youtube mix
+    private TrackListInfo trackListInfo = null;
+    
     public CassettePlayer(CassetteFlowFrame cassetteFlowFrame, CassetteFlow cassetteFlow, String logfile) {
         this(cassetteFlow, logfile);
         this.cassetteFlowFrame = cassetteFlowFrame;
@@ -327,6 +330,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
 
                 currentAudioId = "";
                 currentPlayTime = -1;
+                trackListInfo = null;
                 playtimeDiff = 0;
                 
                 if(cassetteFlowFrame != null) {
@@ -398,7 +402,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
         String playTimeS = sa[3];
         
         // get the total time from the tape data
-        int totalTime = 0;
+        int totalTime;
         
         try {
             totalTime = Integer.parseInt(sa[4]);
@@ -447,6 +451,14 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                     System.out.println("Invalid Record @ Start Time");
                     dataErrors++;
                     return "DATA ERROR";
+                }
+                
+                // see if we have additional track information for long youtube mixes
+                if(cassetteFlow.tracklistDB.containsKey(audioId)) {
+                    trackListInfo = cassetteFlow.tracklistDB.get(audioId);
+                    // update the tracks being displayed
+                } else {
+                    trackListInfo = null;
                 }
                 
                 AudioInfo audioInfo = cassetteFlow.audioInfoDB.get(audioId);
@@ -514,8 +526,14 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
             
             String timeFromFile = String.format("%04d", mp3Time);
             
+            // get the track time
+            String trackName = audioFilename + " [" + track + "]";
+            if (trackListInfo != null) {
+                trackName = trackListInfo.getTrackAtTime(mp3Time, track);
+            }
+                
             if(cassetteFlowFrame != null) {
-                String message = audioFilename + " [" + track + "]\n"
+                String message = trackName + "\n"
                         + "Playtime From Tape: " + String.format("%04d", currentPlayTime) + " / " + String.format("%04d", audioTotalPlayTime) + "\n"
                         + "Playtime From File:  " + timeFromFile + "\n"
                         + "Tape Counter: " + totalTime + " (" + CassetteFlowUtil.getTimeString(totalTime) + ")\n"

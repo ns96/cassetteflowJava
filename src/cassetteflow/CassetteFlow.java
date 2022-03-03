@@ -379,6 +379,12 @@ public class CassetteFlow {
             ex.printStackTrace();
         }
         
+        // generate the lookup table for each of the track list
+        tracks.forEach((k,v) -> {
+            v.createLookUpTable();
+            System.out.println("Tracklist Key: " + k + " Tracks:\n" + v);
+        });
+        
         return tracks;
     }
     
