@@ -156,8 +156,8 @@ public class CassetteFlow {
             
             setDefaultAudioDirectory(properties.getProperty("audio.directory"));
         } catch (IOException e) {
-            String mp3Directory = System.getProperty("user.home");
-            setDefaultAudioDirectory(mp3Directory);
+            String audioDirectory = System.getProperty("user.home");
+            setDefaultAudioDirectory(audioDirectory);
         }
     }
     
@@ -347,6 +347,8 @@ public class CassetteFlow {
         HashMap<String, TrackListInfo> tracks = new HashMap<>();
         
         try {
+            System.out.println("\nLoading Track List File: " + file);
+            
             if(file.exists()) {
                 FileReader reader = new FileReader(file);
                 BufferedReader bufferedReader = new BufferedReader(reader);
@@ -374,6 +376,8 @@ public class CassetteFlow {
                     }
                 }
                 reader.close();
+            } else {
+                System.out.println("Missing Track List File: " + file);
             }
         } catch(Exception ex) {
             ex.printStackTrace();
@@ -1216,6 +1220,7 @@ public class CassetteFlow {
         AUDIO_DIR_NAME = audioDirectory;
         AUDIO_DB_FILENAME = AUDIO_DIR_NAME + File.separator + "audiodb.txt";
         TAPE_DB_FILENAME = AUDIO_DIR_NAME + File.separator + "tapedb.txt";
+        TRACK_LIST_FILENAME = AUDIO_DIR_NAME + File.separator + "tracklist.txt";
         LOG_FILE_NAME = AUDIO_DIR_NAME + File.separator + TAPE_FILE_DIR_NAME + File.separator + "tape.log";
     }
     
