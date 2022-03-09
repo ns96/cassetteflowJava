@@ -770,7 +770,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 0.9.15 (03/03/2022)");
+        setTitle("CassetteFlow v 0.9.17 (03/03/2022)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 
@@ -3101,9 +3101,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             }
             
             List selectedAudio = audioJList.getSelectedValuesList();
-            AudioInfo audioInfo = (AudioInfo) selectedAudio.get(0);
-            String message = audioInfo.getHash10C() + ": " + audioInfo.getName();
-            printToConsole(message, true);
+            if(selectedAudio.size() != 0) {
+                AudioInfo audioInfo = (AudioInfo) selectedAudio.get(0);
+                String message = audioInfo.getHash10C() + ": " + audioInfo.getName();
+                printToConsole(message, true);
+            }
         }
     }//GEN-LAST:event_audioJListValueChanged
 
