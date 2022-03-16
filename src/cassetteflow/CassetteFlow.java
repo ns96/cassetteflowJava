@@ -106,6 +106,10 @@ public class CassetteFlow {
     // The wav file player
     private WavPlayer wavPlayer;
     
+    // String arrays use by the dynamic content track
+    private ArrayList<String> sideADCTList;
+    private ArrayList<String> sideBDCTList;
+    
     // debug flag
     private static final boolean DEBUG = false;
     
@@ -595,13 +599,13 @@ public class CassetteFlow {
             }
         }
         
-        for(AudioInfo mp3Info: sideN) {
+        for(AudioInfo audioInfo: sideN) {
             String trackS = String.format("%02d", fileCount+1);
-            String mp3Id = tapeID + "_" + trackS + "_" + mp3Info.getHash10C();
+            String audioId = tapeID + "_" + trackS + "_" + audioInfo.getHash10C();
             
             // add this entry to the download file
             if(forDownload) {
-                String line = mp3Info.getHash10C() + "\t" + mp3Info.getFile().getName() + "\n";
+                String line = audioInfo.getHash10C() + "\t" + audioInfo.getFile().getName() + "\n";
                 myWriter2.write(line);
             }
             
@@ -609,7 +613,7 @@ public class CassetteFlow {
             if(fileCount >= 1) {
                 currentTimeTotal += muteTime;
                 String timeTotalString = String.format("%04d", currentTimeTotal);
-                String line = mp3Id + "_00" + muteTime + "M_" + timeTotalString + "\n";
+                String line = audioId + "_00" + muteTime + "M_" + timeTotalString + "\n";
                 myWriter.write(line);
                 builder.append(line);
                 
@@ -625,10 +629,10 @@ public class CassetteFlow {
                 }*/
             }
         
-            for(int i = 0; i < mp3Info.getLength(); i++) {
+            for(int i = 0; i < audioInfo.getLength(); i++) {
                 String timeString = String.format("%04d", i);
                 String timeTotalString = String.format("%04d", currentTimeTotal);
-                String line = mp3Id + "_" + timeString + "_" + timeTotalString + "\n";
+                String line = audioId + "_" + timeString + "_" + timeTotalString + "\n";
             
                 for(int j = 0; j < replicate; j++) { // replicate record N times
                     myWriter.write(line);
@@ -649,6 +653,107 @@ public class CassetteFlow {
         }
         
         return builder.toString();
+    }
+    
+    /**
+     * Create a Dynamic Content Track Array for a particular tape
+     * 
+     * @param tapeID
+     * @param sideA
+     * @param sideB
+     * @param muteTime 
+     */
+    public void createDCTArrayList(String tapeID, ArrayList<AudioInfo> sideA, ArrayList<AudioInfo> sideB, int muteTime) {
+        if (sideA != null && sideA.size() >= 1) {
+            sideADCTList = createDCTArrayListForSide(tapeID + "A", sideA, muteTime);
+        }
+
+        if (sideB != null && sideB.size() >= 1) {
+            sideBDCTList = createDCTArrayListForSide(tapeID + "B", sideB, muteTime);
+        }
+
+        // save to the tape database
+        addToTapeDB(tapeID, sideA, sideB, true);        
+    }
+    
+    /**
+     * Create a array list containing line records for the audio tracks on side
+     * A or side B
+     * 
+     * @param tapeID
+     * @param sideN
+     * @param muteTime
+     * @return 
+     */
+    public ArrayList<String> createDCTArrayListForSide(String tapeID, ArrayList<AudioInfo> sideN, int muteTime) {
+        System.out.println("Creating DCT Array: " + tapeID + ", " +  muteTime);
+        System.out.println(sideN);
+        
+        ArrayList<String> dctList = new ArrayList<>();
+        currentTimeTotal = 0;
+        int fileCount = 0;
+        
+        for(AudioInfo audioInfo: sideN) {
+            String trackS = String.format("%02d", fileCount+1);
+            String audioId = tapeID + "_" + trackS + "_" + audioInfo.getHash10C();
+            
+            // add line records to create a N second muted section before next song
+            if(fileCount >= 1) {                
+                for(int i = 0; i < muteTime; i++) {
+                    currentTimeTotal += 1;
+                    String timeTotalString = String.format("%04d", currentTimeTotal);
+                    String line = audioId + "_000M_" + timeTotalString;
+                    dctList.add(line);
+                }
+            }
+        
+            for(int i = 0; i < audioInfo.getLength(); i++) {
+                String timeString = String.format("%04d", i);
+                String timeTotalString = String.format("%04d", currentTimeTotal);
+                String line = audioId + "_" + timeString + "_" + timeTotalString;
+                dctList.add(line);
+                
+                currentTimeTotal += 1;
+            }
+    
+            fileCount += 1;
+        }
+    
+        return dctList;
+    }
+    
+    /**
+     * Get a line record from the DCT array inorder to playback the correct
+     * audio file
+     * 
+     * @param line
+     * @return 
+     */
+    public String getDCTLine(String line) {
+        try {
+            String[] sa = line.split("_");
+            String tapeId = sa[0];
+            int totalTime = Integer.parseInt(sa[4]);
+            ArrayList<String> dctList;
+            
+            // based on total time and side get the line record. Any exception
+            // will result in a null being returned
+            if(tapeId.endsWith("A")) {
+                dctList = sideADCTList;
+            } else {
+                dctList = sideBDCTList;
+            }
+            
+            if(totalTime < dctList.size()) {
+                return dctList.get(totalTime);
+            } else {
+                System.out.println("Invalid Time Code Index: " + line);
+                return null;
+            }
+        } catch(Exception ex) {
+            System.out.println("Invalid DCT Record, or Missing DCT Loopkup Array: " + line);
+            return null;
+        }
     }
     
     /**
@@ -841,17 +946,17 @@ public class CassetteFlow {
             } catch (InterruptedException ex) { }
         }
         
-        for(AudioInfo mp3Info: sideN) {
+        for(AudioInfo audioInfo: sideN) {
             long startTime = System.currentTimeMillis();
             
-            currentAudioID = mp3Info.getHash10C();
-            String data = createInputDataForAudio(tapeID, mp3Info, currentAudioCount);
+            currentAudioID = audioInfo.getHash10C();
+            String data = createInputDataForAudio(tapeID, audioInfo, currentAudioCount, 1);
             
             // indicate the current track being procecessed 
             if(cassetteFlowFrame != null)
                 cassetteFlowFrame.setSelectedIndexForSideJList(currentAudioCount - 1);
             
-            message = "Minimodem Encoding: " + tapeID + " Track [ " + currentAudioCount + " ] ( " + mp3Info.getLengthAsTime() + " )";
+            message = "Minimodem Encoding: " + tapeID + " Track [ " + currentAudioCount + " ] ( " + audioInfo.getLengthAsTime() + " )";
             printToGUIConsole(message, false);
             System.out.println("\n" + message);
                         
@@ -995,16 +1100,17 @@ public class CassetteFlow {
      * @param tapeID
      * @param audioInfo
      * @param audioCount
+     * @param muteTime
      * @return
      */
-    public String createInputDataForAudio(String tapeID, AudioInfo audioInfo, int audioCount) {
+    public String createInputDataForAudio(String tapeID, AudioInfo audioInfo, int audioCount, int muteTime) {
         StringBuilder builder = new StringBuilder();
 
         String trackString = String.format("%02d", audioCount);
         String audioId = tapeID + "_" + trackString + "_" + audioInfo.getHash10C();
         
-        // add a 1 second mute record to allow loading of mp3 correctly?
-        for (int i = 0; i < 1; i++) {
+        // add a mute record to allow loading of mp3 correctly?
+        for (int i = 0; i < muteTime; i++) {
             currentTimeTotal++;
             String timeTotalString = String.format("%04d", currentTimeTotal);
             String line = audioId + "_000M_" + timeTotalString + "\n";

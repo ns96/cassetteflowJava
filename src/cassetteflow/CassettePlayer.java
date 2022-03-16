@@ -179,7 +179,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
         
         decoding = true;
         
-        // start thread to read from csssette tape
+        // start thread to read from tape
         Thread soutThread = new Thread("Standard Output Reader") {
             @Override
             public void run() {
@@ -192,11 +192,11 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                             line = miniModemReader.readLine();
 
                             if (line != null && !paused) { //check for pause again
-                                newLogFileLine(line);
-
                                 if (cassetteFlowFrame != null) {
                                     cassetteFlowFrame.printToConsole(line, true);
                                 }
+                                
+                                newLogFileLine(line);
                             }
                         }
                         
@@ -276,7 +276,32 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                 //System.out.println("Line record: " + line);
                 
                 if(!downloading) {
-                    currentLineRecord = processRecord(line);
+                    // check to see if this line is a DCT line record
+                    // in which case it's needs to be translated
+                    if(line.startsWith("DCT0")) {
+                        String dctLine = cassetteFlow.getDCTLine(line);
+                        
+                        if(dctLine != null) {
+                            if (cassetteFlowFrame != null) {
+                                cassetteFlowFrame.printToConsole("  " + dctLine, true);
+                            }
+                            
+                            currentLineRecord = processRecord(dctLine);
+                        } else {
+                            String stopMessage = "DCT Lookup Error {# errors " + dataErrors + "/" + logLineCount + "} ...";
+
+                            // make sure we stop any previous players
+                            if (player != null) {
+                                player.stop();
+
+                                if (cassetteFlowFrame != null) {
+                                    cassetteFlowFrame.setPlaybackInfo(stopMessage, false);
+                                }
+                            }
+                        }
+                    } else {
+                        currentLineRecord = processRecord(line);
+                    }
                 } else {
                     if(logLineCount%10 == 0) {
                         String message = logLineCount + " -- File Downloads in progress. \nPlease stop cassette playback ...";
@@ -407,7 +432,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
         try {
             totalTime = Integer.parseInt(sa[4]);
         } catch(Exception nfe) {
-            System.out.println("Invalid Record @ Total Time");
+            System.out.println("Invalid Record @ Total Time: " + sa[4] + " | " + line);
             dataErrors++;
             return "DATA ERROR";
         }
@@ -441,7 +466,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
         }
         
         if(!currentAudioId.equals(audioId)) {
-            if(!playTimeS.equals("000M")) {
+            if(!playTimeS.contains("M")) {
                 muteRecords = 0;
                 currentAudioId = audioId;
                 
@@ -488,6 +513,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                 
                 System.out.println("\n" + message);
             } else {
+                // TO-DO 3/15/2022 -- Need to calculate mute time correctly!
                 if(cassetteFlowFrame != null) {
                     if(muteRecords == 0) {
                         cassetteFlowFrame.setPlaybackInfo("Mute Section ...", false);

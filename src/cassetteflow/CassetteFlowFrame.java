@@ -104,7 +104,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     // store the current directory location so when we doing filtering
     // we can display the current directory hen we done with filtering
     private String currentAudioDirectory;
-    
+        
     /**
      * Creates new form CassetteFlowFrame
      */
@@ -688,6 +688,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         realtimeEncodeButton = new javax.swing.JButton();
         filterAudioListButton = new javax.swing.JButton();
         checkTrackListButton = new javax.swing.JButton();
+        addDCTButton = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
         logfileTextField = new javax.swing.JTextField();
         logfileButton = new javax.swing.JButton();
@@ -770,7 +771,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 0.9.17 (03/03/2022)");
+        setTitle("CassetteFlow v 0.2.1 (03/16/2022)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 
@@ -795,7 +796,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 627, Short.MAX_VALUE)
+            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 642, Short.MAX_VALUE)
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addComponent(sideALabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -827,7 +828,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 627, Short.MAX_VALUE)
+            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 642, Short.MAX_VALUE)
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addComponent(sideBLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -861,7 +862,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jPanel6Layout.setHorizontalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jScrollPane7)
-            .addComponent(sideNLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 627, Short.MAX_VALUE)
+            .addComponent(sideNLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 642, Short.MAX_VALUE)
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1018,6 +1019,13 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             }
         });
 
+        addDCTButton.setText("Add DCT");
+        addDCTButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                addDCTButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -1033,7 +1041,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         .addComponent(clearSelectionButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(clearAudioListButton)
-                        .addGap(0, 84, Short.MAX_VALUE))
+                        .addGap(0, 89, Short.MAX_VALUE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(directoryTextField)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1049,6 +1057,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         .addComponent(moveTrackDownButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(checkTrackListButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(addDCTButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(realtimeEncodeButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1120,7 +1130,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                     .addComponent(moveTrackDownButton)
                     .addComponent(playSideButton)
                     .addComponent(realtimeEncodeButton)
-                    .addComponent(checkTrackListButton)))
+                    .addComponent(checkTrackListButton)
+                    .addComponent(addDCTButton)))
         );
 
         jTabbedPane1.addTab("ENCODE", jPanel1);
@@ -1598,7 +1609,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                     .addGroup(jPanel5Layout.createSequentialGroup()
                         .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                             .addComponent(lyraTCreateAButton, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(lyraTPlaySideAButton, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 103, Short.MAX_VALUE)
+                            .addComponent(lyraTPlaySideAButton, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(lyraTEncodeAButton, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
@@ -1984,6 +1995,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         sideLabel.setText("Play Time: " + CassetteFlowUtil.getTimeString(totalTime) + " " + warning);
     }
     
+    /**
+     * Get the length of the tape in seconds
+     * 
+     * @return 
+     */
     private int getMaxTapeTime() {
         int index = tapeLengthComboBox.getSelectedIndex();
         
@@ -3237,9 +3253,65 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         JOptionPane.showMessageDialog(this, message);
     }//GEN-LAST:event_checkTrackListButtonActionPerformed
     
+    /**
+     * Method to add a Dynamic Content Track which allows for dynamic playback
+     * audio or any digital content from a generically encode tape
+     * 
+     * @param evt 
+     */
+    private void addDCTButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addDCTButtonActionPerformed
+        int side = tapeJTabbedPane.getSelectedIndex();
+        int tapeLength = getMaxTapeTime(); // tape length per side
+        
+        DefaultListModel model;
+        JLabel sideLabel;
+        ArrayList<AudioInfo> audioList;
+        
+        // see which side of the tape we adding sounds to
+        if (side == 1) {
+            model = (DefaultListModel) sideBJList.getModel();
+            sideLabel = sideBLabel;
+            audioList = sideBList;
+        } else {
+            model = (DefaultListModel) sideAJList.getModel();
+            sideLabel = sideALabel;
+            audioList = sideAList;
+        }
+
+        int count = model.getSize() + 1;
+        
+        // see if to create a dummy audio info object for creating a file
+        // to be recorded
+        if(count == 1) {
+            // set the tape id to DCT1
+            tapeIDTextField.setText("DCT0");
+            
+            // add a dummy audio info 
+            String timeString = CassetteFlowUtil.getTimeString(tapeLength);
+            File file = new File("DCT -- Dynamic Content Track");
+            AudioInfo audioInfo = new AudioInfo(file, "aaaaaaaaaa", tapeLength, timeString, 0);
+            String trackCount = String.format("%02d", count);
+            String trackName = "[" + trackCount + "] " + audioInfo;
+            model.addElement(trackName);
+            audioList.add(audioInfo);
+
+            calculateTotalTime(audioList, sideLabel);
+        } else {
+            // we need to create and set the DCT arrays for side A and side B
+            // in the cassetteflow object
+            String tapeID = tapeIDTextField.getText();
+            int muteTime = Integer.parseInt(muteJTextField.getText());
+            cassetteFlow.createDCTArrayList(tapeID, sideAList, sideBList, muteTime);
+            
+            String newText = sideLabel.getText() + " || Dynamic Content Set ...";
+            sideLabel.setText(newText);
+        }
+    }//GEN-LAST:event_addDCTButtonActionPerformed
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addAudioDirectoryButton;
     private javax.swing.JButton addAudioToTapeListButton;
+    private javax.swing.JButton addDCTButton;
     private javax.swing.JLabel audioCountLabel;
     private javax.swing.JTextField audioDownloadServerTextField;
     private javax.swing.JList<String> audioJList;
