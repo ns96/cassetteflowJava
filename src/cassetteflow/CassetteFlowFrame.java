@@ -771,7 +771,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 0.2.1 (03/16/2022)");
+        setTitle("CassetteFlow v 0.2.2 (03/17/2022)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 
@@ -3303,8 +3303,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             int muteTime = Integer.parseInt(muteJTextField.getText());
             cassetteFlow.createDCTArrayList(tapeID, sideAList, sideBList, muteTime);
             
-            String newText = sideLabel.getText() + " || Dynamic Content Set ...";
-            sideLabel.setText(newText);
+            String newText = sideALabel.getText() + " || Dynamic Content Loaded ...";
+            sideALabel.setText(newText);
+            
+            newText = sideBLabel.getText() + " || Dynamic Content Loaded ...";
+            sideBLabel.setText(newText);
         }
     }//GEN-LAST:event_addDCTButtonActionPerformed
     

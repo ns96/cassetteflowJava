@@ -283,7 +283,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                         
                         if(dctLine != null) {
                             if (cassetteFlowFrame != null) {
-                                cassetteFlowFrame.printToConsole("  " + dctLine, true);
+                                cassetteFlowFrame.printToConsole(" -->" + dctLine, true);
                             }
                             
                             currentLineRecord = processRecord(dctLine);
