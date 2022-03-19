@@ -58,4 +58,10 @@ with a 4 second blank section in between each track. Having these blank sections
 will allow the AMS to be used on tape decks containing this functionality.  
 
 ## Using
-Coming soon ...
+In addition to allowing the creation of regular analog recordings, this 
+program also allows for some unique capabilities when used for recording 
+CF encoded tapes. For one, it allows for attaching track list information for 
+long mixes (i.e. YouTube mixes), synch with the playback time.  Secondly, it now 
+possible to dynamically select the audio files linked to a specially CF encode 
+tape. This makes it possible to easily create "mixtapes" without having to 
+specifically record the matching CF data onto a tape everytime.

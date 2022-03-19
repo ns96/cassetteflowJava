@@ -104,7 +104,14 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     // store the current directory location so when we doing filtering
     // we can display the current directory hen we done with filtering
     private String currentAudioDirectory;
-        
+    
+    // The frame to view the tape database
+    TapeDatabaseFrame tapeDBFrame;
+    
+    // store the current tape id being decoded so we can view the tracks
+    // in the tapeDBFrame
+    private String currentCassetteId;
+    
     /**
      * Creates new form CassetteFlowFrame
      */
@@ -120,6 +127,14 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         sideBJList.setModel(model);
         
         loadAudioOuputDevices();
+    }
+    
+    /**
+     * Return the main CasssetFlow object
+     * @return 
+     */
+    public CassetteFlow getCassetteFlow() {
+        return cassetteFlow;
     }
     
     /**
@@ -196,14 +211,18 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
      * 
      * @param cassetteID 
      */
+    @Override
     public void setPlayingCassetteID(final String cassetteID) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                currentCassetteId = cassetteID;
                 tracksLabel.setText(cassetteID + " Tracks");
                 tapeInfoTextArea.setText("");
                 
                 ArrayList<String> audioIds = cassetteFlow.tapeDB.get(cassetteID);
+                
+                int trackTotal = 0;
                 
                 if(audioIds != null) {
                    for(int i = 0; i < audioIds.size(); i++) {
@@ -213,15 +232,21 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                        String trackCount = String.format("%02d", (i + 1));
                        tapeInfoTextArea.append("[" + trackCount + "] " + audioInfo.getName() + "\n");
                        
-                       // see if there is additional track information if this is for a youtube mix
+                       // see if there is additional track information if this 
+                       // is for a long youtube mix for example
                        if(cassetteFlow.tracklistDB.containsKey(audioId)) {
                            TrackListInfo trackListInfo = cassetteFlow.tracklistDB.get(audioId);
                            tapeInfoTextArea.append(trackListInfo.toString());
+                           trackTotal += trackListInfo.getTrackCount();
+                       } else {
+                           trackTotal++;
                        }
                    }
                 } else {
                    tapeInfoTextArea.setText("Invalid Tape ID ...");
                 }
+                
+                tracksInfoLabel.setText(trackTotal + " Track(s)");
             }
         });
     }
@@ -707,7 +732,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         mmdelayTextField = new javax.swing.JTextField();
         r2RComboBox = new javax.swing.JComboBox<>();
         r2RTextField = new javax.swing.JTextField();
-        r2RLabel = new javax.swing.JLabel();
+        tracksInfoLabel = new javax.swing.JLabel();
+        viewCurrentTapeButton = new javax.swing.JButton();
         jPanel5 = new javax.swing.JPanel();
         lyraTHostTextField = new javax.swing.JTextField();
         lyraTConnectButton = new javax.swing.JButton();
@@ -771,7 +797,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 0.2.3 (03/17/2022)");
+        setTitle("CassetteFlow v 1.0.0b1 (03/19/2022)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 
@@ -805,7 +831,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 290, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 299, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(trackALabel)
@@ -837,7 +863,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 292, Short.MAX_VALUE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 300, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(trackBLabel)
@@ -867,7 +893,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel6Layout.createSequentialGroup()
-                .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 290, Short.MAX_VALUE)
+                .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 299, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(sideNLabel)
                 .addContainerGap())
@@ -1206,8 +1232,16 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         r2RTextField.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         r2RTextField.setText("64");
 
-        r2RLabel.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        r2RLabel.setText(" FF/REV Track:");
+        tracksInfoLabel.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        tracksInfoLabel.setText("## Track(s)");
+
+        viewCurrentTapeButton.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        viewCurrentTapeButton.setText("View");
+        viewCurrentTapeButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                viewCurrentTapeButtonActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -1218,7 +1252,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                     .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 328, Short.MAX_VALUE)
                     .addComponent(logfileTextField)
                     .addComponent(tracksLabel)
-                    .addComponent(r2RLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                        .addComponent(tracksInfoLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(viewCurrentTapeButton)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane5)
@@ -1266,11 +1303,13 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel6)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 141, Short.MAX_VALUE))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 145, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
                         .addComponent(jScrollPane4)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(r2RLabel))))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(tracksInfoLabel)
+                            .addComponent(viewCurrentTapeButton)))))
         );
 
         jTabbedPane1.addTab("DECODE", jPanel2);
@@ -1668,7 +1707,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(lyraTPlaySideAButton)
                             .addComponent(lyraTPlaySideBButton))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 135, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 138, Short.MAX_VALUE)
                         .addComponent(lyraTStopRawButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(lyraTStopButton))
@@ -1777,7 +1816,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jPanel7Layout.setVerticalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel7Layout.createSequentialGroup()
-                .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 383, Short.MAX_VALUE)
+                .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 387, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(filterShuffleCheckBox)
@@ -2437,6 +2476,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         // stop the thread which keeps track of stop records
         trackStopRecords = false;
         
+        tracksInfoLabel.setText("## Track(s)");
         tapeInfoTextArea.setText("");
         trackInfoTextArea.setText("");
         playbackInfoTextArea.setText("Decoding process stopped ...");
@@ -2714,7 +2754,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     }
     
     private void viewTapeDBButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_viewTapeDBButtonActionPerformed
-        TapeDatabaseFrame tapeDBFrame = new TapeDatabaseFrame();
+        tapeDBFrame = new TapeDatabaseFrame();
         boolean remoteDB = false;
         
         if(lyraTConnect == null) {
@@ -2725,10 +2765,6 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         }
         
         tapeDBFrame.setCassetteFlowFrame(this, remoteDB);
-        
-        tapeDBFrame.setTapeDB(cassetteFlow.tapeDB);
-        tapeDBFrame.setAudioInfoDB(cassetteFlow.audioInfoDB);
-        
         tapeDBFrame.setVisible(true);
     }//GEN-LAST:event_viewTapeDBButtonActionPerformed
 
@@ -3310,6 +3346,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             sideBLabel.setText(newText);
         }
     }//GEN-LAST:event_addDCTButtonActionPerformed
+
+    private void viewCurrentTapeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_viewCurrentTapeButtonActionPerformed
+        viewTapeDBButtonActionPerformed(evt);
+        tapeDBFrame.setSelectedTapeId(currentCassetteId);
+    }//GEN-LAST:event_viewCurrentTapeButtonActionPerformed
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addAudioDirectoryButton;
@@ -3411,7 +3452,6 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JTextArea playbackInfoTextArea;
     private javax.swing.JTextField playbackSpeedTextField;
     private javax.swing.JComboBox<String> r2RComboBox;
-    private javax.swing.JLabel r2RLabel;
     private javax.swing.JTextField r2RTextField;
     private javax.swing.JButton realtimeEncodeButton;
     private javax.swing.JButton reloadAudioOutputsButton;
@@ -3438,7 +3478,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JLabel trackALabel;
     private javax.swing.JLabel trackBLabel;
     private javax.swing.JTextArea trackInfoTextArea;
+    private javax.swing.JLabel tracksInfoLabel;
     private javax.swing.JLabel tracksLabel;
+    private javax.swing.JButton viewCurrentTapeButton;
     private javax.swing.JButton viewTapeDBButton;
     // End of variables declaration//GEN-END:variables
 

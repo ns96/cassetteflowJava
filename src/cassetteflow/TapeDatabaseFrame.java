@@ -21,6 +21,8 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
     
     private CassetteFlowFrame cassetteFlowFrame;
     
+    private CassetteFlow cassetteFlow;
+    
     private int currentTapeLength = 0;
     
     private boolean remoteDB = false;
@@ -33,12 +35,15 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
     }
     
     /**
-     * Set the cassette flow frame
+     * Set the CassetteFlow frame
      * 
      * @param cassetteFlowFrame 
      */
     public void setCassetteFlowFrame(CassetteFlowFrame cassetteFlowFrame, boolean remoteDB) {
         this.cassetteFlowFrame = cassetteFlowFrame;
+        this.cassetteFlow = cassetteFlowFrame.getCassetteFlow();
+        setTapeDB(cassetteFlow.tapeDB);
+        setAudioInfoDB(cassetteFlow.audioInfoDB);
         syncButton.setEnabled(remoteDB);
     }
     
@@ -86,6 +91,16 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
      */
     public void setAudioInfoDB(HashMap<String, AudioInfo> audioInfoDB) {
         this.audioInfoDB = audioInfoDB;
+    }
+    
+    /**
+     * Set the selected tape ID
+     * @param tapeId 
+     */
+    public void setSelectedTapeId(String tapeId) {
+        if(tapeDB.containsKey(tapeId)) {
+            tapeDBJList.setSelectedValue(tapeId, true);
+        }
     }
     
     /**
@@ -193,36 +208,60 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
     private void tapeDBJListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_tapeDBJListValueChanged
         if (!evt.getValueIsAdjusting()) {
             String key = tapeDBJList.getSelectedValue();
-            
-            DefaultListModel model = new DefaultListModel();
-            ArrayList<String> audioIdList = tapeDB.get(key);
-            
-            int totalTime = 0;
-            for (int i = 0; i < audioIdList.size(); i++) {
-                String audioId = audioIdList.get(i);
-                AudioInfo audioInfo = audioInfoDB.get(audioId);
-                String trackCount = String.format("%02d", (i + 1));
-                
-                if(audioInfo != null) {
-                    totalTime += audioInfo.getLength() + 4;
-                    String trackName = "[" + trackCount + "] " + audioInfo;
-                    model.addElement(trackName);
-                } else {
-                    String trackName =  "[" + trackCount + "] " + " Invalid ID -- No audio file loaded ...";
-                    model.addElement(trackName);
-                }
-            }
-            
-            // add the total time 
-            currentTapeLength = totalTime;
-            
-            // show to total play time
-            totalTimeLabel.setText("Play Time: " + CassetteFlowUtil.getTimeString(totalTime));
-            
-            // update the UI with mp3 info records
-            mp3JList.setModel(model);
+            displayTracksForTapeId(key);
         }
     }//GEN-LAST:event_tapeDBJListValueChanged
+    
+    /**
+     * 
+     * @param tapeId 
+     */
+    private void displayTracksForTapeId(String tapeId) {
+        DefaultListModel model = new DefaultListModel();
+        ArrayList<String> audioIdList = tapeDB.get(tapeId);
+
+        int totalTime = 0;
+        for (int i = 0; i < audioIdList.size(); i++) {
+            String audioId = audioIdList.get(i);
+            AudioInfo audioInfo = audioInfoDB.get(audioId);
+            String trackCount = String.format("%02d", (i + 1));
+
+            int trackTotal = 0;
+
+            if (audioInfo != null) {
+                totalTime += audioInfo.getLength() + 4;
+                String trackName = "[" + trackCount + "] " + audioInfo;
+                model.addElement(trackName);
+
+                // see if there is additional track information if this 
+                // is for a long youtube mix for example
+                if (cassetteFlow.tracklistDB.containsKey(audioId)) {
+                    TrackListInfo trackListInfo = cassetteFlow.tracklistDB.get(audioId);
+                    ArrayList<String> tracks = trackListInfo.getTrackNumberAndTitles();
+
+                    for (String track : tracks) {
+                        model.addElement(track);
+                    }
+
+                    trackTotal += trackListInfo.getTrackCount();
+                } else {
+                    trackTotal++;
+                }
+            } else {
+                String trackName = "[" + trackCount + "] " + " Invalid ID -- No audio file loaded ...";
+                model.addElement(trackName);
+            }
+        }
+
+        // add the total time 
+        currentTapeLength = totalTime;
+
+        // show to total play time
+        totalTimeLabel.setText("Play Time: " + CassetteFlowUtil.getTimeString(totalTime));
+
+        // update the UI with mp3 info records
+        mp3JList.setModel(model);
+    }
     
     /**
      * Load a tape and associated audio info objects to the main UI
