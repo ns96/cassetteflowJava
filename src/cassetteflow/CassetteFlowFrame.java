@@ -797,7 +797,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.0.0b1 (03/19/2022)");
+        setTitle("CassetteFlow v 1.0.0b1 (03/20/2022)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 
@@ -1751,7 +1751,6 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
 
         audioDownloadServerTextField.setText("http://");
 
-        filterShuffleCheckBox.setSelected(true);
         filterShuffleCheckBox.setText("Shuffle Filter (min-max) minutes");
         filterShuffleCheckBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {

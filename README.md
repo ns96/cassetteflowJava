@@ -31,6 +31,7 @@ cost in todays day and age though :)
 ![Main GUI 2](gui02.png)
 ![Main GUI 3](gui03.png)
 ![Main GUI 4](gui04.png)
+![Main GUI 5](gui05.png)
 ![Data Flow 1](dataflow01.png)
 ![Data Flow 2](dataflow02.png)
 ![LyraT](LyraT01.png)
@@ -61,7 +62,9 @@ will allow the AMS to be used on tape decks containing this functionality.
 In addition to allowing the creation of regular analog recordings, this 
 program also allows for some unique capabilities when used for recording 
 CF encoded tapes. For one, it allows for attaching track list information for 
-long mixes (i.e. YouTube mixes), synch with the playback time.  Secondly, it now 
-possible to dynamically select the audio files linked to a specially CF encode 
-tape. This makes it possible to easily create "mixtapes" without having to 
-specifically record the matching CF data onto a tape everytime.
+long mixes (i.e. YouTube mixes), synched to the playback time.  The track list
+information is stored in a tab delimitted [tracklist.txt](text file). Secondly, 
+it's now possible to dynamically select the audio files and link them to a 
+specially CF encode tape. These are called Dynamic Content Tracks, DCT, and make 
+possible to easily create "mixtapes" without having to specifically record the 
+matching CF data onto a tape each time.

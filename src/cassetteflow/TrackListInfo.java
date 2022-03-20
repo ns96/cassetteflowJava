@@ -17,7 +17,6 @@ public class TrackListInfo {
     private ArrayList<Integer> trackNumbers;
     private ArrayList<Integer> trackTimes;
     private ArrayList<String> trackTitles;
-    private ArrayList<String> trackNumberAndTitles;
     
     // variables used to look up track for a particular time
     private int lastIndex;
@@ -37,7 +36,6 @@ public class TrackListInfo {
         trackNumbers = new ArrayList<>();
         trackTimes = new ArrayList<>();
         trackTitles = new ArrayList<>();
-        trackNumberAndTitles = new ArrayList<>();
     }
     
     /**
@@ -77,11 +75,13 @@ public class TrackListInfo {
      * @return 
      */
     public ArrayList<String> getTrackNumberAndTitles() {
+        ArrayList<String> tracks = new ArrayList<>();
+        
         for(int i = 0; i < trackNumbers.size(); i++) {
-            trackNumberAndTitles.add("  " + trackNumbers.get(i) + ". " + trackTitles.get(i));
+            tracks.add("  " + trackNumbers.get(i) + ". " + trackTitles.get(i));
         }
         
-        return trackNumberAndTitles;
+        return tracks;
     }
     
     /**

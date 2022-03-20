@@ -1,0 +1,656 @@
+File ID	File Name	Track #	Time_Seconds	Titile
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	1	0	Michael Bolton - Soul Provider
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	2	160	Michael Jackson & Paul McCartney - The Girl Is Mine
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	3	260	Alexander O'Neal - If You Were Here Tonight
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	4	400	Az Yet - Last Night
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	5	565	Toni Braxton - Let It Flow
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	6	730	Celine Dion - Dreamin' Of You
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	7	880	Toni Braxton - You Mean The World To Me
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	8	1025	Tevin Campbell - Can We Talk
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	9	1175	Toni Braxton - Love Shoulda Brought You Home
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	10	1320	Tevin Campbell - I'm Ready
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	11	1480	Toni Braxton - Breathe Again
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	12	1620	Madonna - Take A Bow
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	13	1740	Atlantic Starr - Secret Lovers
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	14	1890	Milli Vanilli - Girl I'm Gonna Miss You
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	15	2010	Trey Lorenz - Someone To Hold
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	16	2160	Bobby Bland - Members Only
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	17	2270	The Chi-Lites - Homely Girl
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	18	2410	Yvonne Elliman - Love Me
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	19	2480	Angie Stone - No More Rain
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	20	2625	Betty Wright - Thank You For The Many Things You've Done
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	21	2780	Dionne Warwick Feat. Elton John & Gladys - That's What Friends Are For
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	22	2915	Betty Wright - No Pain No Gain
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	23	3085	Freddie Jackson - Rock Me Tonight
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	24	3255	Luther Vandross - Your Secret Love
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	25	3390	Michael Bolton - I Promise You
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	26	3545	Rod Stewart - Have I Told You Lately
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	27	3665	Atlantic Starr - Masterpiece
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	28	3820	Michael Bolton - How Am I Supposed To Live Without You
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	29	3995	Aretha Franklin Feat. Michael McDonald - Ever Changing Times
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	30	4155	Mariah Carey - Vision Of Love
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	31	4315	Gerald Levert - I'd Give Anything
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	32	4440	Lionel Richie - Stuck On You
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	33	4595	Billy Ocean - Suddenly
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	34	4745	Mariah Carey - I Don't Wanna Cry
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	35	4895	Whitney Houston - Where Do Broken Hearts Go
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	36	5080	Mariah Carey - Love Takes Time
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	37	5250	Mariah Carey - I Still Believe
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	38	5360	The Temptations - Lady Soul
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	39	5530	Lisa Fischer - How Can I Ease The Pain
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	40	5720	Anita Baker - Body And Soul
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	41	5895	Peabo Bryson & Regina Belle - A Whole New World
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	42	6075	Tiffany - All This Time
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	43	6215	Patti LaBelle - On My Own
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	44	6400	Dolly Parton & Kenny Rogers - Islands In The Stream
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	45	6560	Anita Baker - Same Ole Love
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	46	6680	Elton John - Nikita
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	47	6840	Gregory Abbot - Shake You Down
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	48	6975	Marvin Gaye - Sexual Healing
+a85a61b72f	RNB_CLASSIC_SOULS_DJ_MURRAY_01.mp3	49	7140	George Benson - Kisses In The Moonlight
+				
+e9d3929041	RNB_CLASSIC_SOULS_DJ_MURRAY_02.mp3	50	0	George Benson - Kisses In The Moonlight
+e9d3929041	RNB_CLASSIC_SOULS_DJ_MURRAY_02.mp3	51	100	Glenn Jones
+e9d3929041	RNB_CLASSIC_SOULS_DJ_MURRAY_02.mp3	52	270	Freddie Jackson - You Are My Lady
+e9d3929041	RNB_CLASSIC_SOULS_DJ_MURRAY_02.mp3	53	470	Patti Austin - Baby, Come To Me
+e9d3929041	RNB_CLASSIC_SOULS_DJ_MURRAY_02.mp3	54	650	Mr. Easy - No Chances
+e9d3929041	RNB_CLASSIC_SOULS_DJ_MURRAY_02.mp3	55	840	Bad Gyal Jade - Celebration
+e9d3929041	RNB_CLASSIC_SOULS_DJ_MURRAY_02.mp3	56	975	Kaream Kharizma - Gal Magnet
+e9d3929041	RNB_CLASSIC_SOULS_DJ_MURRAY_02.mp3	57	1090	Kaream Kharizma Feat. Chris Martin - Gyal Magnet [Remix]
+				
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	1	0	Peabo Bryson - If Ever You're In My Arms Again
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	2	150	Luther Vandross & Mariah Carey - Endless Love
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	3	305	Air Supply - All Out Of Love
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	4	420	Peabo Bryson & Regina Belle - A Whole New World 
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	5	560	Toni Braxton - Un-Break My Heart
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	6	690	Toni Braxton - Spanish Guitar
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	7	825	Westlife - Soledad
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	8	945	Celine Dion - Because You Loved Me
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	9	1100	Luther Vandross & Mariah Carey - I'd Rather
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	10	1260	Dionne Warwick Feat. Elton John & Gladys - That's What Friends Are For
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	11	1395	Michael Jackson - You Are Not Alone
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	12	1475	Mariah Carey - Hero
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	13	1615	Mariah Carey - Love Takes Time
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	14	1750	Boyz II Men & Mariah Carey - One Sweet Day
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	15	1900	Lionel Richie - Say You, Say Me
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	16	2050	Whitney Houston - Greatest Love Of All
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	17	2175	Atlantic Starr - Always
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	18	2350	Commodores - Easy
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	19	2410	Lionel Richie - Stuck On You
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	20	2555	Stuck On You - Please Forgive Me
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	21	2680	Whitney Houston - I Will Always Love You
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	22	2945	Whitney Houston - Try It On My Own
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	23	3080	Shania Twain - You're Still The One
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	24	3205	Shania Twain - From This Moment On
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	25	3315	George Benson - Nothing's Gonna Change My Love For You
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	26	3460	3T - Anything
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	27	3540	Jon B. Feat. Babyface - Someone To Love
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	28	3600	Michael Bolton - How Am I Supposed To Live Without You
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	29	3775	Celine Dion - The Power Of Love
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	30	3930	Westlife - My Love
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	31	4070	Bon Jovi - Always
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	32	4220	Whitney Houston - All The Man That I Need
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	33	4340	Luther Vandross - Here And Now
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	34	4455	George Michael - Careless Whisper
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	35	4600	Milli Vanilli - Girl I'm Gonna Miss You
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	36	4775	Toni Braxton - Breathe Again
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	37	4920	Take That - Back For Good
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	38	5040	Mariah Carey - I'll Be There
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	39	5135	Don Henley & Patty Smyth - Sometimes Love Just Ain't Enough
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	40	5280	Michael Bolton - Soul Provider
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	41	5430	Savage Garden - I Knew I Loved You
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	42	5565	Backstreet Boys - Show Me The Meaning Of Being Lonely
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	43	5680	Celine Dion - It's All Coming Back To Me Now
+7a31495cc0	DJ_TOPHAZ-SOUL_MIXPERIENCE.mp3	44	6080	Seal - Kiss From A Rose
+				
+2aaefaf02b	Afrobeat Mix 2021 The Best of Afrobeat 2021 by OSOCITY.mp3	1	0	Rotimi Feat. Wale - In My Bed
+2aaefaf02b	Afrobeat Mix 2021 The Best of Afrobeat 2021 by OSOCITY.mp3	2	90	TrevMoMatic & Starboy Feat. Bad Boys Blue - Lover (Joro)
+2aaefaf02b	Afrobeat Mix 2021 The Best of Afrobeat 2021 by OSOCITY.mp3	3	185	Reekado Banks - Rora
+2aaefaf02b	Afrobeat Mix 2021 The Best of Afrobeat 2021 by OSOCITY.mp3	4	290	Haitian Konpa Feat. Vox Sambou, Manno Beats & Afrotonix - Akouna
+2aaefaf02b	Afrobeat Mix 2021 The Best of Afrobeat 2021 by OSOCITY.mp3	5	380	DANOLA - Premye fwa (paroleslyrics)
+2aaefaf02b	Afrobeat Mix 2021 The Best of Afrobeat 2021 by OSOCITY.mp3	6	500	WizKid - Ghetto Love
+2aaefaf02b	Afrobeat Mix 2021 The Best of Afrobeat 2021 by OSOCITY.mp3	7	570	CKay Feat. Joeboy, Kuami Eugene & Frizzo - love nwantiti
+2aaefaf02b	Afrobeat Mix 2021 The Best of Afrobeat 2021 by OSOCITY.mp3	8	670	Olamide Feat. Omah Lay - Infinity
+2aaefaf02b	Afrobeat Mix 2021 The Best of Afrobeat 2021 by OSOCITY.mp3	9	800	Shenseea Ft. Tarrus Riley - Lighter
+2aaefaf02b	Afrobeat Mix 2021 The Best of Afrobeat 2021 by OSOCITY.mp3	10	865	Ussaboy - Covid mix
+2aaefaf02b	Afrobeat Mix 2021 The Best of Afrobeat 2021 by OSOCITY.mp3	11	940	Zum Feat. Shenseea - Rebel
+				
+f53e21b353	Fiesta Latina Mix 2021 Latin Party Mix 2021 The Best Latin Party Hits by OSOCITY.mp3	1	0	Pitbull - Culo (ft. Lil Jon)
+f53e21b353	Fiesta Latina Mix 2021 Latin Party Mix 2021 The Best Latin Party Hits by OSOCITY.mp3	2	120	Pitbull feat. Sean Paul & Lil Jon - Culo (Remix)
+f53e21b353	Fiesta Latina Mix 2021 Latin Party Mix 2021 The Best Latin Party Hits by OSOCITY.mp3	3	185	Nina Sky - Move Ya Body
+f53e21b353	Fiesta Latina Mix 2021 Latin Party Mix 2021 The Best Latin Party Hits by OSOCITY.mp3	4	290	Bonde R300 - Challenge Oh Nanana
+f53e21b353	Fiesta Latina Mix 2021 Latin Party Mix 2021 The Best Latin Party Hits by OSOCITY.mp3	5	320	Pitbull Feat. Lil Jon - The Anthem
+f53e21b353	Fiesta Latina Mix 2021 Latin Party Mix 2021 The Best Latin Party Hits by OSOCITY.mp3	6	430	Pitbull - Hotel Room Service
+f53e21b353	Fiesta Latina Mix 2021 Latin Party Mix 2021 The Best Latin Party Hits by OSOCITY.mp3	7	545	LMFAO - Shots ft. Lil John
+f53e21b353	Fiesta Latina Mix 2021 Latin Party Mix 2021 The Best Latin Party Hits by OSOCITY.mp3	8	650	Pitbull - Calle Ocho (75, Brazil Street RMX)
+f53e21b353	Fiesta Latina Mix 2021 Latin Party Mix 2021 The Best Latin Party Hits by OSOCITY.mp3	9	740	Qwote Feat. Pitbull & Lucenzo - Throw Your Hands Up
+f53e21b353	Fiesta Latina Mix 2021 Latin Party Mix 2021 The Best Latin Party Hits by OSOCITY.mp3	10	895	Casa De Leones - No Te Veo
+f53e21b353	Fiesta Latina Mix 2021 Latin Party Mix 2021 The Best Latin Party Hits by OSOCITY.mp3	11	985	Michel Telo ft. Pitbull - Ai Se Eu Te Pego (NOSA,NOSA RMX)
+f53e21b353	Fiesta Latina Mix 2021 Latin Party Mix 2021 The Best Latin Party Hits by OSOCITY.mp3	12	1100	Pitbull ft. Machel Montano - Alright
+f53e21b353	Fiesta Latina Mix 2021 Latin Party Mix 2021 The Best Latin Party Hits by OSOCITY.mp3	13	1210	Don Omar - Zumba
+f53e21b353	Fiesta Latina Mix 2021 Latin Party Mix 2021 The Best Latin Party Hits by OSOCITY.mp3	14	1325	El General  - (que es lo que quiere esa nena)
+f53e21b353	Fiesta Latina Mix 2021 Latin Party Mix 2021 The Best Latin Party Hits by OSOCITY.mp3	15	1650	Sergio Mendes - Magalenha
+				
+d2fc13887f	Kompa Mix 2019 The Best of Kompa 2019 BY OSOCITY.mp3	1	0	Platinum D - OU PA KA FE SA
+d2fc13887f	Kompa Mix 2019 The Best of Kompa 2019 BY OSOCITY.mp3	2	150	Reggie 'N' Bollie - BUMAYE
+d2fc13887f	Kompa Mix 2019 The Best of Kompa 2019 BY OSOCITY.mp3	3	325	DJ Snake Feat. Selena Gomez & Ozuna & Cardi B - TAKİ TAKİ
+d2fc13887f	Kompa Mix 2019 The Best of Kompa 2019 BY OSOCITY.mp3	4	450	Geko Feat. NSG - 6:30
+d2fc13887f	Kompa Mix 2019 The Best of Kompa 2019 BY OSOCITY.mp3	5	540	KEVNI X EDDAY - JYNOCKS [ZOUK KOMPA 2018]
+d2fc13887f	Kompa Mix 2019 The Best of Kompa 2019 BY OSOCITY.mp3	6	690	OBOY DOPEBWOY AYA NAKAMURA NOKS x JE M'EN TAPE [ZOUK REMIX 2019]
+				
+6ff21d8067	Kompa Zouk Mix 2020 The Best of Kompa Zouk 2020 BY OSOCITY.mp3	1	0	NOVA X AYA - LA DOT (ZOUK REMIX 2K19)
+6ff21d8067	Kompa Zouk Mix 2020 The Best of Kompa Zouk 2020 BY OSOCITY.mp3	2	130	NOVA X KELESHI AFRICANA - Ring (4 BritS) 2K19
+6ff21d8067	Kompa Zouk Mix 2020 The Best of Kompa Zouk 2020 BY OSOCITY.mp3	3	200	Aya Nakamura - Djadja
+6ff21d8067	Kompa Zouk Mix 2020 The Best of Kompa Zouk 2020 BY OSOCITY.mp3	4	295	Nakamura Feat. Charo - Monaco ZOUK REMIX
+6ff21d8067	Kompa Zouk Mix 2020 The Best of Kompa Zouk 2020 BY OSOCITY.mp3	5	375	DJ NOKS - La COPINE Remix Zouk 2K18
+6ff21d8067	Kompa Zouk Mix 2020 The Best of Kompa Zouk 2020 BY OSOCITY.mp3	6	470	ERPHAAN ALVES x STYX 687 - Overdue (ZOUK REMIX) 2K19
+6ff21d8067	Kompa Zouk Mix 2020 The Best of Kompa Zouk 2020 BY OSOCITY.mp3	7	550	WILLY PAUL x ALAINE x STYX 687 - I Do (ZOUK REMIX) 2K18
+6ff21d8067	Kompa Zouk Mix 2020 The Best of Kompa Zouk 2020 BY OSOCITY.mp3	8	655	OSWALD x STYX 687 - Solo (ZOUK REMIX) 2K18
+				
+d5f444d126	Moombahton Mix 2021 The Best of Moombahton 2021 by OSOCITY.mp3	1	0	Aya Nakamura - Djadja Remix
+d5f444d126	Moombahton Mix 2021 The Best of Moombahton 2021 by OSOCITY.mp3	2	100	Aya Nakamura - Copines DjYaMtZa-Intro
+d5f444d126	Moombahton Mix 2021 The Best of Moombahton 2021 by OSOCITY.mp3	3	220	VEGEDREAM - RAMENEZ LA COUPE A LA MAISON
+d5f444d126	Moombahton Mix 2021 The Best of Moombahton 2021 by OSOCITY.mp3	4	330	Marwa Loud - Billet
+d5f444d126	Moombahton Mix 2021 The Best of Moombahton 2021 by OSOCITY.mp3	5	420	Aya Nakamura - Doudou
+d5f444d126	Moombahton Mix 2021 The Best of Moombahton 2021 by OSOCITY.mp3	6	530	Marwa Loud - Bad Boy
+d5f444d126	Moombahton Mix 2021 The Best of Moombahton 2021 by OSOCITY.mp3	7	675	Dro X Yani - Elle A Tout
+d5f444d126	Moombahton Mix 2021 The Best of Moombahton 2021 by OSOCITY.mp3	8	740	DRIKS Feat. Jahyanai King - TT
+d5f444d126	Moombahton Mix 2021 The Best of Moombahton 2021 by OSOCITY.mp3	9	840	Aya Nakamura - Pookie (ASH Remix)
+d5f444d126	Moombahton Mix 2021 The Best of Moombahton 2021 by OSOCITY.mp3	10	930	PLL feat Dj Sebb - Ocho
+d5f444d126	Moombahton Mix 2021 The Best of Moombahton 2021 by OSOCITY.mp3	11	1060	Tayc - N'y pense plus
+d5f444d126	Moombahton Mix 2021 The Best of Moombahton 2021 by OSOCITY.mp3	12	1170	FRANGLISH Feat.Tory Lanez - My Salsa feat
+d5f444d126	Moombahton Mix 2021 The Best of Moombahton 2021 by OSOCITY.mp3	13	1280	Soolking feat. Lynda, Heuss, L'Algérino, Franglish - Jennifer Remix
+d5f444d126	Moombahton Mix 2021 The Best of Moombahton 2021 by OSOCITY.mp3	14	1390	Soolking feat. Dadju - Melegim
+				
+929e6d4dd7	Old School Dancehall Mix The Best of Old School Dancehall by OSOCITY.mp3	1	0	Beenie Man - Romie
+929e6d4dd7	Old School Dancehall Mix The Best of Old School Dancehall by OSOCITY.mp3	2	120	Mr Vegas - Heads High
+929e6d4dd7	Old School Dancehall Mix The Best of Old School Dancehall by OSOCITY.mp3	3	200	Beenie Man - Let Him Go
+929e6d4dd7	Old School Dancehall Mix The Best of Old School Dancehall by OSOCITY.mp3	4	260	Beenie Man & Mr. Vegas & Goofy & Red Rat & Chrissy D & Buccaneer & Lady Saw & Hawkeye & Lady G - Filthy Mega Mix
+929e6d4dd7	Old School Dancehall Mix The Best of Old School Dancehall by OSOCITY.mp3	5	300	Red Rat - Tight Up Skirt
+929e6d4dd7	Old School Dancehall Mix The Best of Old School Dancehall by OSOCITY.mp3	6	380	Red Rat - Bizzi Blazzi
+929e6d4dd7	Old School Dancehall Mix The Best of Old School Dancehall by OSOCITY.mp3	7	440	Beenie Man - Gwaan So
+929e6d4dd7	Old School Dancehall Mix The Best of Old School Dancehall by OSOCITY.mp3	8	515	Mr Vegas - Big Things a Gwaan
+929e6d4dd7	Old School Dancehall Mix The Best of Old School Dancehall by OSOCITY.mp3	9	580	Beenie Man - Who Am I Sim Simma
+929e6d4dd7	Old School Dancehall Mix The Best of Old School Dancehall by OSOCITY.mp3	10	745	Mr Vegas - Nike Air (Hands In The Air)
+929e6d4dd7	Old School Dancehall Mix The Best of Old School Dancehall by OSOCITY.mp3	11	835	Sean Paul - Infiltrate
+				
+7cf67a99da	Old School Dancehall Mix The Best of Old School Dancehall by OSOCITY_2.mp3	1	0	Chaka Demus & Pliers - Murder She Wrote
+7cf67a99da	Old School Dancehall Mix The Best of Old School Dancehall by OSOCITY_2.mp3	2	145	Chaka Demus & Pliers - Bam Bam
+7cf67a99da	Old School Dancehall Mix The Best of Old School Dancehall by OSOCITY_2.mp3	3	220	Red Rat - Shelly Anne (bam bam riddim)
+7cf67a99da	Old School Dancehall Mix The Best of Old School Dancehall by OSOCITY_2.mp3	4	310	 Bunny General - Full Up a Class
+7cf67a99da	Old School Dancehall Mix The Best of Old School Dancehall by OSOCITY_2.mp3	5	375	Ayalew - Dancehall Boom
+7cf67a99da	Old School Dancehall Mix The Best of Old School Dancehall by OSOCITY_2.mp3	6	510	Louchie Lou & Michie One - If I Was Rich Girl
+7cf67a99da	Old School Dancehall Mix The Best of Old School Dancehall by OSOCITY_2.mp3	7	600	Cutty Ranks - Who Say Me Dun
+7cf67a99da	Old School Dancehall Mix The Best of Old School Dancehall by OSOCITY_2.mp3	8	640	Sasha feat Fatman Scoop - Coca Cola Shape (Sexy Body Remix)
+7cf67a99da	Old School Dancehall Mix The Best of Old School Dancehall by OSOCITY_2.mp3	9	775	Sean Paul - Deport Dem
+7cf67a99da	Old School Dancehall Mix The Best of Old School Dancehall by OSOCITY_2.mp3	10	840	Mr. Vegas - Jack it up
+7cf67a99da	Old School Dancehall Mix The Best of Old School Dancehall by OSOCITY_2.mp3	11	900	Tanto Metro & Devonte - Say wooee
+7cf67a99da	Old School Dancehall Mix The Best of Old School Dancehall by OSOCITY_2.mp3	12	1000	 Beenie Man - Bookshelf
+				
+06dc759e03	Old School Soca Mix The Best of Old School Soca by OSOCITY.mp3	1	0	Cross Fire-Krosfyah - Pump Me Up With The Music
+06dc759e03	Old School Soca Mix The Best of Old School Soca by OSOCITY.mp3	2	155	Atlantik Feat. Tony Prescott - All Aboard
+06dc759e03	Old School Soca Mix The Best of Old School Soca by OSOCITY.mp3	3	270	Square One - Granny
+06dc759e03	Old School Soca Mix The Best of Old School Soca by OSOCITY.mp3	4	380	Rupee - Blame It (On De Music0)
+06dc759e03	Old School Soca Mix The Best of Old School Soca by OSOCITY.mp3	5	495	Rupee - Till' Morning
+06dc759e03	Old School Soca Mix The Best of Old School Soca by OSOCITY.mp3	6	575	De Red Boyz - Nah Going Home (til the Mornin' Come)
+06dc759e03	Old School Soca Mix The Best of Old School Soca by OSOCITY.mp3	7	730	Wine and Bend Over
+06dc759e03	Old School Soca Mix The Best of Old School Soca by OSOCITY.mp3	8	840	Scrunter - De Jumbie
+06dc759e03	Old School Soca Mix The Best of Old School Soca by OSOCITY.mp3	9	960	FayAnn Lyons - Focus
+06dc759e03	Old School Soca Mix The Best of Old School Soca by OSOCITY.mp3	10	1065	Shayne Bailey - Leggo Meh Man
+				
+ac243fa492	Pop Mix 2020 The Best of Pop 2020 by OSOCITY.mp3	1	0	Dua Lipa - Don't Start Now (Lyrics)
+ac243fa492	Pop Mix 2020 The Best of Pop 2020 by OSOCITY.mp3	2	135	Meduza Feat. Goodboys - Piece Of Your Heart
+ac243fa492	Pop Mix 2020 The Best of Pop 2020 by OSOCITY.mp3	3	235	Jay Sean - Ride It (Regard Remix)
+ac243fa492	Pop Mix 2020 The Best of Pop 2020 by OSOCITY.mp3	4	325	24KGoldn - CITY OF ANGELS (Funk Remix)
+ac243fa492	Pop Mix 2020 The Best of Pop 2020 by OSOCITY.mp3	5	440	Doja Cat - Say So (Lyrics)
+ac243fa492	Pop Mix 2020 The Best of Pop 2020 by OSOCITY.mp3	6	615	Aaron Smith - Dancin (KRONO Remix)
+ac243fa492	Pop Mix 2020 The Best of Pop 2020 by OSOCITY.mp3	7	750	Post Malone - Circles
+ac243fa492	Pop Mix 2020 The Best of Pop 2020 by OSOCITY.mp3	8	905	Route 94 Feat. Jess Glynne - My Love
+				
+052a9c2fe6	Pop Mix 2021 The Best of Pop 2021 by OSOCITY.mp3	1	0	Nelly Furtado - Promiscuous ft. Timbaland
+052a9c2fe6	Pop Mix 2021 The Best of Pop 2021 by OSOCITY.mp3	2	200	Ariana Grande, Nelly Furtado - Motive X Promiscuous
+052a9c2fe6	Pop Mix 2021 The Best of Pop 2021 by OSOCITY.mp3	3	260	Timbaland Feat. Keri Hilson & D.O.E. - The Way I Are
+052a9c2fe6	Pop Mix 2021 The Best of Pop 2021 by OSOCITY.mp3	4	370	Timbaland Feat. Justin Timberlake & Nelly Furtado - Give It To Me
+052a9c2fe6	Pop Mix 2021 The Best of Pop 2021 by OSOCITY.mp3	5	520	P. Diddy feat. Keyshia Cole - Last Night
+052a9c2fe6	Pop Mix 2021 The Best of Pop 2021 by OSOCITY.mp3	6	700	Flo Rida - Elevator [Feat. Timbaland]
+052a9c2fe6	Pop Mix 2021 The Best of Pop 2021 by OSOCITY.mp3	7	845	Justin Timberlake - SexyBack
+052a9c2fe6	Pop Mix 2021 The Best of Pop 2021 by OSOCITY.mp3	8	975	The Black Eyed Peas - My Humps
+052a9c2fe6	Pop Mix 2021 The Best of Pop 2021 by OSOCITY.mp3	9	1070	Akon - Smack That ft. Eminem
+052a9c2fe6	Pop Mix 2021 The Best of Pop 2021 by OSOCITY.mp3	10	1230	Scream & Shout Will.I.Am (Feat. Britney Spears)
+052a9c2fe6	Pop Mix 2021 The Best of Pop 2021 by OSOCITY.mp3	11	1400	Fergie - Fergalicious
+052a9c2fe6	Pop Mix 2021 The Best of Pop 2021 by OSOCITY.mp3	12	1590	Black Eyed Peas - Meet Me Halfway
+052a9c2fe6	Pop Mix 2021 The Best of Pop 2021 by OSOCITY.mp3	13	1760	Fergie - Glamorous
+				
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	1	0	Busy Signal - Born Fi Survive
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	2	78	Jesse Royal - Pressure
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	3	140	I-Octane - Let Me Know
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	4	225	Lia Caribe - Don't Fall for Me
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	5	290	Christopher Martin - I Wish It Would Rain
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	6	345	Ce'cile - Used to Be
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	7	405	D-Major - Just Wondering
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	8	446	Padrino - Battlefield
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	9	510	Jah Cure - A Thousand Miles
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	10	588	Konshens - Love Is Here
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	11	650	Busy Signal - Watch Me
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	12	695	Padrino - All for You
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	13	768	Ce'cile - Breakup
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	14	830	Chris M - Between the Lines
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	15	885	I-Octane - Someone to Love
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	16	928	Romain V - Hero
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	17	968	Konshens - Badman Heart
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	18	1030	Fiyaneer - We Bawl
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	19	1120	Turbulence - Stop the Fighting
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	20	1180	Rufftop Rock I - Life Is What You Make It
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	21	1245	Sizzla - Get out a Babylon System
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	22	1320	Bescenta - Fire Bun Return
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	23	1405	Jah Cure - You Cant See My Soul
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	24	1480	Lutan Fyah - Have Mercy
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	25	1545	Powerman - Deep in My Soul
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	26	1610	Dreama - Country Girl
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	27	1675	Anthony B - Close to You
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	28	1740	Richie Spice - Got You Baby
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	29	1800	Romain Virgo - Melanin
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	30	1855	Alaine - You Give Me Hope
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	31	1908	Morgan Heritage - We Don't Want Them
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	32	1985	Tarrus Riley - Jamaican Proverbs
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	33	2038	Pressure Busspipe - Work
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	34	2090	Jemere Morgan - Proud
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	35	2145	Queen Ifrica - To See
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	36	2218	Prince Levy - Jah Walk with I
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	37	2295	Gentleman - Don't Judge
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	38	2355	Pressure - Blaze Fire
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	39	2420	Alaine - Carry On
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	40	2475	Christopher Martin - How Could You
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	41	2550	Jah Cure - Sorry
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	42	2625	Zagga - All of Yours
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	43	2678	Chuck Fenda - Tonight
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	44	2740	Chino Mcgregor - What Goes Around
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	45	2795	I-Octane - Beware
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	46	2855	Ce'cile - Sort Out
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	47	2900	D Major - Respect
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	48	2965	I Wayne - Oxtail
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	49	3035	Collie Buddz - Cali Roots Riddim (Instrumental)
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	50	3075	Collie Buddz; Anthony B - Chill Out
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	51	3130	Collie Buddz - Hold Firm
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	52	3190	Mike Love - These Are My Roots
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	53	3235	Jesse Royal - Ooh La La
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	54	3290	Gentleman - Can't Stop the Love
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	55	3330	Arise Roots - Cali Love
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	56	3395	Pepper - Change
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	57	3460	Etana - All In One
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	58	3510	Artikal Sound System - Light My Way
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	59	3570	Kabaka Pyramid/MediSun - Natural High
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	60	3648	Iration - Be Alright
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	61	3700	Konshens - Blaze Away
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	62	3750	The Roots - Everywhere I Go
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	63	3795	Groundation - Good Over Evil
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	64	3850	Alborosie - See You Again
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	65	3910	Anthony B - Love Like This
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	66	3985	Demarco - Stuck On You
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	67	4060	Turbulence - Stay Close
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	68	4115	Jah Cure - Jah Watch over His People
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	69	4210	Turbulence - They Say
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	70	4288	Bescenta - Give Thanks and Praise
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	71	4350	Rufftop Rock I - The World Needs Love
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	72	4450	Lutan Fyah - Never Give Up
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	73	4515	Powerman - Cant Keep We Down
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	74	4555	Fiyaneer - Obvious
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	75	4620	Yami Bolo - I Got Love for You
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	76	4695	Chevaughn - Karamel Indigo
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	77	4810	Jah Cure - True Love
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	78	4865	Charly Black - My Butterfly
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	79	4920	Chris Martin - Calls Your Name
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	80	4995	Pressure - All for Me
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	81	5050	D-Major - Lessons from Me
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	82	5125	Christopher Martin - Search All You Want
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	83	5190	Alaine - Man Crush Everyday
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	84	5255	Romain Virgo - Progress
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	85	5310	Prohgres - Only God Can Tell
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	86	5375	Busy Signal - What Is a Friend
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	87	5460	Bounty Killer - Inseparable
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	88	5520	Chante - Your Eyes
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	89	5600	Peetah Morgan - There She Goes
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	90	5655	Jemere Morgan - Faith
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	91	5740	Romain Virgo - Stronger
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	92	5845	Alaine - Victory Rock
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	93	5910	Pressure Busspipe - All Said and Done
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	94	5985	Gentleman/Christopher Martin - People
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	95	6070	Bugle - What Is Life
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	96	6115	Irie Souljah - Magic
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	97	6190	D-Major - She Nah Give It Away
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	98	6255	Christopher Martin - On and On
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	99	6330	FALKON - FOREVER GIRL
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	100	6398	CHRISTOPHER MARTIN & ROMAIN VIRGO - TRY MY LOVE
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	101	6470	NIGMA - THANKS (MAMA)
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	102	6555	Falkon - Self Worth
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	103	6622	Ginjah - God Love Me
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	104	6690	Chino Mcgregor - My Love
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	105	6750	Uton Green - No Love
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	106	6840	Richie Spice - Blackout
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	107	6910	Khalia - No Better Day
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	108	6990	Jah Vinci - Officer
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	109	7055	Million Stylez - Holding On
+4dfb3970f9	2019-2021_Best_Of_Reggae_Riddims_Mix_01.mp3	110	7130	Sophia Squire - Vibez So Nice
+				
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	111	0	LMK - So Real 2.0
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	112	250	Stevie Face - Till We Meet Again (Rest in Peace)
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	113	325	Ginjah - People Talk
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	114	410	Busy Signal - Burdens Heavy
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	115	500	Romain Virgo - Can't Stop Reggae
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	116	575	Pressure Busspipe - Everything I Need
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	117	620	Christopher Ellis - Playlist
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	118	695	Lia Caribe - True Love
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	119	760	Jah Cure - No Perfect Love
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	120	845	Busy Signal - Case
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	121	910	Gyptian - Dry Your Tears
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	122	975	JDon Heights - Your Mines
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	123	1070	Roxxie - Perpetual Love
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	124	1135	Sizzla - Nah Sell Mi Soul
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	125	1180	Delly Ranx - Lef Them to Time
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	126	1255	Freddie Mcgregor - Jah Love
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	127	1310	Anthony B - Keep on Moving
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	128	1385	Richie Stephens - Life Without You
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	129	1460	J Boog - Love Like This
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	130	1515	I-Octane - Can't Get Over
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	131	1568	D Major - Guarantee
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	132	1610	Chris Martin - Sweet Khalessi
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	133	1690	Prince Levy - Love You Mama
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	134	1755	Alaine - Better Life
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	135	1820	Alkaline - Never Lose Hope
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	136	1908	Richie Spice - T H C
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	137	1990	Anthony B - Ganja Fi Bun
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	138	2060	Chuck Fenda - Eternal Fire
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	139	2105	Richie Spice - Young Juvenile
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	140	2170	Anthony Cruz - Righteousness Wi Come Fi Defend
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	141	2250	Snatcha Lion - This Reggae Music
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	142	2350	Zamunda - Feeling Irie
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	143	2420	Lutan Fyah - Heavenly Love
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	144	2490	Charly Black - Call On Me
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	145	2560	Duane Stephenson/Romain Virgo - Caribbean Girl
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	146	2640	Maxi Priest - Looking For Love
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	147	2720	Stevie Face - All We Need Is Love
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	148	2775	Malica/Pressure - Make Up
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	149	2855	Marvin Priest - Best of My Love
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	150	2900	Ginjah - Still Believe
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	151	2970	Busy Signal - Your Mama
+de26d52b9b	2019-2021_Best_Of_Reggae_Riddims_Mix_02.mp3	152	3050	Pressure - Africa Love
+				
+8f8f8ea72a	Reggaeton Mix 2020 The Best of Reggaeton 2020 by OSOCITY.mp3	1	0	J Balvin, Tainy - Agua (LetraLyrics)
+8f8f8ea72a	Reggaeton Mix 2020 The Best of Reggaeton 2020 by OSOCITY.mp3	2	130	Black Eyed Peas, Ozuna, J. Rey Soul - MAMACITA (Official Music Video)
+8f8f8ea72a	Reggaeton Mix 2020 The Best of Reggaeton 2020 by OSOCITY.mp3	3	300	KAROL G, Nicki Minaj - Tusa (Official Video)
+8f8f8ea72a	Reggaeton Mix 2020 The Best of Reggaeton 2020 by OSOCITY.mp3	4	465	ROSALÍA, J Balvin - Con Altura (Official Video) ft. El Guincho
+8f8f8ea72a	Reggaeton Mix 2020 The Best of Reggaeton 2020 by OSOCITY.mp3	5	595	J Balvin - Morado (Official Lyric Video)
+8f8f8ea72a	Reggaeton Mix 2020 The Best of Reggaeton 2020 by OSOCITY.mp3	6	700	Yandel & Rauw Alejandro - Dembow 2020 (LetraLyrics)
+8f8f8ea72a	Reggaeton Mix 2020 The Best of Reggaeton 2020 by OSOCITY.mp3	7	830	ROSALÍA, Travis Scott - TKN (Lyrics Letra)
+8f8f8ea72a	Reggaeton Mix 2020 The Best of Reggaeton 2020 by OSOCITY.mp3	8	920	Anuel AA - China (LetraLyrics) Karol G, J. Balvin, Daddy Yankee, Ozuna
+8f8f8ea72a	Reggaeton Mix 2020 The Best of Reggaeton 2020 by OSOCITY.mp3	9	1190	Nicky Jam & Daddy Yankee - Muévelo (Letra Lyrics)
+8f8f8ea72a	Reggaeton Mix 2020 The Best of Reggaeton 2020 by OSOCITY.mp3	10	1325	Daddy Yankee - Que Tire Pa' 'Lante (LetraLyrics)
+				
+20b9fc4bfc	Reggaeton Mix 2021 The Best of Reggaeton 2021 by OSOCITY.mp3	1	0	Bad Bunny - Yonaguni
+20b9fc4bfc	Reggaeton Mix 2021 The Best of Reggaeton 2021 by OSOCITY.mp3	2	170	KAROL G, Mariah Angeliq - EL MAKINON
+20b9fc4bfc	Reggaeton Mix 2021 The Best of Reggaeton 2021 by OSOCITY.mp3	3	290	Aventura, Bad Bunny - Volví
+20b9fc4bfc	Reggaeton Mix 2021 The Best of Reggaeton 2021 by OSOCITY.mp3	4	490	Rauw Alejandro - 2 Catorce Remix
+20b9fc4bfc	Reggaeton Mix 2021 The Best of Reggaeton 2021 by OSOCITY.mp3	5	610	Nio Garcia x J Balvin x Bad Bunny - AM Remix
+20b9fc4bfc	Reggaeton Mix 2021 The Best of Reggaeton 2021 by OSOCITY.mp3	6	790	Sech - Sal y Perrea
+20b9fc4bfc	Reggaeton Mix 2021 The Best of Reggaeton 2021 by OSOCITY.mp3	7	905	Mora x Jhay Cortez - 512
+20b9fc4bfc	Reggaeton Mix 2021 The Best of Reggaeton 2021 by OSOCITY.mp3	8	1010	Anuel AA & Ozuna - ANTES
+20b9fc4bfc	Reggaeton Mix 2021 The Best of Reggaeton 2021 by OSOCITY.mp3	9	1150	DEJA VU - Tainy, Yandel
+20b9fc4bfc	Reggaeton Mix 2021 The Best of Reggaeton 2021 by OSOCITY.mp3	10	1245	Natti Natasha x Becky G - Ram Pam Pam
+20b9fc4bfc	Reggaeton Mix 2021 The Best of Reggaeton 2021 by OSOCITY.mp3	11	1350	J Balvin, Karol G, Nicky Jam - Poblado Remix (Letra) ft. Crissin, Totoy El Frio, Natan & Shander
+				
+aca9050710	SOCA Mix 2019 The Best of SOCA 2019 by OSOCITY.mp3	1	0	GBM Nutron - Practice [2019 Soca] [HD]
+aca9050710	SOCA Mix 2019 The Best of SOCA 2019 by OSOCITY.mp3	2	145	Linky First - Jeune Femme 2019 Soca (Official Audio)
+aca9050710	SOCA Mix 2019 The Best of SOCA 2019 by OSOCITY.mp3	3	260	Melick - Colors (Colors Riddim)
+aca9050710	SOCA Mix 2019 The Best of SOCA 2019 by OSOCITY.mp3	4	340	Jagwa De Champ - Face Down (Music Video)
+aca9050710	SOCA Mix 2019 The Best of SOCA 2019 by OSOCITY.mp3	5	400	Motto ft Blackboy & Ezra [ Fuego Riddim ] - MAN WITH RIDE ( Big Ride )
+aca9050710	SOCA Mix 2019 The Best of SOCA 2019 by OSOCITY.mp3	6	495	MR KILLA - OIL IT
+aca9050710	SOCA Mix 2019 The Best of SOCA 2019 by OSOCITY.mp3	7	540	Trinidad Ghost- More Zessing Zesser 
+aca9050710	SOCA Mix 2019 The Best of SOCA 2019 by OSOCITY.mp3	8	620	MR GRILL - SHOTS (Explicit)
+aca9050710	SOCA Mix 2019 The Best of SOCA 2019 by OSOCITY.mp3	9	640	Potential Kidd - Jump Pon Mi Cocky (Official Music Video)
+aca9050710	SOCA Mix 2019 The Best of SOCA 2019 by OSOCITY.mp3	10	650	Motto - One Woman (Ole Ting Riddim) 2019 Soca (Official Audio)
+aca9050710	SOCA Mix 2019 The Best of SOCA 2019 by OSOCITY.mp3	11	710	Machel Montano x Jacob (Kassav) - Dance (Ole Ting Riddim)
+aca9050710	SOCA Mix 2019 The Best of SOCA 2019 by OSOCITY.mp3	12	770	Patrice Roberts - Good (Ole Ting Riddim) 2019 Soca (Trinidad)
+aca9050710	SOCA Mix 2019 The Best of SOCA 2019 by OSOCITY.mp3	13	825	Nessa Preppy - Issa Snack (Ultra Simmo Intro Edit) (Do This Riddim)
+aca9050710	SOCA Mix 2019 The Best of SOCA 2019 by OSOCITY.mp3	14	920	Wiley x Stefflon Don x Sean Paul x Idris Elba - Boasty (Socaholic Mix)
+aca9050710	SOCA Mix 2019 The Best of SOCA 2019 by OSOCITY.mp3	15	1000	DJ LubsTOAST Remix
+aca9050710	SOCA Mix 2019 The Best of SOCA 2019 by OSOCITY.mp3	16	1030	Sekon Sta & Trinidad Ghost x Travis World - Boom (Do This Riddim)
+aca9050710	SOCA Mix 2019 The Best of SOCA 2019 by OSOCITY.mp3	17	1110	Salty x Travis World - Work (Do This Riddim) 2019 Soca
+				
+5261fb7138	SOCA Mix 2020 The Best of SOCA 2020 by OSOCITY.mp3	1	0	Motto - Shots [One For Di Road] (Official Music Video) (Baila Riddim) 2020 Soca [HD]
+5261fb7138	SOCA Mix 2020 The Best of SOCA 2020 by OSOCITY.mp3	2	70	Kes - Boss Lady (Sign Me Up) (Baila Riddim) 2020 Music Release
+5261fb7138	SOCA Mix 2020 The Best of SOCA 2020 by OSOCITY.mp3	3	125	Skinny Fabulous - Naked (Baila Riddim) 2020 Soca (Trinidad)
+5261fb7138	SOCA Mix 2020 The Best of SOCA 2020 by OSOCITY.mp3	4	180	Dj Cheem - Ba Ba Ben (Rum Poco Riddim )
+5261fb7138	SOCA Mix 2020 The Best of SOCA 2020 by OSOCITY.mp3	5	245	Patrice Roberts, Nessa Preppy, Travis World & Dan Evens - Splash
+5261fb7138	SOCA Mix 2020 The Best of SOCA 2020 by OSOCITY.mp3	6	305	Machel Montano, Salty & Travis World - Boss Wine (Free Up Riddim) Soca 2020
+5261fb7138	SOCA Mix 2020 The Best of SOCA 2020 by OSOCITY.mp3	7	368	Nailah Blackman & Travis World Oil Drum (Free Up Riddim) 2020 Soca
+5261fb7138	SOCA Mix 2020 The Best of SOCA 2020 by OSOCITY.mp3	8	425	Umpa - Baguy (Dynamite Riddim)
+5261fb7138	SOCA Mix 2020 The Best of SOCA 2020 by OSOCITY.mp3	9	480	Salty x Sekon Sta x Skorch Bun It x Coolblaze - Who Pay! (Baby Bells Riddim) 2020 Soca
+5261fb7138	SOCA Mix 2020 The Best of SOCA 2020 by OSOCITY.mp3	10	590	GBM Nutron x Skorch Bun It x Coolblaze - Tambourine (Baby Bells Riddim) 2020 Soca
+5261fb7138	SOCA Mix 2020 The Best of SOCA 2020 by OSOCITY.mp3	11	675	Viking Ding Dong - We Outside (Knock About Riddim) 2020 Soca (Trinidad)
+5261fb7138	SOCA Mix 2020 The Best of SOCA 2020 by OSOCITY.mp3	12	745	Sekon Sta - Waste Man (Knock About Riddim) 2020 Soca (Trinidad)
+5261fb7138	SOCA Mix 2020 The Best of SOCA 2020 by OSOCITY.mp3	13	775	Patrice Roberts - Real Woman 2020 Soca
+5261fb7138	SOCA Mix 2020 The Best of SOCA 2020 by OSOCITY.mp3	14	830	Machel Montano - Play Harder Soca 2020
+5261fb7138	SOCA Mix 2020 The Best of SOCA 2020 by OSOCITY.mp3	15	910	Patrice Roberts - Carry On Soca 2020
+5261fb7138	SOCA Mix 2020 The Best of SOCA 2020 by OSOCITY.mp3	16	980	Problem Child - Feel It 2020 Soca
+5261fb7138	SOCA Mix 2020 The Best of SOCA 2020 by OSOCITY.mp3	17	1055	Machel Montano ft. Afro B - Slow Wine Soca 2020
+				
+be94867773	SOCA Mix 2021 The Best of SOCA 2021 by OSOCITY.mp3	1	0	Kes - Hello (Folklore Riddim) 2018 Soca
+be94867773	SOCA Mix 2021 The Best of SOCA 2021 by OSOCITY.mp3	2	90	Marzville - Give It To Ya (Gummy Bear Riddim) 2017 Soca
+be94867773	SOCA Mix 2021 The Best of SOCA 2021 by OSOCITY.mp3	3	200	Shal Marshall - Splinters (2AM Project) 2018 Soca
+be94867773	SOCA Mix 2021 The Best of SOCA 2021 by OSOCITY.mp3	4	310	Kes & Patrice Roberts - Like It Like That (2AM Project) 2018 Soca
+be94867773	SOCA Mix 2021 The Best of SOCA 2021 by OSOCITY.mp3	5	370	Machel Montan - Fast Wine Soca 2017
+be94867773	SOCA Mix 2021 The Best of SOCA 2021 by OSOCITY.mp3	6	535	Linky First - Rock And Come In -2016 Soca
+be94867773	SOCA Mix 2021 The Best of SOCA 2021 by OSOCITY.mp3	7	700	Flavour - Nwa Baby Remix
+be94867773	SOCA Mix 2021 The Best of SOCA 2021 by OSOCITY.mp3	8	780	Timaya - Epiphany - Sanko
+be94867773	SOCA Mix 2021 The Best of SOCA 2021 by OSOCITY.mp3	9	860	Runtown Feat. Wizkid & Machel Montano - Bend Down Pause Remix Soca 2016
+be94867773	SOCA Mix 2021 The Best of SOCA 2021 by OSOCITY.mp3	10	945	Farmer Nappy - Hookin Meh (The Purple Heart Riddim) 2019 Soca
+be94867773	SOCA Mix 2021 The Best of SOCA 2021 by OSOCITY.mp3	11	1070	Teddyson John - Vent (Travis World Roadmix)
+				
+8d19808307	UK Afro Dancehall Mix 2019 The Best Of UK Afro Dancehall 2019 by OSOCITY.mp3	1	0	Wiley, Sean Paul, Stefflon Don - Boasty ft. Idris Elba
+8d19808307	UK Afro Dancehall Mix 2019 The Best Of UK Afro Dancehall 2019 by OSOCITY.mp3	2	100	Stylo G - Dumpling July 2019
+8d19808307	UK Afro Dancehall Mix 2019 The Best Of UK Afro Dancehall 2019 by OSOCITY.mp3	3	190	Afro B x Vybz Kartel x Dre Skull - Shape Nice
+8d19808307	UK Afro Dancehall Mix 2019 The Best Of UK Afro Dancehall 2019 by OSOCITY.mp3	4	310	ZieZie - Fine Girl GRM Daily
+8d19808307	UK Afro Dancehall Mix 2019 The Best Of UK Afro Dancehall 2019 by OSOCITY.mp3	5	415	Afro B ft. T-Pain - Condo
+8d19808307	UK Afro Dancehall Mix 2019 The Best Of UK Afro Dancehall 2019 by OSOCITY.mp3	6	555	Ms Banks Feat. Kida Kudz - Snack
+8d19808307	UK Afro Dancehall Mix 2019 The Best Of UK Afro Dancehall 2019 by OSOCITY.mp3	7	670	iLL BLU Feat. Ay Em, Geko, ZieZie & C. Tangana - Go Time
+8d19808307	UK Afro Dancehall Mix 2019 The Best Of UK Afro Dancehall 2019 by OSOCITY.mp3	8	790	Mr Eazi Feat. Giggs - London Town
+8d19808307	UK Afro Dancehall Mix 2019 The Best Of UK Afro Dancehall 2019 by OSOCITY.mp3	9	945	AJ x Deno ft EO - London
+8d19808307	UK Afro Dancehall Mix 2019 The Best Of UK Afro Dancehall 2019 by OSOCITY.mp3	10	1075	B Young - Gucci Demon
+				
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	1	0	GBM Nutron - Down Dey
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	2	135	Karene Asche - Private Party
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	3	170	Shurwayne Winchester - Gangalee
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	4	235	Hey Choppi & Machel Montano - Gud Gud
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	5	360	Kerwin Du Bois - Live Up Ya Life
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	6	440	Machel Montano x DJ Tunez x Stacy Barthe - Getaway
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	7	550	Freetown Collective & Stadic - Kasandra
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	8	600	Naomi Cowan x Kes The Band - Tek Time
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	9	670	Faith - Always Summer (Jel Intro)
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	10	750	Patrice Roberts - I Love You more
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	11	835	Problem Child x Millbeatz - Always Ready
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	12	900	Mical Teja - Flava
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	13	955	Erphaan Alves - Imaginary Love
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	14	1020	Rae - Sweetest Whine
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	15	1056	Kurtious & Omar - Wine Down Low
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	16	1125	Patrice Roberts & Afro B - Camera
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	17	1260	Jonnelle x Trinidad Killa - Watch Ova Wi
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	18	1345	Kerwin Du Bois - Soca Love
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	19	1430	Motto - French Vanilla (Jel Intro)
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	20	1500	Charly Black - Hold Me
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	21	1550	Machel Montano - 10 Outta 10
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	22	1610	Teddyson John, Skinny Fabulous - People Business
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	23	1675	Voice - Peace Of Mind (Intro)
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	24	1820	Peter Ram x A Team Band - Pumpin' (Jel Intro)
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	25	1900	Screwface - Let Me In (Jel Intro)
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	26	2005	Leadpipe & Saddis - Look Trouble
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	27	2080	Fiyah B - Rich & Happy
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	28	2130	Steppa - Rich & Happy Riddim Instrumental
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	29	2150	Purple Jacket X Yannick Hooper X DJ Puffy - Gih Dem Waist
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	30	2245	Jagwa De Champ - Active
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	31	2300	Father Phillis - Boxcy Brawlin
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	32	2390	Ambi ft Freezy - Inna Hole
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	33	2460	The Fatha x Blackboy - Bounce (Remix)
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	34	2510	Hey Choppi - We Dance
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	35	2590	Mikey - Company (Jel Festival Intro)
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	36	2730	VIBE x Jougo - Good Vibe
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	37	2820	Lyrikal x Nadia Batson - Fuh Days (Jel Intro)
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	38	2945	Erica Assai - Shame
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	39	3005	Pumpa - Ring-Tinga-Ling
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	40	3035	Fadda Fox - Outside Again (De Cure)
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	41	3076	Mr Killa - Macopolaritis (Jel Intro)
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	42	3120	King Bubba FM - Dog Dite
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	43	3178	Mr. Vegas - Hot Gal Alone
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	44	3210	Shal Marshall - Girls Gone Wild
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	45	3280	Viking Ding Dong - Earthquake (Jel Intro)
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	46	3335	Lil Rick - Clean (Semi Clean)
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	47	3405	Nailah Blackman - Gyal Wine
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	48	3450	Mole & Brucelee Almightee - Bad Badd
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	49	3520	Problem Child - Drunk'n Style
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	50	3590	GBM Nutron - Holding On
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	51	3650	Rucas H.E - Waves
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	52	3700	Sedale - Push Back
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	53	3746	King James - Roll It
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	54	3778	Mic Love - Fork
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	55	3805	Ricardo Drue - Weak
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	56	3860	Skinny Fabulous - Blinkin Bad
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	57	3930	JrCruiza & Maddrass - Simon Says
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	58	3975	Maddrass - LOLLY (Lollipop)
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	59	4025	Vanita Willie X ClimaxXx - Poowah (Remix)
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	60	4080	Master Saleem - Meh Money
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	61	4165	Boyzie - Protect Me (Jel Intro)
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	62	4265	Machel Montano x Voice - One of A Kind (Intro)
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	63	4340	Blaxx - After Quarantine
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	64	4400	Keke - Comfort Me
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	65	4460	Lyrikal, Travis World - Personally
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	66	4555	Adam O, Travis World - Bam Bam
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	67	4580	Nadia Batson, Travis World - Body Banging
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	68	4640	Sekon Sta, Travis World - Sidung
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	69	4705	Jaiga - Do Yuh Thing
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	70	4760	Hypasounds - Feeling Wotless Now (Jel Intro)
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	71	4910	Keno Hall - Man In Law
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	72	4980	Akaii U Sweet - Bounce & Roll It
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	73	5020	Geo Geo - Boom Bang
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	74	5070	Jah Rule - Shooter Rooter
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	75	5115	Problem Child - De Saltfish
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	76	5215	Shireen B - Container
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	77	5240	Tallpree - Fettin Crazy
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	78	5275	Terra D Governor - Looney Toon
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	79	5300	Viking Ding Dong - Bend
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	80	5335	Boyzie - Backerz
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	81	5415	Lavaman - Super Saiyan
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	82	5430	Skinny Fabulous - Big Woman
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	83	5475	Triniboi Joocie x Luni spark & Electrify - Massacre
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	84	5500	Wetty-Beatz x Jab King - Hello
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	85	5565	Jab King - Jab Exam (Fearless Kevon Intro)
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	86	5625	Tallpree - Frontline (Jab All Up In Front)
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	87	5650	Terra De Govenor - Jab Is The New Black
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	88	5675	Shal marshall x Problem Child - Imagine If (I Outside)
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	89	5720	Reo x Dj Flip Tha Boss - We Outside
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	90	5810	Asa Bantan - Shake Ya Pam Pa Lam
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	91	5858	Reo x Little Boy - Dou Dou
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	92	5940	Problem Child - ALLEZ
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	93	6055	Blackboy - CHOKAY
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	94	6095	Motto x Dj Fire Strypz - 1Q 2Q
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	95	6120	Ezra - PASS ME STRAIGHT
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	96	6155	Prado - Flat Down (LIVE Version)
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	97	6255	MTJ - BEN DONG X TIKTOK
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	98	6280	Army Guy X Hyper D - Becky
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	99	6360	Tallpree - Mi Shell
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	100	6425	Breddy - Stop Dat
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	101	6500	Magikal - Inside
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	102	6520	Duwan De Entertainer - Throw Up The Water
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	103	6570	Afro Davii & Chum - 95 Lbs
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	104	6600	Lil Jelo x Inspector x Duwan D Entertainer - Spend Yuh Money
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	105	6675	Dat-C DQ - Canoe
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	106	6770	Viking Ding Dong - Runaway
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	107	6838	Patrice Roberts - Any Way
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	108	6880	Problem Child - Crocodile
+5590394d4a	[YTHUB.CC] 2021 SUMMER SOCA CATCH UP “2021 SUMMER SOCA MIX” _ DJ JEL-192k.mp3	109	6980	Wetty-Beatz x Smash - Rum Love
+				
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	1	0	Mikey X MSK Musik - Company (Jel Intro)
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	2	210	Viking Ding Dong - Earthquake (Jel Intro)
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	3	280	Mole & Brucelee Almightee - Bad Badd
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	4	360	Walkes - Cahn Wait
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	5	375	Nailah Blackman - Gyal Wine
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	6	420	Problem Child - Drunk'n Style
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	7	490	Lil Rick - Clean
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	8	575	Klassik Frescobar x Dj Spider - Like Dat (Intro)
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	9	625	DJ Cheem x Dj Spider - Bumpa
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	10	680	Shal Marshall - Girls Gone Wild
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	11	750	Mr. Vegas - Hot Gal Alone
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	12	765	Sita D Lyrical Diva - Exam
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	13	795	King Bubba FM - Dog Dite
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	14	850	King Bubba FM - Money (Dollar Wine)
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	15	915	Lil Rick - Cooler Pimp
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	16	1015	Lavaman - Dragon
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	17	1040	Skinny Fabulous - White Boy Wasted
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	18	1130	Leadpipe - Horna Man
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	19	1220	Brutal Crankstar - Party Today
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	20	1265	Gatlin & Zac De Champ - Rum
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	21	1295	Saddis - Wifey Material
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	22	1350	Coopa Dan - Rain
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	23	1475	Hypasounds - Feeling Wotless Now (Jel Intro)
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	24	1655	Jus D - Longtime
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	25	1780	Faith - Always Summer (Jel Intro)
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	26	1855	SugahRhe - Reminisce
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	27	1955	Kurtious & Omar - Wine Down Low
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	28	2020	Yannick Hooper - Do To Me
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	29	2100	Fadda Fox - Agony
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	30	2145	Erphaan Alves - Imaginary Love
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	31	2180	Sanctuary Vibez - Forever
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	32	2240	Peter Ram - Pumpin'
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	33	2360	Screwface - Let Me In
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	34	2520	iWeb - Memories
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	35	2665	Leadpipe & Saddis - Look Trouble
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	36	2740	Fiyah B - Rich & Happy
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	37	2810	Red The Artist - Gal Bend Good
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	38	2895	Walkes - Work It
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	39	2950	Bobo & Nellee - Car Key
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	40	3015	Sugah Rhe - Weakness
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	41	3060	Purple Jacket X Yannick Hooper X DJ Puffy - Gih Dem Waist
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	42	3160	Cheem x Li'l Rick - Ba Ba Ben (Official Remix)
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	43	3240	Father Philis - Bumpa Brawling
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	44	3340	Jagwa De Champ - Active
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	45	3465	Jagwa De Champ/Feat. Supa Nytro - Wild & Freaky
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	46	3515	WALKES & FRESHIE - SHOTS
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	47	3565	Stabby - Belly
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	48	3660	AltuhEgo - Release
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	49	3715	Stabby - Questions
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	50	3780	Scrilla - Angle
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	51	3855	Lyrikal - Dutty Waist
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	52	3880	Fiyah B - Do What You Want
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	53	3915	KDM - Tek It All
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	54	3965	Faith Callender - Brek It Off
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	55	4015	Sugah Rhe - Tick-Tok
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	56	4095	C. Diddy - Tek Dese Juks
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	57	4165	Edwin Yearwood - RESILIENCE (Make It Work)
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	58	4265	DJ Cheem - Sweet Soca Music
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	59	4350	Mikey - Riches
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	60	4455	Grateful Co - Ease
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	61	4515	Lynchy - Soca In We Veins
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	62	4575	Red The Artist - In De Fete Again
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	63	4640	Lady J x Lil Rick - Walk Out
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	64	4745	Shanta Prince - Slide & Ride (Ride on Tik Tok)
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	65	4840	Jus D x AkaiiUsweet - Poke
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	66	4890	Adam O x AkaiiUsweet - Warming Up
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	67	4945	Fadda Fox - Outside Again (De Cure)
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	68	5020	Lyrikal x Nadia Batson - Fuh Days
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	69	5075	Sanctuary Vibez - Life Is Never Easy
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	70	5165	Statement - Ah Wanna Party
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	71	5225	Amber - Soca Groupie
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	72	5350	Snypa - We Love To Party
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	73	5425	Richie Rich - Doing De Most
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	74	5450	Boatman - Gal Work
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	75	5510	Holla Bak - Hurt It
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	76	5550	Erphaan Alves - Trouble
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	77	5545	Terrah Dan - My Girl (Dah You?)
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	78	5600	Ms Desire - Show It Off
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	79	5625	Merzy - Dig It
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	80	5690	Sugah Rhe & Walkes - G.O.A.T (Greatest Of All Time)
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	81	5760	Trey Breezy - Workout Session
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	82	5825	Stiffy - I Will Be Drunk
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	83	5910	MR Blood - Down in Dey
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	84	5980	Chrissy D - Final Stage
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	85	6075	Peter Ram - Tek Ya Time
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	86	6140	Bobo - Peppa
+8466745de4	[YTHUB.CC] 2021 CROP OVER CHARGE (BAJAN SOCA MIX) _ DJ JEL _2021 Barbados Soca_-192k.mp3	87	6220	Scrilla - Freek
