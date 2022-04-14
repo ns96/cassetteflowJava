@@ -432,7 +432,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
         try {
             totalTime = Integer.parseInt(sa[4]);
         } catch(Exception nfe) {
-            System.out.println("Invalid Record @ Total Time: " + sa[4] + " | " + line);
+            System.out.println("Invalid Record @ Total Time: " + line);
             dataErrors++;
             return "DATA ERROR";
         }

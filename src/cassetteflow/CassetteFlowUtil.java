@@ -1,8 +1,15 @@
 package cassetteflow;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.commons.codec.digest.DigestUtils;
 
 /**
@@ -115,5 +122,37 @@ public class CassetteFlowUtil {
         } catch(NumberFormatException nfe) {
             return true;
         }
-    } 
+    }
+    
+    /**
+     * Find all audio files in the path and all subdirectories
+     * 
+     * @param path
+     * @return
+     * @throws IOException 
+     */
+    public static List<Path> findAllAudioFiles(Path path) throws IOException {
+        if (!Files.isDirectory(path)) {
+            throw new IllegalArgumentException("Path must be a directory!");
+        }
+
+        List<Path> result;
+        try (Stream<Path> walk = Files.walk(path)) {
+            result = walk
+                    .filter(Files::isRegularFile)   // is a file
+                    .filter(p -> {
+                        String filename = p.getFileName().toString().toLowerCase();
+                        return filename.endsWith(".mp3") || filename.endsWith(".flac");
+                    })
+                    .collect(Collectors.toList());
+        }
+        
+        return result;
+    }
+    
+    public static void main(String[] args) throws IOException {
+        Path path = Paths.get("C:\\mp3files\\");
+        List<Path> paths = findAllAudioFiles(path);
+        paths.forEach(x -> System.out.println(x));
+    }
 }

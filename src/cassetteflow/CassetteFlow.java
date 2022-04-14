@@ -12,11 +12,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Properties;
 import java.util.TreeMap;
 import java.util.logging.Level;
@@ -1231,38 +1233,24 @@ public class CassetteFlow {
      * Method to get the mp3 of flac files is a directory
      * 
      * @param directory
-     * @param storeParentDirectory
-     * @return 
+     * @param storeParentDirectory 
      */
     public final void loadAudioFiles(String directory, boolean storeParentDirectory) {
         // try-catch block to handle exceptions
         try {
             File dir = new File(directory);
 
-            FilenameFilter filter = new FilenameFilter() {
-                @Override
-                public boolean accept(File f, String name) {
-                    
-                    // We want to find only .mp3 or flac files                   
-                    boolean found;
-                    name = name.toLowerCase();
-                    
-                    if(name.endsWith(".mp3") || name.endsWith(".flac")) {
-                        found = true;
-                    } else {
-                        found = false;
-                    }
-                    
-                    return found; 
-                }
+            FilenameFilter filter = (File f, String name) -> {
+                name = name.toLowerCase();
+                return name.endsWith(".mp3") || name.endsWith(".flac");
             };
 
             // Note that this time we are using a File class as an array,
             File[] files = dir.listFiles(filter);
 
-            // Get the names of the files by using the .getName() method
+            // add the files in the root directory
             for (File file : files) {
-                addAudioFileToDatabase(file, storeParentDirectory);
+                addAudioFileToDatabase(file, storeParentDirectory, true);
             }
             
             // save the database as a tab delimited text file
@@ -1279,12 +1267,39 @@ public class CassetteFlow {
     }
     
     /**
-     * Add the MP3 to the database
+     * Loads all audio files in the specified directory and subdirectories.
+     * This is just a convenient way to not to have to manually load a 
+     * directory containing the correct audio files when using the decoding
+     * functionality
+     * 
+     * @param directory 
+     */
+    public final void loadAllAudioFiles(String directory) {
+        try {
+            Path rootPath = Paths.get(directory);
+            List<Path> audioFiles = CassetteFlowUtil.findAllAudioFiles(rootPath);
+            
+            for(Path path: audioFiles) {
+                File file = path.toFile();
+                addAudioFileToDatabase(file, false, false);
+                
+                if(cassetteFlowFrame != null) {
+                    cassetteFlowFrame.printToConsole(path.toString(), true);
+                }
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(CassetteFlow.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    /**
+     * Add the MP3 or flac files to the database
      * 
      * @param file 
      * @param storeParentDirectory 
+     * @param addToList Weather to add to the jlist for GUI display
      */
-    public void addAudioFileToDatabase(File file, boolean storeParentDirectory) {
+    public void addAudioFileToDatabase(File file, boolean storeParentDirectory, boolean addToList) {
         String filename = file.getName();
         String sha10hex = CassetteFlowUtil.get10CharacterHash(filename);
         int[] ia = getAudioLengthAndBitRate(file);
@@ -1299,7 +1314,10 @@ public class CassetteFlow {
             audioInfo.setParentDirectoryName(parentDirecotryName);
         }
         
-        audioInfoList.add(audioInfo);
+        if(addToList) {
+            audioInfoList.add(audioInfo);
+        }
+        
         audioInfoDB.put(sha10hex, audioInfo);
         
         System.out.println(sha10hex + " -- " + audioInfo);
