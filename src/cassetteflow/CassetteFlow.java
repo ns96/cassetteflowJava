@@ -1379,6 +1379,7 @@ public class CassetteFlow {
      */
     public void setDefaultAudioDirectory(String audioDirectory) {
         AUDIO_DIR_NAME = audioDirectory;
+        AUDIO_INDEX_FILENAME = AUDIO_DIR_NAME + File.separator + "audiodb.bin";
         AUDIO_DB_FILENAME = AUDIO_DIR_NAME + File.separator + "audiodb.txt";
         TAPE_DB_FILENAME = AUDIO_DIR_NAME + File.separator + "tapedb.txt";
         TRACK_LIST_FILENAME = AUDIO_DIR_NAME + File.separator + "tracklist.txt";
