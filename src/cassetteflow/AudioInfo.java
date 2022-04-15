@@ -1,13 +1,14 @@
 package cassetteflow;
 
 import java.io.File;
+import java.io.Serializable;
 
 /**
  * This class hold information about mp3 or flac files such as file or url locations
  * 
  * @author Nathan
  */
-public class AudioInfo {
+public class AudioInfo implements Serializable {
     private String hash10C;
     private File file;
     private String Url;

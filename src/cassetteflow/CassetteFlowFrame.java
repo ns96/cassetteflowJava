@@ -790,7 +790,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jLabel11 = new javax.swing.JLabel();
         playbackSpeedTextField = new javax.swing.JTextField();
         reloadAudioOutputsButton = new javax.swing.JButton();
-        findAllAudioButton = new javax.swing.JButton();
+        buildAudioIndexButton = new javax.swing.JButton();
         exitButton = new javax.swing.JButton();
         addAudioDirectoryButton = new javax.swing.JButton();
         createButton = new javax.swing.JButton();
@@ -798,7 +798,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.0.0b3 (04/14/2022)");
+        setTitle("CassetteFlow v 1.0.0b4 (04/15/2022)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 
@@ -1779,10 +1779,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             }
         });
 
-        findAllAudioButton.setText("Find All Audio Files");
-        findAllAudioButton.addActionListener(new java.awt.event.ActionListener() {
+        buildAudioIndexButton.setText("Build and Save Audio Index");
+        buildAudioIndexButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                findAllAudioButtonActionPerformed(evt);
+                buildAudioIndexButtonActionPerformed(evt);
             }
         });
 
@@ -1822,7 +1822,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(clearConsoleButton))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel7Layout.createSequentialGroup()
-                        .addComponent(findAllAudioButton)
+                        .addComponent(buildAudioIndexButton)
                         .addContainerGap())))
         );
         jPanel7Layout.setVerticalGroup(
@@ -1835,7 +1835,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                     .addComponent(shuffleFilterTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel11)
                     .addComponent(playbackSpeedTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(findAllAudioButton))
+                    .addComponent(buildAudioIndexButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(clearConsoleButton)
@@ -3364,18 +3364,22 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         viewTapeDBButtonActionPerformed(evt);
         tapeDBFrame.setSelectedTapeId(currentCassetteId);
     }//GEN-LAST:event_viewCurrentTapeButtonActionPerformed
-
-    private void findAllAudioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_findAllAudioButtonActionPerformed
+    
+    /**
+     * Find all audio files in the root/subdirectories then build index
+     * @param evt 
+     */
+    private void buildAudioIndexButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buildAudioIndexButtonActionPerformed
         printToConsole("Finding All Audio Files ...\n", false);
         
-        Thread thread = new Thread("Encode Thread") {
+        Thread thread = new Thread("Audio Indexer Thread") {
             @Override
             public void run() {
-                cassetteFlow.loadAllAudioFiles(currentAudioDirectory);
+                cassetteFlow.buildAudioFileIndex(currentAudioDirectory);
             }
         };
         thread.start();
-    }//GEN-LAST:event_findAllAudioButtonActionPerformed
+    }//GEN-LAST:event_buildAudioIndexButtonActionPerformed
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addAudioDirectoryButton;
@@ -3389,6 +3393,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JTextField baudRateTextField;
     private javax.swing.JComboBox<String> bluetoothComboBox;
     private javax.swing.JRadioButton bluetoothRadioButton;
+    private javax.swing.JButton buildAudioIndexButton;
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.ButtonGroup buttonGroup2;
     private javax.swing.ButtonGroup buttonGroup3;
@@ -3416,7 +3421,6 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JButton exitButton;
     private javax.swing.JButton filterAudioListButton;
     private javax.swing.JCheckBox filterShuffleCheckBox;
-    private javax.swing.JButton findAllAudioButton;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;

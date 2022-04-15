@@ -4,12 +4,16 @@ import com.formdev.flatlaf.FlatDarculaLaf;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -52,8 +56,11 @@ public class CassetteFlow {
     // The default mp3 directory name
     public static String AUDIO_DIR_NAME = "c:\\mp3files";
     
-    // store the mp3 id hashmap to a tab delimitted file
+    // store the mp3/flac id hashmap to a tab delimitted file for use on the LyraT board
     public static String AUDIO_DB_FILENAME = AUDIO_DIR_NAME + File.separator + "audiodb.txt";
+    
+    // store the audio db file in binary form to make it more efficient to load audio information
+    public static String AUDIO_INDEX_FILENAME = AUDIO_DIR_NAME + File.separator + "audiodb.bin";
     
     // default directory where the text files to be encoded
     public static final String TAPE_FILE_DIR_NAME = "TapeFiles";
@@ -138,6 +145,9 @@ public class CassetteFlow {
     public void init() {
         loadProperties();
         
+        loadAudioFileIndex();
+        
+        // these audio files is displayed in the GUI
         loadAudioFiles(AUDIO_DIR_NAME, false);
         
         File file = new File(TAPE_DB_FILENAME);
@@ -1274,7 +1284,7 @@ public class CassetteFlow {
      * 
      * @param directory 
      */
-    public final void loadAllAudioFiles(String directory) {
+    public final void buildAudioFileIndex(String directory) {
         try {
             Path rootPath = Paths.get(directory);
             List<Path> audioFiles = CassetteFlowUtil.findAllAudioFiles(rootPath);
@@ -1287,8 +1297,35 @@ public class CassetteFlow {
                     cassetteFlowFrame.printToConsole(path.toString(), true);
                 }
             }
+            
+            // save the audiodb db as a binary file
+            FileOutputStream fos = new FileOutputStream(new File(AUDIO_INDEX_FILENAME));
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(audioInfoDB);
+
+            oos.close();
+            fos.close();
         } catch (IOException ex) {
             Logger.getLogger(CassetteFlow.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    /**
+     * Load the audio file index if the file exist
+     */
+    public void loadAudioFileIndex() {
+        File file = new File(AUDIO_INDEX_FILENAME);
+        
+        if(file.canRead()) {
+            try {
+                FileInputStream fis = new FileInputStream(file);
+                ObjectInputStream in = new ObjectInputStream(fis);
+                audioInfoDB = (HashMap<String, AudioInfo>) in.readObject();
+                in.close();
+                fis.close();
+            } catch (IOException | ClassNotFoundException ex) {
+                ex.printStackTrace();
+            }
         }
     }
     
