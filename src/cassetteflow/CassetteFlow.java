@@ -40,9 +40,9 @@ import org.jaudiotagger.audio.mp3.MP3File;
 /**
  * A simple program for creating input files for the cassette flow encoding
  * program/method. It make use of the following libraries for dealing with 
- * MP3 playback and meta data extraction
+ * MP3/flac playback and meta data extraction
  * 
- * Playing of MP3s: https://github.com/radinshayanfar/MyJlayer
+ * Playing of MP3s/FLAC: https://github.com/goxr3plus/java-stream-player
  * 
  * Getting meta data: http://www.jthink.net/jaudiotagger/examples_id3.jsp 
  * 
@@ -98,13 +98,13 @@ public class CassetteFlow {
     // store program properties
     private Properties properties = new Properties();
     
-    private String propertiesFilename = "cassetteFlow.properties";
+    private final String propertiesFilename = "cassetteFlow.properties";
     
     // used to stop realtime encoding
     private boolean stopEncoding = false;
     
     // the number of times to replicate a data line in the input files
-    private int replicate = 4;
+    private final int replicate = 4;
     
     // used when doing realtime encoding to keep track of progress
     public int currentTimeTotal = 0;
@@ -145,9 +145,11 @@ public class CassetteFlow {
     public void init() {
         loadProperties();
         
+        // load the audio file index to make decoding much easier
         loadAudioFileIndex();
         
-        // these audio files is displayed in the GUI
+        // load audio files which is displayed in the GUI, and overwrites the
+        // records in the audio file index.
         loadAudioFiles(AUDIO_DIR_NAME, false);
         
         File file = new File(TAPE_DB_FILENAME);
@@ -1286,6 +1288,8 @@ public class CassetteFlow {
      */
     public final void buildAudioFileIndex(String directory) {
         try {
+            System.out.println("Building Audio File Index Starting @ " + directory);
+            
             Path rootPath = Paths.get(directory);
             List<Path> audioFiles = CassetteFlowUtil.findAllAudioFiles(rootPath);
             
@@ -1305,6 +1309,13 @@ public class CassetteFlow {
 
             oos.close();
             fos.close();
+            
+            String message = "\n" + audioFiles.size() +  " Audio Files Indexed ...";
+            System.out.println(message);
+            
+            if(cassetteFlowFrame != null) {
+                cassetteFlowFrame.printToConsole(message, true);
+            }
         } catch (IOException ex) {
             Logger.getLogger(CassetteFlow.class.getName()).log(Level.SEVERE, null, ex);
         }
