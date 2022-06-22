@@ -119,6 +119,9 @@ public class CassetteFlow {
     private ArrayList<String> sideADCTList;
     private ArrayList<String> sideBDCTList;
     
+    // offset used by dynamic content track
+    private int dctOffset = 0;
+    
     // debug flag
     private static final boolean DEBUG = false;
     
@@ -700,7 +703,7 @@ public class CassetteFlow {
      * @return 
      */
     public ArrayList<String> createDCTArrayListForSide(String tapeID, ArrayList<AudioInfo> sideN, int muteTime) {
-        System.out.println("Creating DCT Array: " + tapeID + ", " +  muteTime);
+        System.out.println("Creating DCT Array: " + tapeID + ", Mute Time: " +  muteTime);
         System.out.println(sideN);
         
         ArrayList<String> dctList = new ArrayList<>();
@@ -737,7 +740,17 @@ public class CassetteFlow {
     }
     
     /**
-     * Get a line record from the DCT array inorder to playback the correct
+     * Set the offset for used when mapping dynamic content track
+     * 
+     * @param dctOffset Offset in minutes
+     */
+    public void setDCTOffset(int dctOffset) {
+        this.dctOffset = dctOffset*60; // convert to seconds
+        System.out.println("DCT Offset In Seconds: " + this.dctOffset);
+    }
+    
+    /**
+     * Get a line record from the DCT array in order to playback the correct
      * audio file
      * 
      * @param line
@@ -748,6 +761,11 @@ public class CassetteFlow {
             String[] sa = line.split("_");
             String tapeId = sa[0];
             int totalTime = Integer.parseInt(sa[4]);
+            
+            // add the dct offset
+            //System.out.println("Tape Total Time: " + totalTime + " / Offset " + dctOffset);
+            totalTime = totalTime + dctOffset;
+            
             ArrayList<String> dctList;
             
             // based on total time and side get the line record. Any exception
