@@ -760,7 +760,15 @@ public class CassetteFlow {
         try {
             String[] sa = line.split("_");
             String tapeId = sa[0];
-            int totalTime = Integer.parseInt(sa[4]);
+            
+            // try reading the totalTime twice incase one is bad
+            int totalTime;
+            try {
+                totalTime = Integer.parseInt(sa[4]);
+            } catch(NumberFormatException nfe) {
+                totalTime = Integer.parseInt(sa[3]);
+                System.out.println("Using backup for DCT TotalTime: " + line);
+            }
             
             // add the dct offset
             //System.out.println("Tape Total Time: " + totalTime + " / Offset " + dctOffset);
@@ -1266,7 +1274,6 @@ public class CassetteFlow {
      * @param storeParentDirectory 
      */
     public final void loadAudioFiles(String directory, boolean storeParentDirectory) {
-        // try-catch block to handle exceptions
         try {
             File dir = new File(directory);
 
@@ -1363,7 +1370,7 @@ public class CassetteFlow {
      * 
      * @param file 
      * @param storeParentDirectory 
-     * @param addToList Weather to add to the jlist for GUI display
+     * @param addToList Weather to add to the jlist for main GUI display
      */
     public void addAudioFileToDatabase(File file, boolean storeParentDirectory, boolean addToList) {
         String filename = file.getName();

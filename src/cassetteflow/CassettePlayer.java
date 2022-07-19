@@ -509,6 +509,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                 // print out the message
                 if(cassetteFlowFrame != null) {
                     cassetteFlowFrame.setPlayingAudioInfo(message);
+                    cassetteFlowFrame.setPlayingAudioTrack(track);
                 }
                 
                 System.out.println("\n" + message);

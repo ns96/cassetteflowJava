@@ -91,11 +91,14 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private boolean lyraTGetDecode;
     
     // used to see if to track stop records in order to estimate the current
-    // tape time whn FF or REW especially using a R2R which doesn't have 
+    // tape time when FF or REW especially when using a R2R which doesn't have
+    // auto stop
+    /*7/19/2022 -- These variables will be removed in future builds */
     private boolean trackStopRecords = false;
     private int stopRecordsTimer = 0;
     private int stopRecordsCounter = 0;
     private int stopRecordsCounterOld = 0;
+    
     private boolean playing;
     
     // store a list of filtered audioIno objects
@@ -111,6 +114,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     // store the current tape id being decoded so we can view the tracks
     // in the tapeDBFrame
     private String currentCassetteId;
+    
+    // store the current tracks being played when decoding
+    private int currentPlayingTrack = -1;
     
     /**
      * Creates new form CassetteFlowFrame
@@ -258,6 +264,18 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         });
     }
     
+    /**
+     * Set the current track that's playing
+     * @param track 
+     */
+    void setPlayingAudioTrack(String track) {
+        try {
+            currentPlayingTrack = Integer.parseInt(track.trim());
+        } catch (NumberFormatException nfe) {
+            currentPlayingTrack = -1;
+        }
+    }
+    
     @Override
     public void setPlaybackInfo(final String info, boolean append, String newLine) {
         SwingUtilities.invokeLater(() -> {
@@ -283,7 +301,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
      */
     @Override
     public void setStopRecords(int stopRecords, int playTime) {        
-        /* 6/21/2022 -- Remove code
+        /* 6/21/2022 -- Remove code. To difficult to implement
         if(stopRecords > 0) {
             stopRecordsCounter++;
             
@@ -796,7 +814,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.0.0b9 (06/22/2022)");
+        setTitle("CassetteFlow v 1.0.0b12 (07/19/2022)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 
@@ -1970,6 +1988,12 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         int side = tapeJTabbedPane.getSelectedIndex();
         
         List selectedAudio = audioJList.getSelectedValuesList();
+        
+        // if nothing was selected then 
+        if(selectedAudio.isEmpty()) {
+            selectedAudio = cassetteFlow.audioInfoList;
+        }
+        
         DefaultListModel model;
         JLabel sideLabel;
         ArrayList<AudioInfo> audioList;
@@ -2451,9 +2475,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         DefaultListModel model = (DefaultListModel) audioJList.getModel();
         model.clear();
         
-        // remove records from the list and hash map
+        // remove records from the list and hashmap database
         cassetteFlow.audioInfoList.clear();
-        cassetteFlow.audioInfoDB.clear();
+        
+        // 7/19/2022 -- Do not clear the main database
+        //cassetteFlow.audioInfoDB.clear();
     }//GEN-LAST:event_clearAudioListButtonActionPerformed
 
     private void createDownloadButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createDownloadButtonActionPerformed
@@ -3371,6 +3397,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private void viewCurrentTapeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_viewCurrentTapeButtonActionPerformed
         viewTapeDBButtonActionPerformed(evt);
         tapeDBFrame.setSelectedTapeId(currentCassetteId);
+        tapeDBFrame.setSelectedTrack(currentPlayingTrack);
     }//GEN-LAST:event_viewCurrentTapeButtonActionPerformed
     
     /**
