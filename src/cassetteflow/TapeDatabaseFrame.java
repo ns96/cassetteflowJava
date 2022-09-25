@@ -132,6 +132,7 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
         loadTapeButton = new javax.swing.JButton();
         totalTimeLabel = new javax.swing.JLabel();
         syncButton = new javax.swing.JButton();
+        combineSidesCheckBox = new javax.swing.JCheckBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Tape Database (Local)");
@@ -174,6 +175,8 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
             }
         });
 
+        combineSidesCheckBox.setText("Combine Sides A&B");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -182,6 +185,8 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
                 .addComponent(loadTapeButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(totalTimeLabel)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(combineSidesCheckBox)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(syncButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -202,7 +207,8 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
                     .addComponent(closeButton)
                     .addComponent(loadTapeButton)
                     .addComponent(totalTimeLabel)
-                    .addComponent(syncButton)))
+                    .addComponent(syncButton)
+                    .addComponent(combineSidesCheckBox)))
         );
 
         pack();
@@ -292,8 +298,20 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
             ArrayList<AudioInfo> sideBList = getAudioInfoList(tapeIdB);
             
             // get an estimate of tape length
-            int tapeLength = (currentTapeLength/60)*2;
-            cassetteFlowFrame.loadTapeInformation(tapeID, sideAList, sideBList, tapeLength);
+            if(combineSidesCheckBox.isSelected()) {
+                tapeID = "CS00";
+                int tapeLength = (currentTapeLength/60)*4;
+                
+                ArrayList<AudioInfo> combineList = new ArrayList<>(sideAList);
+                if(sideBList != null) {
+                    combineList.addAll(sideBList);
+                }
+                
+                cassetteFlowFrame.loadTapeInformation(tapeID, combineList, null, tapeLength);
+            } else {
+                int tapeLength = (currentTapeLength/60)*2;
+                cassetteFlowFrame.loadTapeInformation(tapeID, sideAList, sideBList, tapeLength);
+            }
         }
     }//GEN-LAST:event_loadTapeButtonActionPerformed
     
@@ -343,6 +361,7 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JList<String> audioFileJList;
     private javax.swing.JButton closeButton;
+    private javax.swing.JCheckBox combineSidesCheckBox;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JButton loadTapeButton;

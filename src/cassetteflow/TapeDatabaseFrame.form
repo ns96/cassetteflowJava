@@ -28,6 +28,8 @@
               <Component id="loadTapeButton" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
               <Component id="totalTimeLabel" min="-2" max="-2" attributes="0"/>
+              <EmptySpace type="unrelated" max="-2" attributes="0"/>
+              <Component id="combineSidesCheckBox" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="32767" attributes="0"/>
               <Component id="syncButton" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
@@ -53,6 +55,7 @@
                   <Component id="loadTapeButton" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="totalTimeLabel" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="syncButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="combineSidesCheckBox" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
           </Group>
       </Group>
@@ -137,6 +140,11 @@
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="syncButtonActionPerformed"/>
       </Events>
+    </Component>
+    <Component class="javax.swing.JCheckBox" name="combineSidesCheckBox">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Combine Sides A&amp;B"/>
+      </Properties>
     </Component>
   </SubComponents>
 </Form>
