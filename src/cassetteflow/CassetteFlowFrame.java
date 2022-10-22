@@ -819,7 +819,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.0.0b13 (09/24/2022)");
+        setTitle("CassetteFlow v 1.0.0b14 (10/21/2022)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 
@@ -941,7 +941,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
 
         jLabel2.setText("Tape Length");
 
-        tapeLengthComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "60 Minutes", "90 Minutes", "110 Minutes", "120 Minutes", "240 Minutes (R2R)" }));
+        tapeLengthComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "60 Minutes", "90 Minutes", "110 Minutes", "120 Minutes", "180 Minutes (R2R)", "220 Minutes (R2R)", "240 Minutes (R2R)", "360 Minutes (R2R)" }));
         tapeLengthComboBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 tapeLengthComboBoxActionPerformed(evt);
@@ -2085,20 +2085,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
      * @return 
      */
     private int getMaxTapeTime() {
-        int index = tapeLengthComboBox.getSelectedIndex();
-        
-        switch (index) {
-            case 0:
-                return 1800;
-            case 1:
-                return 2700;
-            case 2:
-                return 3300;
-            case 3:
-                return 3600;
-            default:
-                return 7200;
-        }
+        String[] sa = tapeLengthComboBox.getSelectedItem().toString().split(" ");
+        int timeInSeconds = (Integer.parseInt(sa[0])/2) * 60;
+        return timeInSeconds;
     }
     
     private void directoryTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_directoryTextFieldActionPerformed
