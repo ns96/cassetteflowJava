@@ -1,6 +1,6 @@
 # CassetteFlow Java GUI
 A simple Java program meant for the creation of input files and as a technology 
-testbed for the CassetteFlow system, currently under development using the 
+test bed for the CassetteFlow system, currently under development using the 
 [ESP32LyraT](https://docs.espressif.com/projects/esp-adf/en/latest/get-started/get-started-esp32-lyrat.html) 
 audio board.
 
@@ -14,8 +14,11 @@ ESP32-LyraT board transparently. So for all practical purposes, it would seem
 that a typical audio cassette or R2R is outputting high quality digital audio. 
 Think of it has having the Playlist on the cassettes instead of the audio. This 
 system is especially useful for bring new life into vintage tape decks which are 
-mechanically fine, but can no longer output decent analog audio, and wouldn't 
-be worth fixing.   
+mechanically fine, but can no longer output decent analog audio and wouldn't 
+be worth fixing.
+
+The latest version focuses on supporting the playback control of YouTube videos, 
+and and other streaming music sources if there is an API available.   
 
 In order to accomplish this it makes use of the excellent 
 [Minimodem](https://github.com/kamalmostafa/minimodem) program to encode the 
@@ -32,6 +35,7 @@ cost in todays day and age though :)
 ![Main GUI 3](gui03.png)
 ![Main GUI 4](gui04.png)
 ![Main GUI 5](gui05.png)
+![Main GUI 6](gui06.png)
 ![Data Flow 1](dataflow01.png)
 ![Data Flow 2](dataflow02.png)
 ![LyraT](LyraT01.png)
@@ -61,7 +65,7 @@ will allow the AMS to be used on tape decks containing this functionality.
 ## Using
 In addition to allowing the creation of regular analog recordings, this 
 program also allows for some unique capabilities when used for recording 
-CF encoded tapes. For one, it allows for attaching track list information for 
+CF (CassetteFlow) encoded tapes. For one, it allows for attaching track list information for 
 long mixes (i.e. YouTube mixes), synched to the playback time.  The track list
 information is stored in a tab delimitted [tracklist.txt](text file). Secondly, 
 it's now possible to dynamically select the audio files and link them to a 

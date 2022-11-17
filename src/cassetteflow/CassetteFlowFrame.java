@@ -835,7 +835,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.1.0b1 (11/16/2022)");
+        setTitle("CassetteFlow v 1.1.0b2 (11/17/2022)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 
@@ -2651,8 +2651,14 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         } else {
             cassettePlayer.startLogTailer();
         }
-
-        playbackInfoTextArea.setText("Starting decoding process ...\n");
+        
+        if(deckCastConnect == null) {
+            playbackInfoTextArea.setText("Starting decoding process ...\n");
+        } else {
+            trackInfoTextArea.setText("Stream @ " + deckCastConnect.getServerUrl());
+            playbackInfoTextArea.setText("Starting decoding process for Stream ...\n");
+        }
+        
         startDecodeButton.setEnabled(false);
     }//GEN-LAST:event_startDecodeButtonActionPerformed
     
@@ -3524,6 +3530,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             deckCastConnect.disConnect();
             deckCastConnect = null;
         }
+        
+        streamConnectButton.setEnabled(true);
     }//GEN-LAST:event_streamDisconnectButtonActionPerformed
 
     /**
@@ -3560,6 +3568,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         String totalTimeString = CassetteFlowUtil.getTimeString(streamTotalTime);
         String playTimeString = CassetteFlowUtil.getTimeString(streamPlaytime);        
         streamPlaytimeLabel.setText("Play Time: " + playTimeString + "/" + totalTimeString);
+    }
+    
+    public void setStreamPlayerConnected() {
+        streamConnectButton.setEnabled(false);
     }
    
     // Variables declaration - do not modify//GEN-BEGIN:variables

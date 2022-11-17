@@ -31,6 +31,8 @@ public class DeckCastConnect {
     private int totalPlaytime; // the total playtime of video in seconds
     private int player; // is it player one or 2
     
+    private String streamTitle = ""; // the title for the stream
+    
     // variable used to see if we playing
     private final int RESET_TIME = -99;
     private int currentTapeTime = RESET_TIME;
@@ -53,9 +55,11 @@ public class DeckCastConnect {
                 
                 if(cassetteFlowFrame != null) {
                    cassetteFlowFrame.updateStreamEditorPane(message);
+                   
+                   if(connected) {
+                       cassetteFlowFrame.setStreamPlayerConnected();
+                   }
                 }
-                
-                // TO-DO if connected disable the stream CONNECT button 
             }
         });
         
@@ -89,6 +93,7 @@ public class DeckCastConnect {
             if(!streamPin.equals(obj.getString("pin"))) return;
             if(streamId.equals(obj.getString("videoId"))) return;
             
+            streamTitle = obj.getString("videoTitle");
             streamId = obj.getString("videoId");
             player = obj.getInt("player");
             totalPlaytime = obj.getInt("videoTime");
@@ -142,7 +147,7 @@ public class DeckCastConnect {
                 cassetteFlowFrame.updateStreamPlaytime(currentTapeTime);
             }
             
-            System.out.println("Tape Playtime: " + tapeTime);
+            //System.out.println("Tape Playtime: " + tapeTime);
         }
     } 
     
@@ -151,18 +156,20 @@ public class DeckCastConnect {
      */
     public void stopStream() {
         try {
-            JSONObject obj = new JSONObject();
-            obj.put("data", "Player " + player + " State Changed");
-            obj.put("player", player);
-            obj.put("state", 2);
-            obj.put("ctime", currentTapeTime);
-            socket.emit("my event", obj);
-            
-            currentTapeTime = RESET_TIME;
-            playing = false;
-            cassetteFlowFrame.updateStreamPlaytime(0);
-            
-            System.out.println("Stop Stream Playback");
+            if(playing) {
+                JSONObject obj = new JSONObject();
+                obj.put("data", "Player " + player + " State Changed");
+                obj.put("player", player);
+                obj.put("state", 2);
+                obj.put("ctime", currentTapeTime);
+                socket.emit("my event", obj);
+
+                currentTapeTime = RESET_TIME;
+                playing = false;
+                cassetteFlowFrame.updateStreamPlaytime(0);
+
+                System.out.println("Stop Stream Playback");
+            }
         } catch (JSONException ex) {
             Logger.getLogger(DeckCastConnect.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -173,9 +180,29 @@ public class DeckCastConnect {
      */
     public void disConnect() {
         if(connected) {
+            if(playing) {
+                stopStream();
+            }
+            
             connected = false;
             socket.disconnect();
         }
+    }
+    
+    /**
+     * Get the current track title
+     * @return 
+     */
+    public String getTitle() {
+        return streamTitle;
+    }
+    
+    /**
+     * Return the URL of the server
+     * @return 
+     */
+    public String getServerUrl() {
+        return serverUrl;
     }
     
     // test the functionality
