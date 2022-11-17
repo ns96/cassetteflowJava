@@ -33,6 +33,8 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     private CassetteFlowFrame cassetteFlowFrame;
     
     private StreamPlayer player = null;
+    
+    private DeckCastConnect deckCastConnect;
         
     // used to read the log file outputted by the minimodem program
     // "minimodem -r 1200 &> >(tee -a tape.log)"
@@ -128,6 +130,15 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
      */
     public void setSpeedFactor(double speedFactor) {
        this.speedFactor = speedFactor; 
+    }
+    
+    /**
+     * Set the deck cast object
+     * 
+     * @param deckCastConnect 
+     */
+    public void setDeckCastConnect(DeckCastConnect deckCastConnect) {
+       this.deckCastConnect = deckCastConnect; 
     }
     
     /**
@@ -282,11 +293,20 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                         String dctLine = cassetteFlow.getDCTLine(line);
                         
                         if(dctLine != null) {
-                            if (cassetteFlowFrame != null) {
-                                cassetteFlowFrame.printToConsole(" -->" + dctLine, true);
-                            }
+                            if(!dctLine.contains("TAPE TIME:")) { 
+                                if (cassetteFlowFrame != null) {
+                                    cassetteFlowFrame.printToConsole(" -->" + dctLine, true);
+                                }
                             
-                            currentLineRecord = processRecord(dctLine);
+                                currentLineRecord = processRecord(dctLine);
+                            } else {
+                                // we have a good dct record, but no DCT lookup array so let's see
+                                // if we are controlling a stream player
+                                if(deckCastConnect != null) {
+                                    int tapeTime = Integer.parseInt(dctLine.split(" ")[2]);
+                                    deckCastConnect.playStream(tapeTime);
+                                }
+                            }
                         } else {
                             String stopMessage = "DCT Lookup Error {# errors " + dataErrors + "/" + logLineCount + "} ...";
 
@@ -297,6 +317,11 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                                 if (cassetteFlowFrame != null) {
                                     cassetteFlowFrame.setPlaybackInfo(stopMessage, false);
                                 }
+                            }
+                            
+                            // check to see if we have  deckcast object and stop it's playback as well
+                            if(deckCastConnect != null) {
+                                deckCastConnect.stopStream();
                             }
                         }
                     } else {
@@ -329,6 +354,11 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                     if(cassetteFlowFrame != null) {
                         cassetteFlowFrame.setPlaybackInfo(stopMessage, false);
                     } 
+                }
+                
+                // check to see if we have  deckcast object and stop it's playback as well
+                if (deckCastConnect != null) {
+                    deckCastConnect.stopStream();
                 }
                 
                 // check to make sure we close the minimodem read

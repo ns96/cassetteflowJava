@@ -11,6 +11,7 @@ import java.awt.GraphicsEnvironment;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -94,10 +95,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     // tape time when FF or REW especially when using a R2R which doesn't have
     // auto stop
     /*7/19/2022 -- These variables will be removed in future builds */
-    private boolean trackStopRecords = false;
+    /*private boolean trackStopRecords = false;
     private int stopRecordsTimer = 0;
     private int stopRecordsCounter = 0;
-    private int stopRecordsCounterOld = 0;
+    private int stopRecordsCounterOld = 0;*/
     
     private boolean playing;
     
@@ -117,6 +118,12 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     
     // store the current tracks being played when decoding
     private int currentPlayingTrack = -1;
+    
+    // store the id for the stream video being played
+    private DeckCastConnect deckCastConnect;
+    private String streamId;
+    private int streamTotalTime = 0;
+    private int streamPlayer = 0;
     
     /**
      * Creates new form CassetteFlowFrame
@@ -755,6 +762,15 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         viewCurrentTapeButton = new javax.swing.JButton();
         jLabel12 = new javax.swing.JLabel();
         dctOffsetComboBox = new javax.swing.JComboBox<>();
+        jPanel8 = new javax.swing.JPanel();
+        jScrollPane10 = new javax.swing.JScrollPane();
+        streamEditorPane = new javax.swing.JEditorPane();
+        jLabel13 = new javax.swing.JLabel();
+        streamComboBox = new javax.swing.JComboBox<>();
+        streamConnectButton = new javax.swing.JButton();
+        streamPlaytimeLabel = new javax.swing.JLabel();
+        streamDisconnectButton = new javax.swing.JButton();
+        streamPinTextField = new javax.swing.JTextField();
         jPanel5 = new javax.swing.JPanel();
         lyraTHostTextField = new javax.swing.JTextField();
         lyraTConnectButton = new javax.swing.JButton();
@@ -819,7 +835,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.0.0b14 (10/21/2022)");
+        setTitle("CassetteFlow v 1.1.0b1 (11/16/2022)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
 
@@ -844,7 +860,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 680, Short.MAX_VALUE)
+            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 690, Short.MAX_VALUE)
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addComponent(sideALabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -853,7 +869,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 299, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 324, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(trackALabel)
@@ -876,7 +892,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 680, Short.MAX_VALUE)
+            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 690, Short.MAX_VALUE)
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addComponent(sideBLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -885,7 +901,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 300, Short.MAX_VALUE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 321, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(trackBLabel)
@@ -910,12 +926,12 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jPanel6Layout.setHorizontalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jScrollPane7)
-            .addComponent(sideNLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 680, Short.MAX_VALUE)
+            .addComponent(sideNLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 690, Short.MAX_VALUE)
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel6Layout.createSequentialGroup()
-                .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 299, Short.MAX_VALUE)
+                .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 324, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(sideNLabel)
                 .addContainerGap())
@@ -941,7 +957,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
 
         jLabel2.setText("Tape Length");
 
-        tapeLengthComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "60 Minutes", "90 Minutes", "110 Minutes", "120 Minutes", "180 Minutes (R2R)", "220 Minutes (R2R)", "240 Minutes (R2R)", "360 Minutes (R2R)" }));
+        tapeLengthComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "60 Minutes", "90 Minutes", "110 Minutes", "120 Minutes", "180 Minutes (R2R)", "240 Minutes (R2R)", "360 Minutes (R2R)" }));
         tapeLengthComboBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 tapeLengthComboBoxActionPerformed(evt);
@@ -1089,7 +1105,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         .addComponent(clearSelectionButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(clearAudioListButton)
-                        .addGap(0, 123, Short.MAX_VALUE))
+                        .addGap(0, 132, Short.MAX_VALUE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(directoryTextField)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1191,7 +1207,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         logfileButton.setText("Set Logfile");
 
         startDecodeButton.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        startDecodeButton.setText("Start");
+        startDecodeButton.setText("START");
         startDecodeButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 startDecodeButtonActionPerformed(evt);
@@ -1228,7 +1244,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jLabel6.setText("Playback Information");
 
         stopDecodeButton.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        stopDecodeButton.setText("Stop");
+        stopDecodeButton.setText("STOP");
         stopDecodeButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 stopDecodeButtonActionPerformed(evt);
@@ -1330,7 +1346,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel6)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 145, Short.MAX_VALUE))
+                        .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 178, Short.MAX_VALUE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
                         .addComponent(jScrollPane4)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -1340,6 +1356,73 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         );
 
         jTabbedPane1.addTab("DECODE", jPanel2);
+
+        streamEditorPane.setEditable(false);
+        streamEditorPane.setContentType("text/html"); // NOI18N
+        jScrollPane10.setViewportView(streamEditorPane);
+
+        jLabel13.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        jLabel13.setText("Stream Server");
+
+        streamComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "http://pi3.sytes.net:5054/", "http://127.0.0.1:5054/" }));
+
+        streamConnectButton.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        streamConnectButton.setText("CONNECT");
+        streamConnectButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                streamConnectButtonActionPerformed(evt);
+            }
+        });
+
+        streamPlaytimeLabel.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        streamPlaytimeLabel.setText("Play Time: 0000/0000");
+
+        streamDisconnectButton.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        streamDisconnectButton.setText("DISCONNECT");
+        streamDisconnectButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                streamDisconnectButtonActionPerformed(evt);
+            }
+        });
+
+        streamPinTextField.setText("0002");
+
+        javax.swing.GroupLayout jPanel8Layout = new javax.swing.GroupLayout(jPanel8);
+        jPanel8.setLayout(jPanel8Layout);
+        jPanel8Layout.setHorizontalGroup(
+            jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel8Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane10)
+                    .addGroup(jPanel8Layout.createSequentialGroup()
+                        .addComponent(jLabel13, javax.swing.GroupLayout.PREFERRED_SIZE, 160, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(streamComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 152, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(streamConnectButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(streamDisconnectButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(streamPinTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 102, Short.MAX_VALUE)
+                        .addComponent(streamPlaytimeLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 354, javax.swing.GroupLayout.PREFERRED_SIZE))))
+        );
+        jPanel8Layout.setVerticalGroup(
+            jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel8Layout.createSequentialGroup()
+                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel13)
+                    .addComponent(streamComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(streamConnectButton)
+                    .addComponent(streamPlaytimeLabel)
+                    .addComponent(streamDisconnectButton)
+                    .addComponent(streamPinTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane10, javax.swing.GroupLayout.DEFAULT_SIZE, 439, Short.MAX_VALUE))
+        );
+
+        jTabbedPane1.addTab("STREAM PLAY", jPanel8);
 
         lyraTHostTextField.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         lyraTHostTextField.setText("http://127.0.0.1:8192/");
@@ -1655,7 +1738,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 .addComponent(lyraTHostTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 304, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(startServerCheckBox)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 316, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 394, Short.MAX_VALUE)
                 .addComponent(lyraTConnectButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(lyraTDisconnectButton))
@@ -1734,7 +1817,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(lyraTPlaySideAButton)
                             .addComponent(lyraTPlaySideBButton))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 138, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 179, Short.MAX_VALUE)
                         .addComponent(lyraTStopRawButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(lyraTStopButton))
@@ -1835,7 +1918,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         .addComponent(audioOutputComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(reloadAudioOutputsButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 147, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 152, Short.MAX_VALUE)
                         .addComponent(setAudioDownloadServerButton))
                     .addGroup(jPanel7Layout.createSequentialGroup()
                         .addComponent(jLabel11)
@@ -1854,7 +1937,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jPanel7Layout.setVerticalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel7Layout.createSequentialGroup()
-                .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 386, Short.MAX_VALUE)
+                .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 415, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(filterShuffleCheckBox)
@@ -1915,21 +1998,24 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 1073, Short.MAX_VALUE)
             .addGroup(layout.createSequentialGroup()
                 .addComponent(addAudioDirectoryButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(audioCountLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(audioCountLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(createDownloadButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(createButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(exitButton))
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jTabbedPane1))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
                 .addComponent(jTabbedPane1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -1940,7 +2026,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                     .addComponent(audioCountLabel)))
         );
 
-        setBounds(0, 0, 1087, 553);
+        setBounds(0, 0, 1163, 553);
     }// </editor-fold>//GEN-END:initComponents
 
     private void exitButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitButtonActionPerformed
@@ -2509,8 +2595,12 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             startDecodeButton.setEnabled(true);
         }
         
+        if(deckCastConnect != null) {
+            deckCastConnect.stopStream();
+        }
+        
         // stop the thread which keeps track of stop records
-        trackStopRecords = false;
+        //trackStopRecords = false;
         
         tracksInfoLabel.setText("## Track(s)");
         tapeInfoTextArea.setText("");
@@ -2544,6 +2634,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         cassettePlayer = new CassettePlayer(this, cassetteFlow, logfile);
         cassettePlayer.setMixerName(outputMixerName);
         cassettePlayer.setSpeedFactor(speedFactor);
+        cassettePlayer.setDeckCastConnect(deckCastConnect);
         
         if(directDecodeCheckBox.isSelected()) {
             try {
@@ -3417,7 +3508,59 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             cassetteFlow.setDCTOffset(offset);
         } catch(NumberFormatException nfe) { }
     }//GEN-LAST:event_dctOffsetComboBoxActionPerformed
+
+    private void streamConnectButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_streamConnectButtonActionPerformed
+        try {
+            String streamUrl = streamComboBox.getSelectedItem().toString();
+            String streamPin = streamPinTextField.getText();
+            deckCastConnect = new DeckCastConnect(this, streamUrl, streamPin);            
+        } catch (URISyntaxException ex) {
+            Logger.getLogger(DeckCastConnect.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_streamConnectButtonActionPerformed
+
+    private void streamDisconnectButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_streamDisconnectButtonActionPerformed
+        if(deckCastConnect != null) {
+            deckCastConnect.disConnect();
+            deckCastConnect = null;
+        }
+    }//GEN-LAST:event_streamDisconnectButtonActionPerformed
+
+    /**
+     * 
+     * @param text 
+     */
+    public void updateStreamEditorPane(String text) {
+        String html = "<html>" + text + "</html>";
+        streamEditorPane.setText(html);
+    }
     
+    /**
+     * Set the total playtime for the stream player
+     * 
+     * @param streamId The unique id of the stream audio
+     * @param streamTotalTime The total playtime stream
+     * @param streamPlayer The stream player number
+     */
+    public void setStreamInformation(String streamId, int streamTotalTime, int streamPlayer) {
+        this.streamId = streamId;
+        this.streamTotalTime = streamTotalTime;
+        this.streamPlayer = streamPlayer;
+        
+        // update the timer label
+        updateStreamPlaytime(0);
+    }
+    
+    /**
+     * Update the stream play time
+     * @param streamPlaytime 
+     */
+    public void updateStreamPlaytime(int streamPlaytime) {
+        // update the timer label
+        String totalTimeString = CassetteFlowUtil.getTimeString(streamTotalTime);
+        String playTimeString = CassetteFlowUtil.getTimeString(streamPlaytime);        
+        streamPlaytimeLabel.setText("Play Time: " + playTimeString + "/" + totalTimeString);
+    }
    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addAudioDirectoryButton;
@@ -3464,6 +3607,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel12;
+    private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -3479,8 +3623,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JPanel jPanel5;
     private javax.swing.JPanel jPanel6;
     private javax.swing.JPanel jPanel7;
+    private javax.swing.JPanel jPanel8;
     private javax.swing.JPanel jPanel9;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane10;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
@@ -3539,6 +3685,12 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JCheckBox startServerCheckBox;
     private javax.swing.JButton stopButton;
     private javax.swing.JButton stopDecodeButton;
+    private javax.swing.JComboBox<String> streamComboBox;
+    private javax.swing.JButton streamConnectButton;
+    private javax.swing.JButton streamDisconnectButton;
+    private javax.swing.JEditorPane streamEditorPane;
+    private javax.swing.JTextField streamPinTextField;
+    private javax.swing.JLabel streamPlaytimeLabel;
     private javax.swing.JTextField tapeIDTextField;
     private javax.swing.JTextArea tapeInfoTextArea;
     private javax.swing.JTabbedPane tapeJTabbedPane;

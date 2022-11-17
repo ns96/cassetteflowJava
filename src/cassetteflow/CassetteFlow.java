@@ -784,13 +784,13 @@ public class CassetteFlow {
                 dctList = sideBDCTList;
             }
             
-            if(totalTime < dctList.size()) {
+            if(dctList != null && totalTime < dctList.size()) {
                 return dctList.get(totalTime);
             } else {
-                System.out.println("Invalid Time Code Index: " + line);
-                return null;
+                //System.out.println("Invalid Time Code Index: " + line);
+                return "TAPE TIME: " + totalTime;
             }
-        } catch(Exception ex) {
+        } catch(NumberFormatException ex) {
             System.out.println("Invalid DCT Record, or Missing DCT Loopkup Array: " + line);
             return null;
         }
