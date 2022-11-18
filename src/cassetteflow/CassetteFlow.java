@@ -122,12 +122,15 @@ public class CassetteFlow {
     // offset used by dynamic content track
     private int dctOffset = 0;
     
-    // debug flag
-    private static final boolean DEBUG = false;
+    // indicate if the index has been loaded
+    private boolean indexLoaded = false;
     
     // indicates if we are running on mac so we start pusle audio in addition
     // to minimodem
     public static boolean isMacOs = false;
+    
+    // debug flag
+    private static final boolean DEBUG = false;
     
     /**
      * Default constructor that just loads the mp3/flac files and cassette 
@@ -153,8 +156,15 @@ public class CassetteFlow {
         
         // load audio files which is displayed in the GUI, and overwrites the
         // records in the audio file index.
-        loadAudioFiles(AUDIO_DIR_NAME, false);
-        
+        long startTime = System.nanoTime();
+        if(!indexLoaded) {
+            loadAudioFiles(AUDIO_DIR_NAME, false);
+        } else {
+            loadAudioFilesFromIndex(AUDIO_DIR_NAME);
+        }
+        long elapsedTime = System.nanoTime() - startTime;
+        System.out.println("\nTotal time to load sound files: " + elapsedTime/1000000 + " Milliseconds");
+
         File file = new File(TAPE_DB_FILENAME);
         tapeDB = loadTapeDB(file);
         
@@ -790,7 +800,7 @@ public class CassetteFlow {
                 //System.out.println("Invalid Time Code Index: " + line);
                 return "TAPE TIME: " + totalTime;
             }
-        } catch(NumberFormatException ex) {
+        } catch(Exception ex) {
             System.out.println("Invalid DCT Record, or Missing DCT Loopkup Array: " + line);
             return null;
         }
@@ -1253,6 +1263,7 @@ public class CassetteFlow {
                 info[0] = audioHeader.getTrackLength();
                 info[1] = (int)audioHeader.getBitRateAsNumber()*1000;
                 //System.out.println("Length/Rate " + info[0] + " | " + info[1]);
+                //System.out.println("Audio Tags:" + mp3.getTag().toString());
             } else {
                 // flac file?
                 AudioFile af = AudioFileIO.read(file);
@@ -1268,23 +1279,15 @@ public class CassetteFlow {
     }
     
     /**
-     * Method to get the mp3 of flac files is a directory
+     * Method to get the mp3 of flac files in a directory
      * 
      * @param directory
      * @param storeParentDirectory 
      */
     public final void loadAudioFiles(String directory, boolean storeParentDirectory) {
         try {
-            File dir = new File(directory);
-
-            FilenameFilter filter = (File f, String name) -> {
-                name = name.toLowerCase();
-                return name.endsWith(".mp3") || name.endsWith(".flac");
-            };
-
-            // Note that this time we are using a File class as an array,
-            File[] files = dir.listFiles(filter);
-
+            File[] files = getAudioFiles(directory);
+            
             // add the files in the root directory
             for (File file : files) {
                 addAudioFileToDatabase(file, storeParentDirectory, true);
@@ -1301,6 +1304,55 @@ public class CassetteFlow {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    
+    /**
+     * Method to load the mp3 and flac files using information stored in the
+     * index. This is used on startup to more quickly load the files in the GUI
+     * 
+     * @param directory The default directory
+     */
+    public final void loadAudioFilesFromIndex(String directory) {
+        try {
+            File[] files = getAudioFiles(directory);
+            
+            System.out.println("Loading " + files.length + " audio files using saved index info ...\n");
+            
+            // add the files in the root directory
+            for (File file : files) {
+                String filename = file.getName();
+                String sha10hex = CassetteFlowUtil.get10CharacterHash(filename);
+                
+                AudioInfo audioInfo = audioInfoDB.get(sha10hex);
+                if(audioInfo != null) {
+                    audioInfoList.add(audioInfo);
+                } else {
+                    System.out.println("Index out of date ... Missing entry for " + filename);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Scan directory for supported files i.e. mp3 and flac
+     * 
+     * @param directory
+     * @return 
+     */
+    public File[] getAudioFiles(String directory) {
+        File dir = new File(directory);
+
+        FilenameFilter filter = (File f, String name) -> {
+            name = name.toLowerCase();
+            return name.endsWith(".mp3") || name.endsWith(".flac");
+        };
+
+        // Note that this time we are using a File class as an array,
+        File[] files = dir.listFiles(filter);
+        
+        return files;
     }
     
     /**
@@ -1359,6 +1411,7 @@ public class CassetteFlow {
                 audioInfoDB = (HashMap<String, AudioInfo>) in.readObject();
                 in.close();
                 fis.close();
+                indexLoaded = true;
             } catch (IOException | ClassNotFoundException ex) {
                 ex.printStackTrace();
             }

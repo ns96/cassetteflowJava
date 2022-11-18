@@ -835,9 +835,14 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.1.0b2 (11/17/2022)");
+        setTitle("CassetteFlow v 1.1.0b7 (11/18/2022)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        jTabbedPane1.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                jTabbedPane1KeyPressed(evt);
+            }
+        });
 
         directoryTextField.setText("C:\\\\mp3files");
         directoryTextField.setToolTipText("");
@@ -943,6 +948,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             String[] strings = { "Audio File 1", "Audio File 2" };
             public int getSize() { return strings.length; }
             public String getElementAt(int i) { return strings[i]; }
+        });
+        audioJList.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                audioJListKeyPressed(evt);
+            }
         });
         audioJList.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
             public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
@@ -3533,6 +3543,34 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         
         streamConnectButton.setEnabled(true);
     }//GEN-LAST:event_streamDisconnectButtonActionPerformed
+
+    /**
+     * Add to the side playlist of a + button is pressed
+     * 
+     * @param evt 
+     */
+    private void audioJListKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_audioJListKeyPressed
+        //System.out.println("Key pressed code=" + evt.getKeyCode() + ", char=" + evt.getKeyChar());
+        if(evt.getKeyChar() == '+') {
+            addAudioToTapeListButtonActionPerformed(null);
+        }
+    }//GEN-LAST:event_audioJListKeyPressed
+    
+    /**
+     * Detect key presses to implement support for the buttons on the Reterminal
+     * @param evt 
+     */
+    private void jTabbedPane1KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTabbedPane1KeyPressed
+        System.out.println("Key pressed code=" + evt.getKeyCode() + ", char=" + evt.getKeyChar());
+        
+        char key  = evt.getKeyChar();
+        
+        if(key == 'a') {
+            startDecodeButtonActionPerformed(null);
+        } else if(key == 'f') {
+            stopDecodeButtonActionPerformed(null);
+        }
+    }//GEN-LAST:event_jTabbedPane1KeyPressed
 
     /**
      * 

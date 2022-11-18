@@ -321,7 +321,8 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                             
                             // check to see if we have  deckcast object and stop it's playback as well
                             if(deckCastConnect != null) {
-                                deckCastConnect.stopStream();
+                                // TO-DO 11/18/2022 -- See how best to handle this? 
+                                // deckCastConnect.stopStream();
                             }
                         }
                     } else {
