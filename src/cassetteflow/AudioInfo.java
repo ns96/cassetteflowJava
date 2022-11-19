@@ -61,6 +61,11 @@ public class AudioInfo implements Serializable {
         return file.getName() + " (" + lengthAsTime + ")";
     }
     
+    public String getBasicName() {
+        String fn = file.getName();
+        return fn.substring(0, fn.lastIndexOf("."));
+    }
+    
     @Override
     public String toString() {
         if(!parentDirectoryName.isEmpty()) {

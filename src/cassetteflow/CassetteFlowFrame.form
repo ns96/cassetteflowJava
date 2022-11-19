@@ -106,7 +106,7 @@
                               <Component id="clearSelectionButton" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="clearAudioListButton" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace min="0" pref="132" max="32767" attributes="0"/>
+                              <EmptySpace min="0" pref="130" max="32767" attributes="0"/>
                           </Group>
                           <Group type="102" attributes="0">
                               <Component id="directoryTextField" max="32767" attributes="0"/>
@@ -243,7 +243,7 @@
                   <Layout>
                     <DimensionLayout dim="0">
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="jScrollPane2" pref="690" max="32767" attributes="0"/>
+                          <Component id="jScrollPane2" pref="692" max="32767" attributes="0"/>
                           <Group type="102" attributes="0">
                               <Component id="sideALabel" max="32767" attributes="0"/>
                               <EmptySpace type="unrelated" max="-2" attributes="0"/>
@@ -318,7 +318,7 @@
                   <Layout>
                     <DimensionLayout dim="0">
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="jScrollPane3" pref="690" max="32767" attributes="0"/>
+                          <Component id="jScrollPane3" pref="692" max="32767" attributes="0"/>
                           <Group type="102" attributes="0">
                               <Component id="sideBLabel" max="32767" attributes="0"/>
                               <EmptySpace type="unrelated" max="-2" attributes="0"/>
@@ -384,8 +384,8 @@
                 <Container class="javax.swing.JPanel" name="jPanel6">
                   <Constraints>
                     <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
-                      <JTabbedPaneConstraints tabName="MP3 Split">
-                        <Property name="tabTitle" type="java.lang.String" value="MP3 Split"/>
+                      <JTabbedPaneConstraints tabName="Copy/Export Track List">
+                        <Property name="tabTitle" type="java.lang.String" value="Copy/Export Track List"/>
                       </JTabbedPaneConstraints>
                     </Constraint>
                   </Constraints>
@@ -393,17 +393,49 @@
                   <Layout>
                     <DimensionLayout dim="0">
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="jScrollPane7" max="32767" attributes="0"/>
-                          <Component id="sideNLabel" alignment="0" pref="690" max="32767" attributes="0"/>
+                          <Component id="jScrollPane7" alignment="0" max="32767" attributes="0"/>
+                          <Group type="102" alignment="0" attributes="0">
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Group type="102" alignment="0" attributes="0">
+                                      <Component id="jLabel14" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="jcardSiteTextField" min="-2" pref="333" max="-2" attributes="0"/>
+                                  </Group>
+                                  <Group type="102" alignment="0" attributes="0">
+                                      <Component id="refreshTrackListButton" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="loadTemplateButton" min="-2" pref="125" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="jcardTemplateTextField" pref="319" max="32767" attributes="0"/>
+                                  </Group>
+                              </Group>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="1" attributes="0">
+                                  <Component id="jcardSiteButton" min="-2" pref="110" max="-2" attributes="0"/>
+                                  <Component id="exportTemplateButton" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace max="-2" attributes="0"/>
+                          </Group>
                       </Group>
                     </DimensionLayout>
                     <DimensionLayout dim="1">
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Group type="102" alignment="0" attributes="0">
-                              <Component id="jScrollPane7" pref="324" max="32767" attributes="0"/>
-                              <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                              <Component id="sideNLabel" min="-2" max="-2" attributes="0"/>
+                              <Component id="jScrollPane7" pref="298" max="32767" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="3" attributes="0">
+                                  <Component id="jLabel14" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jcardSiteTextField" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jcardSiteButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="3" attributes="0">
+                                  <Component id="exportTemplateButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="refreshTrackListButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="loadTemplateButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jcardTemplateTextField" alignment="3" min="-2" max="-2" attributes="0"/>
+                              </Group>
                           </Group>
                       </Group>
                     </DimensionLayout>
@@ -416,26 +448,60 @@
 
                       <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
                       <SubComponents>
-                        <Component class="javax.swing.JList" name="sideNJList">
+                        <Component class="javax.swing.JTextArea" name="trackListInfoTextArea">
                           <Properties>
-                            <Property name="model" type="javax.swing.ListModel" editor="org.netbeans.modules.form.editors2.ListModelEditor">
-                              <StringArray count="1">
-                                <StringItem index="0" value="Split Large MP3 Files Using ffmpeg (https://www.ffmpeg.org/) -- Work In Progress"/>
-                              </StringArray>
-                            </Property>
+                            <Property name="columns" type="int" value="20"/>
+                            <Property name="rows" type="int" value="5"/>
                           </Properties>
-                          <AuxValues>
-                            <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
-                          </AuxValues>
                         </Component>
                       </SubComponents>
                     </Container>
-                    <Component class="javax.swing.JLabel" name="sideNLabel">
+                    <Component class="javax.swing.JButton" name="exportTemplateButton">
                       <Properties>
-                        <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                          <Font name="Tahoma" size="11" style="1"/>
-                        </Property>
-                        <Property name="text" type="java.lang.String" value="MP3 Split Information Goes Here ..."/>
+                        <Property name="text" type="java.lang.String" value="Export Template"/>
+                        <Property name="enabled" type="boolean" value="false"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JButton" name="refreshTrackListButton">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Load/Refresh"/>
+                      </Properties>
+                      <Events>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="refreshTrackListButtonActionPerformed"/>
+                      </Events>
+                    </Component>
+                    <Component class="javax.swing.JLabel" name="jLabel14">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="J-Card Template Site =&gt;"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JTextField" name="jcardSiteTextField">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="https://ed7n.github.io/jcard-template/"/>
+                      </Properties>
+                      <Events>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jcardSiteTextFieldActionPerformed"/>
+                      </Events>
+                    </Component>
+                    <Component class="javax.swing.JButton" name="jcardSiteButton">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="View Site"/>
+                      </Properties>
+                      <Events>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jcardSiteButtonActionPerformed"/>
+                      </Events>
+                    </Component>
+                    <Component class="javax.swing.JButton" name="loadTemplateButton">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Load Template"/>
+                      </Properties>
+                      <Events>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="loadTemplateButtonActionPerformed"/>
+                      </Events>
+                    </Component>
+                    <Component class="javax.swing.JTextField" name="jcardTemplateTextField">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Album Title &lt;&gt; Album Group"/>
                       </Properties>
                     </Component>
                   </SubComponents>

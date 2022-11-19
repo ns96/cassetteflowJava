@@ -6,11 +6,13 @@
 package cassetteflow;
 
 import com.goxr3plus.streamplayer.stream.StreamPlayer;
+import java.awt.Desktop;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,6 +31,7 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
+import javax.swing.filechooser.FileFilter;
 
 /**
  * Main User Interface for the cassette flow program
@@ -713,8 +716,14 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         trackBLabel = new javax.swing.JLabel();
         jPanel6 = new javax.swing.JPanel();
         jScrollPane7 = new javax.swing.JScrollPane();
-        sideNJList = new javax.swing.JList<>();
-        sideNLabel = new javax.swing.JLabel();
+        trackListInfoTextArea = new javax.swing.JTextArea();
+        exportTemplateButton = new javax.swing.JButton();
+        refreshTrackListButton = new javax.swing.JButton();
+        jLabel14 = new javax.swing.JLabel();
+        jcardSiteTextField = new javax.swing.JTextField();
+        jcardSiteButton = new javax.swing.JButton();
+        loadTemplateButton = new javax.swing.JButton();
+        jcardTemplateTextField = new javax.swing.JTextField();
         jScrollPane1 = new javax.swing.JScrollPane();
         audioJList = new javax.swing.JList<>();
         jLabel1 = new javax.swing.JLabel();
@@ -865,7 +874,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 690, Short.MAX_VALUE)
+            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 692, Short.MAX_VALUE)
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addComponent(sideALabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -897,7 +906,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 690, Short.MAX_VALUE)
+            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 692, Short.MAX_VALUE)
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addComponent(sideBLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -916,33 +925,87 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
 
         tapeJTabbedPane.addTab("Side B", jPanel4);
 
-        sideNJList.setModel(new javax.swing.AbstractListModel<String>() {
-            String[] strings = { "Split Large MP3 Files Using ffmpeg (https://www.ffmpeg.org/) -- Work In Progress" };
-            public int getSize() { return strings.length; }
-            public String getElementAt(int i) { return strings[i]; }
-        });
-        jScrollPane7.setViewportView(sideNJList);
+        trackListInfoTextArea.setColumns(20);
+        trackListInfoTextArea.setRows(5);
+        jScrollPane7.setViewportView(trackListInfoTextArea);
 
-        sideNLabel.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
-        sideNLabel.setText("MP3 Split Information Goes Here ...");
+        exportTemplateButton.setText("Export Template");
+        exportTemplateButton.setEnabled(false);
+
+        refreshTrackListButton.setText("Load/Refresh");
+        refreshTrackListButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                refreshTrackListButtonActionPerformed(evt);
+            }
+        });
+
+        jLabel14.setText("J-Card Template Site =>");
+
+        jcardSiteTextField.setText("https://ed7n.github.io/jcard-template/");
+        jcardSiteTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jcardSiteTextFieldActionPerformed(evt);
+            }
+        });
+
+        jcardSiteButton.setText("View Site");
+        jcardSiteButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jcardSiteButtonActionPerformed(evt);
+            }
+        });
+
+        loadTemplateButton.setText("Load Template");
+        loadTemplateButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                loadTemplateButtonActionPerformed(evt);
+            }
+        });
+
+        jcardTemplateTextField.setText("Album Title <> Album Group");
 
         javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
         jPanel6.setLayout(jPanel6Layout);
         jPanel6Layout.setHorizontalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jScrollPane7)
-            .addComponent(sideNLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 690, Short.MAX_VALUE)
+            .addGroup(jPanel6Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel6Layout.createSequentialGroup()
+                        .addComponent(jLabel14)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jcardSiteTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 333, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel6Layout.createSequentialGroup()
+                        .addComponent(refreshTrackListButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(loadTemplateButton, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jcardTemplateTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 319, Short.MAX_VALUE)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jcardSiteButton, javax.swing.GroupLayout.PREFERRED_SIZE, 110, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(exportTemplateButton))
+                .addContainerGap())
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel6Layout.createSequentialGroup()
-                .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 324, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(sideNLabel)
-                .addContainerGap())
+                .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 298, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel14)
+                    .addComponent(jcardSiteTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jcardSiteButton))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(exportTemplateButton)
+                    .addComponent(refreshTrackListButton)
+                    .addComponent(loadTemplateButton)
+                    .addComponent(jcardTemplateTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
         );
 
-        tapeJTabbedPane.addTab("MP3 Split", jPanel6);
+        tapeJTabbedPane.addTab("Copy/Export Track List", jPanel6);
 
         audioJList.setModel(new javax.swing.AbstractListModel<String>() {
             String[] strings = { "Audio File 1", "Audio File 2" };
@@ -1115,7 +1178,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         .addComponent(clearSelectionButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(clearAudioListButton)
-                        .addGap(0, 132, Short.MAX_VALUE))
+                        .addGap(0, 130, Short.MAX_VALUE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(directoryTextField)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -2100,18 +2163,14 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         ArrayList<AudioInfo> audioList;
         
         // see which side of the tape we adding sounds to
-        if(side == 2) {
-            model = (DefaultListModel) sideNJList.getModel();
-            sideLabel = sideNLabel;
-            audioList = sideNList;
-        } else if (side == 1) {
-            model = (DefaultListModel) sideBJList.getModel();
-            sideLabel = sideBLabel;
-            audioList = sideBList;
-        } else {
+        if (side == 0) {
             model = (DefaultListModel) sideAJList.getModel();
             sideLabel = sideALabel;
             audioList = sideAList;
+        } else {
+            model = (DefaultListModel) sideBJList.getModel();
+            sideLabel = sideBLabel;
+            audioList = sideBList;
         }
 
         int count = model.getSize() + 1;
@@ -3571,6 +3630,90 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             stopDecodeButtonActionPerformed(null);
         }
     }//GEN-LAST:event_jTabbedPane1KeyPressed
+    
+    /**
+     * Load the track list information for side A and B here to make easier
+     * to create J-cards using an online template such as
+     * https://ed7n.github.io/jcard-template/
+     * 
+     * @param evt 
+     */
+    private void refreshTrackListButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_refreshTrackListButtonActionPerformed
+        StringBuilder sb = new StringBuilder();
+        
+        if(sideAList != null) {
+            sb.append("SIDE A\n");
+            for (AudioInfo audioInfo : sideAList) {
+                sb.append(audioInfo.getBasicName()).append("\n");
+            }
+            sb.append("\n\n");
+        }
+        
+        if(sideBList != null) {
+            sb.append("SIDE B\n");
+            for (AudioInfo audioInfo : sideBList) {
+                sb.append(audioInfo.getBasicName()).append("\n");
+            }
+        }
+        
+        String info = sb.toString().trim();        
+        trackListInfoTextArea.setText(info);
+    }//GEN-LAST:event_refreshTrackListButtonActionPerformed
+    
+    /**
+     * Open the website for the jcard template site
+     * 
+     * @param evt 
+     */
+    private void jcardSiteTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcardSiteTextFieldActionPerformed
+        try {
+            String url = jcardSiteTextField.getText();
+            
+            URI uri = new URI(url);
+            Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
+            if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
+                desktop.browse(uri);
+            }
+        } catch (URISyntaxException | IOException ex) {
+            Logger.getLogger(CassetteFlowFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jcardSiteTextFieldActionPerformed
+
+    private void jcardSiteButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcardSiteButtonActionPerformed
+        jcardSiteTextFieldActionPerformed(null);
+    }//GEN-LAST:event_jcardSiteButtonActionPerformed
+    
+    /**
+     * Open the jcard template file so it can be populated with the 
+     * tracklist and date information
+     * 
+     * @param evt 
+     */
+    private void loadTemplateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadTemplateButtonActionPerformed
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.addChoosableFileFilter(new FileFilter() {
+            @Override
+            public String getDescription() {
+                return "J Card Template (*.jcard.json)";
+            }
+
+            @Override
+            public boolean accept(File f) {
+                if (f.isDirectory()) {
+                    return true;
+                } else {
+                    return f.getName().toLowerCase().endsWith(".jcard.json");
+                }
+            }
+        });
+        
+        int result = fileChooser.showOpenDialog(this);
+ 
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File selectedFile = fileChooser.getSelectedFile();
+            System.out.println("Selected file: " + selectedFile.getAbsolutePath());
+        }
+    }//GEN-LAST:event_loadTemplateButtonActionPerformed
 
     /**
      * 
@@ -3651,6 +3794,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JRadioButton eqRadioButton7;
     private javax.swing.JRadioButton eqRadioButton8;
     private javax.swing.JButton exitButton;
+    private javax.swing.JButton exportTemplateButton;
     private javax.swing.JButton filterAudioListButton;
     private javax.swing.JCheckBox filterShuffleCheckBox;
     private javax.swing.JLabel jLabel1;
@@ -3658,6 +3802,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel13;
+    private javax.swing.JLabel jLabel14;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -3686,6 +3831,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JScrollPane jScrollPane8;
     private javax.swing.JScrollPane jScrollPane9;
     private javax.swing.JTabbedPane jTabbedPane1;
+    private javax.swing.JButton jcardSiteButton;
+    private javax.swing.JTextField jcardSiteTextField;
+    private javax.swing.JTextField jcardTemplateTextField;
+    private javax.swing.JButton loadTemplateButton;
     private javax.swing.JButton logfileButton;
     private javax.swing.JTextField logfileTextField;
     private javax.swing.JButton lyraTConnectButton;
@@ -3718,6 +3867,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JTextArea playbackInfoTextArea;
     private javax.swing.JTextField playbackSpeedTextField;
     private javax.swing.JButton realtimeEncodeButton;
+    private javax.swing.JButton refreshTrackListButton;
     private javax.swing.JButton reloadAudioOutputsButton;
     private javax.swing.JButton removeAllButton;
     private javax.swing.JButton removeAudioButton;
@@ -3728,8 +3878,6 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JLabel sideALabel;
     private javax.swing.JList<String> sideBJList;
     private javax.swing.JLabel sideBLabel;
-    private javax.swing.JList<String> sideNJList;
-    private javax.swing.JLabel sideNLabel;
     private javax.swing.JRadioButton speakerRadioButton;
     private javax.swing.JButton startDecodeButton;
     private javax.swing.JCheckBox startServerCheckBox;
@@ -3748,6 +3896,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JLabel trackALabel;
     private javax.swing.JLabel trackBLabel;
     private javax.swing.JTextArea trackInfoTextArea;
+    private javax.swing.JTextArea trackListInfoTextArea;
     private javax.swing.JLabel tracksInfoLabel;
     private javax.swing.JLabel tracksLabel;
     private javax.swing.JButton viewCurrentTapeButton;
