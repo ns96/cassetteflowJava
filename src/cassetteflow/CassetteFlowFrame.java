@@ -10,10 +10,13 @@ import java.awt.Desktop;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.event.ActionEvent;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,6 +35,8 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.filechooser.FileFilter;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * Main User Interface for the cassette flow program
@@ -94,15 +99,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private String lyraTAudioFilename = "";
     private boolean lyraTGetDecode;
     
-    // used to see if to track stop records in order to estimate the current
-    // tape time when FF or REW especially when using a R2R which doesn't have
-    // auto stop
-    /*7/19/2022 -- These variables will be removed in future builds */
-    /*private boolean trackStopRecords = false;
-    private int stopRecordsTimer = 0;
-    private int stopRecordsCounter = 0;
-    private int stopRecordsCounterOld = 0;*/
-    
+    // keep track if we playing any audio
     private boolean playing;
     
     // store a list of filtered audioIno objects
@@ -128,6 +125,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private int streamTotalTime = 0;
     private int streamPlayer = 0;
     
+    // The JSON object used to when creating a jcard template
+    private JSONObject jcardJSON;
+    
     /**
      * Creates new form CassetteFlowFrame
      */
@@ -143,6 +143,12 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         sideBJList.setModel(model);
         
         loadAudioOuputDevices();
+        
+        // load the jcard json template now
+        try {
+            String jsonText = CassetteFlowUtil.getResourceFileAsString("template.jcard.json");
+            jcardJSON = new JSONObject(jsonText);
+        } catch(IOException | JSONException ex) { }
     }
     
     /**
@@ -306,57 +312,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     public void setPlaybackInfo(final String info, boolean append) {
         setPlaybackInfo(info, append, "\n");
     }
-    
-    /**
-     * Used to estimate the current track during a FF or Rewind operation, especially on
-     * a R2R machine. 11/8/2021 Doesn't work correctly
-     * 
-     * @param stopRecords 
-     * @param playTime 
-     */
-    @Override
-    public void setStopRecords(int stopRecords, int playTime) {        
-        /* 6/21/2022 -- Remove code. To difficult to implement
-        if(stopRecords > 0) {
-            stopRecordsCounter++;
-            
-            if (!trackStopRecords) {
-                trackStopRecords = true;
-                
-                // get the time scale which concerts the time FF or REW to tape time
-                int timeScale = Integer.parseInt(r2RTextField.getText());
-
-                Timer timer = new Timer(1000, (ActionEvent e) -> {
-                    stopRecordsTimer++;
-                    
-                    if(stopRecordsCounter > stopRecordsCounterOld) {
-                        int scaledTime = timeScale * stopRecordsTimer;
-                        System.out.println("FF/REW: " + stopRecordsTimer + " / Scale Time: " + scaledTime
-                                + " / Old PlayTime: " + playTime + " / New PlayTime: " + (playTime + scaledTime));
-                        stopRecordsCounterOld = stopRecordsCounter;
-                    } else {
-                        System.out.println("No new stop records ...");
-                        //stopRecordsTimer--;
-                    }
-                    
-                    // see if to stop the timer
-                    if (!trackStopRecords) {
-                        Timer callingTimer = (Timer) e.getSource();
-                        callingTimer.stop();
-                    }
-                });
-                timer.start();
-            }
-        } else {
-            stopRecordsTimer = 0;
-            stopRecordsCounter = 0;
-            stopRecordsCounterOld = 0;
-            trackStopRecords = false;
-            //System.out.println("No audio data ...");
-        }
-        */
-    }
-    
+        
     /**
      * Process a line record
      * 
@@ -723,7 +679,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jcardSiteTextField = new javax.swing.JTextField();
         jcardSiteButton = new javax.swing.JButton();
         loadTemplateButton = new javax.swing.JButton();
-        jcardTemplateTextField = new javax.swing.JTextField();
+        jcardTitleTextField = new javax.swing.JTextField();
+        jcardGroupTextField = new javax.swing.JTextField();
         jScrollPane1 = new javax.swing.JScrollPane();
         audioJList = new javax.swing.JList<>();
         jLabel1 = new javax.swing.JLabel();
@@ -844,7 +801,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.1.0b7 (11/18/2022)");
+        setTitle("CassetteFlow v 1.1.0b8 (11/20/2022)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jTabbedPane1.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -929,8 +886,12 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         trackListInfoTextArea.setRows(5);
         jScrollPane7.setViewportView(trackListInfoTextArea);
 
-        exportTemplateButton.setText("Export Template");
-        exportTemplateButton.setEnabled(false);
+        exportTemplateButton.setText("Save Template");
+        exportTemplateButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                exportTemplateButtonActionPerformed(evt);
+            }
+        });
 
         refreshTrackListButton.setText("Load/Refresh");
         refreshTrackListButton.addActionListener(new java.awt.event.ActionListener() {
@@ -962,7 +923,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             }
         });
 
-        jcardTemplateTextField.setText("Album Title <> Album Group");
+        jcardTitleTextField.setText("Album Title");
+
+        jcardGroupTextField.setText("Album Group");
 
         javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
         jPanel6.setLayout(jPanel6Layout);
@@ -981,7 +944,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(loadTemplateButton, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jcardTemplateTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 319, Short.MAX_VALUE)))
+                        .addComponent(jcardTitleTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 182, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jcardGroupTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 139, Short.MAX_VALUE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jcardSiteButton, javax.swing.GroupLayout.PREFERRED_SIZE, 110, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -1002,7 +967,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                     .addComponent(exportTemplateButton)
                     .addComponent(refreshTrackListButton)
                     .addComponent(loadTemplateButton)
-                    .addComponent(jcardTemplateTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(jcardTitleTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jcardGroupTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
         );
 
         tapeJTabbedPane.addTab("Copy/Export Track List", jPanel6);
@@ -3714,6 +3680,46 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             System.out.println("Selected file: " + selectedFile.getAbsolutePath());
         }
     }//GEN-LAST:event_loadTemplateButtonActionPerformed
+    
+    /**
+     * Export the json file need for creation of jcard
+     * 
+     * @param evt 
+     */
+    private void exportTemplateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exportTemplateButtonActionPerformed
+        try {
+            jcardJSON.put("titleUpper", jcardTitleTextField.getText());
+            jcardJSON.put("titleLower", jcardGroupTextField.getText());
+            
+            LocalDate currentDate = LocalDate.now();
+            int currentDay = currentDate.getDayOfMonth();
+            String currentMonth = currentDate.getMonth().toString();
+            int currentYear = currentDate.getYear();
+            String date = currentMonth + " " + currentDay + " " + currentYear;
+            jcardJSON.put("noteLower", date);
+            
+            String[] sa = trackListInfoTextArea.getText().split("\n\n");
+            String sideA = sa[0].replace("SIDE A", "").trim();
+            String sideB = sa[1].replace("SIDE B", "").trim();
+            jcardJSON.put("sideAContents", sideA);
+            jcardJSON.put("sideBContents", sideB);
+            
+            // save the json file now for import into the online site
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Specify a file to save");
+
+            int userSelection = fileChooser.showSaveDialog(this);
+
+            if (userSelection == JFileChooser.APPROVE_OPTION) {
+                File fileToSave = fileChooser.getSelectedFile();
+                BufferedWriter writer = new BufferedWriter(new FileWriter(fileToSave));
+                writer.write(jcardJSON.toString(2));
+                writer.close();
+            }
+        } catch (JSONException | IOException ex) {
+            Logger.getLogger(CassetteFlowFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_exportTemplateButtonActionPerformed
 
     /**
      * 
@@ -3831,9 +3837,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JScrollPane jScrollPane8;
     private javax.swing.JScrollPane jScrollPane9;
     private javax.swing.JTabbedPane jTabbedPane1;
+    private javax.swing.JTextField jcardGroupTextField;
     private javax.swing.JButton jcardSiteButton;
     private javax.swing.JTextField jcardSiteTextField;
-    private javax.swing.JTextField jcardTemplateTextField;
+    private javax.swing.JTextField jcardTitleTextField;
     private javax.swing.JButton loadTemplateButton;
     private javax.swing.JButton logfileButton;
     private javax.swing.JTextField logfileTextField;

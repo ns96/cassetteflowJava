@@ -1,7 +1,10 @@
 package cassetteflow;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -17,6 +20,27 @@ import org.apache.commons.codec.digest.DigestUtils;
  * @author Nathan
  */
 public class CassetteFlowUtil {
+    /**
+     * Reads given resource file as a string.
+     * https://stackoverflow.com/questions/6068197/read-resource-text-file-to-string-in-java
+     * 
+     * @param fileName path to the resource file
+     * @return the file's contents
+     * @throws IOException if read fails for any reason
+     */
+    public static String getResourceFileAsString(String fileName) throws IOException {
+        ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+        try ( InputStream is = classLoader.getResourceAsStream("cassetteflow/" + fileName)) {
+            if (is == null) {
+                return null;
+            }
+            try ( InputStreamReader isr = new InputStreamReader(is);  BufferedReader reader = new BufferedReader(isr)) {
+                return reader.lines().collect(Collectors.joining(System.lineSeparator()));
+            }
+        }
+    }
+    
+    
     /**
      * Method to get the time in seconds as a string
      * 

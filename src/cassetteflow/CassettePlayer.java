@@ -342,9 +342,6 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                 
                 logLineCount++;
                 stopRecords = 0;
-                if(cassetteFlowFrame != null) {
-                    cassetteFlowFrame.setStopRecords(0, currentTapeTime);
-                }
             } else if(line.contains("### NOCARRIER")) {                
                 String stopMessage = "Playback Stopped {# errors " + dataErrors +  "/" + logLineCount + "} ...";
                 
@@ -402,20 +399,6 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                 stopRecords++;
                 
                 currentLineRecord = "PLAYBACK STOPPED # " + stopRecords; 
-                
-                // tell the UI the stop records so we can estimate the current
-                // track on the tape. This works for R2R
-                if(cassetteFlowFrame != null) {
-                    // check to see if there is actual audio data
-                    String sa[] = line.split(" ");
-                    
-                    if(!sa[4].equals("ampl=0.000")) {
-                        cassetteFlowFrame.setStopRecords(stopRecords, currentTapeTime);
-                    } else {
-                        //System.out.println("Line Record: " + line);
-                        cassetteFlowFrame.setStopRecords(0, currentTapeTime);
-                    }
-                }
             }
         }
     }

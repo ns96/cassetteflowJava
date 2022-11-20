@@ -14,7 +14,5 @@ public interface RecordProcessorInterface {
     
     void setPlaybackInfo(final String info, boolean append);
     
-    void setStopRecords(int stopRecords, int playTime);
-    
     void processLineRecord(String lineRecord);
 }
