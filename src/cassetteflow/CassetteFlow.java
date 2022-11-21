@@ -90,6 +90,9 @@ public class CassetteFlow {
     
     public static String BAUDE_RATE = "1200";
     
+    // the url for the jcard site
+    public static String JCARD_SITE = "https://ed7n.github.io/jcard-template/";
+    
     // used when running in desktop mode
     private static CassetteFlowFrame cassetteFlowFrame;
     
@@ -701,6 +704,14 @@ public class CassetteFlow {
 
         // save to the tape database
         addToTapeDB(tapeID, sideA, sideB, true);        
+    }
+    
+    /**
+     * Clear the DCT array list
+     */
+    public void clearDCTArrayList() {
+        sideADCTList = null;
+        sideBDCTList = null;
     }
     
     /**

@@ -801,7 +801,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.1.0b8 (11/20/2022)");
+        setTitle("CassetteFlow v 1.1.0b9 (11/21/2022)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jTabbedPane1.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -3758,6 +3758,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     }
     
     public void setStreamPlayerConnected() {
+        // clear the dct array
+        cassetteFlow.clearDCTArrayList();
         streamConnectButton.setEnabled(false);
     }
    
