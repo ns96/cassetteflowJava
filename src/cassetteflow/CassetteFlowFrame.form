@@ -146,6 +146,8 @@
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="muteJTextField" min="-2" pref="40" max="-2" attributes="0"/>
                               <EmptySpace max="32767" attributes="0"/>
+                              <Component id="storeToTapeDBButton" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
                               <Component id="viewTapeDBButton" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <Group type="102" attributes="0">
@@ -180,7 +182,10 @@
                               <Component id="defaultButton" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="filterAudioListButton" alignment="3" min="-2" max="-2" attributes="0"/>
                           </Group>
-                          <Component id="viewTapeDBButton" alignment="1" min="-2" max="-2" attributes="0"/>
+                          <Group type="103" alignment="1" groupAlignment="3" attributes="0">
+                              <Component id="viewTapeDBButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="storeToTapeDBButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
@@ -498,7 +503,7 @@
                     </Component>
                     <Component class="javax.swing.JButton" name="loadTemplateButton">
                       <Properties>
-                        <Property name="text" type="java.lang.String" value="Load Template"/>
+                        <Property name="text" type="java.lang.String" value="Open Template"/>
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="loadTemplateButtonActionPerformed"/>
@@ -732,6 +737,14 @@
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="addDCTButtonActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JButton" name="storeToTapeDBButton">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Store"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="storeToTapeDBButtonActionPerformed"/>
               </Events>
             </Component>
           </SubComponents>

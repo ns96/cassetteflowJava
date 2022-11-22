@@ -144,7 +144,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         
         loadAudioOuputDevices();
         
-        // load the jcard json template now
+        // load the jcard json template
         try {
             String jsonText = CassetteFlowUtil.getResourceFileAsString("template.jcard.json");
             jcardJSON = new JSONObject(jsonText);
@@ -217,6 +217,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         baudRateTextField.setText(CassetteFlow.BAUDE_RATE);
         lyraTHostTextField.setText(CassetteFlow.LYRA_T_HOST);
         audioDownloadServerTextField.setText(CassetteFlow.DOWNLOAD_SERVER);
+        jcardSiteTextField.setText(CassetteFlow.JCARD_SITE);
         
         addAudioInfoToJList();
     }
@@ -708,6 +709,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         filterAudioListButton = new javax.swing.JButton();
         checkTrackListButton = new javax.swing.JButton();
         addDCTButton = new javax.swing.JButton();
+        storeToTapeDBButton = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
         logfileTextField = new javax.swing.JTextField();
         logfileButton = new javax.swing.JButton();
@@ -916,7 +918,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             }
         });
 
-        loadTemplateButton.setText("Load Template");
+        loadTemplateButton.setText("Open Template");
         loadTemplateButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 loadTemplateButtonActionPerformed(evt);
@@ -1129,6 +1131,13 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             }
         });
 
+        storeToTapeDBButton.setText("Store");
+        storeToTapeDBButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                storeToTapeDBButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -1180,6 +1189,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(muteJTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(storeToTapeDBButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(viewTapeDBButton))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(addAudioToTapeListButton)
@@ -1208,7 +1219,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         .addComponent(muteJTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(defaultButton)
                         .addComponent(filterAudioListButton))
-                    .addComponent(viewTapeDBButton, javax.swing.GroupLayout.Alignment.TRAILING))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(viewTapeDBButton)
+                        .addComponent(storeToTapeDBButton)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
@@ -3676,8 +3689,22 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         int result = fileChooser.showOpenDialog(this);
  
         if (result == JFileChooser.APPROVE_OPTION) {
-            File selectedFile = fileChooser.getSelectedFile();
-            System.out.println("Selected file: " + selectedFile.getAbsolutePath());
+            try {
+                File selectedFile = fileChooser.getSelectedFile();
+                System.out.println("Loading Template File: " + selectedFile.getAbsolutePath());
+                
+                String jsonText = CassetteFlowUtil.getContentAsString(selectedFile);
+                JSONObject js = new JSONObject(jsonText);
+                
+                if(js.has("sideAContents") && js.has("sideBContents")) {
+                    jcardJSON = js;
+                    JOptionPane.showMessageDialog(this, "JCard Template Loaded");
+                } else {
+                    JOptionPane.showMessageDialog(this, "Invalid JCard Template");
+                }
+            } catch(IOException | JSONException ex) {
+                JOptionPane.showMessageDialog(this, "Invalid JCard Template");
+            }
         }
     }//GEN-LAST:event_loadTemplateButtonActionPerformed
     
@@ -3720,6 +3747,15 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             Logger.getLogger(CassetteFlowFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_exportTemplateButtonActionPerformed
+    
+    /**
+     * Store the current sideA and sideB to the database
+     * @param evt 
+     */
+    private void storeToTapeDBButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_storeToTapeDBButtonActionPerformed
+        String tapeID = tapeIDTextField.getText();
+        cassetteFlow.addToTapeDB(tapeID, sideAList, sideBList, true);
+    }//GEN-LAST:event_storeToTapeDBButtonActionPerformed
 
     /**
      * 
@@ -3892,6 +3928,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JCheckBox startServerCheckBox;
     private javax.swing.JButton stopButton;
     private javax.swing.JButton stopDecodeButton;
+    private javax.swing.JButton storeToTapeDBButton;
     private javax.swing.JComboBox<String> streamComboBox;
     private javax.swing.JButton streamConnectButton;
     private javax.swing.JButton streamDisconnectButton;

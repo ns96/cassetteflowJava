@@ -187,6 +187,7 @@ public class CassetteFlow {
             LYRA_T_HOST = properties.getProperty("lyraT.host");
             BAUDE_RATE = properties.getProperty("baude.rate", "1200");
             LOG_FILE_NAME = properties.getProperty("minimodem.log.file", "");
+            JCARD_SITE = properties.getProperty("jcard.site", "https://ed7n.github.io/jcard-template/");
             
             setDefaultAudioDirectory(properties.getProperty("audio.directory"));
         } catch (IOException e) {
@@ -205,6 +206,7 @@ public class CassetteFlow {
             properties.put("lyraT.host", LYRA_T_HOST);
             properties.put("baud.rate", BAUDE_RATE);
             properties.put("minimodem.log.file", LOG_FILE_NAME);
+            properties.put("jcard.site", JCARD_SITE);
             
             properties.store(output, "CassetteFlow Defaults");
         } catch (IOException e) {

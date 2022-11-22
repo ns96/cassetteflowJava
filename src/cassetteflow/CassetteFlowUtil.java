@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -20,6 +21,18 @@ import org.apache.commons.codec.digest.DigestUtils;
  * @author Nathan
  */
 public class CassetteFlowUtil {
+    /**
+     * Get a file as a string
+     * 
+     * @param file
+     * @return Return the string content in the file
+     * @throws IOException 
+     */
+    public static String getContentAsString(File file) throws IOException {
+        byte[] encoded = Files.readAllBytes(file.toPath());
+        return new String(encoded, StandardCharsets.UTF_8);
+    }
+    
     /**
      * Reads given resource file as a string.
      * https://stackoverflow.com/questions/6068197/read-resource-text-file-to-string-in-java
