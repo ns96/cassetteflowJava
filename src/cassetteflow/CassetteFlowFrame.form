@@ -11,10 +11,10 @@
   </NonVisualComponents>
   <Properties>
     <Property name="defaultCloseOperation" type="int" value="3"/>
-    <Property name="title" type="java.lang.String" value="CassetteFlow v 1.1.0b9 (11/21/2022)"/>
+    <Property name="title" type="java.lang.String" value="CassetteFlow v 1.1.0b10 (11/23/2022)"/>
   </Properties>
   <SyntheticProperties>
-    <SyntheticProperty name="formSize" type="java.awt.Dimension" value="-84,-19,0,5,115,114,0,18,106,97,118,97,46,97,119,116,46,68,105,109,101,110,115,105,111,110,65,-114,-39,-41,-84,95,68,20,2,0,2,73,0,6,104,101,105,103,104,116,73,0,5,119,105,100,116,104,120,112,0,0,2,41,0,0,4,-117"/>
+    <SyntheticProperty name="formSize" type="java.awt.Dimension" value="-84,-19,0,5,115,114,0,18,106,97,118,97,46,97,119,116,46,68,105,109,101,110,115,105,111,110,65,-114,-39,-41,-84,95,68,20,2,0,2,73,0,6,104,101,105,103,104,116,73,0,5,119,105,100,116,104,120,112,0,0,2,41,0,0,4,58"/>
     <SyntheticProperty name="formPosition" type="java.awt.Point" value="-84,-19,0,5,115,114,0,14,106,97,118,97,46,97,119,116,46,80,111,105,110,116,-74,-60,-118,114,52,126,-56,38,2,0,2,73,0,1,120,73,0,1,121,120,112,0,0,0,0,0,0,0,0"/>
     <SyntheticProperty name="formSizePolicy" type="int" value="0"/>
     <SyntheticProperty name="generatePosition" type="boolean" value="true"/>
@@ -106,14 +106,16 @@
                               <Component id="clearSelectionButton" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="clearAudioListButton" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace min="0" pref="130" max="32767" attributes="0"/>
+                              <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                           </Group>
-                          <Group type="102" attributes="0">
-                              <Component id="directoryTextField" max="32767" attributes="0"/>
-                              <EmptySpace min="-2" max="-2" attributes="0"/>
+                          <Group type="102" alignment="0" attributes="0">
+                              <Component id="directoryTextField" pref="162" max="32767" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
                               <Component id="defaultButton" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
                               <Component id="filterAudioListButton" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="findTracksButton" min="-2" max="-2" attributes="0"/>
                           </Group>
                       </Group>
                       <EmptySpace type="unrelated" min="-2" max="-2" attributes="0"/>
@@ -181,6 +183,7 @@
                               <Component id="muteJTextField" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="defaultButton" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="filterAudioListButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="findTracksButton" alignment="3" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <Group type="103" alignment="1" groupAlignment="3" attributes="0">
                               <Component id="viewTapeDBButton" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -248,7 +251,7 @@
                   <Layout>
                     <DimensionLayout dim="0">
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="jScrollPane2" pref="692" max="32767" attributes="0"/>
+                          <Component id="jScrollPane2" pref="654" max="32767" attributes="0"/>
                           <Group type="102" attributes="0">
                               <Component id="sideALabel" max="32767" attributes="0"/>
                               <EmptySpace type="unrelated" max="-2" attributes="0"/>
@@ -323,7 +326,7 @@
                   <Layout>
                     <DimensionLayout dim="0">
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="jScrollPane3" pref="692" max="32767" attributes="0"/>
+                          <Component id="jScrollPane3" pref="654" max="32767" attributes="0"/>
                           <Group type="102" attributes="0">
                               <Component id="sideBLabel" max="32767" attributes="0"/>
                               <EmptySpace type="unrelated" max="-2" attributes="0"/>
@@ -414,7 +417,7 @@
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Component id="jcardTitleTextField" min="-2" pref="182" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
-                                      <Component id="jcardGroupTextField" pref="139" max="32767" attributes="0"/>
+                                      <Component id="jcardGroupTextField" pref="101" max="32767" attributes="0"/>
                                   </Group>
                               </Group>
                               <EmptySpace max="-2" attributes="0"/>
@@ -516,7 +519,7 @@
                     </Component>
                     <Component class="javax.swing.JTextField" name="jcardGroupTextField">
                       <Properties>
-                        <Property name="text" type="java.lang.String" value="Album Group"/>
+                        <Property name="text" type="java.lang.String" value="Album Artist"/>
                       </Properties>
                     </Component>
                   </SubComponents>
@@ -745,6 +748,14 @@
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="storeToTapeDBButtonActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JButton" name="findTracksButton">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Find"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="findTracksButtonActionPerformed"/>
               </Events>
             </Component>
           </SubComponents>
@@ -1063,7 +1074,7 @@
                               <Component id="streamDisconnectButton" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="streamPinTextField" min="-2" pref="71" max="-2" attributes="0"/>
-                              <EmptySpace pref="102" max="32767" attributes="0"/>
+                              <EmptySpace pref="21" max="32767" attributes="0"/>
                               <Component id="streamPlaytimeLabel" min="-2" pref="354" max="-2" attributes="0"/>
                           </Group>
                       </Group>
@@ -1180,7 +1191,7 @@
                       <Component id="lyraTHostTextField" min="-2" pref="304" max="-2" attributes="0"/>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
                       <Component id="startServerCheckBox" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace pref="394" max="32767" attributes="0"/>
+                      <EmptySpace pref="313" max="32767" attributes="0"/>
                       <Component id="lyraTConnectButton" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="lyraTDisconnectButton" min="-2" max="-2" attributes="0"/>
@@ -1790,7 +1801,7 @@
                               <Component id="audioOutputComboBox" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="reloadAudioOutputsButton" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace pref="152" max="32767" attributes="0"/>
+                              <EmptySpace pref="71" max="32767" attributes="0"/>
                               <Component id="setAudioDownloadServerButton" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <Group type="102" attributes="0">

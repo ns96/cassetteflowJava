@@ -36,6 +36,7 @@ import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.audio.AudioHeader;
 import org.jaudiotagger.audio.mp3.MP3AudioHeader;
 import org.jaudiotagger.audio.mp3.MP3File;
+import org.jaudiotagger.tag.FieldKey;
 
 /**
  * A simple program for creating input files for the cassette flow encoding
@@ -67,10 +68,11 @@ public class CassetteFlow {
     
     public static String LOG_FILE_NAME = AUDIO_DIR_NAME + File.separator + TAPE_FILE_DIR_NAME + File.separator + "tape.log"; 
     
-    // stores the mp3info object keyed by the 10 character hash
+    // stores the audioInfo object keyed by the 10 character hash
     public HashMap<String, AudioInfo> audioInfoDB = new HashMap<>();
     
-    // also store the AudioInfo object in a list for convinience
+    // also store the AudioInfo object in a list for convinience when
+    // displaying in the UI
     public ArrayList<AudioInfo> audioInfoList = new ArrayList<>();
     
     // stores the cassette ID to the mp3ids
@@ -1276,7 +1278,10 @@ public class CassetteFlow {
                 info[0] = audioHeader.getTrackLength();
                 info[1] = (int)audioHeader.getBitRateAsNumber()*1000;
                 //System.out.println("Length/Rate " + info[0] + " | " + info[1]);
-                //System.out.println("Audio Tags:" + mp3.getTag().toString());
+                //System.out.println("Audio Tags:" + mp3.getTag().getFirst(FieldKey.ARTIST));
+                //System.out.println("Audio Tags:" + mp3.getTag().getFirst(FieldKey.GENRE));
+                //System.out.println("Audio Tags:" + mp3.getTag().getFirst(FieldKey.YEAR));
+                //System.out.println("\nAudio Tags:" + mp3.getTag().toString() + "\n");
             } else {
                 // flac file?
                 AudioFile af = AudioFileIO.read(file);
