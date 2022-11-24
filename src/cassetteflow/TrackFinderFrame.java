@@ -7,9 +7,13 @@ package cassetteflow;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
+import javax.swing.SwingUtilities;
 
 /**
  *
@@ -19,9 +23,13 @@ public class TrackFinderFrame extends javax.swing.JFrame {
     private CassetteFlow cassetteFlow;
     private CassetteFlowFrame cassetteFlowFrame;
     private HashMap<String, AudioInfo> audioInfoDB;
+    private TreeMap<String, ArrayList<AudioInfo>> folderMap;
     
     // also store the found AudioInfo object in the list
     private ArrayList<AudioInfo> foundAudioInfoList = new ArrayList<>();
+    
+    // indicate if we pressed found folders
+    private boolean foundFolders = false;
     
     /**
      * Creates new form TrackFinderFrame
@@ -54,7 +62,7 @@ public class TrackFinderFrame extends javax.swing.JFrame {
     private void initComponents() {
 
         closeButton = new javax.swing.JButton();
-        addToMainListButton = new javax.swing.JButton();
+        addToMainJListButton = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
         foundLabel = new javax.swing.JLabel();
         searchByComboBox = new javax.swing.JComboBox<>();
@@ -64,6 +72,7 @@ public class TrackFinderFrame extends javax.swing.JFrame {
         foundJList = new javax.swing.JList<>();
         searchProgressBar = new javax.swing.JProgressBar();
         formatComboBox = new javax.swing.JComboBox<>();
+        foldersButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Track Finder");
@@ -75,10 +84,10 @@ public class TrackFinderFrame extends javax.swing.JFrame {
             }
         });
 
-        addToMainListButton.setText("Add To Track List");
-        addToMainListButton.addActionListener(new java.awt.event.ActionListener() {
+        addToMainJListButton.setText("Add To Track List");
+        addToMainJListButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                addToMainListButtonActionPerformed(evt);
+                addToMainJListButtonActionPerformed(evt);
             }
         });
 
@@ -89,7 +98,7 @@ public class TrackFinderFrame extends javax.swing.JFrame {
         foundLabel.setForeground(java.awt.Color.red);
         foundLabel.setText("0");
 
-        searchByComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Search By Title", "Search By Artist", "Search By Genre", "Search By Year" }));
+        searchByComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Search By Title", "Search By Artist", "Search By Genre", "Search By Year", "Search By Folder" }));
 
         searchButton.setText("Search");
         searchButton.addActionListener(new java.awt.event.ActionListener() {
@@ -102,6 +111,13 @@ public class TrackFinderFrame extends javax.swing.JFrame {
 
         formatComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "MP3", "FLAC", "ALL" }));
 
+        foldersButton.setText("Folders");
+        foldersButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                foldersButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -111,13 +127,15 @@ public class TrackFinderFrame extends javax.swing.JFrame {
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
-                                .addComponent(addToMainListButton)
+                                .addComponent(addToMainJListButton)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jLabel1)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(foundLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(searchProgressBar, javax.swing.GroupLayout.DEFAULT_SIZE, 253, Short.MAX_VALUE))
+                                .addComponent(searchProgressBar, javax.swing.GroupLayout.DEFAULT_SIZE, 175, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(foldersButton))
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(searchByComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -146,12 +164,13 @@ public class TrackFinderFrame extends javax.swing.JFrame {
                 .addGap(6, 6, 6)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(closeButton)
-                    .addComponent(addToMainListButton)
+                    .addComponent(addToMainJListButton)
                     .addComponent(jLabel1)
                     .addComponent(foundLabel)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(searchProgressBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addContainerGap())))
+                        .addContainerGap())
+                    .addComponent(foldersButton)))
         );
 
         pack();
@@ -162,30 +181,58 @@ public class TrackFinderFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_closeButtonActionPerformed
     
     /**
-     * Search for the audio info objects matching the search term
+     * Search for the audio info objects matching the search term. This needs
+     * to be done in a thread
      * @param evt 
      */
     private void searchButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchButtonActionPerformed
-        String searchTerm = searchTextField.getText().toLowerCase().trim();
-        String format = formatComboBox.getSelectedItem().toString().toLowerCase();
+        foundFolders = false;
+        
+        final int searchBy = searchByComboBox.getSelectedIndex();
+        final String searchTerm = searchTextField.getText().toLowerCase().trim();
+        final String format = formatComboBox.getSelectedItem().toString().toLowerCase();
+        
+        // update the gui components
+        searchButton.setEnabled(false);
+        searchProgressBar.setIndeterminate(true);
         
         foundAudioInfoList = new ArrayList<AudioInfo>();
-        for(AudioInfo audioInfo: cassetteFlow.audioInfoDB.values()) {
-            String title = audioInfo.getName().toLowerCase();
-            
-            if(!format.equals("all")) {
-                if(title.contains(searchTerm) && title.contains(format)) {
-                    foundAudioInfoList.add(audioInfo);
-                }
-            } else {
-                if(title.contains(searchTerm)) {
-                    foundAudioInfoList.add(audioInfo);
-                }
-            }
-        }
         
-        // add the results to the UI
-        addAudioInfoToJList();
+        Thread thread = new Thread("Searcher Thread") {
+            @Override
+            public void run() {
+                for (AudioInfo audioInfo : cassetteFlow.audioInfoDB.values()) {
+                    String title = audioInfo.getName().toLowerCase();
+                    
+                    String searchIn;
+                    if(searchBy == 0) {
+                        searchIn = title;
+                    } else {
+                        searchIn = CassetteFlowUtil.getParentDirectoryName(audioInfo.getFile());
+                    }
+
+                    if (!format.equals("all")) {
+                        if (searchIn.contains(searchTerm) && title.contains(format)) {
+                            foundAudioInfoList.add(audioInfo);
+                        }
+                    } else {
+                        if (searchIn.contains(searchTerm)) {
+                            foundAudioInfoList.add(audioInfo);
+                        }
+                    }
+                }
+                                
+                // update the UI now
+                SwingUtilities.invokeLater(() -> {
+                    // add the results to the UI
+                    addAudioInfoToJList();
+                    
+                    searchButton.setEnabled(true);
+                    searchProgressBar.setIndeterminate(false);
+                });
+            }
+        };
+        thread.start();
     }//GEN-LAST:event_searchButtonActionPerformed
     
     /**
@@ -193,11 +240,75 @@ public class TrackFinderFrame extends javax.swing.JFrame {
      * 
      * @param evt 
      */
-    private void addToMainListButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addToMainListButtonActionPerformed
+    private void addToMainJListButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addToMainJListButtonActionPerformed
+        if(foundFolders) {
+            foundAudioInfoList = new ArrayList<AudioInfo>();
+            
+            List<String> keys = foundJList.getSelectedValuesList();
+            
+            for(String key: keys) {
+                String[] sa = key.split(" \\(");
+                foundAudioInfoList.addAll(folderMap.get(sa[0]));
+            }
+        } 
+        
         cassetteFlow.audioInfoList.addAll(foundAudioInfoList);
         cassetteFlowFrame.addAudioInfoToJList();
-    }//GEN-LAST:event_addToMainListButtonActionPerformed
+    }//GEN-LAST:event_addToMainJListButtonActionPerformed
     
+    /**
+     * Find all the parent folders for the audio files
+     * 
+     * @param evt 
+     */
+    private void foldersButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_foldersButtonActionPerformed
+        foundFolders = true;
+        
+        // if we already found all the folders just display folders and resturn
+        if(folderMap != null) {
+            addFoldersToJList();
+            return;
+        }
+        
+        folderMap = new TreeMap<>();
+        
+        // update the gui components
+        foldersButton.setEnabled(false);
+        searchProgressBar.setIndeterminate(true);
+        
+        Thread thread = new Thread("Folder Thread") {
+            @Override
+            public void run() {
+                ArrayList<AudioInfo> audioInfoList; 
+                
+                for (AudioInfo audioInfo : cassetteFlow.audioInfoDB.values()) {
+                    String folder = CassetteFlowUtil.getParentDirectoryName(audioInfo.getFile());
+                    if(folderMap.containsKey(folder)) {
+                        audioInfoList = folderMap.get(folder);
+                        audioInfoList.add(audioInfo);
+                    } else {
+                        audioInfoList = new ArrayList<>();
+                        audioInfoList.add(audioInfo);
+                        folderMap.put(folder, audioInfoList);
+                    }
+                }
+                                
+                // update the UI now
+                SwingUtilities.invokeLater(() -> {
+                    // add the results to the UI
+                    addFoldersToJList();
+                    
+                    foldersButton.setEnabled(true);
+                    searchProgressBar.setIndeterminate(false);
+                });
+            }
+        };
+        thread.start();
+    }//GEN-LAST:event_foldersButtonActionPerformed
+    
+    /**
+     * Add the found audio info objects to the list now
+     */
     private void addAudioInfoToJList() {
         DefaultListModel model = (DefaultListModel) foundJList.getModel();
         model.clear();
@@ -214,6 +325,28 @@ public class TrackFinderFrame extends javax.swing.JFrame {
         }
         
         foundLabel.setText(foundAudioInfoList.size() + " tracks");
+    }
+    
+    /**
+     * Add the found audio folders to the jlist now
+     */
+    private void addFoldersToJList() {
+        DefaultListModel model = (DefaultListModel) foundJList.getModel();
+        model.clear();
+
+        // sort the list of mp3s/flac before displaying
+        TreeSet<String> folderSet = new TreeSet(folderMap.keySet());
+
+        for (String folder : folderSet) {
+            try {
+                int tracks = folderMap.get(folder).size();
+                model.addElement(folder + " (" + tracks + " tracks)");
+            } catch (Exception ex) {
+                Logger.getLogger(TrackFinderFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+        foundLabel.setText(folderSet.size() + " folders");
     }
     
     /**
@@ -252,8 +385,9 @@ public class TrackFinderFrame extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton addToMainListButton;
+    private javax.swing.JButton addToMainJListButton;
     private javax.swing.JButton closeButton;
+    private javax.swing.JButton foldersButton;
     private javax.swing.JComboBox<String> formatComboBox;
     private javax.swing.JList<String> foundJList;
     private javax.swing.JLabel foundLabel;
