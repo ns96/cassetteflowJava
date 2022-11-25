@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
+import java.util.Random;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -36,7 +37,6 @@ import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.audio.AudioHeader;
 import org.jaudiotagger.audio.mp3.MP3AudioHeader;
 import org.jaudiotagger.audio.mp3.MP3File;
-import org.jaudiotagger.tag.FieldKey;
 
 /**
  * A simple program for creating input files for the cassette flow encoding
@@ -137,6 +137,13 @@ public class CassetteFlow {
     // debug flag
     private static final boolean DEBUG = false;
     
+    // debug flag to create dummy audio files for testing the UI with large number
+    // of audio files
+    private static final boolean DEBUG_INDEX = true;
+    private Random random = new Random();
+    public String[] MUSIC_ARTIST;
+    public String[] MUSIC_GENRES;
+    
     /**
      * Default constructor that just loads the mp3/flac files and cassette 
      * map database
@@ -155,6 +162,20 @@ public class CassetteFlow {
      */
     public void init() {
         loadProperties();
+        
+        // create list of GENRES and DUMMY Artist for testing
+        if(DEBUG_INDEX) {
+            MUSIC_GENRES = new String[]{"POP", "Rock", "Hip-Hop & Rap", 
+                "Country", "R&B", "Folk", "Jazz", "Heavy Metal", "EDM",
+                "Soul", "Funk", "Reggae", "Disco", "Classical", "House", 
+                "Techno", "Grunge", "Ambient", "Gospel", "Latin Music", 
+                "Trap"};
+            
+            MUSIC_ARTIST = new String[501];
+            for(int i = 0; i < 501; i++) {
+                MUSIC_ARTIST[i] = "ARTIST_" + i + "D";
+            }
+        }
         
         // load the audio file index to make decoding much easier
         loadAudioFileIndex();
@@ -1377,7 +1398,7 @@ public class CassetteFlow {
      * Loads all audio files in the specified directory and subdirectories.
      * This is just a convenient way to not to have to manually load a 
      * directory containing the correct audio files when using the decoding
-     * functionality
+     * functionality and speed up the startup time of the gui
      * 
      * @param directory 
      */
@@ -1405,7 +1426,7 @@ public class CassetteFlow {
             oos.close();
             fos.close();
             
-            String message = "\n" + audioFiles.size() +  " Audio Files Indexed ...";
+            String message = "\n" + audioFiles.size() + "/"  + audioInfoDB.size() +  " Audio Files Indexed ...";
             System.out.println(message);
             
             if(cassetteFlowFrame != null) {
@@ -1463,6 +1484,25 @@ public class CassetteFlow {
         }
         
         audioInfoDB.put(sha10hex, audioInfo);
+        
+        // if we are dubbing the index add a bunch of duplicate audioIno Objects
+        if(DEBUG_INDEX) {
+            int randomArtist = random.nextInt(MUSIC_ARTIST.length);
+            int randomGenre = random.nextInt(MUSIC_GENRES.length);
+            
+            for(int i = 0; i <= 200; i++) {
+                String dummyFilename = "D" + i + "_" + filename;
+                sha10hex = CassetteFlowUtil.get10CharacterHash(dummyFilename);
+                File dummyFile = new File(dummyFilename);
+                
+                audioInfo = new AudioInfo(dummyFile, sha10hex, length, lengthAsTime, bitRate);
+                audioInfo.setArtist(MUSIC_ARTIST[randomArtist]);
+                audioInfo.setGenre(MUSIC_GENRES[randomGenre]);
+                
+                audioInfoDB.put(sha10hex, audioInfo);
+                
+            }
+        }
         
         System.out.println(sha10hex + " -- " + audioInfo);
     }

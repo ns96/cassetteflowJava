@@ -35,9 +35,9 @@
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="foundLabel" min="-2" pref="100" max="-2" attributes="0"/>
                               <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                              <Component id="searchProgressBar" pref="175" max="32767" attributes="0"/>
+                              <Component id="searchProgressBar" pref="174" max="32767" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
-                              <Component id="foldersButton" min="-2" max="-2" attributes="0"/>
+                              <Component id="viewAllButton" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <Group type="102" attributes="0">
                               <Component id="searchByComboBox" min="-2" max="-2" attributes="0"/>
@@ -84,7 +84,7 @@
                       <Component id="searchProgressBar" max="32767" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                   </Group>
-                  <Component id="foldersButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="viewAllButton" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
           </Group>
       </Group>
@@ -129,12 +129,11 @@
     <Component class="javax.swing.JComboBox" name="searchByComboBox">
       <Properties>
         <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-          <StringArray count="5">
+          <StringArray count="4">
             <StringItem index="0" value="Search By Title"/>
             <StringItem index="1" value="Search By Artist"/>
             <StringItem index="2" value="Search By Genre"/>
-            <StringItem index="3" value="Search By Year"/>
-            <StringItem index="4" value="Search By Folder"/>
+            <StringItem index="3" value="Search By Folder"/>
           </StringArray>
         </Property>
       </Properties>
@@ -187,12 +186,12 @@
         <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
       </AuxValues>
     </Component>
-    <Component class="javax.swing.JButton" name="foldersButton">
+    <Component class="javax.swing.JButton" name="viewAllButton">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Folders"/>
+        <Property name="text" type="java.lang.String" value="View All"/>
       </Properties>
       <Events>
-        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="foldersButtonActionPerformed"/>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="viewAllButtonActionPerformed"/>
       </Events>
     </Component>
   </SubComponents>
