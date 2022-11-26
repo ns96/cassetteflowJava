@@ -134,6 +134,8 @@ public class CassetteFlow {
     // to minimodem
     public static boolean isMacOs = false;
     
+    public static long startTime = 0;
+    
     // debug flag
     private static final boolean DEBUG = false;
     
@@ -141,8 +143,9 @@ public class CassetteFlow {
     // of audio files
     private static final boolean DEBUG_INDEX = true;
     private Random random = new Random();
-    public String[] MUSIC_ARTIST;
-    public String[] MUSIC_GENRES;
+    private String[] MUSIC_ARTIST;
+    private String[] MUSIC_GENRES;
+    private int albumIndex = 0;
     
     /**
      * Default constructor that just loads the mp3/flac files and cassette 
@@ -177,25 +180,29 @@ public class CassetteFlow {
             }
         }
         
+        // keep track of start time so we can se how long it take to load files
+        startTime = System.currentTimeMillis();
+        
         // load the audio file index to make decoding much easier
         loadAudioFileIndex();
         
         // load audio files which is displayed in the GUI, and overwrites the
         // records in the audio file index.
-        long startTime = System.nanoTime();
+        
         if(!indexLoaded) {
             loadAudioFiles(AUDIO_DIR_NAME, false);
         } else {
             loadAudioFilesFromIndex(AUDIO_DIR_NAME);
         }
-        long elapsedTime = System.nanoTime() - startTime;
-        System.out.println("\nTotal time to load sound files: " + elapsedTime/1000000 + " Milliseconds");
 
         File file = new File(TAPE_DB_FILENAME);
         tapeDB = loadTapeDB(file);
         
         file = new File(TRACK_LIST_FILENAME);
         tracklistDB = loadTrackListDB(file);
+        
+        long elapsedTime = System.currentTimeMillis() - startTime;
+        System.out.println("\nTotal time to load sound files: " + elapsedTime + " Milliseconds\n");
     }
     
     /**
@@ -445,7 +452,7 @@ public class CassetteFlow {
         // generate the lookup table for each of the track list
         tracks.forEach((k,v) -> {
             v.createLookUpTable();
-            System.out.println("Tracklist Key: " + k + " Tracks:\n" + v);
+            //System.out.println("Tracklist Key: " + k + " Tracks:\n" + v);
         });
         
         return tracks;
@@ -1405,6 +1412,10 @@ public class CassetteFlow {
     public final void buildAudioFileIndex(String directory) {
         try {
             System.out.println("Building Audio File Index Starting @ " + directory);
+            startTime = System.currentTimeMillis();
+            
+            // reset the audio file index
+            audioInfoDB = new HashMap<>();
             
             Path rootPath = Paths.get(directory);
             List<Path> audioFiles = CassetteFlowUtil.findAllAudioFiles(rootPath);
@@ -1426,7 +1437,8 @@ public class CassetteFlow {
             oos.close();
             fos.close();
             
-            String message = "\n" + audioFiles.size() + "/"  + audioInfoDB.size() +  " Audio Files Indexed ...";
+            long elapsedTime = System.currentTimeMillis() - startTime;
+            String message = "\n" + audioFiles.size() + "/"  + audioInfoDB.size() +  " Audio Files Indexed (" + elapsedTime +" milliseconds)...";
             System.out.println(message);
             
             if(cassetteFlowFrame != null) {
@@ -1489,18 +1501,27 @@ public class CassetteFlow {
         if(DEBUG_INDEX) {
             int randomArtist = random.nextInt(MUSIC_ARTIST.length);
             int randomGenre = random.nextInt(MUSIC_GENRES.length);
+            String dummyDirectory = "!Dummy_Folder" + String.format("%03d", randomGenre);
             
-            for(int i = 0; i <= 200; i++) {
-                String dummyFilename = "D" + i + "_" + filename;
+            String dummyAlbum = "!Album_NNN";
+            
+            for(int i = 0; i < 200; i++) {
+                String dummyFilename = "!" + String.format("%03d", i) + "_" + filename;
+                
                 sha10hex = CassetteFlowUtil.get10CharacterHash(dummyFilename);
-                File dummyFile = new File(dummyFilename);
+                File dummyFile = new File(dummyDirectory, dummyFilename);
+                
+                if(i%62 == 0) {
+                    dummyAlbum = "Album_" + String.format("%04d", albumIndex);
+                    albumIndex++;
+                }
                 
                 audioInfo = new AudioInfo(dummyFile, sha10hex, length, lengthAsTime, bitRate);
                 audioInfo.setArtist(MUSIC_ARTIST[randomArtist]);
                 audioInfo.setGenre(MUSIC_GENRES[randomGenre]);
+                audioInfo.setAlbum(dummyAlbum);
                 
                 audioInfoDB.put(sha10hex, audioInfo);
-                
             }
         }
         
@@ -1622,6 +1643,9 @@ public class CassetteFlow {
                     }
                     
                     cassetteFlowFrame.setVisible(true);
+                    
+                    long elapsedTime = System.currentTimeMillis() - startTime;
+                    System.out.println("\nTotal time to start program: " + elapsedTime + " Milliseconds\n");
                 }
             });
         }

@@ -807,7 +807,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.1.0b12 (11/25/2022)");
+        setTitle("CassetteFlow v 1.1.0b13 (11/26/2022)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jTabbedPane1.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -2308,7 +2308,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 playButton.setEnabled(false);
             } catch (Exception e) {
                 e.printStackTrace();
-                JOptionPane.showMessageDialog(null, "Error playing audio file");
+                JOptionPane.showMessageDialog(null, "Error playing audio file ...");
             }
             
             // start thread to keep track of if we playing sound
@@ -2340,7 +2340,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         }
         
     }//GEN-LAST:event_playButtonActionPerformed
-
+    
+    /**
+     * Stop audio playback
+     * @param evt 
+     */
     private void stopButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stopButtonActionPerformed
         if(player != null) {
             player.stop();

@@ -18,6 +18,7 @@ public class AudioInfo implements Serializable {
     private String parentDirectoryName = "";
     private String genre;
     private String artist;
+    private String album;
     
     public AudioInfo(File file, String hash10C, int length, String lengthAsTime, int bitRate) {
         this.file = file;
@@ -82,6 +83,14 @@ public class AudioInfo implements Serializable {
 
     public void setArtist(String artist) {
         this.artist = artist;
+    }
+    
+    public String getAlbum() {
+        return album;
+    }
+
+    public void setAlbum(String album) {
+        this.album = album;
     }
     
     @Override

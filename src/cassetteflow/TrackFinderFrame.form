@@ -129,11 +129,12 @@
     <Component class="javax.swing.JComboBox" name="searchByComboBox">
       <Properties>
         <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-          <StringArray count="4">
+          <StringArray count="5">
             <StringItem index="0" value="Search By Title"/>
             <StringItem index="1" value="Search By Artist"/>
             <StringItem index="2" value="Search By Genre"/>
-            <StringItem index="3" value="Search By Folder"/>
+            <StringItem index="3" value="Search By Album"/>
+            <StringItem index="4" value="Search By Folder"/>
           </StringArray>
         </Property>
       </Properties>
@@ -150,6 +151,9 @@
       </Events>
     </Component>
     <Component class="javax.swing.JTextField" name="searchTextField">
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="searchTextFieldActionPerformed"/>
+      </Events>
     </Component>
     <Container class="javax.swing.JScrollPane" name="jScrollPane1">
       <AuxValues>
@@ -176,9 +180,9 @@
       <Properties>
         <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
           <StringArray count="3">
-            <StringItem index="0" value="MP3"/>
-            <StringItem index="1" value="FLAC"/>
-            <StringItem index="2" value="ALL"/>
+            <StringItem index="0" value="ALL"/>
+            <StringItem index="1" value="MP3"/>
+            <StringItem index="2" value="FLAC"/>
           </StringArray>
         </Property>
       </Properties>

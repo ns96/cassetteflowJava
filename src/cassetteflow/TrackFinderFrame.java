@@ -6,7 +6,6 @@ package cassetteflow;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -22,10 +21,11 @@ import javax.swing.SwingUtilities;
 public class TrackFinderFrame extends javax.swing.JFrame {
     private CassetteFlow cassetteFlow;
     private CassetteFlowFrame cassetteFlowFrame;
-    
-    private TreeMap<String, ArrayList<AudioInfo>> folderMap;
+
     private TreeMap<String, ArrayList<AudioInfo>> artistMap;
     private TreeMap<String, ArrayList<AudioInfo>> genreMap;
+    private TreeMap<String, ArrayList<AudioInfo>> albumMap;
+    private TreeMap<String, ArrayList<AudioInfo>> folderMap;
     
     // also store the found AudioInfo object in the list
     private ArrayList<AudioInfo> foundAudioInfoList = new ArrayList<>();
@@ -102,7 +102,7 @@ public class TrackFinderFrame extends javax.swing.JFrame {
         foundLabel.setForeground(java.awt.Color.red);
         foundLabel.setText("0");
 
-        searchByComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Search By Title", "Search By Artist", "Search By Genre", "Search By Folder" }));
+        searchByComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Search By Title", "Search By Artist", "Search By Genre", "Search By Album", "Search By Folder" }));
 
         searchButton.setText("Search");
         searchButton.addActionListener(new java.awt.event.ActionListener() {
@@ -111,9 +111,15 @@ public class TrackFinderFrame extends javax.swing.JFrame {
             }
         });
 
+        searchTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                searchTextFieldActionPerformed(evt);
+            }
+        });
+
         jScrollPane1.setViewportView(foundJList);
 
-        formatComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "MP3", "FLAC", "ALL" }));
+        formatComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "ALL", "MP3", "FLAC" }));
 
         viewAllButton.setText("View All");
         viewAllButton.addActionListener(new java.awt.event.ActionListener() {
@@ -215,17 +221,17 @@ public class TrackFinderFrame extends javax.swing.JFrame {
                         searchIn = audioInfo.getArtist();
                     } else if(searchBy == 2) {
                         searchIn = audioInfo.getGenre();
+                    } else if(searchBy == 3) {
+                        searchIn = audioInfo.getAlbum();
                     } else {
                         searchIn = CassetteFlowUtil.getParentDirectoryName(audioInfo.getFile());
                     }
                     
                     // make sure we have something to search in
-                    if(searchIn == null) {
-                        continue;
-                    } else {
-                        searchIn = searchIn.toLowerCase();
-                    }
+                    if(searchIn == null) { continue; }
                     
+                    searchIn = searchIn.toLowerCase();
+                                        
                     if (!format.equals("all")) {
                         if (searchIn.contains(searchTerm) && title.contains(format)) {
                             foundAudioInfoList.add(audioInfo);
@@ -265,9 +271,11 @@ public class TrackFinderFrame extends javax.swing.JFrame {
             } else if (index == 2) {
                 recordMap = genreMap;
             } else if (index == 3) {
+                recordMap = albumMap;
+            } else if (index == 4) {
                 recordMap = folderMap;
             } else {
-                System.out.println("No map records");
+                System.out.println("No map records ...");
             } 
             
             if(recordMap == null) {return;}
@@ -299,17 +307,29 @@ public class TrackFinderFrame extends javax.swing.JFrame {
     private void viewAllButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_viewAllButtonActionPerformed
         viewAll = true;
         int index = searchByComboBox.getSelectedIndex();
+        
         if(index == 1) {
             viewAllArtist();
         } else if(index == 2) {
             viewAllGenres();
         } else if(index == 3) {
+            viewAllAlbums();
+        } else if(index == 4) {
             viewAllFolders();
         } else {
             System.out.println("Nothing to Group By ...");
         } 
         
     }//GEN-LAST:event_viewAllButtonActionPerformed
+    
+    /**
+     * Detect enter pressed in text box
+     * 
+     * @param evt 
+     */
+    private void searchTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchTextFieldActionPerformed
+        searchButtonActionPerformed(evt);
+    }//GEN-LAST:event_searchTextFieldActionPerformed
     
     /**
      * Find and display all artist
@@ -363,7 +383,7 @@ public class TrackFinderFrame extends javax.swing.JFrame {
      * Find and display all genres to display
      */
     private void viewAllGenres() {
-        // if we already found all the folders just display folders and resturn
+        // if we already found all the genres just display folders and return
         if(genreMap != null) {
             addViewAllRecordsToJList(genreMap, "genres");
             return;
@@ -398,6 +418,54 @@ public class TrackFinderFrame extends javax.swing.JFrame {
                 SwingUtilities.invokeLater(() -> {
                     // add the results to the UI
                     addViewAllRecordsToJList(genreMap, "genres");
+                    
+                    viewAllButton.setEnabled(true);
+                    searchProgressBar.setIndeterminate(false);
+                });
+            }
+        };
+        thread.start();
+    }
+    
+    /**
+     * Find and display all albums to display
+     */
+    private void viewAllAlbums() {
+        // if we already found all the artist just display albums and return
+        if(albumMap != null) {
+            addViewAllRecordsToJList(albumMap, "albums");
+            return;
+        }
+        
+        albumMap = new TreeMap<>();
+        
+        // update the gui components
+        viewAllButton.setEnabled(false);
+        searchProgressBar.setIndeterminate(true);
+        
+        Thread thread = new Thread("Album Thread") {
+            @Override
+            public void run() {
+                ArrayList<AudioInfo> audioInfoList; 
+                
+                for (AudioInfo audioInfo : cassetteFlow.audioInfoDB.values()) {
+                    String album = audioInfo.getAlbum();
+                    if(album == null) continue;
+                    
+                    if(albumMap.containsKey(album)) {
+                        audioInfoList = albumMap.get(album);
+                        audioInfoList.add(audioInfo);
+                    } else {
+                        audioInfoList = new ArrayList<>();
+                        audioInfoList.add(audioInfo);
+                        albumMap.put(album, audioInfoList);
+                    }
+                }
+                                
+                // update the UI now
+                SwingUtilities.invokeLater(() -> {
+                    // add the results to the UI
+                    addViewAllRecordsToJList(albumMap, "album");
                     
                     viewAllButton.setEnabled(true);
                     searchProgressBar.setIndeterminate(false);
