@@ -74,7 +74,9 @@ public class AudioInfo implements Serializable {
     }
 
     public void setGenre(String genre) {
-        this.genre = genre;
+        if(!genre.isBlank()) {
+            this.genre = genre;
+        }
     }
 
     public String getArtist() {
@@ -82,7 +84,9 @@ public class AudioInfo implements Serializable {
     }
 
     public void setArtist(String artist) {
-        this.artist = artist;
+        if(!artist.isBlank()) {
+            this.artist = artist;
+        }
     }
     
     public String getAlbum() {
@@ -90,7 +94,9 @@ public class AudioInfo implements Serializable {
     }
 
     public void setAlbum(String album) {
-        this.album = album;
+        if(!album.isBlank()) {
+            this.album = album;
+        }
     }
     
     @Override

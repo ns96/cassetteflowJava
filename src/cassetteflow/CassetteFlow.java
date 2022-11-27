@@ -35,8 +35,14 @@ import javax.swing.SwingUtilities;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.audio.AudioHeader;
+import org.jaudiotagger.audio.exceptions.CannotReadException;
+import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
+import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
 import org.jaudiotagger.audio.mp3.MP3AudioHeader;
 import org.jaudiotagger.audio.mp3.MP3File;
+import org.jaudiotagger.tag.FieldKey;
+import org.jaudiotagger.tag.Tag;
+import org.jaudiotagger.tag.TagException;
 
 /**
  * A simple program for creating input files for the cassette flow encoding
@@ -141,7 +147,7 @@ public class CassetteFlow {
     
     // debug flag to create dummy audio files for testing the UI with large number
     // of audio files
-    private static final boolean DEBUG_INDEX = true;
+    private static final boolean DEBUG_INDEX = false;
     private Random random = new Random();
     private String[] MUSIC_ARTIST;
     private String[] MUSIC_GENRES;
@@ -163,7 +169,7 @@ public class CassetteFlow {
     /**
      * Do initial loading of audio, tape, and track database if needed
      */
-    public void init() {
+    public final void init() {
         loadProperties();
         
         // create list of GENRES and DUMMY Artist for testing
@@ -338,10 +344,6 @@ public class CassetteFlow {
      */
     public void saveTapeDB(File file) throws IOException {
         try {
-            /**ObjectOutputStream oos = new ObjectOutputStream(fos);
-            oos.writeObject(cassetteDB);
-            oos.close();
-            */
             FileWriter writer = new FileWriter(file);
             
             for(String key: tapeDB.keySet()) {
@@ -350,7 +352,7 @@ public class CassetteFlow {
             }
             
             writer.close();
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             ex.printStackTrace();
         }
     }
@@ -1291,37 +1293,45 @@ public class CassetteFlow {
     }
     
     /**
-     * Method to return the length in seconds of the mp3/flac file
+     * Method to return the length/bit and tag information of the mp3/flac file
      * 
-     * @param file
+     * @param file The mp3 or flac file
      * @return the file length and bit rate
      */
-    public int[] getAudioLengthAndBitRate(File file) {
-        int[] info = {-1,-1};
+    public HeaderAndTagInfo getHeaderAndTagInfo(File file) {
+        HeaderAndTagInfo headerAndTagInfo = new HeaderAndTagInfo();
         
         try {
+            Tag tag;
+            AudioHeader audioHeader;
+            
             if(file.getName().toLowerCase().endsWith("mp3")) { 
                 MP3File mp3 = (MP3File) AudioFileIO.read(file);
-                MP3AudioHeader audioHeader = mp3.getMP3AudioHeader();
-                info[0] = audioHeader.getTrackLength();
-                info[1] = (int)audioHeader.getBitRateAsNumber()*1000;
-                //System.out.println("Length/Rate " + info[0] + " | " + info[1]);
-                //System.out.println("Audio Tags:" + mp3.getTag().getFirst(FieldKey.ARTIST));
-                //System.out.println("Audio Tags:" + mp3.getTag().getFirst(FieldKey.GENRE));
-                //System.out.println("Audio Tags:" + mp3.getTag().getFirst(FieldKey.YEAR));
-                //System.out.println("\nAudio Tags:" + mp3.getTag().toString() + "\n");
-            } else {
-                // flac file?
+                audioHeader = mp3.getMP3AudioHeader();
+                tag = mp3.getTag();
+            } else { // flac or wav file?
                 AudioFile af = AudioFileIO.read(file);
-                AudioHeader audioHeader = af.getAudioHeader();
-                info[0] = audioHeader.getTrackLength();
-                info[1] = (int)audioHeader.getBitRateAsNumber()*1000;
+                audioHeader = af.getAudioHeader();
+                tag = af.getTag();
             }
-        } catch(Exception ex) {
+            
+            headerAndTagInfo.length = audioHeader.getTrackLength();
+            headerAndTagInfo.bitrate = (int)audioHeader.getBitRateAsNumber()*1000;
+            headerAndTagInfo.artist = tag.getFirst(FieldKey.ARTIST);
+            headerAndTagInfo.genre = tag.getFirst(FieldKey.GENRE);
+            headerAndTagInfo.album = tag.getFirst(FieldKey.ALBUM);
+            
+            /**
+            System.out.println("Audio Artist Tag:" + tag.getFirst(FieldKey.ARTIST));
+            System.out.println("Audio Genre Tag:" + tag.getFirst(FieldKey.GENRE));
+            System.out.println("Audio Album Tag:" + tag.getFirst(FieldKey.ALBUM));
+            System.out.println("Audio Tags:" + tag.toString() + "\n");
+            */
+        } catch(IOException | CannotReadException | InvalidAudioFrameException | ReadOnlyFileException | TagException ex) {
             ex.printStackTrace();
         }
         
-        return info;
+        return headerAndTagInfo;
     }
     
     /**
@@ -1479,12 +1489,17 @@ public class CassetteFlow {
     public void addAudioFileToDatabase(File file, boolean storeParentDirectory, boolean addToList) {
         String filename = file.getName();
         String sha10hex = CassetteFlowUtil.get10CharacterHash(filename);
-        int[] ia = getAudioLengthAndBitRate(file);
-        int length = ia[0];
-        int bitRate = ia[1];
+        
+        HeaderAndTagInfo headerAndTagInfo = getHeaderAndTagInfo(file);
+        int length = headerAndTagInfo.length;
+        int bitrate = headerAndTagInfo.bitrate;
+        
         String lengthAsTime = CassetteFlowUtil.getTimeString(length);
 
-        AudioInfo audioInfo = new AudioInfo(file, sha10hex, length, lengthAsTime, bitRate);
+        AudioInfo audioInfo = new AudioInfo(file, sha10hex, length, lengthAsTime, bitrate);
+        audioInfo.setArtist(headerAndTagInfo.artist);
+        audioInfo.setAlbum(headerAndTagInfo.album);
+        audioInfo.setGenre(headerAndTagInfo.genre);
         
         if(storeParentDirectory) {
             String parentDirecotryName = CassetteFlowUtil.getParentDirectoryName(file);
@@ -1516,7 +1531,7 @@ public class CassetteFlow {
                     albumIndex++;
                 }
                 
-                audioInfo = new AudioInfo(dummyFile, sha10hex, length, lengthAsTime, bitRate);
+                audioInfo = new AudioInfo(dummyFile, sha10hex, length, lengthAsTime, bitrate);
                 audioInfo.setArtist(MUSIC_ARTIST[randomArtist]);
                 audioInfo.setGenre(MUSIC_GENRES[randomGenre]);
                 audioInfo.setAlbum(dummyAlbum);
