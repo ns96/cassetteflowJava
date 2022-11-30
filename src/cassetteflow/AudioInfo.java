@@ -19,6 +19,7 @@ public class AudioInfo implements Serializable {
     private String genre;
     private String artist;
     private String album;
+    private int year = 0;
     
     public AudioInfo(File file, String hash10C, int length, String lengthAsTime, int bitRate) {
         this.file = file;
@@ -97,6 +98,14 @@ public class AudioInfo implements Serializable {
         if(!album.isBlank()) {
             this.album = album;
         }
+    }
+    
+    public int getYear() {
+        return year;
+    }
+
+    public void setYear(int year) {
+        this.year = year;
     }
     
     @Override

@@ -144,13 +144,9 @@ public class CassetteFlow {
     // debug flag
     private static final boolean DEBUG = false;
     
-    // debug flag to create dummy audio files for testing the UI with large number
-    // of audio files
-    private static final boolean DEBUG_INDEX = false;
-    private Random random = new Random();
-    private String[] MUSIC_ARTIST;
-    private String[] MUSIC_GENRES;
-    private int albumIndex = 0;
+    // object to create dummy audio files from a spotify dataset for testing the UI with large number
+    // of records
+    private SpotifyDatasetLoader spotifyDatasetLoader;
     
     /**
      * Default constructor that just loads the mp3/flac files and cassette 
@@ -170,20 +166,6 @@ public class CassetteFlow {
      */
     public final void init() {
         loadProperties();
-        
-        // create list of GENRES and DUMMY Artist for testing
-        if(DEBUG_INDEX) {
-            MUSIC_GENRES = new String[]{"POP", "Rock", "Hip-Hop & Rap", 
-                "Country", "R&B", "Folk", "Jazz", "Heavy Metal", "EDM",
-                "Soul", "Funk", "Reggae", "Disco", "Classical", "House", 
-                "Techno", "Grunge", "Ambient", "Gospel", "Latin Music", 
-                "Trap"};
-            
-            MUSIC_ARTIST = new String[501];
-            for(int i = 0; i < 501; i++) {
-                MUSIC_ARTIST[i] = "ARTIST_" + i + "D";
-            }
-        }
         
         // keep track of start time so we can se how long it take to load files
         startTime = System.currentTimeMillis();
@@ -1320,6 +1302,11 @@ public class CassetteFlow {
             headerAndTagInfo.genre = tag.getFirst(FieldKey.GENRE);
             headerAndTagInfo.album = tag.getFirst(FieldKey.ALBUM);
             
+            try {
+                headerAndTagInfo.year = Integer.parseInt(tag.getFirst(FieldKey.YEAR));
+            } catch(NumberFormatException nfe) {}
+            
+            
             /**
             System.out.println("Audio Artist Tag:" + tag.getFirst(FieldKey.ARTIST));
             System.out.println("Audio Genre Tag:" + tag.getFirst(FieldKey.GENRE));
@@ -1417,8 +1404,9 @@ public class CassetteFlow {
      * functionality and speed up the startup time of the gui
      * 
      * @param directory 
+     * @param dummyAlbums This loads a sample of albums/tracks from the spotify dataset
      */
-    public final void buildAudioFileIndex(String directory) {
+    public final void buildAudioFileIndex(String directory, int dummyAlbums) {
         try {
             System.out.println("Building Audio File Index Starting @ " + directory);
             startTime = System.currentTimeMillis();
@@ -1438,6 +1426,31 @@ public class CassetteFlow {
                 }
             }
             
+            String message;
+            
+            // see if to load any dummy records from the spotify dataset
+            File spotifyFile = new File(AUDIO_DIR_NAME, "spotify_tracks.tsv");
+            if(dummyAlbums > 0 && spotifyFile.canRead()) {
+                message = "\nLoading " + dummyAlbums + " albums from Spotify dataset: " + spotifyFile.getPath();
+                System.out.println(message);
+                if(cassetteFlowFrame != null) {
+                    cassetteFlowFrame.printToConsole(message, true);
+                }
+                
+                if(spotifyDatasetLoader == null) {
+                    spotifyDatasetLoader = new SpotifyDatasetLoader();
+                    spotifyDatasetLoader.loadDataset(spotifyFile);
+                }
+                
+                int tracks = spotifyDatasetLoader.getSample(dummyAlbums, audioInfoDB);
+                
+                message = tracks + " dummy tracks loaded from Spotify dataset ...";
+                System.out.println(message);
+                if(cassetteFlowFrame != null) {
+                    cassetteFlowFrame.printToConsole(message, true);
+                }
+            }
+            
             // save the audiodb db as a binary file
             FileOutputStream fos = new FileOutputStream(new File(AUDIO_INDEX_FILENAME));
             ObjectOutputStream oos = new ObjectOutputStream(fos);
@@ -1447,7 +1460,7 @@ public class CassetteFlow {
             fos.close();
             
             long elapsedTime = System.currentTimeMillis() - startTime;
-            String message = "\n" + audioFiles.size() + "/"  + audioInfoDB.size() +  " Audio Files Indexed (" + elapsedTime +" milliseconds)...";
+            message = "\n" + audioFiles.size() + "/"  + audioInfoDB.size() +  " Audio Files Indexed (" + elapsedTime +" milliseconds)...";
             System.out.println(message);
             
             if(cassetteFlowFrame != null) {
@@ -1499,6 +1512,7 @@ public class CassetteFlow {
         audioInfo.setArtist(headerAndTagInfo.artist);
         audioInfo.setAlbum(headerAndTagInfo.album);
         audioInfo.setGenre(headerAndTagInfo.genre);
+        audioInfo.setYear(headerAndTagInfo.year);
         
         if(storeParentDirectory) {
             String parentDirecotryName = CassetteFlowUtil.getParentDirectoryName(file);
@@ -1510,34 +1524,6 @@ public class CassetteFlow {
         }
         
         audioInfoDB.put(sha10hex, audioInfo);
-        
-        // if we are dubbing the index add a bunch of duplicate audioIno Objects
-        if(DEBUG_INDEX) {
-            int randomArtist = random.nextInt(MUSIC_ARTIST.length);
-            int randomGenre = random.nextInt(MUSIC_GENRES.length);
-            String dummyDirectory = "!Dummy_Folder" + String.format("%03d", randomGenre);
-            
-            String dummyAlbum = "!Album_NNN";
-            
-            for(int i = 0; i < 200; i++) {
-                String dummyFilename = "!" + String.format("%03d", i) + "_" + filename;
-                
-                sha10hex = CassetteFlowUtil.get10CharacterHash(dummyFilename);
-                File dummyFile = new File(dummyDirectory, dummyFilename);
-                
-                if(i%62 == 0) {
-                    dummyAlbum = "Album_" + String.format("%04d", albumIndex);
-                    albumIndex++;
-                }
-                
-                audioInfo = new AudioInfo(dummyFile, sha10hex, length, lengthAsTime, bitrate);
-                audioInfo.setArtist(MUSIC_ARTIST[randomArtist]);
-                audioInfo.setGenre(MUSIC_GENRES[randomGenre]);
-                audioInfo.setAlbum(dummyAlbum);
-                
-                audioInfoDB.put(sha10hex, audioInfo);
-            }
-        }
         
         System.out.println(sha10hex + " -- " + audioInfo);
     }

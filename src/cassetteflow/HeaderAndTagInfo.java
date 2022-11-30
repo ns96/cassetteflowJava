@@ -12,6 +12,7 @@ public class HeaderAndTagInfo {
     public String artist; // the artist
     public String album; // the album
     public String genre; // the genre
+    public int year = 0; // the year
     
     public HeaderAndTagInfo() {}
     
@@ -23,12 +24,14 @@ public class HeaderAndTagInfo {
      * @param artist
      * @param album
      * @param genre 
+     * @param year
      */
-    public HeaderAndTagInfo(int length, int bitrate, String artist, String album, String genre) {
+    public HeaderAndTagInfo(int length, int bitrate, String artist, String album, String genre, int year) {
         this.length = length;
         this.bitrate = bitrate;
         this.artist = artist;
         this.album = album;
         this.genre = genre;
+        this.year = year;
     }
 }

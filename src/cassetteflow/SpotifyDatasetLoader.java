@@ -10,10 +10,9 @@ import java.util.HashMap;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import kotlin.text.Typography;
 
 /**
- * A class to load a tab delimited containing a strip down version of the 
+ * A class to load a tab delimited containing a subset version of the 
  * Spotify dataset from kaggle
  * 
  * https://www.kaggle.com/datasets/rodolfofigueroa/spotify-12m-songs
@@ -25,17 +24,15 @@ import kotlin.text.Typography;
 public class SpotifyDatasetLoader {
     private Random random = new Random();
     private HashMap<String, ArrayList<AudioInfo>> albumMap = new HashMap<>();
-    private CassetteFlow cassetteFlow;
-    private final String[] MUSIC_GENRES;
+    private String[] MUSIC_GENRES;
+    
+    private boolean stop = false; // use to prevent infite loop situation when building sample
     
     /**
-     * Default constructor which contains  
-     * 
-     * @param cassetteFlow 
+     * Default constructor which creates an array of genres 
      */
-    public SpotifyDatasetLoader(CassetteFlow cassetteFlow) {
-        this.cassetteFlow = cassetteFlow;
-        
+    public SpotifyDatasetLoader() {
+        // used to randonly set the genre
         MUSIC_GENRES = new String[]{"POP", "Rock", "Hip-Hop & Rap", 
                 "Country", "R&B", "Folk", "Jazz", "Heavy Metal", "EDM",
                 "Soul", "Funk", "Reggae", "Disco", "Classical", "House", 
@@ -64,15 +61,17 @@ public class SpotifyDatasetLoader {
             ArrayList<AudioInfo> trackList;
             int genreIndex;
             String genre = "unknown";
+            String ext = ".mp3";
             AudioInfo audioInfo;
             
             while((line = br.readLine()) != null) {
                 String[] sa = line.split(splitBy);
                 String albumId = sa[1];
                 String album = sa[2];
-                String artist = sa[3]; 
-                String filename = sa[7] + ".mp3";
+                String artist = sa[3];
+                String filename = sa[7] + ext;
                 
+                int year = Integer.parseInt(sa[6]);
                 int length = Integer.parseInt(sa[8]);
                 String lengthAsTime = CassetteFlowUtil.getTimeString(length);
                  
@@ -81,19 +80,20 @@ public class SpotifyDatasetLoader {
                 } else {
                     albumCount++;
                     
+                    if(albumCount%100 == 0) {
+                        ext = ".flac";
+                    } else {
+                        ext = ".mp3";
+                    }
+                    
                     genreIndex = random.nextInt(MUSIC_GENRES.length);
                     genre = MUSIC_GENRES[genreIndex];
                     
                     trackList = new ArrayList<>();
                     albumMap.put(albumId, trackList);
                 }
-                
-                // let create a dummy directory
-                if (albumCount % 200 == 0) {
-                    directoryNumber++;
-                }
-                
-                String dummyDirectory = "!Spotify" + String.format("%03d", directoryNumber);
+                                
+                String dummyDirectory = "!Spotify" + String.format("%06d", albumCount);
                 String sha10hex = CassetteFlowUtil.get10CharacterHash(filename);
                 File dummyFile = new File(dummyDirectory, filename);
                 
@@ -101,6 +101,7 @@ public class SpotifyDatasetLoader {
                 audioInfo.setArtist(artist);
                 audioInfo.setGenre(genre);
                 audioInfo.setAlbum(album);
+                audioInfo.setYear(year);
                 trackList.add(audioInfo);
                 
                 i++;
@@ -126,10 +127,10 @@ public class SpotifyDatasetLoader {
     /**
      * Return a sample of albums
      * @param sampleSize
-     * @return 
+     * @param audioInfoDB Stores the sample records here
+     * @return number of tracks found
      */
-    public ArrayList<AudioInfo> getSample(int sampleSize) {
-        ArrayList<AudioInfo> sampleList = new ArrayList<>();
+    public int getSample(int sampleSize, HashMap<String, AudioInfo> audioInfoDB) {
         Random generator = new Random();
         
         if(sampleSize == -1) {
@@ -137,25 +138,46 @@ public class SpotifyDatasetLoader {
         }
         
         Object[] values = albumMap.values().toArray();
-        for(int i = 0; i < sampleSize; i++) {
+        int tracks = 0;
+        int i = 0;
+        
+        do {
             ArrayList<AudioInfo> albumList = (ArrayList<AudioInfo>)values[generator.nextInt(values.length)];
-            sampleList.addAll(albumList);
-        }
+            
+            if (albumList.size() > 5) { // only take albums with at least 4 tracks
+                for (AudioInfo audioInfo : albumList) {
+                    String key = audioInfo.getHash10C();
+                    if (!audioInfoDB.containsKey(key)) {
+                        audioInfoDB.put(audioInfo.getHash10C(), audioInfo);
+                        tracks++;
+                    }
+                }
+                i++;
+            }
+        } while (i < sampleSize && !stop);
         
-        System.out.println( sampleSize + " Albums / " + sampleList.size() + " tracks ...");
+        System.out.println( sampleSize + " Albums / " + tracks + " tracks ...");
         
-        return sampleList;
+        return tracks;
     }
     
+    /**
+     * Set the stop variable to prevent infite loops
+     * 
+     * @param stop 
+     */
+    public void setStop(boolean stop) {
+        this.stop  =stop;
+    }
     
     /**
      * Main method for testing
      * @param args 
      */
     public static void main(String[] args) {
-        File file = new File("C:\\Users\\Nathan\\Documents\\SpotifyDataset\\tracks.csv");
-        SpotifyDatasetLoader spotifyDatasetLoader = new SpotifyDatasetLoader(null);
+        File file = new File("C:\\mp3files\\spotify_tracks.tsv");
+        SpotifyDatasetLoader spotifyDatasetLoader = new SpotifyDatasetLoader();
         spotifyDatasetLoader.loadDataset(file);
-        spotifyDatasetLoader.getSample(12000);
+        spotifyDatasetLoader.getSample(12000, new HashMap<>());
     }
 }

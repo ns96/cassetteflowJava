@@ -800,6 +800,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         playbackSpeedTextField = new javax.swing.JTextField();
         reloadAudioOutputsButton = new javax.swing.JButton();
         buildAudioIndexButton = new javax.swing.JButton();
+        dummyAlbumsTextField = new javax.swing.JTextField();
         exitButton = new javax.swing.JButton();
         addAudioDirectoryButton = new javax.swing.JButton();
         createButton = new javax.swing.JButton();
@@ -807,7 +808,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.1.0b14 (11/27/2022)");
+        setTitle("CassetteFlow v 1.1.0b15 (11/30/2022)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jTabbedPane1.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -1961,6 +1962,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             }
         });
 
+        dummyAlbumsTextField.setText("0");
+
         javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
         jPanel7.setLayout(jPanel7Layout);
         jPanel7Layout.setHorizontalGroup(
@@ -1997,6 +2000,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(clearConsoleButton))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel7Layout.createSequentialGroup()
+                        .addComponent(dummyAlbumsTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(buildAudioIndexButton)
                         .addContainerGap())))
         );
@@ -2010,7 +2015,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                     .addComponent(shuffleFilterTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel11)
                     .addComponent(playbackSpeedTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(buildAudioIndexButton))
+                    .addComponent(buildAudioIndexButton)
+                    .addComponent(dummyAlbumsTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(clearConsoleButton)
@@ -3560,11 +3566,17 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
      */
     private void buildAudioIndexButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buildAudioIndexButtonActionPerformed
         printToConsole("Finding All Audio Files ...\n", false);
-        
+                
         Thread thread = new Thread("Audio Indexer Thread") {
             @Override
             public void run() {
-                cassetteFlow.buildAudioFileIndex(currentAudioDirectory);
+                // see if to load any dummy records from the spotify dataset
+                int dummyAlbums = 0;
+                try {
+                    dummyAlbums = Integer.parseInt(dummyAlbumsTextField.getText());
+                } catch (NumberFormatException nfe) { }
+                
+                cassetteFlow.buildAudioFileIndex(currentAudioDirectory, dummyAlbums);
             }
         };
         thread.start();
@@ -3858,6 +3870,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JCheckBox directDecodeCheckBox;
     private javax.swing.JCheckBox directEncodeCheckBox;
     private javax.swing.JTextField directoryTextField;
+    private javax.swing.JTextField dummyAlbumsTextField;
     private javax.swing.JProgressBar encodeProgressBar;
     private javax.swing.JRadioButton eqRadioButton1;
     private javax.swing.JRadioButton eqRadioButton2;

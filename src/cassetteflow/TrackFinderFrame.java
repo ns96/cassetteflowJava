@@ -34,7 +34,7 @@ public class TrackFinderFrame extends javax.swing.JFrame {
     private boolean viewAll = false;
     
     // specify the record limit to display and send to main display
-    private final int RECORD_LIMIT =  1500;
+    private final int RECORD_LIMIT =  5000;
     
     /**
      * Creates new form TrackFinderFrame
@@ -172,15 +172,16 @@ public class TrackFinderFrame extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 278, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(6, 6, 6)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(closeButton)
-                    .addComponent(addToMainJListButton)
-                    .addComponent(jLabel1)
-                    .addComponent(foundLabel)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(searchProgressBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addContainerGap())
-                    .addComponent(viewAllButton)))
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(closeButton)
+                        .addComponent(addToMainJListButton)
+                        .addComponent(jLabel1)
+                        .addComponent(foundLabel)
+                        .addComponent(viewAllButton))))
         );
 
         pack();
@@ -246,8 +247,7 @@ public class TrackFinderFrame extends javax.swing.JFrame {
                 // update the UI now
                 SwingUtilities.invokeLater(() -> {
                     // add the results to the UI
-                    addAudioInfoToJList();
-                    
+                    addAudioInfoToJList(searchBy);
                     searchButton.setEnabled(true);
                     searchProgressBar.setIndeterminate(false);
                 });
@@ -524,7 +524,7 @@ public class TrackFinderFrame extends javax.swing.JFrame {
     /**
      * Add the found audio info objects to the list now
      */
-    private void addAudioInfoToJList() {
+    private void addAudioInfoToJList(int searchBy) {
         DefaultListModel model = (DefaultListModel) foundJList.getModel();
         model.clear();
 
@@ -534,7 +534,17 @@ public class TrackFinderFrame extends javax.swing.JFrame {
         if(foundAudioInfoList.size() <= RECORD_LIMIT) { 
             for (AudioInfo audioInfo : foundAudioInfoList) {
                 try {
-                    model.addElement(audioInfo);
+                    String searchIn = "";
+                    
+                    if(searchBy == 1) {
+                        searchIn = " || " + audioInfo.getArtist();
+                    } else if(searchBy == 2) {
+                        searchIn = " || " + audioInfo.getGenre();
+                    } else if(searchBy == 3) {
+                        searchIn = " || " + audioInfo.getAlbum();
+                    }
+                    
+                    model.addElement(audioInfo + searchIn);
                 } catch (Exception ex) {
                     Logger.getLogger(TrackFinderFrame.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -547,7 +557,18 @@ public class TrackFinderFrame extends javax.swing.JFrame {
             for(int i = 0; i < RECORD_LIMIT; i++) {
                 try {
                     AudioInfo audioInfo = foundAudioInfoList.get(i);
-                    model.addElement(audioInfo);
+                    
+                    String searchIn = "";
+                    
+                    if(searchBy == 1) {
+                        searchIn = " || " + audioInfo.getArtist();
+                    } else if(searchBy == 2) {
+                        searchIn = " || " + audioInfo.getGenre();
+                    } else if(searchBy == 3) {
+                        searchIn = " || " + audioInfo.getAlbum();
+                    }
+                    
+                    model.addElement(audioInfo + searchIn);
                 } catch (Exception ex) {
                     Logger.getLogger(TrackFinderFrame.class.getName()).log(Level.SEVERE, null, ex);
                 }
