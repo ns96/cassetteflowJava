@@ -71,7 +71,7 @@ public class SpotifyDatasetLoader {
                 String artist = sa[3];
                 String filename = sa[7] + ext;
                 
-                int year = Integer.parseInt(sa[6]);
+                String year = sa[6];
                 int length = Integer.parseInt(sa[8]);
                 String lengthAsTime = CassetteFlowUtil.getTimeString(length);
                  
@@ -162,7 +162,7 @@ public class SpotifyDatasetLoader {
     }
     
     /**
-     * Set the stop variable to prevent infite loops
+     * Set the stop variable to prevent infinite loops
      * 
      * @param stop 
      */

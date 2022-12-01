@@ -1301,18 +1301,7 @@ public class CassetteFlow {
             headerAndTagInfo.artist = tag.getFirst(FieldKey.ARTIST);
             headerAndTagInfo.genre = tag.getFirst(FieldKey.GENRE);
             headerAndTagInfo.album = tag.getFirst(FieldKey.ALBUM);
-            
-            try {
-                headerAndTagInfo.year = Integer.parseInt(tag.getFirst(FieldKey.YEAR));
-            } catch(NumberFormatException nfe) {}
-            
-            
-            /**
-            System.out.println("Audio Artist Tag:" + tag.getFirst(FieldKey.ARTIST));
-            System.out.println("Audio Genre Tag:" + tag.getFirst(FieldKey.GENRE));
-            System.out.println("Audio Album Tag:" + tag.getFirst(FieldKey.ALBUM));
-            System.out.println("Audio Tags:" + tag.toString() + "\n");
-            */
+            headerAndTagInfo.year = tag.getFirst(FieldKey.YEAR);
         } catch(IOException | CannotReadException | InvalidAudioFrameException | ReadOnlyFileException | TagException ex) {
             ex.printStackTrace();
         }

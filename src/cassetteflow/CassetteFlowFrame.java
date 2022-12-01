@@ -808,7 +808,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.1.0b15 (11/30/2022)");
+        setTitle("CassetteFlow v 1.1.0b15 (12/01/2022)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jTabbedPane1.addKeyListener(new java.awt.event.KeyAdapter() {

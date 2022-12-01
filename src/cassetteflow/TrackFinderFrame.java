@@ -25,6 +25,7 @@ public class TrackFinderFrame extends javax.swing.JFrame {
     private TreeMap<String, ArrayList<AudioInfo>> artistMap;
     private TreeMap<String, ArrayList<AudioInfo>> genreMap;
     private TreeMap<String, ArrayList<AudioInfo>> albumMap;
+    private TreeMap<String, ArrayList<AudioInfo>> yearMap;
     private TreeMap<String, ArrayList<AudioInfo>> folderMap;
     
     // also store the found AudioInfo object in the list
@@ -102,7 +103,7 @@ public class TrackFinderFrame extends javax.swing.JFrame {
         foundLabel.setForeground(java.awt.Color.red);
         foundLabel.setText("0");
 
-        searchByComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Search By Title", "Search By Artist", "Search By Genre", "Search By Album", "Search By Folder" }));
+        searchByComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Search By Title", "Search By Artist", "Search By Genre", "Search By Album", "Search By Year ", "Search By Folder" }));
 
         searchButton.setText("Search");
         searchButton.addActionListener(new java.awt.event.ActionListener() {
@@ -224,6 +225,8 @@ public class TrackFinderFrame extends javax.swing.JFrame {
                         searchIn = audioInfo.getGenre();
                     } else if(searchBy == 3) {
                         searchIn = audioInfo.getAlbum();
+                    } else if(searchBy == 4) {
+                        searchIn = audioInfo.getYear();
                     } else {
                         searchIn = CassetteFlowUtil.getParentDirectoryName(audioInfo.getFile());
                     }
@@ -273,6 +276,8 @@ public class TrackFinderFrame extends javax.swing.JFrame {
             } else if (index == 3) {
                 recordMap = albumMap;
             } else if (index == 4) {
+                recordMap = yearMap;
+            } else if (index == 5) {
                 recordMap = folderMap;
             } else {
                 System.out.println("No map records ...");
@@ -315,6 +320,8 @@ public class TrackFinderFrame extends javax.swing.JFrame {
         } else if(index == 3) {
             viewAllAlbums();
         } else if(index == 4) {
+            viewAllYears();
+        } else if(index == 5) {
             viewAllFolders();
         } else {
             System.out.println("Nothing to Group By ...");
@@ -380,7 +387,7 @@ public class TrackFinderFrame extends javax.swing.JFrame {
     }
     
     /**
-     * Find and display all genres to display
+     * Find and display all genres
      */
     private void viewAllGenres() {
         // if we already found all the genres just display folders and return
@@ -428,7 +435,7 @@ public class TrackFinderFrame extends javax.swing.JFrame {
     }
     
     /**
-     * Find and display all albums to display
+     * Find and display all albums
      */
     private void viewAllAlbums() {
         // if we already found all the artist just display albums and return
@@ -466,6 +473,54 @@ public class TrackFinderFrame extends javax.swing.JFrame {
                 SwingUtilities.invokeLater(() -> {
                     // add the results to the UI
                     addViewAllRecordsToJList(albumMap, "album");
+                    
+                    viewAllButton.setEnabled(true);
+                    searchProgressBar.setIndeterminate(false);
+                });
+            }
+        };
+        thread.start();
+    }
+    
+    /**
+     * Find and display all years
+     */
+    private void viewAllYears() {
+        // if we already found all the artist just display albums and return
+        if(albumMap != null) {
+            addViewAllRecordsToJList(yearMap, "years");
+            return;
+        }
+        
+        yearMap = new TreeMap<>();
+        
+        // update the gui components
+        viewAllButton.setEnabled(false);
+        searchProgressBar.setIndeterminate(true);
+        
+        Thread thread = new Thread("Year Thread") {
+            @Override
+            public void run() {
+                ArrayList<AudioInfo> audioInfoList; 
+                
+                for (AudioInfo audioInfo : cassetteFlow.audioInfoDB.values()) {
+                    String year = audioInfo.getYear();
+                    if(year == null) continue;
+                    
+                    if(yearMap.containsKey(year)) {
+                        audioInfoList = yearMap.get(year);
+                        audioInfoList.add(audioInfo);
+                    } else {
+                        audioInfoList = new ArrayList<>();
+                        audioInfoList.add(audioInfo);
+                        yearMap.put(year, audioInfoList);
+                    }
+                }
+                                
+                // update the UI now
+                SwingUtilities.invokeLater(() -> {
+                    // add the results to the UI
+                    addViewAllRecordsToJList(yearMap, "years");
                     
                     viewAllButton.setEnabled(true);
                     searchProgressBar.setIndeterminate(false);
@@ -542,6 +597,8 @@ public class TrackFinderFrame extends javax.swing.JFrame {
                         searchIn = " || " + audioInfo.getGenre();
                     } else if(searchBy == 3) {
                         searchIn = " || " + audioInfo.getAlbum();
+                    } else if(searchBy == 4) {
+                        searchIn = " || " + audioInfo.getYear();
                     }
                     
                     model.addElement(audioInfo + searchIn);
@@ -566,6 +623,8 @@ public class TrackFinderFrame extends javax.swing.JFrame {
                         searchIn = " || " + audioInfo.getGenre();
                     } else if(searchBy == 3) {
                         searchIn = " || " + audioInfo.getAlbum();
+                    } else if(searchBy == 4) {
+                        searchIn = " || " + audioInfo.getYear();
                     }
                     
                     model.addElement(audioInfo + searchIn);
@@ -593,7 +652,11 @@ public class TrackFinderFrame extends javax.swing.JFrame {
                 int tracks = recordMap.get(record).size();
                 
                 if(record.isBlank()) {
-                    record = "_DUMMY";
+                    if(type.equals("years")) {
+                        record = "_UNKNOWN";
+                    } else {
+                        record = "_DUMMY";
+                    }
                 }
                 
                 model.addElement(record + " (" + tracks + " tracks)");

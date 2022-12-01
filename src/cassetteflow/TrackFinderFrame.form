@@ -131,12 +131,13 @@
     <Component class="javax.swing.JComboBox" name="searchByComboBox">
       <Properties>
         <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-          <StringArray count="5">
+          <StringArray count="6">
             <StringItem index="0" value="Search By Title"/>
             <StringItem index="1" value="Search By Artist"/>
             <StringItem index="2" value="Search By Genre"/>
             <StringItem index="3" value="Search By Album"/>
-            <StringItem index="4" value="Search By Folder"/>
+            <StringItem index="4" value="Search By Year "/>
+            <StringItem index="5" value="Search By Folder"/>
           </StringArray>
         </Property>
       </Properties>
