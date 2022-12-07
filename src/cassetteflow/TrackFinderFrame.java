@@ -290,8 +290,14 @@ public class TrackFinderFrame extends javax.swing.JFrame {
             List<String> keys = foundJList.getSelectedValuesList();
             
             for(String key: keys) {
-                String[] sa = key.split(" \\(");
-                foundAudioInfoList.addAll(recordMap.get(sa[0]));
+                // tjis should be done better using indexof and substring
+                if(key.contains(" || ")) {
+                    String[] sa1 = key.split(" || ");
+                    key = sa1[1];
+                }
+                
+                String[] sa2 = key.split(" \\(");
+                foundAudioInfoList.addAll(recordMap.get(sa2[0]));
             }
         } 
         
@@ -592,16 +598,16 @@ public class TrackFinderFrame extends javax.swing.JFrame {
                     String searchIn = "";
                     
                     if(searchBy == 1) {
-                        searchIn = " || " + audioInfo.getArtist();
+                        searchIn = audioInfo.getArtist() + " || ";
                     } else if(searchBy == 2) {
-                        searchIn = " || " + audioInfo.getGenre();
+                        searchIn = audioInfo.getGenre()  + " || ";
                     } else if(searchBy == 3) {
-                        searchIn = " || " + audioInfo.getAlbum();
+                        searchIn = audioInfo.getAlbum() + " || ";
                     } else if(searchBy == 4) {
-                        searchIn = " || " + audioInfo.getYear();
+                        searchIn = audioInfo.getYear() + " || ";
                     }
                     
-                    model.addElement(audioInfo + searchIn);
+                    model.addElement(searchIn + audioInfo);
                 } catch (Exception ex) {
                     Logger.getLogger(TrackFinderFrame.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -618,16 +624,16 @@ public class TrackFinderFrame extends javax.swing.JFrame {
                     String searchIn = "";
                     
                     if(searchBy == 1) {
-                        searchIn = " || " + audioInfo.getArtist();
+                        searchIn = audioInfo.getArtist() + " || ";
                     } else if(searchBy == 2) {
-                        searchIn = " || " + audioInfo.getGenre();
+                        searchIn = audioInfo.getGenre()  + " || ";
                     } else if(searchBy == 3) {
-                        searchIn = " || " + audioInfo.getAlbum();
+                        searchIn = audioInfo.getAlbum() + " || ";
                     } else if(searchBy == 4) {
-                        searchIn = " || " + audioInfo.getYear();
+                        searchIn = audioInfo.getYear() + " || ";
                     }
                     
-                    model.addElement(audioInfo + searchIn);
+                    model.addElement(searchIn + audioInfo);
                 } catch (Exception ex) {
                     Logger.getLogger(TrackFinderFrame.class.getName()).log(Level.SEVERE, null, ex);
                 }
