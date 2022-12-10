@@ -55,8 +55,8 @@ public class SpotifyDatasetLoader {
             br.readLine(); // read header
             
             int i = 0;
-            int directoryNumber = 0;
             int albumCount = 0;
+            int folderCount = 0;
             
             ArrayList<AudioInfo> trackList;
             int genreIndex;
@@ -93,7 +93,7 @@ public class SpotifyDatasetLoader {
                     albumMap.put(albumId, trackList);
                 }
                                 
-                String dummyDirectory = "!Spotify" + String.format("%06d", albumCount);
+                String dummyDirectory = "!Spotify" + String.format("%06d", folderCount);
                 String sha10hex = CassetteFlowUtil.get10CharacterHash(filename);
                 File dummyFile = new File(dummyDirectory, filename);
                 
@@ -105,6 +105,12 @@ public class SpotifyDatasetLoader {
                 trackList.add(audioInfo);
                 
                 i++;
+                
+                // add 400 tracks to each dummy folder
+                if(i%501 == 0) {
+                    folderCount++;
+                }
+                
                 if(i%10000 == 0) {
                     System.out.println(i + " Lines Processed ...");
                 }
@@ -144,7 +150,7 @@ public class SpotifyDatasetLoader {
         do {
             ArrayList<AudioInfo> albumList = (ArrayList<AudioInfo>)values[generator.nextInt(values.length)];
             
-            if (albumList.size() > 5) { // only take albums with at least 4 tracks
+            if (albumList.size() > 5) { // only take albums with at least 5 tracks
                 for (AudioInfo audioInfo : albumList) {
                     String key = audioInfo.getHash10C();
                     if (!audioInfoDB.containsKey(key)) {

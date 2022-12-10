@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
 package cassetteflow;
 
 import java.util.ArrayList;
@@ -559,6 +555,7 @@ public class TrackFinderFrame extends javax.swing.JFrame {
                 
                 for (AudioInfo audioInfo : cassetteFlow.audioInfoDB.values()) {
                     String folder = CassetteFlowUtil.getParentDirectoryName(audioInfo.getFile());
+                    
                     if(folderMap.containsKey(folder)) {
                         audioInfoList = folderMap.get(folder);
                         audioInfoList.add(audioInfo);
@@ -605,6 +602,9 @@ public class TrackFinderFrame extends javax.swing.JFrame {
                         searchIn = audioInfo.getAlbum() + " || ";
                     } else if(searchBy == 4) {
                         searchIn = audioInfo.getYear() + " || ";
+                    } else if(searchBy == 5) {
+                        String folder = CassetteFlowUtil.getParentDirectoryName(audioInfo.getFile());
+                        searchIn = folder + " || ";
                     }
                     
                     model.addElement(searchIn + audioInfo);
@@ -615,7 +615,7 @@ public class TrackFinderFrame extends javax.swing.JFrame {
             
             foundLabel.setText(foundAudioInfoList.size() + " tracks");
         } else {
-            System.out.println("Display limit excedded. Only showing 1000 found entries ...");
+            System.out.println("Display limit exceeded. Only showing RECORD_LIMIT entries ...");
             
             for(int i = 0; i < RECORD_LIMIT; i++) {
                 try {
@@ -631,6 +631,9 @@ public class TrackFinderFrame extends javax.swing.JFrame {
                         searchIn = audioInfo.getAlbum() + " || ";
                     } else if(searchBy == 4) {
                         searchIn = audioInfo.getYear() + " || ";
+                    } else if(searchBy == 5) {
+                        String folder = CassetteFlowUtil.getParentDirectoryName(audioInfo.getFile());
+                        searchIn = folder + " || ";
                     }
                     
                     model.addElement(searchIn + audioInfo);
@@ -656,6 +659,8 @@ public class TrackFinderFrame extends javax.swing.JFrame {
         for (String record : recordSet) {
             try {
                 int tracks = recordMap.get(record).size();
+                
+                if(tracks <= 1) continue; // 12/8/2022 tempt bug fix to not display folders with only 1 track 
                 
                 if(record.isBlank()) {
                     if(type.equals("years")) {
