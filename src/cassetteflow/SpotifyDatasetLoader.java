@@ -66,6 +66,7 @@ public class SpotifyDatasetLoader {
             
             while((line = br.readLine()) != null) {
                 String[] sa = line.split(splitBy);
+                String title = sa[0];
                 String albumId = sa[1];
                 String album = sa[2];
                 String artist = sa[3];
@@ -98,6 +99,7 @@ public class SpotifyDatasetLoader {
                 File dummyFile = new File(dummyDirectory, filename);
                 
                 audioInfo = new AudioInfo(dummyFile, sha10hex, length, lengthAsTime, 323);
+                audioInfo.setTitle(title);
                 audioInfo.setArtist(artist);
                 audioInfo.setGenre(genre);
                 audioInfo.setAlbum(album);

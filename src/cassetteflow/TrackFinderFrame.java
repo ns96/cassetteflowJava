@@ -74,6 +74,8 @@ public class TrackFinderFrame extends javax.swing.JFrame {
         searchProgressBar = new javax.swing.JProgressBar();
         formatComboBox = new javax.swing.JComboBox<>();
         viewAllButton = new javax.swing.JButton();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        trackInfoTextArea = new javax.swing.JTextArea();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Track Finder");
@@ -114,6 +116,11 @@ public class TrackFinderFrame extends javax.swing.JFrame {
             }
         });
 
+        foundJList.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+                foundJListValueChanged(evt);
+            }
+        });
         jScrollPane1.setViewportView(foundJList);
 
         formatComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "ALL", "MP3", "FLAC" }));
@@ -125,6 +132,11 @@ public class TrackFinderFrame extends javax.swing.JFrame {
             }
         });
 
+        trackInfoTextArea.setEditable(false);
+        trackInfoTextArea.setColumns(20);
+        trackInfoTextArea.setRows(5);
+        jScrollPane2.setViewportView(trackInfoTextArea);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -132,28 +144,27 @@ public class TrackFinderFrame extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(addToMainJListButton)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jLabel1)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(foundLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(searchProgressBar, javax.swing.GroupLayout.DEFAULT_SIZE, 174, Short.MAX_VALUE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(viewAllButton))
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(searchByComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(searchTextField)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(formatComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(searchByComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(searchButton)
-                            .addComponent(closeButton)))
-                    .addComponent(jScrollPane1))
+                        .addComponent(searchTextField)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(formatComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(searchButton))
+                    .addComponent(jScrollPane1)
+                    .addComponent(jScrollPane2)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(addToMainJListButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jLabel1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(foundLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(searchProgressBar, javax.swing.GroupLayout.PREFERRED_SIZE, 176, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(viewAllButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(closeButton)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -167,18 +178,21 @@ public class TrackFinderFrame extends javax.swing.JFrame {
                         .addComponent(searchButton)
                         .addComponent(formatComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 278, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(6, 6, 6)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(searchProgressBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addContainerGap())
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(closeButton)
-                        .addComponent(addToMainJListButton)
-                        .addComponent(jLabel1)
-                        .addComponent(foundLabel)
-                        .addComponent(viewAllButton))))
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 280, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 118, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(addToMainJListButton)
+                            .addComponent(jLabel1)
+                            .addComponent(foundLabel))
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(viewAllButton)
+                            .addComponent(closeButton)))
+                    .addComponent(searchProgressBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
         );
 
         pack();
@@ -195,6 +209,7 @@ public class TrackFinderFrame extends javax.swing.JFrame {
      */
     private void searchButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchButtonActionPerformed
         viewAll = false;
+        trackInfoTextArea.setText("");
         
         final int searchBy = searchByComboBox.getSelectedIndex();
         final String searchTerm = searchTextField.getText().toLowerCase().trim();
@@ -256,44 +271,23 @@ public class TrackFinderFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_searchButtonActionPerformed
     
     /**
-     * Add the found tracks to the tracklist in the main GUI track list
+     * Add the found tracks to the main GUI track list
      * 
      * @param evt 
      */
     private void addToMainJListButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addToMainJListButtonActionPerformed
         if(viewAll) {
-            int index = searchByComboBox.getSelectedIndex();
-            TreeMap<String, ArrayList<AudioInfo>> recordMap = null;
-            
-            if (index == 1) {
-                recordMap = artistMap;
-            } else if (index == 2) {
-                recordMap = genreMap;
-            } else if (index == 3) {
-                recordMap = albumMap;
-            } else if (index == 4) {
-                recordMap = yearMap;
-            } else if (index == 5) {
-                recordMap = folderMap;
-            } else {
-                System.out.println("No map records ...");
-            } 
-            
-            if(recordMap == null) {return;}
+            TreeMap<String, ArrayList<AudioInfo>> recordMap = getRecordMap();
+            if(recordMap == null) 
+                return;
             
             foundAudioInfoList = new ArrayList<>();
             
-            List<String> keys = foundJList.getSelectedValuesList();
+            List<String> values = foundJList.getSelectedValuesList();
             
-            for(String key: keys) {
-                // tjis should be done better using indexof and substring
-                if(key.contains(" || ")) {
-                    String[] sa1 = key.split(" || ");
-                    key = sa1[1];
-                }
-                
-                String[] sa2 = key.split(" \\(");
-                foundAudioInfoList.addAll(recordMap.get(sa2[0]));
+            for(String value: values) {
+                String key = getRecordMapKey(value);
+                foundAudioInfoList.addAll(recordMap.get(key));
             }
         } 
         
@@ -303,8 +297,49 @@ public class TrackFinderFrame extends javax.swing.JFrame {
             cassetteFlow.audioInfoList.addAll(foundAudioInfoList.subList(0, RECORD_LIMIT));
         }
     
+        // call this method to update the UI with the added values
         cassetteFlowFrame.addAudioInfoToJList();
     }//GEN-LAST:event_addToMainJListButtonActionPerformed
+    
+    /**
+     * Based on the selected value in the jlist, return a key for the record map
+     * @param value
+     * @return 
+     */
+    private String getRecordMapKey(String value) {
+        // this should be done better using indexof and substring
+        if (value.contains(" || ")) {
+            String[] sa1 = value.split(" || ");
+            value = sa1[1];
+        }
+
+        return value.split(" \\(")[0];
+    }
+    
+    /**
+     * Based on what we searching by get the correct record map
+     * @return 
+     */
+    private TreeMap<String, ArrayList<AudioInfo>> getRecordMap() {
+        int index = searchByComboBox.getSelectedIndex();
+        TreeMap<String, ArrayList<AudioInfo>> recordMap = null;
+
+        if (index == 1) {
+            recordMap = artistMap;
+        } else if (index == 2) {
+            recordMap = genreMap;
+        } else if (index == 3) {
+            recordMap = albumMap;
+        } else if (index == 4) {
+            recordMap = yearMap;
+        } else if (index == 5) {
+            recordMap = folderMap;
+        } else {
+            System.out.println("No map records ...");
+        }
+        
+        return recordMap;
+    }
     
     /**
      * Find all the parent folders for the audio files
@@ -339,6 +374,26 @@ public class TrackFinderFrame extends javax.swing.JFrame {
     private void searchTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchTextFieldActionPerformed
         searchButtonActionPerformed(evt);
     }//GEN-LAST:event_searchTextFieldActionPerformed
+
+    /**
+     * Keep track of selections so we can display track information
+     * 
+     * @param evt 
+     */
+    private void foundJListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_foundJListValueChanged
+        if(evt.getValueIsAdjusting()) return;
+
+        if(!viewAll) {
+            int index = foundJList.getSelectedIndex();
+            if(index != -1) {
+                AudioInfo audioInfo = foundAudioInfoList.get(index);
+                trackInfoTextArea.setText(audioInfo.getFullInfo());
+            }
+        } else {
+            String value = foundJList.getSelectedValue();
+            trackInfoTextArea.setText(value + "\n");
+        }
+    }//GEN-LAST:event_foundJListValueChanged
     
     /**
      * Find and display all artist
@@ -615,7 +670,7 @@ public class TrackFinderFrame extends javax.swing.JFrame {
             
             foundLabel.setText(foundAudioInfoList.size() + " tracks");
         } else {
-            System.out.println("Display limit exceeded. Only showing RECORD_LIMIT entries ...");
+            System.out.println("Display limit exceeded. Only showing " + RECORD_LIMIT + " entries ...");
             
             for(int i = 0; i < RECORD_LIMIT; i++) {
                 try {
@@ -722,10 +777,12 @@ public class TrackFinderFrame extends javax.swing.JFrame {
     private javax.swing.JLabel foundLabel;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JButton searchButton;
     private javax.swing.JComboBox<String> searchByComboBox;
     private javax.swing.JProgressBar searchProgressBar;
     private javax.swing.JTextField searchTextField;
+    private javax.swing.JTextArea trackInfoTextArea;
     private javax.swing.JButton viewAllButton;
     // End of variables declaration//GEN-END:variables
 

@@ -16,6 +16,7 @@ public class AudioInfo implements Serializable {
     private String lengthAsTime;
     private int bitRate;
     private String parentDirectoryName = "";
+    private String title; // the title from the mp3/flac tags
     private String genre;
     private String artist;
     private String album;
@@ -62,14 +63,27 @@ public class AudioInfo implements Serializable {
     }
     
     public String getName() {
-        return file.getName() + " (" + lengthAsTime + ")";
+        if(file != null) {
+            return file.getName() + " (" + lengthAsTime + ")";
+        } else {
+            // we should have a title then
+            return title + " (" + lengthAsTime + ")";
+        }
     }
     
     public String getBasicName() {
         String fn = file.getName();
         return fn.substring(0, fn.lastIndexOf("."));
     }
-
+    
+    public String getTitle() {
+        return title;
+    }
+    
+    public void setTitle(String title) {
+        this.title = title;
+    }
+    
     public String getGenre() {
         return genre;
     }
@@ -113,7 +127,19 @@ public class AudioInfo implements Serializable {
         if(!parentDirectoryName.isEmpty()) {
             return "[" + parentDirectoryName + "] " + file.getName() + " (" + lengthAsTime + ")";
         } else {
-            return file.getName() + " (" + lengthAsTime + ")";
+            return getName();
         }
+    }
+    
+    /**
+     * Return the full info for the tracks
+     * 
+     * @return 
+     */
+    public String getFullInfo() {
+        String info = "File: " + getName() + "\nTitle: " + title + "\nArtist: " + artist + "\nAlbum: " + 
+                album + "\nYear: " + year + "\nGenre: " + genre;
+        
+        return info;
     }
 }

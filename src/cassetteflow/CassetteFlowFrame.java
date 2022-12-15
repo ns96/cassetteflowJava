@@ -808,7 +808,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.1.0b17 (12/10/2022)");
+        setTitle("CassetteFlow v 1.1.0b18 (12/15/2022)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jTabbedPane1.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -1003,7 +1003,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
 
         jLabel2.setText("Tape Length");
 
-        tapeLengthComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "60 Minutes", "90 Minutes", "110 Minutes", "120 Minutes", "180 Minutes (R2R)", "240 Minutes (R2R)", "360 Minutes (R2R)" }));
+        tapeLengthComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "60 Minutes", "90 Minutes", "110 Minutes", "120 Minutes", "150 Minutes (R2R)", "180 Minutes (R2R)", "360 Minutes (R2R)" }));
         tapeLengthComboBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 tapeLengthComboBoxActionPerformed(evt);

@@ -1298,6 +1298,7 @@ public class CassetteFlow {
             
             headerAndTagInfo.length = audioHeader.getTrackLength();
             headerAndTagInfo.bitrate = (int)audioHeader.getBitRateAsNumber()*1000;
+            headerAndTagInfo.title = tag.getFirst(FieldKey.TITLE);
             headerAndTagInfo.artist = tag.getFirst(FieldKey.ARTIST);
             headerAndTagInfo.genre = tag.getFirst(FieldKey.GENRE);
             headerAndTagInfo.album = tag.getFirst(FieldKey.ALBUM);
@@ -1498,6 +1499,7 @@ public class CassetteFlow {
         String lengthAsTime = CassetteFlowUtil.getTimeString(length);
 
         AudioInfo audioInfo = new AudioInfo(file, sha10hex, length, lengthAsTime, bitrate);
+        audioInfo.setTitle(headerAndTagInfo.title);
         audioInfo.setArtist(headerAndTagInfo.artist);
         audioInfo.setAlbum(headerAndTagInfo.album);
         audioInfo.setGenre(headerAndTagInfo.genre);

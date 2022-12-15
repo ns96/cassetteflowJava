@@ -9,6 +9,7 @@ package cassetteflow;
 public class HeaderAndTagInfo {
     public int length = -1; // length of the mp3/flack track in seconds
     public int bitrate = -1; // the bit rate
+    public String title; // the track title
     public String artist; // the artist
     public String album; // the album
     public String genre; // the genre
