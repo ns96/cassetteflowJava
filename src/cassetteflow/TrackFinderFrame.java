@@ -312,8 +312,9 @@ public class TrackFinderFrame extends javax.swing.JFrame {
             String[] sa1 = value.split(" || ");
             value = sa1[1];
         }
-
-        return value.split(" \\(")[0];
+        
+        int end = value.lastIndexOf(" (");
+        return value.substring(0, end);
     }
     
     /**
@@ -381,17 +382,39 @@ public class TrackFinderFrame extends javax.swing.JFrame {
      * @param evt 
      */
     private void foundJListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_foundJListValueChanged
-        if(evt.getValueIsAdjusting()) return;
-
+        if(evt.getValueIsAdjusting()) return; // we are adjusting
+        
+        int index = foundJList.getSelectedIndex();
+        if(index == -1) return;
+        
         if(!viewAll) {
-            int index = foundJList.getSelectedIndex();
-            if(index != -1) {
-                AudioInfo audioInfo = foundAudioInfoList.get(index);
-                trackInfoTextArea.setText(audioInfo.getFullInfo());
-            }
+            AudioInfo audioInfo = foundAudioInfoList.get(index);
+            trackInfoTextArea.setText(audioInfo.getFullInfo());
         } else {
-            String value = foundJList.getSelectedValue();
-            trackInfoTextArea.setText(value + "\n");
+            trackInfoTextArea.setText("");
+            
+            TreeMap<String, ArrayList<AudioInfo>> recordMap = getRecordMap();
+            String key = getRecordMapKey(foundJList.getSelectedValue());
+            
+            ArrayList<AudioInfo> trackList = recordMap.get(key);
+            Collections.sort(trackList, (o1, o2) -> o1.toString().compareTo(o2.toString()));
+            
+            int max = trackList.size();
+            boolean trimmed = false;
+            
+            // only display the fist 100 tracks
+            if(max > 100) {
+                max = 100;
+                trimmed = true;
+            }
+            
+            for(int i = 0; i < max; i++) {
+                trackInfoTextArea.append( (i + 1) + "\t " + trackList.get(i).toString() + "\n");
+            }
+            
+            if(trimmed) {
+                trackInfoTextArea.append(trackList.size() + "\t Only displaying fist 100 tracks ...");
+            }
         }
     }//GEN-LAST:event_foundJListValueChanged
     
@@ -762,10 +785,8 @@ public class TrackFinderFrame extends javax.swing.JFrame {
         //</editor-fold>
 
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new TrackFinderFrame().setVisible(true);
-            }
+        java.awt.EventQueue.invokeLater(() -> {
+            new TrackFinderFrame().setVisible(true);
         });
     }
 
