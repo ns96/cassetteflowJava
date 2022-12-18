@@ -248,7 +248,7 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
 
             if (audioInfo != null) {
                 totalTime += audioInfo.getLength() + 4;
-                String trackName = "[" + trackCount + "] " + audioInfo;
+                String trackName = "[" + trackCount + "] " + audioInfo.toString();
                 model.addElement(trackName);
 
                 // see if there is additional track information if this 

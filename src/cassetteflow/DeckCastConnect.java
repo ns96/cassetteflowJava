@@ -11,8 +11,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -22,6 +24,8 @@ import org.json.JSONObject;
  */
 public class DeckCastConnect {
     private final CassetteFlowFrame cassetteFlowFrame;
+    private final CassetteFlow cassetteFlow;
+    
     private Socket socket;
     private boolean connected = false;
     
@@ -38,8 +42,13 @@ public class DeckCastConnect {
     private int currentTapeTime = RESET_TIME;
     private boolean playing = false;
     
-    public DeckCastConnect(CassetteFlowFrame cassetteFlowFrame, String url, String pin) throws URISyntaxException {
+    // create a dct play for the que list
+    private ArrayList<String> sideADCTList;
+    private ArrayList<AudioInfo> queList;
+    
+    public DeckCastConnect(CassetteFlowFrame cassetteFlowFrame, CassetteFlow cassetteFlow, String url, String pin) throws URISyntaxException {
         this.cassetteFlowFrame = cassetteFlowFrame;
+        this.cassetteFlow = cassetteFlow;
         this.serverUrl = url;
         this.streamPin = pin;
         
@@ -86,7 +95,7 @@ public class DeckCastConnect {
      * @param obj 
      */
     private void processMessage(JSONObject obj) throws JSONException {
-        System.out.println(obj.toString(1));
+        //System.out.println(obj.toString(1));
         
         if(obj.has("videoInfoLiteHTML")) {
             // see if to return based on pin or video id
@@ -106,6 +115,29 @@ public class DeckCastConnect {
             
             // reset the tapeTime variable
             currentTapeTime = RESET_TIME;
+        } else if(obj.has("queListData")) {
+            sideADCTList = new ArrayList<>();
+            queList = new ArrayList<>();
+            
+            JSONArray queArray = obj.getJSONArray("queListData");
+            for(int i = 0; i < queArray.length(); i++) {
+                String[] record = queArray.getString(i).split("\t");
+                String videoId = record[0];
+                String title = record[1];
+                int length = Integer.parseInt(record[2]);
+                String lengthAsTime = CassetteFlowUtil.getTimeString(length);
+                
+                AudioInfo audioInfo = new AudioInfo(null, videoId, length, lengthAsTime, 128);
+                audioInfo.setTitle(title);
+                queList.add(audioInfo);
+                
+                // store this in the audio info DB
+                cassetteFlow.audioInfoDB.put(videoId, audioInfo);
+            }
+            
+            // populate the dct list and store a dummy record
+            sideADCTList = cassetteFlow.createDCTArrayListForSide("STR0A", queList, 4);
+            cassetteFlow.addToTapeDB("STR0", queList, null, false);   
         }
     }
     
@@ -208,7 +240,7 @@ public class DeckCastConnect {
     // test the functionality
     public static void main(String[] args) {
         try {
-            DeckCastConnect dcc = new DeckCastConnect(null, "http://127.0.0.1:5054/", "0001");
+            DeckCastConnect dcc = new DeckCastConnect(null, null, "http://127.0.0.1:5054/", "0001");
             
             // wait for user to press key to exit program
             BufferedReader in = new BufferedReader(new InputStreamReader(System.in));

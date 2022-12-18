@@ -3594,7 +3594,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         try {
             String streamUrl = streamComboBox.getSelectedItem().toString();
             String streamPin = streamPinTextField.getText();
-            deckCastConnect = new DeckCastConnect(this, streamUrl, streamPin);            
+            deckCastConnect = new DeckCastConnect(this, cassetteFlow, streamUrl, streamPin);            
         } catch (URISyntaxException ex) {
             Logger.getLogger(DeckCastConnect.class.getName()).log(Level.SEVERE, null, ex);
         }
