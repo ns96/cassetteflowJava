@@ -99,11 +99,11 @@ public class DeckCastConnect {
      */
     private void processMessage(JSONObject obj) throws JSONException {
         //System.out.println(obj.toString(1));
-        //if(!streamPin.equals(obj.getString("pin"))) return;
+        // make sure the client pin matches
+        if(!obj.has("pin") || !streamPin.equals(obj.getString("pin"))) return;
         
         if(obj.has("videoInfoLiteHTML")) {
-            // see if to return based on pin or video id
-            if(!streamPin.equals(obj.getString("pin"))) return;
+            // see if to return based if video id is the same
             if(streamId.equals(obj.getString("videoId"))) return;
             
             streamTitle = obj.getString("videoTitle");
@@ -151,6 +151,8 @@ public class DeckCastConnect {
             //String message = "QueList Loaded: " + queList.size() + " Tracks / " + sideADCTList.size() + " seconds ...";
             String queListHtml = obj.getString("queListHTML");
             cassetteFlowFrame.updateStreamEditorPane(queListHtml);
+        } else {
+            System.out.println("Unused message\n" + obj.toString(2));
         }
     }
     
@@ -221,9 +223,9 @@ public class DeckCastConnect {
                 String playTimeS = line[3];
                 
                 // get the new start time
-                int startTime;
+                int playTime;
                 try {
-                    startTime = Integer.parseInt(playTimeS);
+                    playTime = Integer.parseInt(playTimeS);
                 } catch(NumberFormatException nfe) {
                     if(playTimeS.contains("M")) {
                         System.out.println("Mute section ...");
@@ -254,12 +256,12 @@ public class DeckCastConnect {
 
                     Thread.sleep(1000);
 
-                    if (startTime > 0) {
+                    if (playTime > 0) {
                         obj = new JSONObject();
                         obj.put("data", "Player " + player + " State Changed");
                         obj.put("player", player);
                         obj.put("state", 1);
-                        obj.put("ctime", startTime);
+                        obj.put("ctime", playTime);
 
                         socket.emit("my event", obj);
                         System.out.println(obj.toString(2));
@@ -267,17 +269,17 @@ public class DeckCastConnect {
 
                     playing = true;
                 } else if(diff > 5) {
-                    System.out.println("\nChanging Track Start Time " + startTime);
+                    System.out.println("\nSeekig Track Start Time @ " + playTime);
                     
                     JSONObject obj = new JSONObject();
                         obj.put("data", "Player " + player + " State Changed");
                         obj.put("player", player);
                         obj.put("state", 1);
-                        obj.put("ctime", startTime);
+                        obj.put("ctime", playTime);
                         socket.emit("my event", obj);
                 }
                 
-                cassetteFlowFrame.updateStreamPlaytime(startTime);
+                cassetteFlowFrame.updateStreamPlaytime(playTime);
             } else {
                 playing = false;
             }
