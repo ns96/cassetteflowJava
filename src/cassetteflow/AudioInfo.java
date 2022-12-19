@@ -21,6 +21,7 @@ public class AudioInfo implements Serializable {
     private String artist;
     private String album;
     private String year;
+    private String streamId;
     
     public AudioInfo(File file, String hash10C, int length, String lengthAsTime, int bitRate) {
         this.file = file;
@@ -120,6 +121,14 @@ public class AudioInfo implements Serializable {
 
     public void setYear(String year) {
         this.year = year;
+    }
+    
+    public String getStreamId() {
+        return streamId;
+    }
+
+    public void setStreamId(String streamId) {
+        this.streamId = streamId;
     }
     
     @Override
