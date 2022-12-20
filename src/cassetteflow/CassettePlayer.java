@@ -285,6 +285,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
             
             if(line.length() == 29 && validCharacters(line)) {
                 //System.out.println("Line record: " + line);
+                logLineCount++;
                 
                 if(!downloading) {
                     // check to see if this line is a DCT line record
@@ -305,6 +306,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                                 if(deckCastConnect != null) {
                                     int tapeTime = Integer.parseInt(dctLine.split(" ")[2]);
                                     deckCastConnect.playStream(tapeTime);
+                                    deckCastConnect.setDataErrors(dataErrors, logLineCount);
                                 }
                             }
                         } else {
@@ -340,7 +342,6 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                     }
                 }
                 
-                logLineCount++;
                 stopRecords = 0;
             } else if(line.contains("### NOCARRIER")) {                
                 String stopMessage = "Playback Stopped {# errors " + dataErrors +  "/" + logLineCount + "} ...";

@@ -809,7 +809,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.1.0b21 (12/19/2022)");
+        setTitle("CassetteFlow v 1.1.0b22 (12/20/2022)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jTabbedPane1.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -1442,8 +1442,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             }
         });
 
-        streamPlaytimeLabel.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        streamPlaytimeLabel.setText("Play Time: 0000/0000");
+        streamPlaytimeLabel.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        streamPlaytimeLabel.setText("Play Time: 00:00:00/00:00:00 [000]");
 
         streamDisconnectButton.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         streamDisconnectButton.setText("DISCONNECT");
@@ -3845,18 +3845,19 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         this.streamPlayer = streamPlayer;
         
         // update the timer label
-        updateStreamPlaytime(0);
+        updateStreamPlaytime(0, "");
     }
     
     /**
      * Update the stream play time
-     * @param streamPlaytime 
+     * @param streamPlaytime The stream playtime
+     * @param track The track number from a que list
      */
-    public void updateStreamPlaytime(int streamPlaytime) {
+    public void updateStreamPlaytime(int streamPlaytime, String track) {
         // update the timer label
         String totalTimeString = CassetteFlowUtil.getTimeString(streamTotalTime);
         String playTimeString = CassetteFlowUtil.getTimeString(streamPlaytime);        
-        streamPlaytimeLabel.setText("Play Time: " + playTimeString + "/" + totalTimeString);
+        streamPlaytimeLabel.setText("Play Time: " + playTimeString + "/" + totalTimeString + " " + track);
     }
     
     public void setStreamPlayerConnected() {
