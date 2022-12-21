@@ -50,6 +50,7 @@ public class DeckCastConnect {
     private ArrayList<AudioInfo> queList;
     private boolean queListLoaded = false;
     private String queVideoId = "";
+    private String oldQueVideoId = "";
     private String queTrack = "";
     private String queListHtml = "";
     
@@ -121,20 +122,30 @@ public class DeckCastConnect {
             totalPlaytime = obj.getInt("videoTime");
 
             String infoHtml = obj.getString("videoInfoLiteHTML");
-            if (cassetteFlowFrame != null) {
-                cassetteFlowFrame.setStreamInformation(streamId, totalPlaytime, player);
-                
-                if(queListLoaded) {
-                    String html = infoHtml + "<br><hr>" + queListHtml;
-                    cassetteFlowFrame.updateStreamEditorPane(html);
-                } else {
-                    cassetteFlowFrame.updateStreamEditorPane(infoHtml);
-                }
-            }
             
-            // reset the tapeTime variable
-            if(queList == null) {
+            cassetteFlowFrame.setStreamInformation(streamId, totalPlaytime, player);
+
+            if (queListLoaded) {
+                String html = infoHtml + "<br><hr>" + queListHtml;
+                cassetteFlowFrame.updateStreamEditorPane(html);
+            } else {
+                String sha10hex = CassetteFlowUtil.get10CharacterHash(streamTitle);
+                String lengthAsTime = CassetteFlowUtil.getTimeString(totalPlaytime);
+                
+                AudioInfo audioInfo = new AudioInfo(null, sha10hex, totalPlaytime, lengthAsTime, 128);
+                audioInfo.setTitle(streamTitle);
+                audioInfo.setStreamId(streamId);
+                currentAudioInfo = audioInfo;
+                
+                // store this in the audio info DB and the tape db
+                cassetteFlow.audioInfoDB.put(sha10hex, audioInfo);
+                queList = new ArrayList<>();
+                queList.add(audioInfo);
+                cassetteFlow.addToTapeDB("STR0", queList, null, false);
+                
                 currentTapeTime = RESET_TIME;
+                cassetteFlowFrame.updateStreamEditorPane(infoHtml);
+                cassetteFlowFrame.setPlayingCassetteID("STR0A");
             }
         } else if(obj.has("queListData")) {
             sideADCTList = new ArrayList<>();
@@ -166,6 +177,7 @@ public class DeckCastConnect {
             //String message = "QueList Loaded: " + queList.size() + " Tracks / " + sideADCTList.size() + " seconds ...";
             queListHtml = obj.getString("queListHTML");
             cassetteFlowFrame.updateStreamEditorPane(queListHtml);
+            cassetteFlowFrame.setPlayingCassetteID("STR0A");
         } else {
             System.out.println("Unused message\n" + obj.toString(2));
         }
@@ -186,8 +198,8 @@ public class DeckCastConnect {
                 } else {
                     stopStream();
                 }
-            } else {
-                playQuedTracks(tapeTime, diff);
+            } else if(sideADCTList != null) {
+                playQuedTracks(tapeTime);
             }
             
             // update the current time
@@ -195,7 +207,16 @@ public class DeckCastConnect {
             
             // if we are playing then update the counter
             if(playing && !queListLoaded) {
-                cassetteFlowFrame.updateStreamPlaytime(currentTapeTime, "");
+                cassetteFlowFrame.updateStreamPlaytime(currentTapeTime, "[1]");
+                
+                // update the decode panel in the main UI
+                // update the UI indicating playtime
+                String message = currentAudioInfo.getName() + " [1]\n"
+                    + "Playtime From Tape: " + String.format("%04d", tapeTime) + " / " + String.format("%04d", currentAudioInfo.getLength()) + "\n"
+                    + "Tape Counter: " + tapeTime + " (" + CassetteFlowUtil.getTimeString(tapeTime) + ")\n"
+                    + "Data Errors: " + dataErrors +  "/" + logLineCount;
+
+                cassetteFlowFrame.setPlaybackInfo(message, false, "");
             }
         }
     } 
@@ -217,6 +238,14 @@ public class DeckCastConnect {
             socket.emit("my event", obj);
 
             playing = true;
+            
+            // update the decode UI with the track thats playing
+            String message = "Stream ID: " + currentAudioInfo.getStreamId() + "\n"
+                    + currentAudioInfo.getName() + "\n"
+                    + "Start Time @ " + tapeTime + " | Track Number: 1";
+
+            cassetteFlowFrame.setPlayingAudioInfo(message);
+            cassetteFlowFrame.setPlayingAudioTrack("1");
         } catch (JSONException ex) {
             Logger.getLogger(DeckCastConnect.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -224,10 +253,9 @@ public class DeckCastConnect {
     
     /**
      * Play the Qued tracks on the server
-     * @param diff
      * @param tapeTime 
      */
-    public void playQuedTracks(int tapeTime, int diff) {
+    public void playQuedTracks(int tapeTime) {
         try {
             if(tapeTime < sideADCTList.size()) {
                 String dctLine = sideADCTList.get(tapeTime);
@@ -264,6 +292,7 @@ public class DeckCastConnect {
                 }
                 
                 if(!trackId.equals(queVideoId)) {
+                    muteRecords = 0;
                     currentAudioInfo = cassetteFlow.audioInfoDB.get(trackId);
                     String videoId = currentAudioInfo.getStreamId();
                     System.out.println("\nPlaying Track: " + track + " -- " + currentAudioInfo);
@@ -271,16 +300,20 @@ public class DeckCastConnect {
                     queTrack = track;
                     queVideoId = trackId;
 
-                    // send message to change the video and start it playing
-                    JSONObject obj = new JSONObject();
-                    obj.put("data", "Video Changed -- Player " + player);
-                    obj.put("uname", "Guest");
-                    obj.put("player", player);
-                    obj.put("videoId", videoId);
-                    socket.emit("my event", obj);
-                    System.out.println(obj.toString(2));
+                    // send message to change the video and start it playing if we change video
+                    JSONObject obj;
+                    if(!queVideoId.equals(oldQueVideoId)) {
+                        oldQueVideoId = queVideoId;
+                        obj = new JSONObject();
+                        obj.put("data", "Video Changed -- Player " + player);
+                        obj.put("uname", "Guest");
+                        obj.put("player", player);
+                        obj.put("videoId", videoId);
+                        socket.emit("my event", obj);
+                        System.out.println(obj.toString(2));
 
-                    Thread.sleep(1000);
+                        Thread.sleep(1000);
+                    }
 
                     if (playTime > 0) {
                         obj = new JSONObject();
@@ -293,30 +326,15 @@ public class DeckCastConnect {
                         System.out.println(obj.toString(2));
                     }
                     
-                    // update the UI which the track thats playing
-                    String message = "Audio ID: " + currentAudioInfo.getStreamId() + "\n" + 
+                    // update the decode UI with the track thats playing
+                    String message = "Stream ID: " + currentAudioInfo.getStreamId() + "\n" + 
                         currentAudioInfo.getName() + "\n" + 
                         "Start Time @ " + playTime + " | Track Number: " + track;
                     
                     cassetteFlowFrame.setPlayingAudioInfo(message);
+                    cassetteFlowFrame.setPlayingAudioTrack(track);
                     
                     playing = true;
-                } else if(diff > 5) {
-                    System.out.println("\nSeekig Track Start Time @ " + playTime);
-                    
-                    // update the UI which the track thats playing
-                    String message = "Audio ID: " + currentAudioInfo.getStreamId() + "\n" + 
-                        currentAudioInfo.getName() + "\n" + 
-                        "Start Time @ " + playTime + " | Track Number: " + track;
-                    
-                    cassetteFlowFrame.setPlayingAudioInfo(message);
-                    
-                    JSONObject obj = new JSONObject();
-                        obj.put("data", "Player " + player + " State Changed");
-                        obj.put("player", player);
-                        obj.put("state", 1);
-                        obj.put("ctime", playTime);
-                        socket.emit("my event", obj);
                 }
                 
                 cassetteFlowFrame.updateStreamPlaytime(playTime, "[ " + track + " ]");
@@ -358,6 +376,8 @@ public class DeckCastConnect {
                 // reset the que video id
                 if(queList == null) {
                     currentTapeTime = RESET_TIME;
+                } else {
+                    queVideoId = "";
                 }
             }
         } catch (JSONException ex) {
