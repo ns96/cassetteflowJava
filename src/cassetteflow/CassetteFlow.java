@@ -1304,6 +1304,7 @@ public class CassetteFlow {
             headerAndTagInfo.year = tag.getFirst(FieldKey.YEAR);
         } catch(IOException | CannotReadException | InvalidAudioFrameException | ReadOnlyFileException | TagException ex) {
             ex.printStackTrace();
+            return null;
         }
         
         return headerAndTagInfo;
@@ -1492,6 +1493,11 @@ public class CassetteFlow {
         String sha10hex = CassetteFlowUtil.get10CharacterHash(filename);
         
         HeaderAndTagInfo headerAndTagInfo = getHeaderAndTagInfo(file);
+        if(headerAndTagInfo == null) {
+            System.out.println("No header information for: " + file.getName());
+            return;
+        }
+        
         int length = headerAndTagInfo.length;
         int bitrate = headerAndTagInfo.bitrate;
         
