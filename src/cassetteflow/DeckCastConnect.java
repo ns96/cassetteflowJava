@@ -144,6 +144,8 @@ public class DeckCastConnect {
                 cassetteFlow.addToTapeDB("STR0", queList, null, false);
                 
                 currentTapeTime = RESET_TIME;
+                queListLoaded = false;
+                
                 cassetteFlowFrame.updateStreamEditorPane(infoHtml);
                 cassetteFlowFrame.setPlayingCassetteID("STR0A");
             }
@@ -374,7 +376,7 @@ public class DeckCastConnect {
                 System.out.println("Stopped Stream Playback ...");
                 
                 // reset the que video id
-                if(queList == null) {
+                if(!queListLoaded) {
                     currentTapeTime = RESET_TIME;
                 } else {
                     queVideoId = "";
