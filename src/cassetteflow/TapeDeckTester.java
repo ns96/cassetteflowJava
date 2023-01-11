@@ -37,8 +37,36 @@ public class TapeDeckTester {
     // the current line record
     private String currentLineRecord;
     
+    // private current side
+    private char currentSide = 'A'; // side A or B
+    private int sideAErrors = 0;
+    private int sideALineCount = 0;
+    private int sideBErrors = 0;
+    private int sideBLineCount = 0;
+    
     private static final DecimalFormat df = new DecimalFormat("0.0000");
-       
+   
+    /**
+     * Default constructor which just adds shutdown hook to terminate the minimodem process
+     */
+    public TapeDeckTester() {
+        System.out.println("Tape Deck Tester Version 1.1.0");
+        
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+        @Override
+        public void run() {
+            try {
+                Thread.sleep(200);
+                System.out.println("Shutting down minimodem ...");
+                process.destroy();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                e.printStackTrace();
+            }
+        }
+    });
+    }
+    
     /**
      * Return the current line record
      * @return 
@@ -144,21 +172,30 @@ public class TapeDeckTester {
         if(line != null) {
             line = line.trim();
             
-            if(line.length() == 29 && validCharacters(line)) {
-                //System.out.println("Line record: " + line);
+            if(line.length() == 29) {
                 logLineCount++;
-                currentLineRecord = processRecord(line);
+                updateSideLineCount();
+                
+                // check to see if all characters are valid
+                if(!validCharacters(line)) return;
+                
+                processRecord(line);
                 stopRecords = 0;
                 
                 if(logLineCount %10 == 0) {
                     String message = "CURRENT PROGRESS (errors/line records): " + dataErrors +  "/" + logLineCount + 
-                            " { " + getPercentError() + "% }";
+                            " { " + getPercentError() + "% }\n" +
+                            "SIDE A ERRORS: " + sideAErrors + "/"  + sideALineCount + "\t{ " + getSidePercentError('A') + "% }\n" +
+                            "SIDE B ERRORS: " + sideBErrors + "/"  + sideBLineCount + "\t{ " + getSidePercentError('B') + "% }\n";
+                    
                     System.out.println(message);
                 }
             } else if(line.contains("### NOCARRIER")) {
                 if(stopRecords == 0) {
                     String stopMessage = "PLAYBACK STOPPED {# Errors " + dataErrors +  "/" + logLineCount + 
-                        " | " + getPercentError() + "%} ...";
+                        " | " + getPercentError() + "%}\n" + 
+                        "SIDE A ERRORS: " + sideAErrors + "/"  + sideALineCount + "\t{ " + getSidePercentError('A') + "% }\n" +
+                        "SIDE B ERRORS: " + sideBErrors + "/"  + sideBLineCount + "\t{ " + getSidePercentError('B') + "% }\n";
                     
                     System.out.println("\n");
                     System.out.println(stopMessage);
@@ -179,6 +216,52 @@ public class TapeDeckTester {
         
         if(logLineCount != 0) 
             percent = ((double)dataErrors / (double)logLineCount)*100.0;
+        
+        return df.format(percent);
+    }
+    
+    /**
+     * Update the log line count for the side
+     */
+    public void updateSideLineCount() {
+        if(currentSide == 'A') {
+            sideALineCount++;
+        } else {
+            sideBLineCount++;
+        }
+    }
+    
+    /**
+     * Update the errors for the side
+     */
+    public void updateSideErrors() {
+        if(currentSide == 'A') {
+            sideAErrors++;
+        } else {
+            sideBErrors++;
+        }
+    }
+    
+    /**
+     * Get the percent error for side A or B
+     * @param side
+     * @return 
+     */
+    public String getSidePercentError(char side) {
+        double percent = 0.0;
+        int errors;
+        int lineCount;
+        
+        if(side == 'A') {
+            errors = sideAErrors;
+            lineCount = sideALineCount;
+        } else {
+            errors = sideBErrors;
+            lineCount = sideBLineCount;
+        }
+        
+        if(lineCount != 0) 
+            percent = ((double)errors / (double)lineCount)*100.0;
         
         return df.format(percent);
     }
@@ -234,6 +317,12 @@ public class TapeDeckTester {
         // check to see what tape ID is DCT_0
         if(!tapeId.equals("DCT0A") && !tapeId.equals("DCT0B")) {
             return printError("\nInvalid Tape ID @: " + line + "\n");
+        } else {
+            if(tapeId.contains("0A")) {
+                currentSide = 'A';
+            } else {
+                currentSide = 'B';
+            }
         }
         
         if(!audioId.equals("aaaaaaaaaa")) {
@@ -251,8 +340,22 @@ public class TapeDeckTester {
     private String printError(String error) {
         System.out.println(error);
         dataErrors++;
+        updateSideErrors();
         
         return "DATA ERROR";
+    }
+    
+    /**
+     * Method to get the time in seconds as a string
+     * 
+     * @param totalSecs
+     * @return 
+     */
+    private String getTimeString(int totalSecs) {
+        int hours = totalSecs / 3600;
+        int minutes = (totalSecs % 3600) / 60;
+        int seconds = totalSecs % 60;
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
     }
      
     // stop reading logfile and playing
