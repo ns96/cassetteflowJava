@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.DecimalFormat;
+import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -23,6 +24,9 @@ public class TapeDeckTester {
     // keep track of the number of read errors after a complete line record 
     // has been read in.
     private int dataErrors = 0;
+    
+    // keep track of data length errors. Those usually occurs at the start and stop of the tape
+    private int dataLengthErrors = 0;
     
     // variables used for calling minimodem
     private final String COMMAND_MINIMODEM = "minimodem -r 1200";
@@ -50,21 +54,7 @@ public class TapeDeckTester {
      * Default constructor which just adds shutdown hook to terminate the minimodem process
      */
     public TapeDeckTester() {
-        System.out.println("Tape Deck Tester Version 1.1.0");
-        
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-        @Override
-        public void run() {
-            try {
-                Thread.sleep(200);
-                System.out.println("Shutting down minimodem ...");
-                process.destroy();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                e.printStackTrace();
-            }
-        }
-    });
+        System.out.println("Tape Deck Tester Version 1.1.1");
     }
     
     /**
@@ -192,8 +182,8 @@ public class TapeDeckTester {
                 }
             } else if(line.contains("### NOCARRIER")) {
                 if(stopRecords == 0) {
-                    String stopMessage = "PLAYBACK STOPPED {# Errors " + dataErrors +  "/" + logLineCount + 
-                        " | " + getPercentError() + "%}\n" + 
+                    String stopMessage = "PLAYBACK STOPPED (errors/line records): " + dataErrors +  "/" + logLineCount + 
+                        " { " + getPercentError() + "%}\n" + 
                         "SIDE A ERRORS: " + sideAErrors + "/"  + sideALineCount + "\t{ " + getSidePercentError('A') + "% }\n" +
                         "SIDE B ERRORS: " + sideBErrors + "/"  + sideBLineCount + "\t{ " + getSidePercentError('B') + "% }\n";
                     
@@ -203,6 +193,12 @@ public class TapeDeckTester {
                 }
                 
                 stopRecords++;
+            } else {
+                // count errors when line is not long enough but should contain data
+                if(!line.contains("###") && line.contains("_")) {
+                    dataLengthErrors++;
+                    System.out.println("\nInvalid Data Length @: " + line + " (# Data Length Errors: " + dataLengthErrors +  ")\n");
+                }
             }
         }
     }
@@ -358,7 +354,7 @@ public class TapeDeckTester {
         return String.format("%02d:%02d:%02d", hours, minutes, seconds);
     }
      
-    // stop reading logfile and playing
+    // stop reading from minimodem and close it 
     public void stop() {
         decoding = false;
 
@@ -376,6 +372,18 @@ public class TapeDeckTester {
         TapeDeckTester tapeDeckDataTester = new TapeDeckTester();
         try {
             tapeDeckDataTester.startMinimodem();
+            
+            // start the scanner to close the program
+            Scanner sc = new Scanner(System.in);
+            String input = null;
+
+            do {
+                System.out.println("Type X and hit Enter to exit program");
+                input = sc.next();
+            } while (!input.equalsIgnoreCase("x"));
+            
+            sc.close();
+            tapeDeckDataTester.stop();
         } catch (IOException ex) {
             Logger.getLogger(TapeDeckTester.class.getName()).log(Level.SEVERE, null, ex);
         }
