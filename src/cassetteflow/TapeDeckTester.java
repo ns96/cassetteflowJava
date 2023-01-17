@@ -54,7 +54,7 @@ public class TapeDeckTester {
      * Default constructor which just adds shutdown hook to terminate the minimodem process
      */
     public TapeDeckTester() {
-        System.out.println("Tape Deck Tester Version 1.1.1");
+        System.out.println("Tape Deck Tester Version 1.1.2");
     }
     
     /**
@@ -185,8 +185,8 @@ public class TapeDeckTester {
                     String stopMessage = "PLAYBACK STOPPED (errors/line records): " + dataErrors +  "/" + logLineCount + 
                         " { " + getPercentError() + "%}\n" + 
                         "SIDE A ERRORS: " + sideAErrors + "/"  + sideALineCount + "\t{ " + getSidePercentError('A') + "% }\n" +
-                        "SIDE B ERRORS: " + sideBErrors + "/"  + sideBLineCount + "\t{ " + getSidePercentError('B') + "% }\n";
-                    
+                        "SIDE B ERRORS: " + sideBErrors + "/"  + sideBLineCount + "\t{ " + getSidePercentError('B') + "% }\n" +
+                        "DATA LENGTH ERRORS: " + dataLengthErrors  + "\n";
                     System.out.println("\n");
                     System.out.println(stopMessage);
                     System.out.println(line + "\n");
