@@ -100,6 +100,8 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     // used to display tracks from long youtube mix
     private TrackListInfo trackListInfo = null;
     
+    private final int STOP_RECORD_LIMIT = 0;
+    
     public CassettePlayer(CassetteFlowFrame cassetteFlowFrame, CassetteFlow cassetteFlow, String logfile) {
         this(cassetteFlow, logfile);
         this.cassetteFlowFrame = cassetteFlowFrame;
@@ -343,11 +345,13 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                 }
                 
                 stopRecords = 0;
-            } else if(line.contains("### NOCARRIER")) {                
+            } else if(line.contains("### NOCARRIER")) {
+                stopRecords++; // increment the stop records
+                
                 String stopMessage = "Playback Stopped {# errors " + dataErrors +  "/" + logLineCount + "} ...";
                 
-                // make sure we stop any previous players
-                if (player != null) {
+                // make sure we stop any previous players after receiving a few stop records
+                if (player != null && stopRecords > STOP_RECORD_LIMIT) {
                     player.stop();
                     
                     if(cassetteFlowFrame != null) {
@@ -361,7 +365,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                 }
                 
                 // check to make sure we close the minimodem read
-                if(miniModemReader != null && stopRecords == 0 && readDelay > 0) {
+                if(miniModemReader != null && stopRecords == 1 && readDelay > 0) {
                     try {
                         paused = true;
                         
@@ -387,17 +391,15 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                 trackListInfo = null;
                 playtimeDiff = 0;
                 
-                if(cassetteFlowFrame != null) {
+                if(cassetteFlowFrame != null && stopRecords > (STOP_RECORD_LIMIT + 1)) {
                     cassetteFlowFrame.setPlaybackInfo(stopMessage, true);
                 } else {
-                    if(stopRecords == 0) {
+                    if(stopRecords == 1) {
                         System.out.println("\n");
                     }
                     
                     System.out.println(stopMessage);
                 }
-                
-                stopRecords++;
                 
                 currentLineRecord = "PLAYBACK STOPPED # " + stopRecords; 
             }
