@@ -21,6 +21,8 @@ public class TapeDeckTester {
     // keep track off the number of stop and mute records
     private int stopRecords = 0;
     
+    private int totalStops = 0;
+    
     // keep track of the number of read errors after a complete line record 
     // has been read in.
     private int dataErrors = 0;
@@ -54,7 +56,7 @@ public class TapeDeckTester {
      * Default constructor which just adds shutdown hook to terminate the minimodem process
      */
     public TapeDeckTester() {
-        System.out.println("Tape Deck Tester Version 1.2.0");
+        System.out.println("Tape Deck Tester Version 1.2.1");
     }
     
     /**
@@ -177,7 +179,8 @@ public class TapeDeckTester {
                             " { " + getPercentError() + "% }\n" +
                             "SIDE A ERRORS: " + sideAErrors + "/"  + sideALineCount + "\t{ " + getSidePercentError('A') + "% }\n" +
                             "SIDE B ERRORS: " + sideBErrors + "/"  + sideBLineCount + "\t{ " + getSidePercentError('B') + "% }\n" +
-                            "DATA LENGTH ERRORS: " + dataLengthErrors  + "\n";
+                            "DATA LENGTH ERRORS: " + dataLengthErrors  + "\n" + 
+                            "TOTAL STOPS: " + totalStops + "\n";
                     
                     System.out.println(message);
                 }
@@ -187,10 +190,14 @@ public class TapeDeckTester {
                         " { " + getPercentError() + "%}\n" + 
                         "SIDE A ERRORS: " + sideAErrors + "/"  + sideALineCount + "\t{ " + getSidePercentError('A') + "% }\n" +
                         "SIDE B ERRORS: " + sideBErrors + "/"  + sideBLineCount + "\t{ " + getSidePercentError('B') + "% }\n" +
-                        "DATA LENGTH ERRORS: " + dataLengthErrors  + "\n";
+                        "DATA LENGTH ERRORS: " + dataLengthErrors  + "\n" + 
+                        "TOTAL STOPS: " + totalStops + "\n";
+                    
                     System.out.println("\n");
                     System.out.println(stopMessage);
                     System.out.println(line + "\n");
+                    
+                    totalStops++;
                 }
                 
                 stopRecords++;

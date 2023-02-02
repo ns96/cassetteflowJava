@@ -107,7 +107,7 @@ public class CassetteFlow {
     // store program properties
     private Properties properties = new Properties();
     
-    private final String propertiesFilename = "cassetteFlow.properties";
+    private final String PROPERTIES_FILENAME = "cassetteFlow.properties";
     
     // used to stop realtime encoding
     private boolean stopEncoding = false;
@@ -196,7 +196,7 @@ public class CassetteFlow {
      */
     private void loadProperties() {
         // try loading the properties
-        try (FileReader fileReader = new FileReader(propertiesFilename)) {
+        try (FileReader fileReader = new FileReader(PROPERTIES_FILENAME)) {
             properties.load(fileReader);
             
             DOWNLOAD_SERVER = properties.getProperty("download.server");
@@ -216,7 +216,7 @@ public class CassetteFlow {
      * Save the default properties file
      */
     public void saveProperties() {
-        try (FileWriter output = new FileWriter(propertiesFilename)) {
+        try (FileWriter output = new FileWriter(PROPERTIES_FILENAME)) {
             properties.put("audio.directory", AUDIO_DIR_NAME);
             properties.put("download.server", DOWNLOAD_SERVER);
             properties.put("lyraT.host", LYRA_T_HOST);
