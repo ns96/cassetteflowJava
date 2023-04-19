@@ -71,6 +71,11 @@ public class CassetteFlowServer {
         System.out.println("Cassette Flow Server Started ...");
     }
     
+    /**
+     * Set the cassetteflow object
+     * 
+     * @param cassetteFlow 
+     */
     public void setCassetteFlow(CassetteFlow cassetteFlow) {
         this.cassetteFlow = cassetteFlow;
     }
@@ -350,5 +355,4 @@ public class CassetteFlowServer {
             ex.printStackTrace();
         }
     }
-    
 }
