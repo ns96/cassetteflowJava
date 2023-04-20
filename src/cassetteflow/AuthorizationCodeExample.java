@@ -17,7 +17,7 @@ public class AuthorizationCodeExample {
   private static final String clientId = SpotifyAppInfo.clientId;
   private static final String clientSecret = SpotifyAppInfo.clientSecret;
   private static final URI redirectUri = SpotifyHttpManager.makeUri(SpotifyAppInfo.redirectUri);
-  private static final String code = SpotifyAppInfo.code;
+  private static final String code = "";
 
   private static final SpotifyApi spotifyApi = new SpotifyApi.Builder()
     .setClientId(clientId)

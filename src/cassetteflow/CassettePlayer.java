@@ -34,7 +34,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     
     private StreamPlayer player = null;
     
-    private DeckCastConnect deckCastConnect;
+    private DeckCastConnector deckCastConnect;
         
     // used to read the log file outputted by the minimodem program
     // "minimodem -r 1200 &> >(tee -a tape.log)"
@@ -139,7 +139,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
      * 
      * @param deckCastConnect 
      */
-    public void setDeckCastConnect(DeckCastConnect deckCastConnect) {
+    public void setDeckCastConnect(DeckCastConnector deckCastConnect) {
        this.deckCastConnect = deckCastConnect; 
     }
     

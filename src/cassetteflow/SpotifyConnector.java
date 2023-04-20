@@ -3,6 +3,7 @@ package cassetteflow;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import com.sun.org.apache.xerces.internal.xs.ItemPSVI;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
@@ -18,13 +19,25 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.hc.core5.http.ParseException;
+import org.json.JSONException;
+import org.json.JSONObject;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.SpotifyHttpManager;
+import se.michaelthelin.spotify.enums.AuthorizationScope;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
+import se.michaelthelin.spotify.model_objects.IPlaylistItem;
 import se.michaelthelin.spotify.model_objects.credentials.AuthorizationCodeCredentials;
+import se.michaelthelin.spotify.model_objects.special.PlaybackQueue;
+import se.michaelthelin.spotify.model_objects.specification.Paging;
+import se.michaelthelin.spotify.model_objects.specification.PlaylistTrack;
+import se.michaelthelin.spotify.model_objects.specification.Track;
+import se.michaelthelin.spotify.model_objects.specification.TrackSimplified;
 import se.michaelthelin.spotify.requests.authorization.authorization_code.AuthorizationCodeRefreshRequest;
 import se.michaelthelin.spotify.requests.authorization.authorization_code.AuthorizationCodeRequest;
 import se.michaelthelin.spotify.requests.authorization.authorization_code.AuthorizationCodeUriRequest;
+import se.michaelthelin.spotify.requests.data.albums.GetAlbumsTracksRequest;
+import se.michaelthelin.spotify.requests.data.player.GetTheUsersQueueRequest;
+import se.michaelthelin.spotify.requests.data.playlists.GetPlaylistsItemsRequest;
 
 /**
  * A class to connect to the Spotify backend to get tract information and control playback
@@ -33,6 +46,7 @@ import se.michaelthelin.spotify.requests.authorization.authorization_code.Author
  */
 public class SpotifyConnector {
     private HttpServer server;
+    private CassetteFlowFrame cassetteFlowFrame;
     private CassetteFlow cassetteFlow;
     
     private String code = "";
@@ -50,24 +64,41 @@ public class SpotifyConnector {
             .build();
 
     private static final AuthorizationCodeUriRequest authorizationCodeUriRequest = spotifyApi.authorizationCodeUri()
+            .scope(AuthorizationScope.STREAMING, 
+                    AuthorizationScope.USER_MODIFY_PLAYBACK_STATE,
+                    AuthorizationScope.USER_READ_PLAYBACK_STATE,
+                    AuthorizationScope.USER_READ_CURRENTLY_PLAYING)
             .build();
+    
+    private boolean connected = false;
     
     /**
      * The default constructor
-     * 
-     * @throws IOException 
      */
-    public SpotifyConnector() throws IOException {
-        
-        
-        ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor)Executors.newFixedThreadPool(10);
-        
-        server = HttpServer.create(new InetSocketAddress("0.0.0.0", 3000), 0);
-        server.createContext("/", new SetCodeHandler());
-        server.setExecutor(threadPoolExecutor);
-        server.start();
-        
-        System.out.println("Spotify Connector Server Started ...");
+    public SpotifyConnector() {
+        try {
+            ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
+
+            server = HttpServer.create(new InetSocketAddress("0.0.0.0", 3000), 0);
+            server.createContext("/", new SetCodeHandler());
+            server.setExecutor(threadPoolExecutor);
+            server.start();
+
+            System.out.println("Spotify Connector Server Started ...");
+        } catch (IOException ioe) {
+            System.out.println("Error Starting Spotify Connector Server ...");
+        }
+    }
+    
+    /**
+     * The constructor that take the cassette flow objects
+     * @param cassetteFlowFrame
+     * @param cassetteFlow
+     */
+    public SpotifyConnector(CassetteFlowFrame cassetteFlowFrame, CassetteFlow cassetteFlow) {
+        this();
+        this.cassetteFlowFrame = cassetteFlowFrame;
+        this.cassetteFlow = cassetteFlow;
     }
     
     /**
@@ -79,16 +110,7 @@ public class SpotifyConnector {
         System.out.println("URI: " + uri.toString());
         return uri;
     }
-    
-    /**
-     * Set the CassetteFlow object
-     * 
-     * @param cassetteFlow 
-     */
-    public void setCassetteFlow(CassetteFlow cassetteFlow) {
-        this.cassetteFlow = cassetteFlow;
-    }
-    
+        
     /**
      * Stop the http server
      */
@@ -134,6 +156,13 @@ public class SpotifyConnector {
         }
     }
     
+    /**
+     * Stop music playback the server which listens spotify connections 
+     */
+    void disConnect() {
+        stop();
+    }
+    
     // class to handle setting the code from server
     private class SetCodeHandler implements HttpHandler {
         @Override
@@ -145,7 +174,7 @@ public class SpotifyConnector {
             
             // get the access code
             code = params.get("code").toString();
-            System.out.println("Access Code Set");
+            System.out.println("Access Code Set ...");
             
             try {
                 AuthorizationCodeRequest authorizationCodeRequest = spotifyApi.authorizationCode(code)
@@ -163,6 +192,17 @@ public class SpotifyConnector {
                 
                 // start thread to automatically renew the access token
                 startRenewThread();
+                
+                // indicate we are connected
+                connected = true;
+                
+                String message = "Spotify Player Connected ...";
+                message = message.toUpperCase();
+                
+                if(cassetteFlowFrame != null) {
+                    cassetteFlowFrame.updateStreamEditorPane(message);
+                    cassetteFlowFrame.setStreamPlayerConnected();
+                }
             } catch (SpotifyWebApiException | ParseException e) {
                 System.out.println("Error ");
             }
@@ -203,19 +243,78 @@ public class SpotifyConnector {
     }
     
     /**
+     * Get the items in the playlist or album
+     * 
+     * @param playlistId 
+     */
+    public void loadPlaylist(String playlistId) {
+        GetPlaylistsItemsRequest getPlaylistsItemsRequest = spotifyApi.getPlaylistsItems(playlistId)
+            .limit(50)
+            .build();
+        
+        try {
+            Paging<PlaylistTrack> playlistTrackPaging = getPlaylistsItemsRequest.execute();
+            System.out.println("Total Playlist Tracks: " + playlistTrackPaging.getTotal());
+            
+            for(PlaylistTrack item: playlistTrackPaging.getItems()) {
+                Track track = (Track)item.getTrack();
+                System.out.println(track.getName() + " : " + track.getDurationMs());
+            }
+        } catch (IOException | SpotifyWebApiException | ParseException ex) {
+            System.out.println("Error loading playlist, might be an album?");
+            loadAlbum(playlistId);
+        }
+    }
+    
+    /**
+     * Get the items in the album
+     * 
+     * @param albumId 
+     */
+    public void loadAlbum(String albumId) {
+        GetAlbumsTracksRequest getAlbumsTracksRequest = spotifyApi.getAlbumsTracks(albumId)
+            .limit(50)
+            .build();
+        
+        try {
+            Paging<TrackSimplified> trackPaging = getAlbumsTracksRequest.execute();
+            System.out.println("Total Album Tracks: " + trackPaging.getTotal());
+            
+            for(TrackSimplified track: trackPaging.getItems()) {
+                System.out.println(track.getName() + " : " + track.getDurationMs());
+            }
+        } catch (IOException | SpotifyWebApiException | ParseException ex) {
+            Logger.getLogger(SpotifyConnector.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    /**
+     * Load the users playback queue. 4/20/2022 -- This endpoint doesn't work correctly.
+     * It does return all the items in the que. See link below
+     * https://community.spotify.com/t5/Spotify-for-Developers/Get-User-Queue-Doesn-t-Return-Full-Queue/td-p/5435038
+     */
+    public void loadPlaybackQue() {
+        GetTheUsersQueueRequest usersQueueRequest = spotifyApi.getTheUsersQueue().build();
+        try {
+            PlaybackQueue playbackQue = usersQueueRequest.execute();
+            System.out.println("PlayBack Que: " + playbackQue.getCurrentlyPlaying());
+            
+            for(IPlaylistItem item: playbackQue.getQueue()) {
+                System.out.println(item.getName() + " : " + item.getDurationMs());
+            }
+            
+        } catch (IOException | SpotifyWebApiException | ParseException ex) {
+            Logger.getLogger(SpotifyConnector.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    /**
      * Method to run micro-server independently
      * 
      * @param args 
      */
     public static void main(String[] args) {
-        try {
-            //CassetteFlow cf = new CassetteFlow();
-            SpotifyConnector spotifyConnector = new SpotifyConnector();
-            //spotifyConnector.setCassetteFlow(cf);
-            
-            spotifyConnector.getAuthorizationCodeUri();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
+        SpotifyConnector spotifyConnector = new SpotifyConnector();            
+        spotifyConnector.getAuthorizationCodeUri();
     }
 }

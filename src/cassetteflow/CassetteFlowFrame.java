@@ -123,7 +123,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private int currentPlayingTrack = -1;
     
     // store the id for the stream video being played
-    private DeckCastConnect deckCastConnect;
+    private DeckCastConnector deckCastConnector;
+    private SpotifyConnector spotifyConnector;
     private String streamId;
     private int streamTotalTime = 0;
     private int streamPlayer = 0;
@@ -809,7 +810,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.2.0b2 (03/08/2023)");
+        setTitle("CassetteFlow v 1.2.0b3 (04/20/2023)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jTabbedPane1.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -1432,7 +1433,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jLabel13.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabel13.setText("Stream Server");
 
-        streamComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "http://pi3.sytes.net:5054/", "http://127.0.0.1:5054/" }));
+        streamComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "http://pi3.sytes.net:5054/", "http://127.0.0.1:5054/", "https://www.spotify.com/" }));
 
         streamConnectButton.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         streamConnectButton.setText("CONNECT");
@@ -1454,6 +1455,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         });
 
         streamPinTextField.setText("0002");
+        streamPinTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                streamPinTextFieldActionPerformed(evt);
+            }
+        });
 
         streamPlayClearButton.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         streamPlayClearButton.setText("Clear");
@@ -1480,8 +1486,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(streamDisconnectButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(streamPinTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(streamPinTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 87, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(streamPlaytimeLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 289, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(streamPlayClearButton))))
@@ -1498,7 +1504,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                     .addComponent(streamPinTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(streamPlayClearButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane10, javax.swing.GroupLayout.DEFAULT_SIZE, 396, Short.MAX_VALUE))
+                .addComponent(jScrollPane10, javax.swing.GroupLayout.DEFAULT_SIZE, 439, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("STREAM PLAY", jPanel8);
@@ -2676,8 +2682,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             startDecodeButton.setEnabled(true);
         }
         
-        if(deckCastConnect != null) {
-            deckCastConnect.stopStream();
+        if(deckCastConnector != null) {
+            deckCastConnector.stopStream();
         }
         
         // stop the thread which keeps track of stop records
@@ -2716,8 +2722,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         cassettePlayer.setMixerName(outputMixerName);
         cassettePlayer.setSpeedFactor(speedFactor);
         
-        if(deckCastConnect != null) {
-            cassettePlayer.setDeckCastConnect(deckCastConnect);
+        if(deckCastConnector != null) {
+            cassettePlayer.setDeckCastConnect(deckCastConnector);
             setPlayingCassetteID("STR0A");
         }
         
@@ -2737,10 +2743,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             cassettePlayer.startLogTailer();
         }
         
-        if(deckCastConnect == null) {
+        if(deckCastConnector == null) {
             playbackInfoTextArea.setText("Starting decoding process ...\n");
         } else {
-            trackInfoTextArea.setText("Stream @ " + deckCastConnect.getServerUrl());
+            trackInfoTextArea.setText("Stream @ " + deckCastConnector.getServerUrl());
             playbackInfoTextArea.setText("Starting decoding process for Stream ...\n");
         }
         
@@ -3605,21 +3611,42 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             cassetteFlow.setDCTOffset(offset);
         } catch(NumberFormatException nfe) { }
     }//GEN-LAST:event_dctOffsetComboBoxActionPerformed
-
+    
+    /**
+     * Connect to a streaming media service
+     * @param evt 
+     */
     private void streamConnectButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_streamConnectButtonActionPerformed
         try {
             String streamUrl = streamComboBox.getSelectedItem().toString();
             String streamPin = streamPinTextField.getText();
-            deckCastConnect = new DeckCastConnect(this, cassetteFlow, streamUrl, streamPin);            
-        } catch (URISyntaxException ex) {
-            Logger.getLogger(DeckCastConnect.class.getName()).log(Level.SEVERE, null, ex);
+            
+            if(streamUrl.contains("spotify")) {
+                spotifyConnector = new SpotifyConnector(this, cassetteFlow);
+                URI uri = spotifyConnector.getAuthorizationCodeUri();
+                
+                // launch the browser to complete login
+                Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
+                if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
+                    desktop.browse(uri);
+                }
+            } else {
+                deckCastConnector = new DeckCastConnector(this, cassetteFlow, streamUrl, streamPin);
+            }
+        } catch (IOException | URISyntaxException ex) {
+            Logger.getLogger(DeckCastConnector.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_streamConnectButtonActionPerformed
 
     private void streamDisconnectButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_streamDisconnectButtonActionPerformed
-        if(deckCastConnect != null) {
-            deckCastConnect.disConnect();
-            deckCastConnect = null;
+        if(deckCastConnector != null) {
+            deckCastConnector.disConnect();
+            deckCastConnector = null;
+        }
+        
+        if(spotifyConnector != null) {
+            spotifyConnector.disConnect();
+            spotifyConnector = null;
         }
         
         streamConnectButton.setEnabled(true);
@@ -3816,10 +3843,17 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     }//GEN-LAST:event_findTracksButtonActionPerformed
 
     private void streamPlayClearButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_streamPlayClearButtonActionPerformed
-        if(deckCastConnect != null) {
-            deckCastConnect.clearQueList();
+        if(deckCastConnector != null) {
+            deckCastConnector.clearQueList();
         }
     }//GEN-LAST:event_streamPlayClearButtonActionPerformed
+
+    private void streamPinTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_streamPinTextFieldActionPerformed
+        //4/20/2023 DEBUG Code
+        if(spotifyConnector != null) {
+            spotifyConnector.loadPlaylist(streamPinTextField.getText());
+        }
+    }//GEN-LAST:event_streamPinTextFieldActionPerformed
 
     /**
      * 

@@ -22,7 +22,7 @@ import org.json.JSONObject;
  *
  * @author Nathan
  */
-public class DeckCastConnect {
+public class DeckCastConnector {
     private final CassetteFlowFrame cassetteFlowFrame;
     private final CassetteFlow cassetteFlow;
     
@@ -59,7 +59,7 @@ public class DeckCastConnect {
     private int logLineCount = 0;
     private int muteRecords = 0;
     
-    public DeckCastConnect(CassetteFlowFrame cassetteFlowFrame, CassetteFlow cassetteFlow, String url, String pin) throws URISyntaxException {
+    public DeckCastConnector(CassetteFlowFrame cassetteFlowFrame, CassetteFlow cassetteFlow, String url, String pin) throws URISyntaxException {
         this.cassetteFlowFrame = cassetteFlowFrame;
         this.cassetteFlow = cassetteFlow;
         this.serverUrl = url;
@@ -93,7 +93,7 @@ public class DeckCastConnect {
                     JSONObject obj = (JSONObject) args[0];
                     processMessage(obj);
                 } catch (JSONException ex) {
-                    Logger.getLogger(DeckCastConnect.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(DeckCastConnector.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         });
@@ -249,7 +249,7 @@ public class DeckCastConnect {
             cassetteFlowFrame.setPlayingAudioInfo(message);
             cassetteFlowFrame.setPlayingAudioTrack("1");
         } catch (JSONException ex) {
-            Logger.getLogger(DeckCastConnect.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DeckCastConnector.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
@@ -352,7 +352,7 @@ public class DeckCastConnect {
                 playing = false;
             }
         } catch (JSONException | InterruptedException ex) {
-            Logger.getLogger(DeckCastConnect.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DeckCastConnector.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
@@ -383,7 +383,7 @@ public class DeckCastConnect {
                 }
             }
         } catch (JSONException ex) {
-            Logger.getLogger(DeckCastConnect.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DeckCastConnector.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
@@ -454,13 +454,13 @@ public class DeckCastConnect {
     // test the functionality
     public static void main(String[] args) {
         try {
-            DeckCastConnect dcc = new DeckCastConnect(null, null, "http://127.0.0.1:5054/", "0001");
+            DeckCastConnector dcc = new DeckCastConnector(null, null, "http://127.0.0.1:5054/", "0001");
             
             // wait for user to press key to exit program
             BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
             in.readLine();
         } catch (URISyntaxException | IOException ex) {
-            Logger.getLogger(DeckCastConnect.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DeckCastConnector.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 }
