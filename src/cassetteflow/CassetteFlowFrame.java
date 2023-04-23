@@ -810,7 +810,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.2.0b3 (04/20/2023)");
+        setTitle("CassetteFlow v 1.2.0b4 (04/23/2023)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jTabbedPane1.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -1454,7 +1454,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             }
         });
 
-        streamPinTextField.setText("0002");
+        streamPinTextField.setText("3dEL2fn2HqnnIpSlearSJE");
         streamPinTextField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 streamPinTextFieldActionPerformed(evt);
