@@ -34,7 +34,9 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     
     private StreamPlayer player = null;
     
-    private DeckCastConnector deckCastConnect;
+    private DeckCastConnector deckCastConnector;
+    
+    private SpotifyConnector spotifyConnector;
         
     // used to read the log file outputted by the minimodem program
     // "minimodem -r 1200 &> >(tee -a tape.log)"
@@ -135,12 +137,21 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     }
     
     /**
-     * Set the deck cast object
+     * Set the deckcast connector object
      * 
      * @param deckCastConnect 
      */
-    public void setDeckCastConnect(DeckCastConnector deckCastConnect) {
-       this.deckCastConnect = deckCastConnect; 
+    public void setDeckCastConnector(DeckCastConnector deckCastConnector) {
+       this.deckCastConnector = deckCastConnector; 
+    }
+    
+    /**
+     * Set the spotify connector object
+     * 
+     * @param spotifyConnector  
+     */
+    public void setSpotifyConnector(SpotifyConnector spotifyConnector) {
+       this.spotifyConnector = spotifyConnector; 
     }
     
     /**
@@ -305,10 +316,17 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                             } else {
                                 // we have a good dct record, but no DCT lookup array so let's see
                                 // if we are controlling a stream player
-                                if(deckCastConnect != null) {
+                                
+                                if(deckCastConnector != null) {
                                     int tapeTime = Integer.parseInt(dctLine.split(" ")[2]);
-                                    deckCastConnect.playStream(tapeTime);
-                                    deckCastConnect.setDataErrors(dataErrors, logLineCount);
+                                    deckCastConnector.playStream(tapeTime);
+                                    deckCastConnector.setDataErrors(dataErrors, logLineCount);
+                                }
+                                
+                                if(spotifyConnector != null) {
+                                    int tapeTime = Integer.parseInt(dctLine.split(" ")[2]);
+                                    spotifyConnector.playStream(tapeTime);
+                                    spotifyConnector.setDataErrors(dataErrors, logLineCount);
                                 }
                             }
                         } else {
@@ -324,9 +342,9 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                             }
                             
                             // check to see if we have  deckcast object and stop it's playback as well
-                            if(deckCastConnect != null) {
+                            if(deckCastConnector != null) {
                                 // TO-DO 11/18/2022 -- See how best to handle this? 
-                                // deckCastConnect.stopStream();
+                                //deckCastConnector.stopStream();
                             }
                         }
                     } else {
@@ -360,8 +378,13 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                 }
                 
                 // check to see if we have  deckcast object and stop it's playback as well
-                if (deckCastConnect != null) {
-                    deckCastConnect.stopStream();
+                if (deckCastConnector != null) {
+                    deckCastConnector.stopStream();
+                }
+                
+                // check to see if we have  spotify object and stop it's playback as well
+                if (spotifyConnector != null) {
+                    spotifyConnector.stopStream();
                 }
                 
                 // check to make sure we close the minimodem read

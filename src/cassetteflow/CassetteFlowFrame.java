@@ -122,7 +122,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     // store the current tracks being played when decoding
     private int currentPlayingTrack = -1;
     
-    // store the id for the stream video being played
+    // initite the objects to allow control of streaming
+    // music sites. Store the id for the stream video/track being played
     private DeckCastConnector deckCastConnector;
     private SpotifyConnector spotifyConnector;
     private String streamId;
@@ -810,7 +811,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.2.0b4 (04/23/2023)");
+        setTitle("CassetteFlow v 1.2.0b4 (04/24/2023)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jTabbedPane1.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -2362,7 +2363,6 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 playerThread.start();
             }
         }
-        
     }//GEN-LAST:event_playButtonActionPerformed
     
     /**
@@ -2686,6 +2686,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             deckCastConnector.stopStream();
         }
         
+        if(spotifyConnector != null) {
+            spotifyConnector.stopStream();
+        }
+        
         // stop the thread which keeps track of stop records
         //trackStopRecords = false;
         
@@ -2723,7 +2727,12 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         cassettePlayer.setSpeedFactor(speedFactor);
         
         if(deckCastConnector != null) {
-            cassettePlayer.setDeckCastConnect(deckCastConnector);
+            cassettePlayer.setDeckCastConnector(deckCastConnector);
+            setPlayingCassetteID("STR0A");
+        }
+        
+        if(spotifyConnector != null) {
+            cassettePlayer.setSpotifyConnector(spotifyConnector);
             setPlayingCassetteID("STR0A");
         }
         
@@ -2743,10 +2752,15 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             cassettePlayer.startLogTailer();
         }
         
-        if(deckCastConnector == null) {
+        if(deckCastConnector == null && spotifyConnector == null) {
             playbackInfoTextArea.setText("Starting decoding process ...\n");
         } else {
-            trackInfoTextArea.setText("Stream @ " + deckCastConnector.getServerUrl());
+            if(deckCastConnector != null) {
+                trackInfoTextArea.setText("Stream @ " + deckCastConnector.getServerUrl());
+            } else {
+                trackInfoTextArea.setText("Stream @ Spotify");
+            }
+            
             playbackInfoTextArea.setText("Starting decoding process for Stream ...\n");
         }
         

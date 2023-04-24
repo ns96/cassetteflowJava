@@ -1,7 +1,6 @@
 package cassetteflow;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -40,7 +39,7 @@ import se.michaelthelin.spotify.requests.authorization.authorization_code.Author
 import se.michaelthelin.spotify.requests.authorization.authorization_code.AuthorizationCodeUriRequest;
 import se.michaelthelin.spotify.requests.data.albums.GetAlbumRequest;
 import se.michaelthelin.spotify.requests.data.player.GetTheUsersQueueRequest;
-import se.michaelthelin.spotify.requests.data.player.SeekToPositionInCurrentlyPlayingTrackRequest;
+import se.michaelthelin.spotify.requests.data.player.PauseUsersPlaybackRequest;
 import se.michaelthelin.spotify.requests.data.player.StartResumeUsersPlaybackRequest;
 import se.michaelthelin.spotify.requests.data.playlists.GetPlaylistRequest;
 
@@ -94,7 +93,6 @@ public class SpotifyConnector {
     private ArrayList<AudioInfo> queList;
     private boolean queListLoaded = false;
     private String queTrackId = "";
-    private String oldQueTrackId = "";
     private String queTrack = "";
     private String queListHtml = "";
     
@@ -278,8 +276,9 @@ public class SpotifyConnector {
      * Get the items in the playlist or album
      * 
      * @param playlistId 
+     * @return  
      */
-    public void loadPlaylist(String playlistId) {
+    public ArrayList<AudioInfo> loadPlaylist(String playlistId) {
         GetPlaylistRequest getPlaylistRequest = spotifyApi.getPlaylist(playlistId)
                 .build();
         
@@ -313,23 +312,27 @@ public class SpotifyConnector {
             
             storeAudioInfoRecords();
             
-            // 4/23/2023 DEBUG code
+            /*
+            // 4/23/2023 DEBUG **** REMOVE ****
             AudioInfo test = queList.get(2);
             queTrackId = "new";
-            oldQueTrackId = "old";
-            playTrack(test.getStreamId(), test.getUrl(), 60);
+            playTrack(test.getUrl(), 0);
+            */
         } catch (IOException | SpotifyWebApiException | ParseException ex) {
             System.out.println("Error loading playlist, might be an album?");
-            loadAlbum(playlistId);
+            return loadAlbum(playlistId);
         }
+        
+        return queList;
     }
     
     /**
      * Get the items in the album
      * 
      * @param albumId 
+     * @return  
      */
-    public void loadAlbum(String albumId) {
+    public ArrayList<AudioInfo> loadAlbum(String albumId) {
          GetAlbumRequest getAlbumRequest = spotifyApi.getAlbum(albumId)
                  .build();
                 
@@ -364,6 +367,8 @@ public class SpotifyConnector {
         } catch (IOException | SpotifyWebApiException | ParseException ex) {
             Logger.getLogger(SpotifyConnector.class.getName()).log(Level.SEVERE, null, ex);
         }
+        
+        return queList;
     }
         
     /**
@@ -393,9 +398,10 @@ public class SpotifyConnector {
         // populate the dct list and store a dummy record
         sideADCTList = cassetteFlow.createDCTArrayListForSide("STR0A", queList, 4);
         cassetteFlow.addToTapeDB("STR0", queList, null, false);
-
-        String message = "Spotify Playlist/Album Loaded (" + streamTitle + "): " + queList.size() + " Tracks / " + sideADCTList.size() + " seconds ...";
-        queListHtml = message; // generate qlist html here
+        
+        totalPlaytime = sideADCTList.size();
+        String message = "Spotify Playlist/Album Loaded (" + streamTitle + "): " + queList.size() + " Tracks / " + CassetteFlowUtil.getTimeString(totalPlaytime) + " (" + totalPlaytime + ")";
+        queListHtml = message; // generate nice looking html ...
         cassetteFlowFrame.updateStreamEditorPane(queListHtml);
         cassetteFlowFrame.setPlayingCassetteID("STR0A");
     } 
@@ -452,8 +458,11 @@ public class SpotifyConnector {
                 queTrack = track;
                 queTrackId = trackId;
 
-                playTrack(trackId, url, playTime);
-
+                playTrack(url, playTime);
+                
+                // update the stream play panel
+                cassetteFlowFrame.setStreamInformation(trackId, currentAudioInfo.getLength(), 1);
+                
                 // update the decode UI with the track thats playing
                 String message = "Stream ID: " + currentAudioInfo.getStreamId() + "\n"
                         + currentAudioInfo.getName() + "\n"
@@ -485,36 +494,23 @@ public class SpotifyConnector {
     /**
      * Plat the particular track
      *
-     * @param trackId
      * @param url
      * @param playTime
      */
-    public void playTrack(String trackId, String url, int playTime) {
+    public void playTrack(String url, int playTime) {
         // send message to change the video and start it playing if we change video
         try {
-            if (!queTrackId.equals(oldQueTrackId)) {
-                oldQueTrackId = queTrackId;
-  
-                JsonArray trackObject = JsonParser.parseString(url).getAsJsonArray();
-                StartResumeUsersPlaybackRequest startResumeUsersPlaybackRequest = spotifyApi.startResumeUsersPlayback()
-                        .uris(trackObject)
-                        .position_ms(0)
-                        .build();
-                startResumeUsersPlaybackRequest.execute();
+            int positionMs = playTime * 1000;
 
-                System.out.println("Changing to new track ...");
-                Thread.sleep(1000);
-            }
+            JsonArray trackObject = JsonParser.parseString(url).getAsJsonArray();
+            StartResumeUsersPlaybackRequest startResumeUsersPlaybackRequest = spotifyApi.startResumeUsersPlayback()
+                    .uris(trackObject)
+                    .position_ms(positionMs)
+                    .build();
+            startResumeUsersPlaybackRequest.execute();
 
-            if (playTime > 0) { // playing the same track, but we need to go to new location
-                int positionMs = playTime*1000;
-                SeekToPositionInCurrentlyPlayingTrackRequest seekToPositionInCurrentlyPlayingTrackRequest =
-                        spotifyApi.seekToPositionInCurrentlyPlayingTrack(positionMs)
-                        .build();
-                seekToPositionInCurrentlyPlayingTrackRequest.execute();
-                
-                System.out.println("Playing song at new time location ...");
-            }
+            System.out.println("Changing to new track ...");
+            Thread.sleep(1000);
         } catch (SpotifyWebApiException | ParseException | InterruptedException | IOException ex) {
             Logger.getLogger(SpotifyConnector.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -526,8 +522,10 @@ public class SpotifyConnector {
     public void stopStream() {
         try {
             if(playing) {
-                // TODO Add spotify code to stop playing the stream 
-
+                PauseUsersPlaybackRequest pauseUsersPlaybackRequest = spotifyApi.pauseUsersPlayback()
+                        .build();
+                pauseUsersPlaybackRequest.execute();
+                
                 playing = false;
                 cassetteFlowFrame.updateStreamPlaytime(0, "");
                 cassetteFlowFrame.setPlaybackInfo("", false);
@@ -537,9 +535,20 @@ public class SpotifyConnector {
                 // reset the que track id
                 queTrackId = "";
             }
-        } catch (Exception ex) {
-            Logger.getLogger(DeckCastConnector.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException | ParseException | SpotifyWebApiException ex) {
+            Logger.getLogger(SpotifyConnector.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+    
+    /**
+     * Set the data errors and log lines
+     * 
+     * @param dataErrors
+     * @param logLineCount 
+     */
+    public void setDataErrors(int dataErrors, int logLineCount) {
+        this.dataErrors = dataErrors;
+        this.logLineCount = logLineCount;
     }
     
     /**
