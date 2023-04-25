@@ -29,6 +29,7 @@ import se.michaelthelin.spotify.model_objects.IPlaylistItem;
 import se.michaelthelin.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 import se.michaelthelin.spotify.model_objects.special.PlaybackQueue;
 import se.michaelthelin.spotify.model_objects.specification.Album;
+import se.michaelthelin.spotify.model_objects.specification.ArtistSimplified;
 import se.michaelthelin.spotify.model_objects.specification.Paging;
 import se.michaelthelin.spotify.model_objects.specification.Playlist;
 import se.michaelthelin.spotify.model_objects.specification.PlaylistTrack;
@@ -38,10 +39,12 @@ import se.michaelthelin.spotify.requests.authorization.authorization_code.Author
 import se.michaelthelin.spotify.requests.authorization.authorization_code.AuthorizationCodeRequest;
 import se.michaelthelin.spotify.requests.authorization.authorization_code.AuthorizationCodeUriRequest;
 import se.michaelthelin.spotify.requests.data.albums.GetAlbumRequest;
+import se.michaelthelin.spotify.requests.data.albums.GetAlbumsTracksRequest;
 import se.michaelthelin.spotify.requests.data.player.GetTheUsersQueueRequest;
 import se.michaelthelin.spotify.requests.data.player.PauseUsersPlaybackRequest;
 import se.michaelthelin.spotify.requests.data.player.StartResumeUsersPlaybackRequest;
 import se.michaelthelin.spotify.requests.data.playlists.GetPlaylistRequest;
+import se.michaelthelin.spotify.requests.data.playlists.GetPlaylistsItemsRequest;
 
 /**
  * A class to connect to the Spotify backend to get tract information and control playback
@@ -288,36 +291,31 @@ public class SpotifyConnector {
             Playlist playlist = getPlaylistRequest.execute();
             streamTitle = playlist.getName();
             
-            Paging<PlaylistTrack> playlistTrackPaging = playlist.getTracks();
-            System.out.println("Total Playlist Tracks: " + playlistTrackPaging.getTotal());
             
-            for(PlaylistTrack item: playlistTrackPaging.getItems()) {
-                Track track = (Track)item.getTrack();
-                String trackId = track.getId();
-                String title = track.getName();
-                String sha10hex = CassetteFlowUtil.get10CharacterHash(title);
-                int length = track.getDurationMs()/1000; // length in seconds
-                String lengthAsTime = CassetteFlowUtil.getTimeString(length);
-                String url = "[\"" + track.getUri() + "\"]";
-                AudioInfo audioInfo = new AudioInfo(null, sha10hex, length, lengthAsTime, 128);
-                audioInfo.setTitle(title);
-                audioInfo.setStreamId(trackId);
-                audioInfo.setUrl(url);
-                queList.add(audioInfo);
-                
-                // store this in the audio info DB
-                cassetteFlow.audioInfoDB.put(sha10hex, audioInfo);
-                queListLoaded = true;
+            Paging<PlaylistTrack> playlistTrackPaging = playlist.getTracks();
+            int total =  playlistTrackPaging.getTotal();
+            int limit = playlistTrackPaging.getLimit();
+            
+            System.out.println("Total Playlist Tracks: " + total);
+            generateAudioInfoObjectsForPlaylist(playlistTrackPaging);
+            
+            if(total > limit) {
+                int start = limit;
+                for(int i = start; i < total; i += 50) {
+                    System.out.println("Getting Playlist Request For Offset: " + i);
+                    
+                    GetPlaylistsItemsRequest getPlaylistsItemsRequest = spotifyApi
+                        .getPlaylistsItems(playlistId)
+                        .limit(50)
+                        .offset(i)
+                        .build();
+                    
+                    playlistTrackPaging = getPlaylistsItemsRequest.execute();
+                    generateAudioInfoObjectsForPlaylist(playlistTrackPaging);
+                }
             }
             
             storeAudioInfoRecords();
-            
-            /*
-            // 4/23/2023 DEBUG **** REMOVE ****
-            AudioInfo test = queList.get(2);
-            queTrackId = "new";
-            playTrack(test.getUrl(), 0);
-            */
         } catch (IOException | SpotifyWebApiException | ParseException ex) {
             System.out.println("Error loading playlist, might be an album?");
             return loadAlbum(playlistId);
@@ -325,6 +323,33 @@ public class SpotifyConnector {
         
         return queList;
     }
+    
+    /**
+     * generate the audio info objects
+     * 
+     * @param paging 
+     */
+    private void generateAudioInfoObjectsForPlaylist(Paging<PlaylistTrack> playlistTrackPaging) {
+        for (PlaylistTrack item : playlistTrackPaging.getItems()) {
+            Track track = (Track) item.getTrack();
+            String trackId = track.getId();
+            String title = track.getName() + " -- " + getArtists(track.getArtists());
+            String sha10hex = CassetteFlowUtil.get10CharacterHash(title);
+            int length = track.getDurationMs() / 1000; // length in seconds
+            String lengthAsTime = CassetteFlowUtil.getTimeString(length);
+            String url = "[\"" + track.getUri() + "\"]";
+            AudioInfo audioInfo = new AudioInfo(null, sha10hex, length, lengthAsTime, 128);
+            audioInfo.setTitle(title);
+            audioInfo.setStreamId(trackId);
+            audioInfo.setUrl(url);
+            queList.add(audioInfo);
+
+            // store this in the audio info DB
+            cassetteFlow.audioInfoDB.put(sha10hex, audioInfo);
+            queListLoaded = true;
+        }
+    }
+        
     
     /**
      * Get the items in the album
@@ -343,24 +368,24 @@ public class SpotifyConnector {
             streamTitle = album.getName();
             
             Paging<TrackSimplified> trackPaging = album.getTracks();
-            System.out.println("Total Album Tracks: " + trackPaging.getTotal());
+            int total =  trackPaging.getTotal();
+            int limit = trackPaging.getLimit();
             
-            for(TrackSimplified track: trackPaging.getItems()) {
-                String trackId = track.getId();
-                String title = track.getName();
-                String sha10hex = CassetteFlowUtil.get10CharacterHash(title);
-                int length = track.getDurationMs()/1000; // length in seconds
-                String lengthAsTime = CassetteFlowUtil.getTimeString(length);
-                String url = "[\"" + track.getUri() + "\"]";
-                AudioInfo audioInfo = new AudioInfo(null, sha10hex, length, lengthAsTime, 128);
-                audioInfo.setTitle(title);
-                audioInfo.setStreamId(trackId);
-                audioInfo.setUrl(url);
-                queList.add(audioInfo);
-                
-                // store this in the audio info DB
-                cassetteFlow.audioInfoDB.put(sha10hex, audioInfo);
-                queListLoaded = true;
+            System.out.println("Total Album Tracks: " + trackPaging.getTotal());
+            generateAudioInfoObjectsForAlbum(trackPaging);
+            
+            if(total > limit) {
+                int start = limit;
+                for(int i = start; i < total; i += 50) {
+                    System.out.println("Getting Album Request For Offset: " + i);
+                    GetAlbumsTracksRequest getAlbumsTracksRequest = spotifyApi.getAlbumsTracks(albumId)
+                            .limit(50)
+                            .offset(i)
+                            .build();
+
+                    trackPaging = getAlbumsTracksRequest.execute();
+                    generateAudioInfoObjectsForAlbum(trackPaging);
+                }
             }
             
             storeAudioInfoRecords();
@@ -370,7 +395,42 @@ public class SpotifyConnector {
         
         return queList;
     }
-        
+    
+    /**
+     * generate audio info objects for album
+     * @param trackPaging 
+     */
+    private void generateAudioInfoObjectsForAlbum(Paging<TrackSimplified> trackPaging) {
+        for (TrackSimplified track : trackPaging.getItems()) {
+            String trackId = track.getId();
+            String title = track.getName() + " -- " + getArtists(track.getArtists());
+            String sha10hex = CassetteFlowUtil.get10CharacterHash(title);
+            int length = track.getDurationMs() / 1000; // length in seconds
+            String lengthAsTime = CassetteFlowUtil.getTimeString(length);
+            String url = "[\"" + track.getUri() + "\"]";
+            AudioInfo audioInfo = new AudioInfo(null, sha10hex, length, lengthAsTime, 128);
+            audioInfo.setTitle(title);
+            audioInfo.setStreamId(trackId);
+            audioInfo.setUrl(url);
+            queList.add(audioInfo);
+
+            // store this in the audio info DB
+            cassetteFlow.audioInfoDB.put(sha10hex, audioInfo);
+            queListLoaded = true;
+        }
+    }
+    
+    /**
+     * Get the first artist only
+     * 
+     * @param artistSimplified
+     * @return 
+     */
+    private String getArtists(ArtistSimplified[] artistArray) {
+        ArtistSimplified artistSimplified = artistArray[0];
+        return artistSimplified.getName();
+    }
+    
     /**
      * Load the users playback queue. 4/20/2022 -- This endpoint doesn't work correctly.
      * It does return all the items in the que. See link below
@@ -401,7 +461,7 @@ public class SpotifyConnector {
         
         totalPlaytime = sideADCTList.size();
         String message = "Spotify Playlist/Album Loaded (" + streamTitle + "): " + queList.size() + " Tracks / " + CassetteFlowUtil.getTimeString(totalPlaytime) + " (" + totalPlaytime + ")";
-        queListHtml = message; // generate nice looking html ...
+        queListHtml = message; // TO-DO generate nice looking html ...
         cassetteFlowFrame.updateStreamEditorPane(queListHtml);
         cassetteFlowFrame.setPlayingCassetteID("STR0A");
     } 
@@ -470,8 +530,6 @@ public class SpotifyConnector {
 
                 cassetteFlowFrame.setPlayingAudioInfo(message);
                 cassetteFlowFrame.setPlayingAudioTrack(track);
-
-                playing = true;
             }
 
             cassetteFlowFrame.updateStreamPlaytime(playTime, "[ " + track + " ]");
@@ -494,15 +552,16 @@ public class SpotifyConnector {
     /**
      * Plat the particular track
      *
-     * @param url
+     * @param trackURI
      * @param playTime
      */
-    public void playTrack(String url, int playTime) {
+    public void playTrack(String trackURI, int playTime) {
         // send message to change the video and start it playing if we change video
         try {
+            playing = true;
             int positionMs = playTime * 1000;
 
-            JsonArray trackObject = JsonParser.parseString(url).getAsJsonArray();
+            JsonArray trackObject = JsonParser.parseString(trackURI).getAsJsonArray();
             StartResumeUsersPlaybackRequest startResumeUsersPlaybackRequest = spotifyApi.startResumeUsersPlayback()
                     .uris(trackObject)
                     .position_ms(positionMs)
@@ -512,6 +571,7 @@ public class SpotifyConnector {
             System.out.println("Changing to new track ...");
             Thread.sleep(1000);
         } catch (SpotifyWebApiException | ParseException | InterruptedException | IOException ex) {
+            playing = false;
             Logger.getLogger(SpotifyConnector.class.getName()).log(Level.SEVERE, null, ex);
         }
     } 

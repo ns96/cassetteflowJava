@@ -6,6 +6,7 @@
 package cassetteflow;
 
 import com.goxr3plus.streamplayer.stream.StreamPlayer;
+import com.goxr3plus.streamplayer.stream.StreamPlayerException;
 import java.awt.Desktop;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
@@ -101,6 +102,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     
     // keep track if we playing any audio
     private boolean playing;
+    
+    // keep track if we playing spotify track
+    private boolean playingSpotify = false;
     
     // store a list of filtered audioIno objects
     private ArrayList<AudioInfo> filteredAudioList;
@@ -811,7 +815,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.2.0b4 (04/24/2023)");
+        setTitle("CassetteFlow v 1.2.0b5 (04/25/2023)");
 
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jTabbedPane1.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -1455,7 +1459,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             }
         });
 
-        streamPinTextField.setText("3dEL2fn2HqnnIpSlearSJE");
+        streamPinTextField.setText("2KvnvJuv2YLHqs2aW5pf1X");
         streamPinTextField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 streamPinTextFieldActionPerformed(evt);
@@ -2263,11 +2267,50 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         return timeInSeconds;
     }
     
+    /**
+     * either filter the track list or load spotify album or tracks
+     * 
+     * @param evt 
+     */
     private void directoryTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_directoryTextFieldActionPerformed
-        // just call the filter button audio list action
-        filterAudioListButtonActionPerformed(null);
+        String value = directoryTextField.getText();
+        
+        // see if to load spotify playlist or album tracks
+        if(value.contains("open.spotify.com") && spotifyConnector != null) {
+            value = value.replace("https://open.spotify.com/", "");
+            String[] sa = value.split("/");
+            
+            if(sa[0].equals("playlist")) {
+                loadSpotifyTracks(spotifyConnector.loadPlaylist(sa[1]));
+            } else if(sa[0].equals("album")) {
+                loadSpotifyTracks(spotifyConnector.loadAlbum(sa[1]));
+            }
+        } else {
+            // just call the filter button audio list action
+            filterAudioListButtonActionPerformed(null);
+        }
     }//GEN-LAST:event_directoryTextFieldActionPerformed
+    
+    /**
+     * Load the spotify tracks into the main UI
+     * 
+     * @param spotifyTrackList
+     */
+    private void loadSpotifyTracks(ArrayList<AudioInfo> spotifyTrackList) {
+        if(filteredAudioList == null) 
+            filteredAudioList = new ArrayList<>();
+        
+        DefaultListModel filteredModel = new DefaultListModel();
+        
+        filteredAudioList.addAll(spotifyTrackList); 
+        for (AudioInfo audioInfo : filteredAudioList) {
+            filteredModel.addElement(audioInfo);
+        }
 
+        audioJList.setModel(filteredModel);
+        audioCountLabel.setText(filteredModel.size() + " Spotify tracks loaded");
+    }
+    
     private void removeAudioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removeAudioButtonActionPerformed
         int side = tapeJTabbedPane.getSelectedIndex();
         
@@ -2311,6 +2354,16 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             } catch(NumberFormatException nfe) {}
             
             final AudioInfo audioInfo = (AudioInfo) selectedAudio.get(0);
+            
+            // check to see if we playing a spotify track. If so return
+            if(spotifyConnector != null) {
+                String url = audioInfo.getUrl();
+                if(url != null && url.contains("spotify")) {
+                    playSpotifyTrack(url, audioInfo.toString(), audioInfo.getLength());
+                    return;
+                }
+            } 
+            
             System.out.println("\nPlaying Audio: " + audioInfo  + " / Speed: "  + speedFactor);
             
             // make sure we stop any previous threads
@@ -2331,7 +2384,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 player.play();
                 
                 playButton.setEnabled(false);
-            } catch (Exception e) {
+            } catch (StreamPlayerException e) {
                 e.printStackTrace();
                 JOptionPane.showMessageDialog(null, "Error playing audio file ...");
             }
@@ -2366,6 +2419,158 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     }//GEN-LAST:event_playButtonActionPerformed
     
     /**
+     * play a Spotify track
+     * 
+     * @param trackURI 
+     * @param title
+     * @param length
+     */
+    private void playSpotifyTrack(String trackURI, String title, int length) {
+        // make sure we stop any previous threads
+        if (player != null) {
+            player.stop();
+            player = null;
+        }
+
+        playingSpotify = true;
+        playButton.setEnabled(false);
+        
+        System.out.println("\nPlaying Spotify Audio: " + title);
+        spotifyConnector.playTrack(trackURI, 0);
+        
+        // start thread to keep track of if we playing sound
+        if (playerThread == null) {
+            playerThread = new Thread(() -> {
+                try {
+                    int playTime = 0;
+
+                    while (playingSpotify) {
+                        Thread.sleep(1000);
+                        playTime++;
+                        
+                        if(playTime >= length) {
+                            System.out.println("Spotify Track Finished ...");
+                            break;
+                        }
+                    }
+                } catch (InterruptedException ex) { }
+                
+                playingSpotify = false;
+                playButton.setEnabled(true);
+            });
+            playerThread.start();
+        }
+    }
+    
+    /**
+     * Method to play a side of Spotify tracks
+     */
+    private void playSpotifyTracks(int side, String tapeID, int muteTime) {
+        // make sure we stop any previous threads
+        if (player != null) {
+            player.stop();
+            player = null;
+        }
+        
+        playerThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                ArrayList<AudioInfo> audioList;
+                String sideString;
+                JLabel trackLabel;
+                JList jlist;
+                
+                if(side == 0) {
+                    audioList = sideAList;
+                    sideString = "A";
+                    jlist = sideAJList;
+                    trackLabel = trackALabel;
+                } else {
+                    audioList = sideBList;
+                    sideString = "B";
+                    jlist = sideBJList;
+                    trackLabel = trackBLabel;
+                }
+                
+                // save to the tape database
+                cassetteFlow.addToTapeDB(tapeID, sideAList, sideBList, true);
+                
+                // play the spotify track now
+                try {
+                    int track = 1;
+                    
+                    for(AudioInfo audioInfo: audioList) {
+                        // check to see if playback was stopped
+                        if(!playSide) {
+                            break;
+                        }
+                        
+                        jlist.setSelectedIndex(track -1);
+                        //trackLabel.setText("Playing Track: " + String.format("%02d", track));
+                        System.out.println("Playing " + audioInfo + " on side: " + sideString);
+                        
+                        // play the spotify track
+                        String url = audioInfo.getUrl();
+                        int length = audioInfo.getLength();
+                        
+                        if(url != null && url.contains("spotify")) {
+                            spotifyConnector.playTrack(url, 0);
+                            playingSpotify = true;
+                        } else {
+                            continue;
+                        }
+                        
+                        // wait for playback to stop
+                        int loopCount = 0;
+                        int playTime = 0;
+                        while(playingSpotify) {
+                            Thread.sleep(100);
+                            loopCount++;
+                            
+                            //update display every second
+                            if(loopCount%10 == 0) {
+                                playTime = loopCount/10;
+                                String message = "Playing Track: " + String.format("%02d", track) + 
+                                        " (" + CassetteFlowUtil.getTimeString(playTime) + ")";
+                                trackLabel.setText(message);
+                                
+                                if(playTime >= length) {
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        // pause a certain amount of time to create a mute section
+                        Thread.sleep(muteTime*1000);
+                        track++;
+                        playingSpotify = false;
+                    }
+                    
+                    // stop the playback if needed
+                    spotifyConnector.stopStream();
+                                        
+                    // re-enable the play side button and other buttons
+                    playButton.setEnabled(true);
+                    playSideButton.setEnabled(true);
+                    moveTrackUpButton.setEnabled(true);
+                    moveTrackDownButton.setEnabled(true);
+                    realtimeEncodeButton.setEnabled(true);
+                    createDownloadButton.setEnabled(true);
+                    createButton.setEnabled(true);
+                    
+                    trackLabel.setText("");
+                    playSide = false;
+                    playingSpotify = false;
+                } catch (InterruptedException e) {
+                    JOptionPane.showMessageDialog(null, "Error playing Spotify stream");
+                }
+            }
+        }
+        );
+        playerThread.start();
+    }
+    
+    /**
      * Stop audio playback
      * @param evt 
      */
@@ -2394,6 +2599,13 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         // see if to stop playing a side of the tape either locally or on the LyraT board
         if (playSide) {
             playSide = false;
+        }
+        
+        // finally check to see if we playing spotify
+        if(playingSpotify) {
+            spotifyConnector.stopStream();
+            playingSpotify = false;
+            playButton.setEnabled(true);
         }
     }//GEN-LAST:event_stopButtonActionPerformed
 
@@ -2545,6 +2757,12 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             return;
         }
         
+        // see if we might be playing spotify tracks instead
+        if(spotifyConnector != null) {
+            playSpotifyTracks(side, tapeID, muteTime);
+            return;
+        }
+        
         // make sure we stop any previous threads
         if (player != null) {
             player.stop();
@@ -2635,7 +2853,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         );
         playerThread.start();
     }//GEN-LAST:event_playSideButtonActionPerformed
-    
+     
     /**
      * Clear the audio from the list
      * 
@@ -2644,6 +2862,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private void clearAudioListButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearAudioListButtonActionPerformed
         DefaultListModel model = (DefaultListModel) audioJList.getModel();
         model.clear();
+        
+        // clear any filtered audio
+        filteredAudioList = null;
         
         // remove records from the list and hashmap database
         cassetteFlow.audioInfoList.clear();
@@ -3389,7 +3610,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         int firstIndex = evt.getFirstIndex();
 
         if (firstIndex >= 0 && !evt.getValueIsAdjusting()) {
-            if(!playSide && player != null && player.isPlaying()) {
+            if(!playSide && (player != null && player.isPlaying() || playingSpotify)) {
                 playButtonActionPerformed(null);
             }
             
