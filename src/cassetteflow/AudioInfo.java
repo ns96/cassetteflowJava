@@ -73,8 +73,14 @@ public class AudioInfo implements Serializable {
     }
     
     public String getBasicName() {
-        String fn = file.getName();
-        return fn.substring(0, fn.lastIndexOf("."));
+        if(file != null) {
+            String fn = file.getName();
+            return fn.substring(0, fn.lastIndexOf("."));
+        } else {
+            // we must have a spotify track so split artist from it
+            String[] sa = title.split(" -- ");
+            return sa[0];
+        }
     }
     
     public String getTitle() {

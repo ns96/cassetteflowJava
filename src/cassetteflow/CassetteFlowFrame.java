@@ -158,6 +158,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             String jsonText = CassetteFlowUtil.getResourceFileAsString("template.jcard.json");
             jcardJSON = new JSONObject(jsonText);
         } catch(IOException | JSONException ex) { }
+        
+        // hide the LyrT tab pane 
+        mainTabbedPane.remove(3);
     }
     
     /**
@@ -666,7 +669,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         buttonGroup1 = new javax.swing.ButtonGroup();
         buttonGroup2 = new javax.swing.ButtonGroup();
         buttonGroup3 = new javax.swing.ButtonGroup();
-        jTabbedPane1 = new javax.swing.JTabbedPane();
+        mainTabbedPane = new javax.swing.JTabbedPane();
         jPanel1 = new javax.swing.JPanel();
         directoryTextField = new javax.swing.JTextField();
         tapeJTabbedPane = new javax.swing.JTabbedPane();
@@ -815,12 +818,12 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.2.0b5 (04/25/2023)");
+        setTitle("CassetteFlow v 1.2.0b7 (04/26/2023)");
 
-        jTabbedPane1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        jTabbedPane1.addKeyListener(new java.awt.event.KeyAdapter() {
+        mainTabbedPane.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        mainTabbedPane.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
-                jTabbedPane1KeyPressed(evt);
+                mainTabbedPaneKeyPressed(evt);
             }
         });
 
@@ -1272,7 +1275,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                     .addComponent(addDCTButton)))
         );
 
-        jTabbedPane1.addTab("ENCODE", jPanel1);
+        mainTabbedPane.addTab("ENCODE", jPanel1);
 
         logfileTextField.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         logfileTextField.setText("logfile");
@@ -1429,7 +1432,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                             .addComponent(viewCurrentTapeButton)))))
         );
 
-        jTabbedPane1.addTab("DECODE", jPanel2);
+        mainTabbedPane.addTab("DECODE", jPanel2);
 
         streamEditorPane.setEditable(false);
         streamEditorPane.setContentType("text/html"); // NOI18N
@@ -1512,7 +1515,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 .addComponent(jScrollPane10, javax.swing.GroupLayout.DEFAULT_SIZE, 439, Short.MAX_VALUE))
         );
 
-        jTabbedPane1.addTab("STREAM PLAY", jPanel8);
+        mainTabbedPane.addTab("STREAM PLAY", jPanel8);
 
         lyraTHostTextField.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         lyraTHostTextField.setText("http://127.0.0.1:8192/");
@@ -1914,7 +1917,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                     .addComponent(jScrollPane9)))
         );
 
-        jTabbedPane1.addTab("ESP32 LyraT", jPanel5);
+        mainTabbedPane.addTab("ESP32 LyraT", jPanel5);
 
         consoleTextArea.setColumns(20);
         consoleTextArea.setFont(new java.awt.Font("Monospaced", 0, 24)); // NOI18N
@@ -2052,7 +2055,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                     .addComponent(reloadAudioOutputsButton)))
         );
 
-        jTabbedPane1.addTab("Setup / Output Console", jPanel7);
+        mainTabbedPane.addTab("Setup / Output Console", jPanel7);
 
         exitButton.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         exitButton.setText("Exit");
@@ -2105,13 +2108,13 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 .addComponent(exitButton))
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jTabbedPane1))
+                .addComponent(mainTabbedPane))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jTabbedPane1)
+                .addComponent(mainTabbedPane)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(addAudioDirectoryButton)
@@ -2268,7 +2271,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     }
     
     /**
-     * either filter the track list or load spotify album or tracks
+     * either filter the track list or load Spotify album or tracks
      * 
      * @param evt 
      */
@@ -2277,13 +2280,12 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         
         // see if to load spotify playlist or album tracks
         if(value.contains("open.spotify.com") && spotifyConnector != null) {
-            value = value.replace("https://open.spotify.com/", "");
-            String[] sa = value.split("/");
+            String[] sa = spotifyConnector.getSpotifyMediaId(value);
             
             if(sa[0].equals("playlist")) {
-                loadSpotifyTracks(spotifyConnector.loadPlaylist(sa[1]));
+                loadSpotifyTracks(spotifyConnector.loadPlaylist(sa[1], false));
             } else if(sa[0].equals("album")) {
-                loadSpotifyTracks(spotifyConnector.loadAlbum(sa[1]));
+                loadSpotifyTracks(spotifyConnector.loadAlbum(sa[1], false));
             }
         } else {
             // just call the filter button audio list action
@@ -2292,7 +2294,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     }//GEN-LAST:event_directoryTextFieldActionPerformed
     
     /**
-     * Load the spotify tracks into the main UI
+     * Load the Spotify tracks into the main UI
      * 
      * @param spotifyTrackList
      */
@@ -2432,11 +2434,16 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             player = null;
         }
 
-        playingSpotify = true;
         playButton.setEnabled(false);
         
         System.out.println("\nPlaying Spotify Audio: " + title);
-        spotifyConnector.playTrack(trackURI, 0);
+        playingSpotify = spotifyConnector.playTrack(trackURI, 0);
+        
+        if(!playingSpotify) {
+            JOptionPane.showMessageDialog(null, "Error Playing Spotify Track ...");
+            playButton.setEnabled(true);
+            return;
+        }
         
         // start thread to keep track of if we playing sound
         if (playerThread == null) {
@@ -2514,8 +2521,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         int length = audioInfo.getLength();
                         
                         if(url != null && url.contains("spotify")) {
-                            spotifyConnector.playTrack(url, 0);
-                            playingSpotify = true;
+                            playingSpotify = spotifyConnector.playTrack(url, 0);
+                            if(!playingSpotify) {
+                                JOptionPane.showMessageDialog(null, "Error Playing Spotify Track ...");
+                                break;
+                            }
                         } else {
                             continue;
                         }
@@ -2543,7 +2553,6 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         // pause a certain amount of time to create a mute section
                         Thread.sleep(muteTime*1000);
                         track++;
-                        playingSpotify = false;
                     }
                     
                     // stop the playback if needed
@@ -2845,7 +2854,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                     
                     trackLabel.setText("");
                     playSide = false;
-                } catch (Exception e) {
+                } catch (StreamPlayerException | InterruptedException e) {
                     JOptionPane.showMessageDialog(null, "Error playing mp3 file");
                 }
             }
@@ -3903,7 +3912,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
      * Detect key presses to implement support for the buttons on the Reterminal
      * @param evt 
      */
-    private void jTabbedPane1KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTabbedPane1KeyPressed
+    private void mainTabbedPaneKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_mainTabbedPaneKeyPressed
         System.out.println("Key pressed code=" + evt.getKeyCode() + ", char=" + evt.getKeyChar());
         
         char key  = evt.getKeyChar();
@@ -3913,7 +3922,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         } else if(key == 'f') {
             stopDecodeButtonActionPerformed(null);
         }
-    }//GEN-LAST:event_jTabbedPane1KeyPressed
+    }//GEN-LAST:event_mainTabbedPaneKeyPressed
     
     /**
      * Load the track list information for side A and B here to make easier
@@ -4084,9 +4093,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     }//GEN-LAST:event_streamPlayClearButtonActionPerformed
 
     private void streamPinTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_streamPinTextFieldActionPerformed
-        //4/20/2023 DEBUG Code
+        // if we connected to spotify load a Spotify playlist or album for DCT playback 
         if(spotifyConnector != null) {
-            spotifyConnector.loadPlaylist(streamPinTextField.getText());
+            String[] info = spotifyConnector.getSpotifyMediaId(streamPinTextField.getText());
+            spotifyConnector.loadPlaylist(info[1], true);
         }
     }//GEN-LAST:event_streamPinTextFieldActionPerformed
 
@@ -4210,7 +4220,6 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JScrollPane jScrollPane7;
     private javax.swing.JScrollPane jScrollPane8;
     private javax.swing.JScrollPane jScrollPane9;
-    private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTextField jcardGroupTextField;
     private javax.swing.JButton jcardSiteButton;
     private javax.swing.JTextField jcardSiteTextField;
@@ -4239,6 +4248,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JButton lyraTStopRawButton;
     private javax.swing.JButton lyraTVolDownButton;
     private javax.swing.JButton lyraTVolUpButton;
+    private javax.swing.JTabbedPane mainTabbedPane;
     private javax.swing.JTextField mmdelayTextField;
     private javax.swing.JButton moveTrackDownButton;
     private javax.swing.JButton moveTrackUpButton;
