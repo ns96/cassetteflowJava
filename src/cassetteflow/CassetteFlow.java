@@ -825,7 +825,7 @@ public class CassetteFlow {
                 //System.out.println("Invalid Time Code Index: " + line);
                 return "TAPE TIME: " + totalTime;
             }
-        } catch(Exception ex) {
+        } catch(NumberFormatException ex) {
             System.out.println("Invalid DCT Record, or Missing DCT Loopkup Array: " + line);
             return null;
         }

@@ -146,12 +146,13 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     }
     
     /**
-     * Set the spotify connector object
+     * Set the Spotify connector object
      * 
      * @param spotifyConnector  
      */
     public void setSpotifyConnector(SpotifyConnector spotifyConnector) {
-       this.spotifyConnector = spotifyConnector; 
+        this.spotifyConnector = spotifyConnector; 
+        System.out.println("\n\nSpotifyConnector Set ...\n");
     }
     
     /**
@@ -311,7 +312,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                                 if (cassetteFlowFrame != null) {
                                     cassetteFlowFrame.printToConsole(" -->" + dctLine, true);
                                 }
-                            
+                                
                                 currentLineRecord = processRecord(dctLine);
                             } else {
                                 // we have a good dct record, but no DCT lookup array so let's see

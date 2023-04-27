@@ -60,13 +60,13 @@ public class SpotifyConnector {
     private String accessToken = "";
     private String refreshToken = "";
 
-    private static final String clientId = SpotifyAppInfo.clientId;
-    private static final String clientSecret = SpotifyAppInfo.clientSecret;
+    private static final String CLIENT_ID = SpotifyAppInfo.clientId;
+    private static final String CLIENT_SECRET = SpotifyAppInfo.clientSecret;
     private static final URI redirectUri = SpotifyHttpManager.makeUri(SpotifyAppInfo.redirectUri);
 
     private static final SpotifyApi spotifyApi = new SpotifyApi.Builder()
-            .setClientId(clientId)
-            .setClientSecret(clientSecret)
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
             .setRedirectUri(redirectUri)
             .build();
 
@@ -79,7 +79,7 @@ public class SpotifyConnector {
     
     private boolean connected = false;
     
-    private String streamId = ""; // the spotify id
+    private String streamId = ""; // the Spotify id
     private int totalPlaytime; // the total playtime of track in seconds
     private String streamTitle = ""; // the title for the stream
     
@@ -94,9 +94,7 @@ public class SpotifyConnector {
     // create a dct play for the que list
     private ArrayList<String> sideADCTList;
     private ArrayList<AudioInfo> queList;
-    private boolean queListLoaded = false;
     private String queTrackId = "";
-    private String queTrack = "";
     private String queListHtml = "";
     
     // keep track of data errors
@@ -196,7 +194,7 @@ public class SpotifyConnector {
         stop();
     }
     
-    // class to handle setting the code from server
+    // class to handle setting the code from Spotify server
     private class SetCodeHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange he) throws IOException {
@@ -273,6 +271,15 @@ public class SpotifyConnector {
             Timer timer = new Timer("Renew Timer");
             timer.scheduleAtFixedRate(renewTask, 2700000, 2700000);
         }
+    }
+    
+    /**
+     * Check to make sure we sucessfully authenticated
+     * 
+     * @return 
+     */
+    public boolean isConnected() {
+       return connected; 
     }
     
     /**
@@ -377,7 +384,6 @@ public class SpotifyConnector {
 
             // store this in the audio info DB
             cassetteFlow.audioInfoDB.put(sha10hex, audioInfo);
-            queListLoaded = true;
         }
     }
         
@@ -447,7 +453,6 @@ public class SpotifyConnector {
 
             // store this in the audio info DB
             cassetteFlow.audioInfoDB.put(sha10hex, audioInfo);
-            queListLoaded = true;
         }
     }
     
@@ -498,6 +503,17 @@ public class SpotifyConnector {
             cassetteFlowFrame.setPlayingCassetteID("STR0A");
         }
     } 
+    
+    /**
+     * Update dctlist for streaming playback
+     * 
+     * @param trackList 
+     * @param muteTime 
+     */
+    public void updateDCTList(ArrayList<AudioInfo> trackList, int muteTime) {
+        sideADCTList = cassetteFlow.createDCTArrayListForSide("STR0A", trackList, muteTime);
+        cassetteFlow.addToTapeDB("STR0", trackList, null, false);
+    }
     
     /**
      * Return an html of the loaded Spotify file
@@ -574,8 +590,6 @@ public class SpotifyConnector {
                 currentAudioInfo = cassetteFlow.audioInfoDB.get(trackId);
                 String url = currentAudioInfo.getUrl();
                 System.out.println("\nPlaying Track: " + track + " -- " + currentAudioInfo);
-
-                queTrack = track;
                 queTrackId = trackId;
 
                 playTrack(url, playTime);
@@ -668,9 +682,7 @@ public class SpotifyConnector {
     public void clearQueList() {
         sideADCTList = null;
         queList = null;
-        queListLoaded = false;
         queListHtml = "";
-        
         cassetteFlowFrame.updateStreamEditorPane("Track List Cleared ...");
     }
     

@@ -1,7 +1,7 @@
 package cassetteflow;
 
 /**
- * Store information specify to spotify app to allow easy hiding. This should note be committed
+ * Store information specify to Spotify app to allow easy hiding. This should note be committed
  * @author Nathan
  */
 public final class SpotifyAppInfo {
