@@ -103,6 +103,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     // keep track if we playing any audio
     private boolean playing;
     
+    // keep track if we playing youtube track
+    private boolean playingYouTube = false;
+    
     // keep track if we playing spotify track
     private boolean playingSpotify = false;
     
@@ -818,7 +821,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.2.0b10 (04/27/2023)");
+        setTitle("CassetteFlow v 1.2.0b12 (04/30/2023)");
 
         mainTabbedPane.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         mainTabbedPane.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -1462,7 +1465,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             }
         });
 
-        streamPinTextField.setText("2KvnvJuv2YLHqs2aW5pf1X");
+        streamPinTextField.setText("0001");
         streamPinTextField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 streamPinTextFieldActionPerformed(evt);
@@ -2055,7 +2058,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                     .addComponent(reloadAudioOutputsButton)))
         );
 
-        mainTabbedPane.addTab("Setup / Output Console", jPanel7);
+        mainTabbedPane.addTab("SETUP / CONSOLE", jPanel7);
 
         exitButton.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         exitButton.setText("Exit");
@@ -2287,6 +2290,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             } else if(sa[0].equals("album")) {
                 loadSpotifyTracks(spotifyConnector.loadAlbum(sa[1], false));
             }
+        } else if(value.contains("youtube:") && deckCastConnector != null) {
+            loadYouTubeTracks(deckCastConnector.getQueList());
+        } else if(value.contains("https://www.youtube.com/playlist") && deckCastConnector != null) {
+            deckCastConnector.loadPlaylist(value);
         } else {
             // just call the filter button audio list action
             filterAudioListButtonActionPerformed(null);
@@ -2311,6 +2318,26 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
 
         audioJList.setModel(filteredModel);
         audioCountLabel.setText(filteredModel.size() + " Spotify tracks loaded");
+    }
+    
+    /**
+     * Load the YouTube tracks into the main UI
+     * 
+     * @param youtubeTrackList
+     */
+    public void loadYouTubeTracks(ArrayList<AudioInfo> youtubeTrackList) {
+        if(filteredAudioList == null) 
+            filteredAudioList = new ArrayList<>();
+        
+        DefaultListModel filteredModel = new DefaultListModel();
+        
+        filteredAudioList.addAll(youtubeTrackList); 
+        for (AudioInfo audioInfo : filteredAudioList) {
+            filteredModel.addElement(audioInfo);
+        }
+
+        audioJList.setModel(filteredModel);
+        audioCountLabel.setText(filteredModel.size() + " YouTube tracks loaded");
     }
     
     private void removeAudioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removeAudioButtonActionPerformed
@@ -2365,6 +2392,15 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                     return;
                 }
             } 
+            
+            // check to see if we playing a youtube track. If so return
+            if(deckCastConnector != null) {
+                String videoId = audioInfo.getStreamId();
+                if(videoId != null) {
+                    playYouTubeTrack(videoId, audioInfo.toString(), audioInfo.getLength());
+                    return;
+                }
+            }
             
             System.out.println("\nPlaying Audio: " + audioInfo  + " / Speed: "  + speedFactor);
             
@@ -2440,7 +2476,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         playingSpotify = spotifyConnector.playTrack(trackURI, 0);
         
         if(!playingSpotify) {
-            JOptionPane.showMessageDialog(null, "Error Playing Spotify Track ...");
+            JOptionPane.showMessageDialog(null, "Error Playing Spotify Track\n"
+            + "No Active Player Found");
             playButton.setEnabled(true);
             return;
         }
@@ -2523,7 +2560,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         if(url != null && url.contains("spotify")) {
                             playingSpotify = spotifyConnector.playTrack(url, 0);
                             if(!playingSpotify) {
-                                JOptionPane.showMessageDialog(null, "Error Playing Spotify Track ...");
+                                JOptionPane.showMessageDialog(null, "Error Playing Spotify Track\n"
+                                        + "No Active Player Found");
                                 break;
                             }
                         } else {
@@ -2531,23 +2569,19 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         }
                         
                         // wait for playback to stop
-                        int loopCount = 0;
                         int playTime = 0;
                         while(playingSpotify) {
-                            Thread.sleep(100);
-                            loopCount++;
-                            
                             //update display every second
-                            if(loopCount%10 == 0) {
-                                playTime = loopCount/10;
-                                String message = "Playing Track: " + String.format("%02d", track) + 
-                                        " (" + CassetteFlowUtil.getTimeString(playTime) + ")";
-                                trackLabel.setText(message);
-                                
-                                if(playTime >= length) {
-                                    break;
-                                }
+                            String message = "Playing Track: " + String.format("%02d", track)
+                                    + " (" + CassetteFlowUtil.getTimeString(playTime) + ")";
+                            trackLabel.setText(message);
+
+                            if (playTime >= length) {
+                                break;
                             }
+                            
+                            playTime++;
+                            Thread.sleep(1000);
                         }
                         
                         // pause a certain amount of time to create a mute section
@@ -2572,6 +2606,163 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                     playingSpotify = false;
                 } catch (InterruptedException e) {
                     JOptionPane.showMessageDialog(null, "Error playing Spotify stream");
+                }
+            }
+        }
+        );
+        playerThread.start();
+    }
+    
+    /**
+     * play a YouTube track
+     * 
+     * @param videoId 
+     * @param title
+     * @param length
+     */
+    private void playYouTubeTrack(String videoId, String title, int length) {
+        // make sure we stop any previous threads
+        if (player != null) {
+            player.stop();
+            player = null;
+        }
+
+        playButton.setEnabled(false);
+        
+        System.out.println("\nPlaying YouTube Audio: " + title);
+        playingYouTube = deckCastConnector.playSingleTrack(videoId);
+        
+        if(!playingYouTube) {
+            JOptionPane.showMessageDialog(null, "Error Playing YouTube Track\n"
+            + "No Active Player Found");
+            playButton.setEnabled(true);
+            return;
+        }
+        
+        // start thread to keep track of if we playing sound
+        if (playerThread == null) {
+            playerThread = new Thread(() -> {
+                try {
+                    int playTime = 0;
+
+                    while (playingYouTube) {
+                        Thread.sleep(1000);
+                        playTime++;
+                        
+                        if(playTime >= length) {
+                            System.out.println("YouTube Track Finished ...");
+                            break;
+                        }
+                    }
+                } catch (InterruptedException ex) { }
+                
+                playingYouTube = false;
+                playButton.setEnabled(true);
+            });
+            playerThread.start();
+        }
+    }
+    
+    /**
+     * Method to play a side of YouTube tracks
+     */
+    private void playYouTubeTracks(int side, String tapeID, int muteTime) {
+        // make sure we stop any previous threads
+        if (player != null) {
+            player.stop();
+            player = null;
+        }
+        
+        playerThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                ArrayList<AudioInfo> audioList;
+                String sideString;
+                JLabel trackLabel;
+                JList jlist;
+                
+                if(side == 0) {
+                    audioList = sideAList;
+                    sideString = "A";
+                    jlist = sideAJList;
+                    trackLabel = trackALabel;
+                } else {
+                    audioList = sideBList;
+                    sideString = "B";
+                    jlist = sideBJList;
+                    trackLabel = trackBLabel;
+                }
+                
+                // save to the tape database
+                cassetteFlow.addToTapeDB(tapeID, sideAList, sideBList, true);
+                
+                // play the youtube track now
+                try {
+                    int track = 1;
+                    
+                    for(AudioInfo audioInfo: audioList) {
+                        // check to see if playback was stopped
+                        if(!playSide) {
+                            break;
+                        }
+                        
+                        jlist.setSelectedIndex(track -1);
+                        //trackLabel.setText("Playing Track: " + String.format("%02d", track));
+                        System.out.println("Playing " + audioInfo + " on side: " + sideString);
+                        
+                        // play the spotify track
+                        String videoId = audioInfo.getStreamId();
+                        int length = audioInfo.getLength();
+                        
+                        if(videoId != null) {
+                            playingYouTube = deckCastConnector.playSingleTrack(videoId);
+                            if(!playingYouTube) {
+                                JOptionPane.showMessageDialog(null, "Error Playing YouTube Track\n"
+                                        + "No Active Player Found");
+                                break;
+                            }
+                        } else {
+                            continue;
+                        }
+                        
+                        // wait for playback to stop
+                        int playTime = 0;
+                        while(playingYouTube) {
+                            //update display every second
+                            String message = "Playing Track: " + String.format("%02d", track)
+                                    + " (" + CassetteFlowUtil.getTimeString(playTime) + ")";
+                            trackLabel.setText(message);
+
+                            if (playTime >= length) {
+                                break;
+                            }
+
+                            playTime++;
+                            Thread.sleep(1000);
+                        }
+                        
+                        // pause a certain amount of time to create a mute section
+                        Thread.sleep(muteTime*1000);
+                        track++;
+                    }
+                    
+                    // stop the playback if needed
+                    deckCastConnector.stopStream();
+                                        
+                    // re-enable the play side button and other buttons
+                    playButton.setEnabled(true);
+                    playSideButton.setEnabled(true);
+                    moveTrackUpButton.setEnabled(true);
+                    moveTrackDownButton.setEnabled(true);
+                    realtimeEncodeButton.setEnabled(true);
+                    createDownloadButton.setEnabled(true);
+                    createButton.setEnabled(true);
+                    
+                    trackLabel.setText("");
+                    playSide = false;
+                    playingYouTube = false;
+                } catch (InterruptedException e) {
+                    JOptionPane.showMessageDialog(null, "Error playing YouTube stream");
                 }
             }
         }
@@ -2608,6 +2799,13 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         // see if to stop playing a side of the tape either locally or on the LyraT board
         if (playSide) {
             playSide = false;
+        }
+        
+        // finally check to see if we playing youtube
+        if(playingYouTube) {
+            deckCastConnector.stopStream();
+            playingYouTube = false;
+            playButton.setEnabled(true);
         }
         
         // finally check to see if we playing spotify
@@ -2763,6 +2961,12 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         // if we connected to the lyraT board play the side through there
         if(lyraTConnect != null) {
             lyraTCreateAndPlayInputFiles(side, muteTime);
+            return;
+        }
+        
+        // see if we might be playing youtube tracks instead
+        if(deckCastConnector != null) {
+            playYouTubeTracks(side, tapeID, muteTime);
             return;
         }
         
@@ -3616,7 +3820,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         int firstIndex = evt.getFirstIndex();
 
         if (firstIndex >= 0 && !evt.getValueIsAdjusting()) {
-            if(!playSide && (player != null && player.isPlaying() || playingSpotify)) {
+            if(!playSide && (player != null && player.isPlaying() || playingYouTube || playingSpotify)) {
                 playButtonActionPerformed(null);
             }
             
@@ -3808,7 +4012,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             String tapeID = tapeIDTextField.getText();
             int muteTime = Integer.parseInt(muteJTextField.getText());
             
-            if(spotifyConnector != null) {
+            if(deckCastConnector != null) {
+                deckCastConnector.updateDCTList(sideAList, muteTime);
+            } else if(spotifyConnector != null) {
                 spotifyConnector.updateDCTList(sideAList, muteTime);
             } else {
                 cassetteFlow.createDCTArrayList(tapeID, sideAList, sideBList, muteTime);
@@ -4139,10 +4345,12 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         streamPlaytimeLabel.setText("Play Time: " + playTimeString + "/" + totalTimeString + " " + track);
     }
     
-    public void setStreamPlayerConnected() {
-        // clear the dct array
-        cassetteFlow.clearDCTArrayList();
-        streamConnectButton.setEnabled(false);
+    public void setStreamPlayerConnected(boolean connected) {
+        if(connected) {
+            // clear the dct array
+            cassetteFlow.clearDCTArrayList();
+            streamConnectButton.setEnabled(false);
+        }
     }
    
     // Variables declaration - do not modify//GEN-BEGIN:variables

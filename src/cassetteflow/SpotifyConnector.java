@@ -60,9 +60,9 @@ public class SpotifyConnector {
     private String accessToken = "";
     private String refreshToken = "";
 
-    private static final String CLIENT_ID = SpotifyAppInfo.clientId;
-    private static final String CLIENT_SECRET = SpotifyAppInfo.clientSecret;
-    private static final URI redirectUri = SpotifyHttpManager.makeUri(SpotifyAppInfo.redirectUri);
+    private static final String CLIENT_ID = SpotifyAppInfo.CLIENT_ID;
+    private static final String CLIENT_SECRET = SpotifyAppInfo.CLIENT_SECRET;
+    private static final URI redirectUri = SpotifyHttpManager.makeUri(SpotifyAppInfo.REDIRECT_URI);
 
     private static final SpotifyApi spotifyApi = new SpotifyApi.Builder()
             .setClientId(CLIENT_ID)
@@ -206,6 +206,7 @@ public class SpotifyConnector {
             // get the access code
             code = params.get("code").toString();
             System.out.println("Access Code Set ...");
+            String message;
             
             try {
                 AuthorizationCodeRequest authorizationCodeRequest = spotifyApi.authorizationCode(code)
@@ -227,15 +228,19 @@ public class SpotifyConnector {
                 // indicate we are connected
                 connected = true;
                 
-                String message = "Spotify Player Connected ...";
+                message = "Spotify Player Connected ...";
                 message = message.toUpperCase();
-                
-                if(cassetteFlowFrame != null) {
-                    cassetteFlowFrame.updateStreamEditorPane(message);
-                    cassetteFlowFrame.setStreamPlayerConnected();
-                }
             } catch (SpotifyWebApiException | ParseException e) {
-                System.out.println("Error ");
+                e.printStackTrace();
+
+                connected = false;
+                message = "Error Connecting To Spotify Player ...";
+            }
+            
+            // update the connection status to the main UI
+            if(cassetteFlowFrame != null) {
+                cassetteFlowFrame.updateStreamEditorPane(message.toUpperCase());
+                cassetteFlowFrame.setStreamPlayerConnected(connected);
             }
             
             sendResponse(he, response);
@@ -592,16 +597,21 @@ public class SpotifyConnector {
                 System.out.println("\nPlaying Track: " + track + " -- " + currentAudioInfo);
                 queTrackId = trackId;
 
-                playTrack(url, playTime);
+                playing = playTrack(url, playTime); 
+                String message;
+                
+                if(playing) {
+                    message = "Stream ID: " + currentAudioInfo.getStreamId() + "\n"
+                            + currentAudioInfo.getName() + "\n"
+                            + "Start Time @ " + playTime + " | Track Number: " + track;
+                } else {
+                    message = "ERROR PLAYING Stream ID: " + currentAudioInfo.getStreamId() + "\n"
+                            + currentAudioInfo.getName() + "\n"
+                            + "Start Time @ " + playTime + " | Track Number: " + track;
+                }
                 
                 // update the stream play panel
                 cassetteFlowFrame.setStreamInformation(trackId, currentAudioInfo.getLength(), 1);
-                
-                // update the decode UI with the track thats playing
-                String message = "Stream ID: " + currentAudioInfo.getStreamId() + "\n"
-                        + currentAudioInfo.getName() + "\n"
-                        + "Start Time @ " + playTime + " | Track Number: " + track;
-
                 cassetteFlowFrame.setPlayingAudioInfo(message);
                 cassetteFlowFrame.setPlayingAudioTrack(track);
             }

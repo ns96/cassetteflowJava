@@ -59,6 +59,9 @@ public class DeckCastConnector {
     private int logLineCount = 0;
     private int muteRecords = 0;
     
+    // indicate we waiting on the list
+    private boolean waitingOnQueList = false; 
+    
     public DeckCastConnector(CassetteFlowFrame cassetteFlowFrame, CassetteFlow cassetteFlow, String url, String pin) throws URISyntaxException {
         this.cassetteFlowFrame = cassetteFlowFrame;
         this.cassetteFlow = cassetteFlow;
@@ -79,7 +82,7 @@ public class DeckCastConnector {
                    cassetteFlowFrame.updateStreamEditorPane(message);
                    
                    if(connected) {
-                       cassetteFlowFrame.setStreamPlayerConnected();
+                       cassetteFlowFrame.setStreamPlayerConnected(connected);
                    }
                 }
             }
@@ -180,10 +183,36 @@ public class DeckCastConnector {
             queListHtml = obj.getString("queListHTML");
             cassetteFlowFrame.updateStreamEditorPane(queListHtml);
             cassetteFlowFrame.setPlayingCassetteID("STR0A");
+            
+            // see if to load the que list that was just loaded
+            if(waitingOnQueList) {
+                waitingOnQueList = false;
+                cassetteFlowFrame.loadYouTubeTracks(queList);
+            }
         } else {
             System.out.println("Unused message\n" + obj.toString(2));
         }
     }
+    
+    /**
+     * Send command to load playlist on client
+     * @param playlistUrl 
+     */
+    public void loadPlaylist(String playlistUrl) {
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put("data", "Video Qued");
+            obj.put("player", 0);
+            obj.put("pin", streamPin);
+            obj.put("clientId", "DeckCast_" + streamPin);
+            obj.put("videoId", playlistUrl);
+            socket.emit("my event", obj);
+            waitingOnQueList = true;
+        } catch (JSONException ex) {
+            Logger.getLogger(DeckCastConnector.class.getName()).log(Level.SEVERE, null, ex);
+            waitingOnQueList = false;
+        }
+    } 
     
     /**
      * Play the stream on the remote server
@@ -357,6 +386,41 @@ public class DeckCastConnector {
     }
     
     /**
+     * Play 
+     * @param videoId 
+     * @return  
+     */
+    public boolean playSingleTrack(String videoId) {
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put("data", "Video Changed -- Player " + player);
+            obj.put("uname", "Guest");
+            obj.put("player", player);
+            obj.put("videoId", videoId);
+            socket.emit("my event", obj);
+            
+            System.out.println(obj.toString(2));
+            playing = true;
+        } catch (JSONException ex) {
+            Logger.getLogger(DeckCastConnector.class.getName()).log(Level.SEVERE, null, ex);
+            playing = false;
+        }
+        
+        return playing;
+    }
+    
+    /**
+     * Update dctlist for streaming playback
+     * 
+     * @param trackList 
+     * @param muteTime 
+     */
+    public void updateDCTList(ArrayList<AudioInfo> trackList, int muteTime) {
+        sideADCTList = cassetteFlow.createDCTArrayListForSide("STR0A", trackList, muteTime);
+        cassetteFlow.addToTapeDB("STR0", trackList, null, false);
+    }
+    
+    /**
      * Stop play back of the stream
      */
     public void stopStream() {
@@ -417,6 +481,15 @@ public class DeckCastConnector {
      */
     public String getServerUrl() {
         return serverUrl;
+    }
+    
+    /**
+     * Return the quelist items
+     * 
+     * @return 
+     */
+    public ArrayList<AudioInfo> getQueList() {
+        return queList;
     }
     
     /**
