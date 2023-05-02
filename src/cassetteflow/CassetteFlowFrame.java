@@ -821,7 +821,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.2.0b12 (04/30/2023)");
+        setTitle("CassetteFlow v 1.2.0b14 (05/02/2023)");
 
         mainTabbedPane.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         mainTabbedPane.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -2283,8 +2283,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         
         // see if to load spotify playlist or album tracks
         if(value.contains("open.spotify.com") && spotifyConnector != null) {
-            String[] sa = spotifyConnector.getSpotifyMediaId(value);
+            audioCountLabel.setText(" Loading Spotify tracks ...");
             
+            String[] sa = spotifyConnector.getSpotifyMediaId(value);
             if(sa[0].equals("playlist")) {
                 loadSpotifyTracks(spotifyConnector.loadPlaylist(sa[1], false));
             } else if(sa[0].equals("album")) {
@@ -2293,6 +2294,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         } else if(value.contains("youtube:") && deckCastConnector != null) {
             loadYouTubeTracks(deckCastConnector.getQueList());
         } else if(value.contains("https://www.youtube.com/playlist") && deckCastConnector != null) {
+            encodeProgressBar.setIndeterminate(true);
+            audioCountLabel.setText(" Loading YouTube playlist tracks ...");
+            
             deckCastConnector.loadPlaylist(value);
         } else {
             // just call the filter button audio list action
@@ -2338,6 +2342,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
 
         audioJList.setModel(filteredModel);
         audioCountLabel.setText(filteredModel.size() + " YouTube tracks loaded");
+        encodeProgressBar.setIndeterminate(false);
     }
     
     private void removeAudioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removeAudioButtonActionPerformed
@@ -2643,7 +2648,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         if (playerThread == null) {
             playerThread = new Thread(() -> {
                 try {
-                    int playTime = 0;
+                    int playTime = 1; // assume it takes a second to load player
 
                     while (playingYouTube) {
                         Thread.sleep(1000);
@@ -2725,8 +2730,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                             continue;
                         }
                         
-                        // wait for playback to stop
-                        int playTime = 0;
+                        // wait for playback to stop, assume player takes 1 second to load
+                        int playTime = 1;
                         while(playingYouTube) {
                             //update display every second
                             String message = "Playing Track: " + String.format("%02d", track)

@@ -317,7 +317,6 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                             } else {
                                 // we have a good dct record, but no DCT lookup array so let's see
                                 // if we are controlling a stream player
-                                
                                 if(deckCastConnector != null) {
                                     int tapeTime = Integer.parseInt(dctLine.split(" ")[2]);
                                     deckCastConnector.playStream(tapeTime);
