@@ -45,6 +45,7 @@ import se.michaelthelin.spotify.requests.data.player.PauseUsersPlaybackRequest;
 import se.michaelthelin.spotify.requests.data.player.StartResumeUsersPlaybackRequest;
 import se.michaelthelin.spotify.requests.data.playlists.GetPlaylistRequest;
 import se.michaelthelin.spotify.requests.data.playlists.GetPlaylistsItemsRequest;
+import se.michaelthelin.spotify.requests.data.tracks.GetTrackRequest;
 
 /**
  * A class to connect to the Spotify backend to get tract information and control playback
@@ -432,7 +433,8 @@ public class SpotifyConnector {
             
             storeAudioInfoRecords(storeDct);
         } catch (IOException | SpotifyWebApiException | ParseException ex) {
-            Logger.getLogger(SpotifyConnector.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("Error loading album, might be a track?");
+            return loadTrack(albumId, storeDct);
         }
         
         return queList;
@@ -459,6 +461,45 @@ public class SpotifyConnector {
             // store this in the audio info DB
             cassetteFlow.audioInfoDB.put(sha10hex, audioInfo);
         }
+    }
+    
+    /**
+     * Get the items in the album
+     * 
+     * @param trackId 
+     * @param storeDct 
+     * @return  
+     */
+    public ArrayList<AudioInfo> loadTrack(String trackId, boolean storeDct) {
+        GetTrackRequest getTrackRequest = spotifyApi.getTrack(trackId)
+                 .build();
+                
+        try {
+            queList = new ArrayList<>();
+            
+            Track track = getTrackRequest.execute();
+            streamTitle = track.getName();
+           
+            String title = track.getName() + " -- " + getArtists(track.getArtists());
+            String sha10hex = CassetteFlowUtil.get10CharacterHash(title);
+            int length = track.getDurationMs() / 1000; // length in seconds
+            String lengthAsTime = CassetteFlowUtil.getTimeString(length);
+            String url = "[\"" + track.getUri() + "\"]";
+            AudioInfo audioInfo = new AudioInfo(null, sha10hex, length, lengthAsTime, 128);
+            audioInfo.setTitle(title);
+            audioInfo.setStreamId(trackId);
+            audioInfo.setUrl(url);
+            queList.add(audioInfo);
+
+            // store this in the audio info DB
+            cassetteFlow.audioInfoDB.put(sha10hex, audioInfo);
+                        
+            storeAudioInfoRecords(storeDct);
+        } catch (IOException | SpotifyWebApiException | ParseException ex) {
+            Logger.getLogger(SpotifyConnector.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return queList;
     }
     
     /**
