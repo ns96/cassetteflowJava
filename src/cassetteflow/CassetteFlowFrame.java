@@ -821,7 +821,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.2.0b15 (05/06/2023)");
+        setTitle("CassetteFlow v 1.2.0b18 (06/26/2023)");
 
         mainTabbedPane.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         mainTabbedPane.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -851,11 +851,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 682, Short.MAX_VALUE)
+            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 665, Short.MAX_VALUE)
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addComponent(sideALabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(trackALabel, javax.swing.GroupLayout.PREFERRED_SIZE, 201, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(trackALabel, javax.swing.GroupLayout.PREFERRED_SIZE, 270, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -883,11 +883,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 682, Short.MAX_VALUE)
+            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 665, Short.MAX_VALUE)
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addComponent(sideBLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(trackBLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(trackBLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 270, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -966,7 +966,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jcardTitleTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 182, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jcardGroupTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 128, Short.MAX_VALUE)))
+                        .addComponent(jcardGroupTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 112, Short.MAX_VALUE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jcardSiteButton, javax.swing.GroupLayout.PREFERRED_SIZE, 110, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -1180,7 +1180,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         .addComponent(clearAudioListButton)
                         .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(directoryTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 187, Short.MAX_VALUE)
+                        .addComponent(directoryTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 171, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(defaultButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -2282,24 +2282,29 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         String value = directoryTextField.getText();
         
         // see if to load spotify playlist or album tracks
-        if(value.contains("open.spotify.com") && spotifyConnector != null) {
-            audioCountLabel.setText(" Loading Spotify tracks ...");
+        if(spotifyConnector != null) {
+            if(value.contains("open.spotify.com")) {
+                audioCountLabel.setText(" Loading Spotify tracks ...");
             
-            String[] sa = spotifyConnector.getSpotifyMediaId(value);
-            if(sa[0].equals("playlist")) {
-                loadSpotifyTracks(spotifyConnector.loadPlaylist(sa[1], false));
-            } else if(sa[0].equals("album")) {
-                loadSpotifyTracks(spotifyConnector.loadAlbum(sa[1], false));
-            } else if(sa[0].equals("track")) {
-                loadSpotifyTracks(spotifyConnector.loadTrack(sa[1], false));
+                String[] sa = spotifyConnector.getSpotifyMediaId(value);
+                if(sa[0].equals("playlist")) {
+                    loadSpotifyTracks(spotifyConnector.loadPlaylist(sa[1], false));
+                } else if(sa[0].equals("album")) {
+                    loadSpotifyTracks(spotifyConnector.loadAlbum(sa[1], false));
+                } else if(sa[0].equals("track")) {
+                    loadSpotifyTracks(spotifyConnector.loadTrack(sa[1], false));
+                }
+            } else if(value.contains("spotify:") && spotifyConnector != null) {
+                loadStreamingTracks("Spotify", spotifyConnector.getQueList());
             }
-        } else if(value.contains("youtube:") && deckCastConnector != null) {
-            loadYouTubeTracks(deckCastConnector.getQueList());
-        } else if(value.contains("https://www.youtube.com/playlist") && deckCastConnector != null) {
-            encodeProgressBar.setIndeterminate(true);
-            audioCountLabel.setText(" Loading YouTube playlist tracks ...");
-            
-            deckCastConnector.loadPlaylist(value);
+        } else if(deckCastConnector != null) {
+            if(value.contains("https://www.youtube.com/playlist")) {
+                encodeProgressBar.setIndeterminate(true);
+                audioCountLabel.setText(" Loading YouTube playlist tracks ...");
+                deckCastConnector.loadPlaylist(value);
+            } else if(value.contains("youtube:")) {
+                loadStreamingTracks("YouTube", deckCastConnector.getQueList());
+            }
         } else {
             // just call the filter button audio list action
             filterAudioListButtonActionPerformed(null);
@@ -2329,21 +2334,22 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     /**
      * Load the YouTube tracks into the main UI
      * 
-     * @param youtubeTrackList
+     * @param streamer
+     * @param streamingTrackList
      */
-    public void loadYouTubeTracks(ArrayList<AudioInfo> youtubeTrackList) {
+    public void loadStreamingTracks(String streamer, ArrayList<AudioInfo> streamingTrackList) {
         if(filteredAudioList == null) 
             filteredAudioList = new ArrayList<>();
         
         DefaultListModel filteredModel = new DefaultListModel();
         
-        filteredAudioList.addAll(youtubeTrackList); 
+        filteredAudioList.addAll(streamingTrackList); 
         for (AudioInfo audioInfo : filteredAudioList) {
             filteredModel.addElement(audioInfo);
         }
 
         audioJList.setModel(filteredModel);
-        audioCountLabel.setText(filteredModel.size() + " YouTube tracks loaded");
+        audioCountLabel.setText(filteredModel.size() + " " + streamer + " tracks loaded");
         encodeProgressBar.setIndeterminate(false);
     }
     
@@ -2549,6 +2555,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 // play the spotify track now
                 try {
                     int track = 1;
+                    int currentPlayTime = 0;
                     
                     for(AudioInfo audioInfo: audioList) {
                         // check to see if playback was stopped
@@ -2579,8 +2586,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         int playTime = 0;
                         while(playingSpotify) {
                             //update display every second
-                            String message = "Playing Track: " + String.format("%02d", track)
-                                    + " (" + CassetteFlowUtil.getTimeString(playTime) + ")";
+                            String message = "Playing Track: " + String.format("%02d", track) + 
+                                        " (" + CassetteFlowUtil.getTimeString(playTime) + " | " +
+                                        CassetteFlowUtil.getTimeString(currentPlayTime) + ")";
+                            
                             trackLabel.setText(message);
 
                             if (playTime >= length) {
@@ -2588,11 +2597,13 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                             }
                             
                             playTime++;
+                            currentPlayTime++;
                             Thread.sleep(1000);
                         }
                         
                         // pause a certain amount of time to create a mute section
                         Thread.sleep(muteTime*1000);
+                        currentPlayTime += muteTime;
                         track++;
                     }
                     
@@ -2706,6 +2717,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 // play the youtube track now
                 try {
                     int track = 1;
+                    int currentPlayTime = 1;
                     
                     for(AudioInfo audioInfo: audioList) {
                         // check to see if playback was stopped
@@ -2736,8 +2748,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         int playTime = 1;
                         while(playingYouTube) {
                             //update display every second
-                            String message = "Playing Track: " + String.format("%02d", track)
-                                    + " (" + CassetteFlowUtil.getTimeString(playTime) + ")";
+                            String message = "Playing Track: " + String.format("%02d", track) + 
+                                        " (" + CassetteFlowUtil.getTimeString(playTime) + " | " +
+                                        CassetteFlowUtil.getTimeString(currentPlayTime) + ")";
+                            
                             trackLabel.setText(message);
 
                             if (playTime >= length) {
@@ -2745,11 +2759,13 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                             }
 
                             playTime++;
+                            currentPlayTime++;
                             Thread.sleep(1000);
                         }
                         
                         // pause a certain amount of time to create a mute section
                         Thread.sleep(muteTime*1000);
+                        currentPlayTime += muteTime;
                         track++;
                     }
                     
@@ -3016,7 +3032,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 // play the sound file now MP3 or FLAC
                 try {
                     int track = 1;
-                    
+                    int currentPlayTime = 0;
+                            
                     for(AudioInfo audioInfo: audioList) {
                         // check to see if playback was stopped
                         if(!playSide) {
@@ -3040,8 +3057,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                             //update display every second
                             if(loopCount%10 == 0) {
                                 int playTime = loopCount/10;
+                                currentPlayTime++;
+                                        
                                 String message = "Playing Track: " + String.format("%02d", track) + 
-                                        " (" + CassetteFlowUtil.getTimeString(playTime) + ")";
+                                        " (" + CassetteFlowUtil.getTimeString(playTime) + " | " +
+                                        CassetteFlowUtil.getTimeString(currentPlayTime) + ")";
                                 trackLabel.setText(message);
                             }
                             
@@ -3051,6 +3071,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         
                         // pause a certain amount of time to create a mute section
                         Thread.sleep(muteTime*1000);
+                        currentPlayTime += muteTime;
                         track++;
                     }
                                         

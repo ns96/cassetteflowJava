@@ -187,7 +187,7 @@ public class DeckCastConnector {
             // see if to load the que list that was just loaded
             if(waitingOnQueList) {
                 waitingOnQueList = false;
-                cassetteFlowFrame.loadYouTubeTracks(queList);
+                cassetteFlowFrame.loadStreamingTracks("YouTube", queList);
             }
         } else {
             System.out.println("Unused message\n" + obj.toString(2));

@@ -738,6 +738,15 @@ public class SpotifyConnector {
     }
     
     /**
+     * Return the quelist items
+     * 
+     * @return 
+     */
+    public ArrayList<AudioInfo> getQueList() {
+        return queList;
+    }
+    
+    /**
      * Set the data errors and log lines
      * 
      * @param dataErrors
