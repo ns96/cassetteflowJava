@@ -131,8 +131,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     
     // initite the objects to allow control of streaming
     // music sites. Store the id for the stream video/track being played
+    // deckCastConnectorDisplay is used only to show current playing track through web ui
     private DeckCastConnector deckCastConnector;
-    private SpotifyConnector spotifyConnector;
+    private DeckCastConnector deckCastConnectorDisplay;
+    private SpotifyConnector spotifyConnector;  
     private String streamId;
     private int streamTotalTime = 0;
     private int streamPlayer = 0;
@@ -821,7 +823,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.2.0b18 (06/26/2023)");
+        setTitle("CassetteFlow v 1.3.0b2 (10/14/2024)");
 
         mainTabbedPane.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         mainTabbedPane.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -1444,7 +1446,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jLabel13.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabel13.setText("Stream Server");
 
-        streamComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "http://pi3.sytes.net:5054/", "http://127.0.0.1:5054/", "https://www.spotify.com/" }));
+        streamComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "http://pi86.sytes.net:5054/", "http://127.0.0.1:5054/", "https://www.spotify.com/" }));
 
         streamConnectButton.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         streamConnectButton.setText("CONNECT");
@@ -2294,7 +2296,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 } else if(sa[0].equals("track")) {
                     loadSpotifyTracks(spotifyConnector.loadTrack(sa[1], false));
                 }
-            } else if(value.contains("spotify:") && spotifyConnector != null) {
+            } else if(value.contains("spotify:")) {
                 loadStreamingTracks("Spotify", spotifyConnector.getQueList());
             }
         } else if(deckCastConnector != null) {
@@ -2402,6 +2404,12 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 String url = audioInfo.getUrl();
                 if(url != null && url.contains("spotify")) {
                     playSpotifyTrack(url, audioInfo.toString(), audioInfo.getLength());
+                    
+                    // send information to deck cast about playing track
+                    if (deckCastConnectorDisplay != null) {
+                        deckCastConnectorDisplay.displayPlayingAudioInfo(audioInfo, 0, "spotify");
+                    }
+                    
                     return;
                 }
             } 
@@ -2435,6 +2443,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 player.play();
                 
                 playButton.setEnabled(false);
+                
+                // send information to deck cast about playing track
+                if(deckCastConnectorDisplay != null) {
+                    deckCastConnectorDisplay.displayPlayingAudioInfo(audioInfo, 0, "mp3/FLAC");
+                }
             } catch (StreamPlayerException e) {
                 e.printStackTrace();
                 JOptionPane.showMessageDialog(null, "Error playing audio file ...");
@@ -2578,6 +2591,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                                         + "No Active Player Found");
                                 break;
                             }
+                            
+                            // send information to deck cast about playing track
+                            if (deckCastConnectorDisplay != null) {
+                                deckCastConnectorDisplay.displayPlayingAudioInfo(audioInfo, 0, "spotify");
+                            }
                         } else {
                             continue;
                         }
@@ -2622,6 +2640,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                     trackLabel.setText("");
                     playSide = false;
                     playingSpotify = false;
+                    
+                    if (deckCastConnectorDisplay != null) {
+                        deckCastConnectorDisplay.clearAudioInfoDisplay();
+                    }
                 } catch (InterruptedException e) {
                     JOptionPane.showMessageDialog(null, "Error playing Spotify stream");
                 }
@@ -2837,6 +2859,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             playingSpotify = false;
             playButton.setEnabled(true);
         }
+        
+        if(deckCastConnectorDisplay != null) {
+            deckCastConnectorDisplay.clearAudioInfoDisplay();
+        }
     }//GEN-LAST:event_stopButtonActionPerformed
 
     private void clearSelectionButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearSelectionButtonActionPerformed
@@ -3051,6 +3077,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         player.open(audioInfo.getFile());
                         player.play(); 
                         
+                        // send information to deck cast about playing track
+                        if (deckCastConnectorDisplay != null) {
+                            deckCastConnectorDisplay.displayPlayingAudioInfo(audioInfo, 0, "mp3/FLAC");
+                        }
+
                         // wait for playback to stop
                         int loopCount = 0;
                         while(player.isPlaying()) {
@@ -3148,6 +3179,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             deckCastConnector.stopStream();
         }
         
+        if(deckCastConnectorDisplay != null) {
+            deckCastConnectorDisplay.clearAudioInfoDisplay();
+        }
+        
         if(spotifyConnector != null) {
             spotifyConnector.stopStream();
         }
@@ -3195,6 +3230,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             setPlayingCassetteID("STR0A");
         }
         
+        // set the cassett flow connector for displaying information
+        if(deckCastConnectorDisplay != null) {
+            cassettePlayer.setDeckCastConnectorDisplay(deckCastConnectorDisplay);
+        }
+          
         if(directDecodeCheckBox.isSelected()) {
             try {
                 // get the delay used to synchronized the playback time indicated
@@ -4110,6 +4150,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
                     desktop.browse(uri);
                 }
+            } else if(streamPin.equals("-1")) {
+                deckCastConnectorDisplay = new DeckCastConnector(null, null, streamUrl, "CF");
             } else {
                 deckCastConnector = new DeckCastConnector(this, cassetteFlow, streamUrl, streamPin);
             }
@@ -4333,6 +4375,14 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         if(spotifyConnector != null) {
             String[] info = spotifyConnector.getSpotifyMediaId(streamPinTextField.getText());
             spotifyConnector.loadPlaylist(info[1], true);
+        } else {
+            try {
+                // create a deckcast connector for displaying the current audio track
+                String streamUrl = streamComboBox.getSelectedItem().toString();
+                deckCastConnectorDisplay = new DeckCastConnector(null, null, streamUrl, "CF");
+            } catch (URISyntaxException ex) {
+                Logger.getLogger(CassetteFlowFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }//GEN-LAST:event_streamPinTextFieldActionPerformed
 

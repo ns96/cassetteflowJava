@@ -22,6 +22,7 @@ public class AudioInfo implements Serializable {
     private String album;
     private String year;
     private String streamId;
+    private String imageUrl;
     
     public AudioInfo(File file, String hash10C, int length, String lengthAsTime, int bitRate) {
         this.file = file;
@@ -36,6 +37,10 @@ public class AudioInfo implements Serializable {
     }
     
     public String getUrl() {
+        if(Url == null) {
+            Url = "unknown";
+        }
+        
         return Url;
     }
 
@@ -135,6 +140,18 @@ public class AudioInfo implements Serializable {
 
     public void setStreamId(String streamId) {
         this.streamId = streamId;
+    }
+
+    public String getImageUrl() {
+        if(imageUrl == null) {
+            imageUrl = "https://img.youtube.com/vi/MwsGULCvMBk/0.jpg";
+        }
+        
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
     
     @Override

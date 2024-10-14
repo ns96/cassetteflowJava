@@ -28,6 +28,7 @@ public class DeckCastConnector {
     
     private Socket socket;
     private boolean connected = false;
+    private String clientId = "";
     
     private String serverUrl = "";
     private String streamPin;
@@ -84,6 +85,11 @@ public class DeckCastConnector {
                    if(connected) {
                        cassetteFlowFrame.setStreamPlayerConnected(connected);
                    }
+                } else {
+                    if(connected) {
+                        System.out.println(message);
+                        clientId = socket.id();
+                    }
                 }
             }
         });
@@ -418,6 +424,77 @@ public class DeckCastConnector {
     public void updateDCTList(ArrayList<AudioInfo> trackList, int muteTime) {
         sideADCTList = cassetteFlow.createDCTArrayListForSide("STR0A", trackList, muteTime);
         cassetteFlow.addToTapeDB("STR0", trackList, null, false);
+    }
+    
+    /**
+     * Send information so the current track playing can be displayed on DeckCast site.
+     * This is a bit of a hack since having a dialog with html would be better
+     * 
+     * @param audioInfo
+     * @param tapeTime The time video was started at
+     * @param format
+     */
+    public void displayPlayingAudioInfo(AudioInfo audioInfo, int tapeTime, String format) {
+        try {
+            System.out.println("Sending information for " + audioInfo + " / " + tapeTime + " Client ID " + clientId);
+            
+            // construct the html to display
+            String soundBarImg = "static/img/bar_vu.gif";
+            String videoUrl = audioInfo.getUrl();
+            String videoImg = audioInfo.getImageUrl();
+            
+            if(format.equals("spotify")) {
+                videoUrl = "https://open.spotify.com/track/" + audioInfo.getStreamId();
+            }
+            
+            String infoHtml = "<font size=\"+7\">"+ audioInfo.toString() + "</font><br>";
+                infoHtml += "<font size=\"+3\"><span align=\"center\" id=\"tracklist\"></span></font>";
+                infoHtml += "<table cellpadding=\"2\" cellspacing=\"0\" border=\"0\" width=\"100%\">";
+                infoHtml += "<tr>";
+                infoHtml += "<td><font size=\"+5\"><span id=\"track\">Track # 1</span></font></td>";
+                infoHtml += "<td><font size=\"+5\"><span id=\"timer\">";
+                infoHtml += "&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;";
+                infoHtml += "</span></font></td>";
+                infoHtml += "</tr>";
+                infoHtml += "<tr>";
+                infoHtml += "<td style=\"text-align: center;\"><img src=\"" + videoImg + "\" alt=\"Video Thumbnail\" width=\"360\" height=\"270\"><br>";
+                infoHtml += "<img src=\"" + soundBarImg + "\" alt=\"Soundbar Gif\" width=\"360\" height=\"270\">";
+                infoHtml += "</td>";
+                infoHtml += "<td bgcolor=\"white\"><div id=\"qrcode\" style=\"width: 50%; margin: 0 auto;\"></div></td>";
+                infoHtml += "</tr></table>";
+            
+            // send the json object to the deckcast backend
+            JSONObject obj = new JSONObject();
+            obj.put("data", "CassetteFlow Client");
+            obj.put("clientId", clientId);
+            obj.put("ctime", tapeTime);
+            obj.put("videoId", audioInfo.getHash10C());
+            obj.put("videoTitle", audioInfo.toString());
+            obj.put("videoTime", audioInfo.getLength());
+            obj.put("videoInfoHTML", infoHtml);
+            obj.put("videoFormat", format);
+            obj.put("videoUrl", videoUrl);
+            obj.put("videoImg", videoImg);
+            
+            socket.emit("my event", obj);
+        } catch (JSONException ex) {
+            Logger.getLogger(DeckCastConnector.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    /**
+     * Clear the audio info that displayed on the deckcastdj page
+     */
+    public void clearAudioInfoDisplay() {
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put("data", "RELOAD_PLAYING");
+            obj.put("clientId", clientId);
+            
+            socket.emit("my event", obj);
+        } catch (JSONException ex) {
+            Logger.getLogger(DeckCastConnector.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
     /**

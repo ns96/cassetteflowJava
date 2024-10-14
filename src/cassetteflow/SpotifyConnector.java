@@ -382,10 +382,16 @@ public class SpotifyConnector {
             int length = track.getDurationMs() / 1000; // length in seconds
             String lengthAsTime = CassetteFlowUtil.getTimeString(length);
             String url = "[\"" + track.getUri() + "\"]";
+            
             AudioInfo audioInfo = new AudioInfo(null, sha10hex, length, lengthAsTime, 128);
             audioInfo.setTitle(title);
             audioInfo.setStreamId(trackId);
             audioInfo.setUrl(url);
+            
+            // set the image url now
+            String imageUrl = track.getAlbum().getImages()[0].getUrl();
+            audioInfo.setImageUrl(imageUrl);
+            
             queList.add(audioInfo);
 
             // store this in the audio info DB
@@ -398,6 +404,7 @@ public class SpotifyConnector {
      * Get the items in the album
      * 
      * @param albumId 
+     * @param storeDct 
      * @return  
      */
     public ArrayList<AudioInfo> loadAlbum(String albumId, boolean storeDct) {
@@ -409,13 +416,14 @@ public class SpotifyConnector {
             
             Album album = getAlbumRequest.execute();
             streamTitle = album.getName();
+            String imageUrl = album.getImages()[0].getUrl();
             
             Paging<TrackSimplified> trackPaging = album.getTracks();
             int total =  trackPaging.getTotal();
             int limit = trackPaging.getLimit();
             
             System.out.println("Total Album Tracks: " + trackPaging.getTotal());
-            generateAudioInfoObjectsForAlbum(trackPaging);
+            generateAudioInfoObjectsForAlbum(trackPaging, imageUrl);
             
             if(total > limit) {
                 int start = limit;
@@ -427,7 +435,7 @@ public class SpotifyConnector {
                             .build();
 
                     trackPaging = getAlbumsTracksRequest.execute();
-                    generateAudioInfoObjectsForAlbum(trackPaging);
+                    generateAudioInfoObjectsForAlbum(trackPaging, imageUrl);
                 }
             }
             
@@ -444,7 +452,7 @@ public class SpotifyConnector {
      * generate audio info objects for album
      * @param trackPaging 
      */
-    private void generateAudioInfoObjectsForAlbum(Paging<TrackSimplified> trackPaging) {
+    private void generateAudioInfoObjectsForAlbum(Paging<TrackSimplified> trackPaging, String imageUrl) {
         for (TrackSimplified track : trackPaging.getItems()) {
             String trackId = track.getId();
             String title = track.getName() + " -- " + getArtists(track.getArtists());
@@ -452,10 +460,13 @@ public class SpotifyConnector {
             int length = track.getDurationMs() / 1000; // length in seconds
             String lengthAsTime = CassetteFlowUtil.getTimeString(length);
             String url = "[\"" + track.getUri() + "\"]";
+            
             AudioInfo audioInfo = new AudioInfo(null, sha10hex, length, lengthAsTime, 128);
             audioInfo.setTitle(title);
             audioInfo.setStreamId(trackId);
             audioInfo.setUrl(url);
+            audioInfo.setImageUrl(imageUrl);
+            
             queList.add(audioInfo);
 
             // store this in the audio info DB
@@ -485,10 +496,16 @@ public class SpotifyConnector {
             int length = track.getDurationMs() / 1000; // length in seconds
             String lengthAsTime = CassetteFlowUtil.getTimeString(length);
             String url = "[\"" + track.getUri() + "\"]";
+            
             AudioInfo audioInfo = new AudioInfo(null, sha10hex, length, lengthAsTime, 128);
             audioInfo.setTitle(title);
             audioInfo.setStreamId(trackId);
             audioInfo.setUrl(url);
+            
+            // set the image url now
+            String imageUrl = track.getAlbum().getImages()[0].getUrl();
+            audioInfo.setImageUrl(imageUrl);
+            
             queList.add(audioInfo);
 
             // store this in the audio info DB
@@ -512,7 +529,7 @@ public class SpotifyConnector {
         ArtistSimplified artistSimplified = artistArray[0];
         return artistSimplified.getName();
     }
-    
+        
     /**
      * Load the users playback queue. 4/20/2022 -- This endpoint doesn't work correctly.
      * It does return all the items in the que. See link below
@@ -591,12 +608,16 @@ public class SpotifyConnector {
      * Play the tracks through Spotify app
      * 
      * @param tapeTime 
+     * @return the time at which the track was started 
      */
-    public void playStream(int tapeTime) {
+    public int playStream(int tapeTime) {
         if (currentTapeTime == tapeTime) {
-            return;
+            return -1;
         }
-
+        
+        // keeps track of where to start the playback
+        int startAt = -1;
+        
         if (tapeTime < sideADCTList.size()) {
             String dctLine = sideADCTList.get(tapeTime);
             String[] line = dctLine.split("_");
@@ -605,10 +626,10 @@ public class SpotifyConnector {
             String trackId = line[2];
             String playTimeS = line[3];
             String playTimeTotalS = line[4];
-
-            // get the new start time
+            
             int playTime;
             int playTimeTotal;
+            
             try {
                 playTime = Integer.parseInt(playTimeS);
                 playTimeTotal = Integer.parseInt(playTimeTotalS);
@@ -628,7 +649,7 @@ public class SpotifyConnector {
                     System.out.println("Start Time Error ... " + dctLine);
                 }
 
-                return;
+                return -1;
             }
 
             if (!trackId.equals(queTrackId)) {
@@ -655,6 +676,8 @@ public class SpotifyConnector {
                 cassetteFlowFrame.setStreamInformation(trackId, currentAudioInfo.getLength(), 1);
                 cassetteFlowFrame.setPlayingAudioInfo(message);
                 cassetteFlowFrame.setPlayingAudioTrack(track);
+                
+                startAt = playTime;
             }
 
             cassetteFlowFrame.updateStreamPlaytime(playTime, "[ " + track + " ]");
@@ -672,6 +695,8 @@ public class SpotifyConnector {
 
         //update the current time
         currentTapeTime = tapeTime;
+        
+        return startAt;
     }
 
     /**
@@ -755,6 +780,14 @@ public class SpotifyConnector {
     public void setDataErrors(int dataErrors, int logLineCount) {
         this.dataErrors = dataErrors;
         this.logLineCount = logLineCount;
+    }
+
+    public boolean isPlaying() {
+        return playing;
+    }
+
+    public AudioInfo getCurrentAudioInfo() {
+        return currentAudioInfo;
     }
     
     /**

@@ -36,6 +36,8 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     
     private DeckCastConnector deckCastConnector;
     
+    private DeckCastConnector deckCastConnectorDisplay;
+    
     private SpotifyConnector spotifyConnector;
         
     // used to read the log file outputted by the minimodem program
@@ -143,6 +145,15 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
      */
     public void setDeckCastConnector(DeckCastConnector deckCastConnector) {
        this.deckCastConnector = deckCastConnector; 
+    }
+    
+    /**
+     * Set the deckcast connector object used to display information through browser
+     * 
+     * @param deckCastConnectorDisplay 
+     */
+    public void setDeckCastConnectorDisplay(DeckCastConnector deckCastConnectorDisplay) {
+       this.deckCastConnectorDisplay = deckCastConnectorDisplay; 
     }
     
     /**
@@ -325,7 +336,14 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                                 
                                 if(spotifyConnector != null) {
                                     int tapeTime = Integer.parseInt(dctLine.split(" ")[2]);
-                                    spotifyConnector.playStream(tapeTime);
+                                    int startAt = spotifyConnector.playStream(tapeTime);
+                                    
+                                    if(spotifyConnector.isPlaying() && startAt != -1) {
+                                        if (deckCastConnectorDisplay != null) {
+                                            deckCastConnectorDisplay.displayPlayingAudioInfo(spotifyConnector.getCurrentAudioInfo(), startAt, "spotify");
+                                        }
+                                    }
+                                    
                                     spotifyConnector.setDataErrors(dataErrors, logLineCount);
                                 }
                             }
@@ -341,7 +359,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                                 }
                             }
                             
-                            // check to see if we have  deckcast object and stop it's playback as well
+                            // check to see if we have deckcast object and stop it's playback as well
                             if(deckCastConnector != null) {
                                 // TO-DO 11/18/2022 -- See how best to handle this? 
                                 //deckCastConnector.stopStream();
@@ -542,6 +560,10 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                     message = "Audio ID: " + audioId + "\n" + 
                         audioInfo.getName() + "\n" + 
                         "Start Time @ " + startTime + " | Track Number: " + track;
+                    
+                    if (deckCastConnectorDisplay != null) {
+                        deckCastConnectorDisplay.displayPlayingAudioInfo(audioInfo, startTime, "mp3/FLAC");
+                    }
                 } else {
                     message = "Playback Error.  Unknown Audio ID: " + audioId; 
                 }
