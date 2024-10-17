@@ -514,6 +514,8 @@ public class SpotifyConnector {
             storeAudioInfoRecords(storeDct);
         } catch (IOException | SpotifyWebApiException | ParseException ex) {
             Logger.getLogger(SpotifyConnector.class.getName()).log(Level.SEVERE, null, ex);
+            
+            return null;
         }
         
         return queList;
@@ -579,7 +581,7 @@ public class SpotifyConnector {
     }
     
     /**
-     * Return an html of the loaded Spotify file
+     * Return an html of the loaded Spotify data
      * @param currentTrack
      * @return 
      */
@@ -594,11 +596,15 @@ public class SpotifyConnector {
         
         for(int i = 0; i < size; i++) {
             int track = i+1;
+            String imageUrl = queList.get(i).getImageUrl();    
+            String html = "<img src=\"" + imageUrl + "\" alt=\"Track Thumbnail\" width=\"54\" height=\"54\">";
+            sb.append("<p style=\"font-size: 14px;\">").append(html);
             if(currentTrack != track) {
-                sb.append("[").append(track).append("] ").append(queList.get(i).toString()).append("<br>");
+                sb.append(" [").append(track).append("] ").append(queList.get(i).toString()).append("<br>");
             } else {
-                sb.append("<b>[").append(track).append("] ").append(queList.get(i).toString()).append("</b><br>");
+                sb.append(" <b>[").append(track).append("] ").append(queList.get(i).toString()).append("</b><br>");
             }
+            sb.append("</p>");
         }
         
         return sb.toString();

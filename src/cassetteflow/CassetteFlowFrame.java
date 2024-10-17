@@ -823,7 +823,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.3.0b2 (10/14/2024)");
+        setTitle("CassetteFlow v 1.3.0b4 (10/16/2024)");
 
         mainTabbedPane.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         mainTabbedPane.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -2319,6 +2319,12 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
      * @param spotifyTrackList
      */
     private void loadSpotifyTracks(ArrayList<AudioInfo> spotifyTrackList) {
+        if(spotifyTrackList == null) {
+            String message = "Error Loading Spotify Tracks ...";
+            JOptionPane.showMessageDialog(this, message, "Spotify Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
         if(filteredAudioList == null) 
             filteredAudioList = new ArrayList<>();
         
@@ -4368,6 +4374,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         if(deckCastConnector != null) {
             deckCastConnector.clearQueList();
         }
+        
+        if(spotifyConnector != null) {
+            spotifyConnector.clearQueList();
+        }
     }//GEN-LAST:event_streamPlayClearButtonActionPerformed
 
     private void streamPinTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_streamPinTextFieldActionPerformed
@@ -4391,8 +4401,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
      * @param text 
      */
     public void updateStreamEditorPane(String text) {
-        String html = "<html>" + text + "</html>";
-        streamEditorPane.setText(html);
+        SwingUtilities.invokeLater(() -> {
+            String html = "<html>" + text + "</html>";
+            streamEditorPane.setText(html);
+        });
     }
     
     /**
