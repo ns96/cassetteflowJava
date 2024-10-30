@@ -521,6 +521,7 @@ public class DeckCastConnector {
                     currentTapeTime = RESET_TIME;
                 } else {
                     queVideoId = "";
+                    oldQueVideoId = "";
                 }
             }
         } catch (JSONException ex) {
