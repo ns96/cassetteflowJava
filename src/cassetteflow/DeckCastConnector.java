@@ -133,21 +133,31 @@ public class DeckCastConnector {
             String infoHtml = obj.getString("videoInfoLiteHTML");
             
             cassetteFlowFrame.setStreamInformation(streamId, totalPlaytime, player);
-
+                        
             if (queListLoaded) {
                 String html = infoHtml + "<br><hr>" + queListHtml;
                 cassetteFlowFrame.updateStreamEditorPane(html);
-            } else {
-                String sha10hex = CassetteFlowUtil.get10CharacterHash(streamTitle);
-                String lengthAsTime = CassetteFlowUtil.getTimeString(totalPlaytime);
                 
-                AudioInfo audioInfo = new AudioInfo(null, sha10hex, totalPlaytime, lengthAsTime, 128);
+                // add track list information here
+                if(obj.has("trackList") && !cassetteFlow.tracklistDB.containsKey("streamId")) {
+                    AudioInfo audioInfo = cassetteFlow.audioInfoDB.get(streamId);
+                    addTrackList(audioInfo, obj.getJSONArray("trackList"));
+                    cassetteFlowFrame.setPlayingCassetteID("STR0A");
+                }
+            } else {
+                String lengthAsTime = CassetteFlowUtil.getTimeString(totalPlaytime); 
+                AudioInfo audioInfo = new AudioInfo(null, streamId, totalPlaytime, lengthAsTime, 128);
                 audioInfo.setTitle(streamTitle);
                 audioInfo.setStreamId(streamId);
                 currentAudioInfo = audioInfo;
                 
+                // add tracklist information for long play youtube mix
+                if(obj.has("trackList") && !cassetteFlow.tracklistDB.containsKey("streamId")) {
+                    addTrackList(audioInfo, obj.getJSONArray("trackList"));
+                }
+                
                 // store this in the audio info DB and the tape db
-                cassetteFlow.audioInfoDB.put(sha10hex, audioInfo);
+                cassetteFlow.audioInfoDB.put(streamId, audioInfo);
                 queList = new ArrayList<>();
                 queList.add(audioInfo);
                 cassetteFlow.addToTapeDB("STR0", queList, null, false);
@@ -167,17 +177,16 @@ public class DeckCastConnector {
                 String[] record = queArray.getString(i).split("\t");
                 String videoId = record[0];
                 String title = record[1];
-                String sha10hex = CassetteFlowUtil.get10CharacterHash(title);
                 int length = Integer.parseInt(record[2]);
                 String lengthAsTime = CassetteFlowUtil.getTimeString(length);
                 
-                AudioInfo audioInfo = new AudioInfo(null, sha10hex, length, lengthAsTime, 128);
+                AudioInfo audioInfo = new AudioInfo(null, videoId, length, lengthAsTime, 128);
                 audioInfo.setTitle(title);
                 audioInfo.setStreamId(videoId);
                 queList.add(audioInfo);
                 
                 // store this in the audio info DB
-                cassetteFlow.audioInfoDB.put(sha10hex, audioInfo);
+                cassetteFlow.audioInfoDB.put(videoId, audioInfo);
                 queListLoaded = true;
             }
             
@@ -198,6 +207,37 @@ public class DeckCastConnector {
         } else {
             System.out.println("Unused message\n" + obj.toString(2));
         }
+    }
+    
+    /**
+     * If there is track information then add them to the local track list database
+     * 
+     * @param audioInfo
+     * @param trackList
+     */
+    private void addTrackList(AudioInfo audioInfo, JSONArray trackList) {
+        int timePerTrack = (int)audioInfo.getLength()/trackList.length();
+        
+        System.out.println("Time per track(s) " + timePerTrack);
+        TrackListInfo trackListInfo = new TrackListInfo(audioInfo.getHash10C(), audioInfo.getStreamId());
+        
+        for(int i = 0; i < trackList.length(); i++) {
+            try {
+                String trackTitle = trackList.getString(i);
+                String trackTime = Integer.toString(i*timePerTrack);
+                String trackNum = Integer.toString(i + 1);
+                
+                trackListInfo.addTrack(trackNum, trackTime, trackTitle);
+                
+                System.out.println("Track " + i + " => " + trackTitle);
+            } catch (JSONException ex) {
+                Logger.getLogger(DeckCastConnector.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+        // create the look up table and add to the main tracks database
+        trackListInfo.createLookUpTable();
+        cassetteFlow.tracklistDB.put(audioInfo.getHash10C(), trackListInfo);
     }
     
     /**
@@ -521,7 +561,7 @@ public class DeckCastConnector {
                     currentTapeTime = RESET_TIME;
                 } else {
                     queVideoId = "";
-                    oldQueVideoId = "";
+                    //oldQueVideoId = "";
                 }
             }
         } catch (JSONException ex) {
