@@ -615,7 +615,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
             
             String timeFromFile = String.format("%04d", mp3Time);
             
-            // get the track time
+            // get the track name
             String trackName = audioFilename + " [" + track + "]";
             if (trackListInfo != null) {
                 trackName = trackListInfo.getTrackAtTime(mp3Time, track);

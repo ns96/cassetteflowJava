@@ -63,6 +63,9 @@ public class DeckCastConnector {
     // indicate we waiting on the list
     private boolean waitingOnQueList = false; 
     
+    // store the current tracklist
+    private TrackListInfo trackListInfo = null;
+    
     public DeckCastConnector(CassetteFlowFrame cassetteFlowFrame, CassetteFlow cassetteFlow, String url, String pin) throws URISyntaxException {
         this.cassetteFlowFrame = cassetteFlowFrame;
         this.cassetteFlow = cassetteFlow;
@@ -143,6 +146,8 @@ public class DeckCastConnector {
                     AudioInfo audioInfo = cassetteFlow.audioInfoDB.get(streamId);
                     addTrackList(audioInfo, obj.getJSONArray("trackList"));
                     cassetteFlowFrame.setPlayingCassetteID("STR0A");
+                } else {
+                    trackListInfo = null;
                 }
             } else {
                 String lengthAsTime = CassetteFlowUtil.getTimeString(totalPlaytime); 
@@ -154,6 +159,8 @@ public class DeckCastConnector {
                 // add tracklist information for long play youtube mix
                 if(obj.has("trackList") && !cassetteFlow.tracklistDB.containsKey("streamId")) {
                     addTrackList(audioInfo, obj.getJSONArray("trackList"));
+                } else {
+                    trackListInfo = null;
                 }
                 
                 // store this in the audio info DB and the tape db
@@ -219,7 +226,7 @@ public class DeckCastConnector {
         int timePerTrack = (int)audioInfo.getLength()/trackList.length();
         
         System.out.println("Time per track(s) " + timePerTrack);
-        TrackListInfo trackListInfo = new TrackListInfo(audioInfo.getHash10C(), audioInfo.getStreamId());
+        trackListInfo = new TrackListInfo(audioInfo.getHash10C(), audioInfo.getStreamId());
         
         for(int i = 0; i < trackList.length(); i++) {
             try {
@@ -287,8 +294,12 @@ public class DeckCastConnector {
                 cassetteFlowFrame.updateStreamPlaytime(currentTapeTime, "[1]");
                 
                 // update the decode panel in the main UI
-                // update the UI indicating playtime
-                String message = currentAudioInfo.getName() + " [1]\n"
+                String trackName = currentAudioInfo.getName() + " [1]";
+                if (trackListInfo != null) {
+                    trackName = trackListInfo.getTrackAtTime(tapeTime, "1");
+                }
+                
+                String message = trackName + "\n"
                     + "Playtime From Tape: " + String.format("%04d", tapeTime) + " / " + String.format("%04d", currentAudioInfo.getLength()) + "\n"
                     + "Tape Counter: " + tapeTime + " (" + CassetteFlowUtil.getTimeString(tapeTime) + ")\n"
                     + "Data Errors: " + dataErrors +  "/" + logLineCount;
@@ -416,8 +427,14 @@ public class DeckCastConnector {
                 
                 cassetteFlowFrame.updateStreamPlaytime(playTime, "[ " + track + " ]");
                 
+                // update the decode panel in the main UI
+                String trackName = currentAudioInfo.getName() + " [" + track + "]";
+                if (trackListInfo != null) {
+                    trackName = trackListInfo.getTrackAtTime(tapeTime, track);
+                }
+                
                 // update the UI indicating playtime
-                String message = currentAudioInfo.getName() + " [" + track + "]\n"
+                String message = trackName + "\n"
                     + "Playtime From Tape: " + String.format("%04d", playTime) + " / " + String.format("%04d", currentAudioInfo.getLength()) + "\n"
                     + "Tape Counter: " + playTimeTotal + " (" + CassetteFlowUtil.getTimeString(playTimeTotal) + ")\n"
                     + "Data Errors: " + dataErrors +  "/" + logLineCount;
