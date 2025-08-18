@@ -578,12 +578,18 @@ public class DeckCastConnector {
                     currentTapeTime = RESET_TIME;
                 } else {
                     queVideoId = "";
-                    //oldQueVideoId = "";
                 }
             }
         } catch (JSONException ex) {
             Logger.getLogger(DeckCastConnector.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+    
+    /**
+     * reset the 
+     */
+    public void resetOldQueVideoId() {
+        oldQueVideoId = "";
     }
     
     /**

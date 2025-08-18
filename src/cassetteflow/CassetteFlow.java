@@ -89,7 +89,7 @@ public class CassetteFlow {
     public static String TRACK_LIST_FILENAME = AUDIO_DIR_NAME + File.separator + "tracklist.txt";
     
     // the location of mp3 files on the server
-    public static String DOWNLOAD_SERVER = "http://192.168.1.14/~pi/mp3/";
+    public static String DOWNLOAD_SERVER = "http://192.168.1.45/~pi/mp3/";
     
     // The IP address of the LyraT host
     public static String LYRA_T_HOST = "http://127.0.0.1:8192/";

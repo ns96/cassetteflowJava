@@ -823,7 +823,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.3.0b7 (11/02/2024)");
+        setTitle("CassetteFlow v 1.3.0b11 (08/18/2025)");
 
         mainTabbedPane.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         mainTabbedPane.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -1018,7 +1018,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
 
         jLabel2.setText("Tape Length");
 
-        tapeLengthComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "60 Minutes", "90 Minutes", "110 Minutes", "120 Minutes", "150 Minutes (R2R)", "160 Minutes (R2R)", "180 Minutes (R2R)", "240 Minutes (R2R)", "360 Minutes (R2R)" }));
+        tapeLengthComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "60 Minutes", "90 Minutes", "110 Minutes", "120 Minutes", "150 Minutes (R2R)", "160 Minutes (R2R)", "180 Minutes (R2R)", "240 Minutes (R2R)", "360 Minutes (R2R)", "44 Minutes (Vinyl)" }));
         tapeLengthComboBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 tapeLengthComboBoxActionPerformed(evt);
@@ -1446,7 +1446,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jLabel13.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabel13.setText("Stream Server");
 
-        streamComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "http://pi86.sytes.net:5054/", "http://127.0.0.1:5054/", "https://www.spotify.com/" }));
+        streamComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "http://pi86.sytes.net:5054/", "http://127.0.0.1:5054/", "http://127.0.0.1:5154/", "https://www.spotify.com/" }));
 
         streamConnectButton.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         streamConnectButton.setText("CONNECT");
@@ -2265,8 +2265,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     }
     
     /**
-     * Get the length of the tape in seconds
-     * 
+     * Get the length of the tape in seconds based on the selected value in
+     * combobox
      * @return 
      */
     private int getMaxTapeTime() {
@@ -3183,6 +3183,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         
         if(deckCastConnector != null) {
             deckCastConnector.stopStream();
+            deckCastConnector.resetOldQueVideoId();
         }
         
         if(deckCastConnectorDisplay != null) {
@@ -4177,6 +4178,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             spotifyConnector = null;
         }
         
+        // clear the display
+        updateStreamEditorPane("Stream Player Disconnected ...");
         streamConnectButton.setEnabled(true);
     }//GEN-LAST:event_streamDisconnectButtonActionPerformed
 
@@ -4373,10 +4376,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private void streamPlayClearButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_streamPlayClearButtonActionPerformed
         if(deckCastConnector != null) {
             deckCastConnector.clearQueList();
-        }
-        
-        if(spotifyConnector != null) {
+        } else if(spotifyConnector != null) {
             spotifyConnector.clearQueList();
+        } else {
+            updateStreamEditorPane("");
         }
     }//GEN-LAST:event_streamPlayClearButtonActionPerformed
 
