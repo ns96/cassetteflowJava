@@ -347,10 +347,11 @@ public class DeckCastConnector {
         try {
             if(tapeTime < sideADCTList.size()) {
                 String dctLine = sideADCTList.get(tapeTime);
-                String[] line = dctLine.split("_");
-                String tapeID = line[0];
+                String[] line = dctLine.split("_"); 
+                String tapeId = line[0];
                 String track = line[1];
                 String trackId = line[2];
+                trackId = trackId.replace("$", "_");
                 String playTimeS = line[3];
                 String playTimeTotalS = line[4];
                 

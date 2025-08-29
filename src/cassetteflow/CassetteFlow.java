@@ -747,7 +747,11 @@ public class CassetteFlow {
         
         for(AudioInfo audioInfo: sideN) {
             String trackS = String.format("%02d", fileCount+1);
-            String audioId = tapeID + "_" + trackS + "_" + audioInfo.getHash10C();
+            
+            // get the 10 character hash and see if it contains "_" if so replace with $
+            // this is needed becuase youtube video ID can contain "_"
+            String cleanHash = audioInfo.getHash10C().replace("_", "$");            
+            String audioId = tapeID + "_" + trackS + "_" + cleanHash;
             
             // add line records to create a N second muted section before next song
             if(fileCount >= 1) {                

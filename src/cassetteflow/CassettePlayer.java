@@ -300,7 +300,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     } 
     
     /**
-     * Process a line from the log file tailer class.
+     * Process a line from the log file tailler class.
      * @param line 
      */
     @Override

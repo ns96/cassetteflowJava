@@ -142,6 +142,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     // The JSON object used to when creating a jcard template
     private JSONObject jcardJSON;
     
+    // specify if to hide the lyraT tab
+    private static final boolean HIDE_LYRAT_TAB = false;
+    
     /**
      * Creates new form CassetteFlowFrame
      */
@@ -164,8 +167,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             jcardJSON = new JSONObject(jsonText);
         } catch(IOException | JSONException ex) { }
         
-        // hide the LyrT tab pane 
-        mainTabbedPane.remove(3);
+        // Hide the LyrT tab pane if needed
+        if(HIDE_LYRAT_TAB) {
+            mainTabbedPane.remove(3);
+        }
     }
     
     /**
@@ -332,13 +337,21 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     }
         
     /**
-     * Process a line record
+     * Process a line record from the lyraT board
      * 
      * @param line 
      */
     @Override
     public void processLineRecord(String line) {
         //printToLyraTConsole("Line Record: " + line, true);
+        
+        // if we just connected to the lyraT device for record reading just pass it
+        // to the cassette player
+        if(cassettePlayer != null ) {
+            cassettePlayer.newLogFileLine(line);
+        }
+        
+        /*
         String[] sa = line.split("_");
         
         if(sa.length != 5) {
@@ -438,6 +451,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
 
             setPlaybackInfo(message, false, "");
         }
+        
+        */
     }
     
     /**
@@ -799,6 +814,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         lyraTVolDownButton = new javax.swing.JButton();
         lyraTMuteToggleButton = new javax.swing.JToggleButton();
         lyraTVolUpButton = new javax.swing.JButton();
+        lyraTRawDataReadCheckBox = new javax.swing.JCheckBox();
         jPanel7 = new javax.swing.JPanel();
         jScrollPane8 = new javax.swing.JScrollPane();
         consoleTextArea = new javax.swing.JTextArea();
@@ -823,7 +839,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.3.0b11 (08/18/2025)");
+        setTitle("CassetteFlow v 1.3.0b14 (08/29/2025)");
 
         mainTabbedPane.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         mainTabbedPane.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -1825,6 +1841,14 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         });
         jPanel9.add(lyraTVolUpButton);
 
+        lyraTRawDataReadCheckBox.setSelected(true);
+        lyraTRawDataReadCheckBox.setText("Raw Data Read Only");
+        lyraTRawDataReadCheckBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                lyraTRawDataReadCheckBoxActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
         jPanel5.setLayout(jPanel5Layout);
         jPanel5Layout.setHorizontalGroup(
@@ -1834,9 +1858,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 .addComponent(jLabel5)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(lyraTHostTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 304, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(lyraTRawDataReadCheckBox)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(startServerCheckBox)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 321, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(lyraTConnectButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(lyraTDisconnectButton))
@@ -1870,7 +1896,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(clearLyraTConsoleButton))
                     .addComponent(jScrollPane9)
-                    .addComponent(jPanel9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addComponent(jPanel9, javax.swing.GroupLayout.DEFAULT_SIZE, 875, Short.MAX_VALUE)))
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1880,7 +1906,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                     .addComponent(lyraTConnectButton)
                     .addComponent(lyraTDisconnectButton)
                     .addComponent(jLabel5)
-                    .addComponent(startServerCheckBox))
+                    .addComponent(startServerCheckBox)
+                    .addComponent(lyraTRawDataReadCheckBox))
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel5Layout.createSequentialGroup()
                         .addGap(9, 9, 9)
@@ -1915,7 +1942,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(lyraTPlaySideAButton)
                             .addComponent(lyraTPlaySideBButton))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 179, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 174, Short.MAX_VALUE)
                         .addComponent(lyraTStopRawButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(lyraTStopButton))
@@ -2128,6 +2155,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                     .addComponent(exitButton)
                     .addComponent(audioCountLabel)))
         );
+
+        getAccessibleContext().setAccessibleName("");
+        getAccessibleContext().setAccessibleDescription("");
 
         setBounds(0, 0, 1102, 553);
     }// </editor-fold>//GEN-END:initComponents
@@ -3201,15 +3231,6 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     }//GEN-LAST:event_stopDecodeButtonActionPerformed
 
     private void startDecodeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startDecodeButtonActionPerformed
-        // check to see if we connected to the lyraT board
-        if(lyraTConnect != null) {
-            // set the lyraT to decode if not done so already
-            //lyraTConnect.setModeDecode();
-            lyraTGetDecodeRecord();
-            startDecodeButton.setEnabled(false);
-            return;
-        }
-        
         String logfile = logfileTextField.getText();
         
         if(cassettePlayer != null) cassettePlayer.stop();
@@ -3241,8 +3262,14 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         if(deckCastConnectorDisplay != null) {
             cassettePlayer.setDeckCastConnectorDisplay(deckCastConnectorDisplay);
         }
-          
-        if(directDecodeCheckBox.isSelected()) {
+        
+        // check to see if we not getting the line record from the lyraT device 
+        if(lyraTConnect != null && lyraTRawDataReadCheckBox.isSelected()) {
+            // start pulling raw records from lyraT if its not already doing so
+            if(!lyraTReadLineRecords) {
+                lyraTGetRawButtonActionPerformed(null);
+            }
+        } else if(directDecodeCheckBox.isSelected()) {
             try {
                 // get the delay used to synchronized the playback time indicated
                 // from the data on cassette vs the actual playback time from mp3
@@ -3272,61 +3299,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         
         startDecodeButton.setEnabled(false);
     }//GEN-LAST:event_startDecodeButtonActionPerformed
-    
-    private void lyraTGetDecodeRecord() {
-        // reset global variable that keep track of track information from lyraT
-        lyraTDataErrors = 0;
-        lyraTStartTime = 0;
-        lyraTCurrentTapeId = "";
-        lyraTCurrentAudioId = "";
-        lyraTMuteRecords = 0;
-        lyraTAudioTotalPlayTime = 0;
-        lyraTCurrentPlayTime = 0;
-        lyraTAudioFilename = "";
         
-        lyraTGetDecode = true;
-        
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    int stopCount = 0;
-                    
-                    while(lyraTGetDecode) {
-                        String response = lyraTConnect.getInfo();
-                        String[] sa = response.split(" ");
-                        
-                        printToConsole(response, true);
-                        
-                        if(sa.length > 1 && sa[1].contains("_")) {
-                            stopCount = 0;
-                            processLineRecord(sa[1]);
-                        } else {
-                            stopCount++;
-                            lyraTCurrentAudioId = "";
-                            lyraTCurrentPlayTime = -1;
-                            
-                            String stopMessage = "Playback Stopped {# errors " + lyraTDataErrors + "} ...";
-                            if(stopCount == 1) {
-                                setPlaybackInfo(stopMessage, false);
-                            } else {
-                                setPlaybackInfo(stopMessage, true);
-                            }
-                        }
-                    
-                        Thread.sleep(1000);
-                    }
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(null, "LyraT Read Data Error ...", "LyraT Error", JOptionPane.ERROR_MESSAGE);
-                    stopDecodeButtonActionPerformed(null);
-                    ex.printStackTrace();
-                }
-            }
-        }
-        );
-        thread.start();
-    }
-    
     /**
      * Add audio tracks to a tape side
      * 
@@ -3447,32 +3420,34 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             
             lyraTConnect = new ESP32LyraTConnect(host);
             
-            // try getting informtion to see if we connected
+            // try getting information to see if we connected
             String info = lyraTConnect.getInfo();
             if(info != null) {
                 lyraTConsoleTextArea.append("Connected to CassetteFlow Server @ " + host + "\n\n");
                 
-                // clear the UI and databases
-                clearAudioListButtonActionPerformed(null);
-                
-                // load the database from LyraT
-                loadLyraTDatabases();
-                
                 // save the host
                 cassetteFlow.setLyraTHost(host);
                 
-                // update the UI to indicate we are connect to the remote lyraT host
-                addAudioInfoToJList();
+                if(!lyraTRawDataReadCheckBox.isSelected()) {
+                    // clear the UI and databases
+                    clearAudioListButtonActionPerformed(null);
                 
-                lyraTConsoleTextArea.append("Loaded Audio Database ...\n\nLoaded Tape Database ...\n\n");
+                    // load the database from LyraT
+                    loadLyraTDatabases();
                 
-                currentAudioDirectory = "ESP32LyraT @ " + cassetteFlow.LYRA_T_HOST;
-                directoryTextField.setText(currentAudioDirectory);
+                    // update the UI to indicate we are connect to the remote lyraT host
+                    addAudioInfoToJList();
                 
-                // disable buttons which should not work when connected to LyraT
-                playButton.setEnabled(false);
-                realtimeEncodeButton.setEnabled(false);
-                createDownloadButton.setEnabled(false);
+                    lyraTConsoleTextArea.append("Loaded Audio Database ...\n\nLoaded Tape Database ...\n\n");
+                
+                    currentAudioDirectory = "ESP32LyraT @ " + cassetteFlow.LYRA_T_HOST;
+                    directoryTextField.setText(currentAudioDirectory);
+                
+                    // disable buttons which should not work when connected to LyraT
+                    playButton.setEnabled(false);
+                    realtimeEncodeButton.setEnabled(false);
+                    createDownloadButton.setEnabled(false);
+                }
             } else {
                 lyraTConsoleTextArea.append("Error Connecting to CassetteFlow Server @ " + host + "\n\n");
                 lyraTConnect= null;
@@ -4390,14 +4365,21 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             spotifyConnector.loadPlaylist(info[1], true);
         } else {
             try {
-                // create a deckcast connector for displaying the current audio track
+                // create a deckcast connector for displaying the current audio track playing through mp3 or spotify
                 String streamUrl = streamComboBox.getSelectedItem().toString();
                 deckCastConnectorDisplay = new DeckCastConnector(null, null, streamUrl, "CF");
+                
+                // print out to the output console we are connected to the deckcast backend
+                consoleTextArea.append("DeckcastDJ Stream Player For Display @ " + streamUrl + "playing\n");
             } catch (URISyntaxException ex) {
                 Logger.getLogger(CassetteFlowFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }//GEN-LAST:event_streamPinTextFieldActionPerformed
+
+    private void lyraTRawDataReadCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lyraTRawDataReadCheckBoxActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_lyraTRawDataReadCheckBoxActionPerformed
 
     /**
      * 
@@ -4546,6 +4528,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JRadioButton lyraTPassRadioButton;
     private javax.swing.JButton lyraTPlaySideAButton;
     private javax.swing.JButton lyraTPlaySideBButton;
+    private javax.swing.JCheckBox lyraTRawDataReadCheckBox;
     private javax.swing.JButton lyraTServerTestDBButton;
     private javax.swing.JButton lyraTStopButton;
     private javax.swing.JButton lyraTStopRawButton;
