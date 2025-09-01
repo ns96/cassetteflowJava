@@ -3277,6 +3277,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             if(cassetteFlowServer != null) {
                 cassetteFlowServer.stop();
                 cassetteFlowServer = null;
+                lyraTConsoleTextArea.append("Local Cassette Flow Server Stopped ...\n\n");
             }
         }
     }//GEN-LAST:event_startServerCheckBoxActionPerformed

@@ -91,6 +91,13 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     // the current line record
     private String currentLineRecord;
     
+    // raw line record returned from minimodem
+    private String rawLineRecord;
+    
+    // indicate if we only interested in getting the raw line record minimodem and not processing it
+    private boolean rawLineRecordOnly = false;
+    // variable to keep track of all of the raw data lines we have seen.  Useful for debugging
+   
     // keeps track of the current audio progress
     private int audioProgress;
     
@@ -118,6 +125,15 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
         this.logfile = logfile;
         
         DOWNLOAD_DIR = CassetteFlow.AUDIO_DIR_NAME + File.separator + "downloads";
+    }
+    
+    /**
+     * Set the raw line record flag
+     *
+     * @param rawLineRecordOnly
+     */
+    public void setRawLineRecordOnly(boolean rawLineRecordOnly) {
+        this.rawLineRecordOnly = rawLineRecordOnly;
     }
     
     /**
@@ -172,6 +188,14 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
      */
     public String getCurrentLineRecord() {
         return currentLineRecord;
+    }
+    
+    /**
+     * Method to return the raw minimodem line returned
+     * @return 
+     */
+    public String getRawLineRecord() {
+        return rawLineRecord;
     }
     
     /**
@@ -307,6 +331,12 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     public synchronized void newLogFileLine(String line) {
         if(line != null) {
             line = line.trim();
+            rawLineRecord = line;
+            
+            // if we only reading raw line records just return
+            if(rawLineRecordOnly) {
+                return;
+            }
             
             if(line.length() == 29 && validCharacters(line)) {
                 //System.out.println("Line record: " + line);

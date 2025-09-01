@@ -245,6 +245,18 @@ public class CassetteFlow {
         } else {
             return "NO PLAYER";
         }
+    }
+    
+    /**
+     * Get the raw line record from the minimodem program
+     * @return 
+     */
+    public String getRawLineRecord() {
+        if(cassettePlayer != null) {
+            return cassettePlayer.getRawLineRecord();
+        } else {
+            return "NO PLAYER ...";
+        }
     } 
     
     /**

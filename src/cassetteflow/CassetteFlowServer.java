@@ -192,13 +192,13 @@ public class CassetteFlowServer {
                         
                         while (readRawData) {
                             // the \r\n must be added for chunking to work
-                            String response = "\r\n" + cassetteFlow.getCurrentLineRecord();
+                            String response = "\r\n" + cassetteFlow.getRawLineRecord();
                             
                             byte[] data = response.getBytes("UTF-8");
                             os.write(data);
                             os.flush();
                             
-                            Thread.sleep(1000);
+                            Thread.sleep(200);
                         }
                         
                         os.close();
@@ -342,15 +342,23 @@ public class CassetteFlowServer {
     }
     
     /**
-     * Method to run mirco server independently
+     * Method to run mirco server independently of the GUI application
      * 
      * @param args 
      */
     public static void main(String[] args) {
         try {
-            CassetteFlow cf = new CassetteFlow();
+            // init the cassette playey and object to start the minimodem program
+            CassetteFlow cf = new CassetteFlow();  
+            CassettePlayer cp = new CassettePlayer(cf, null);
+            cp.setRawLineRecordOnly(true);
+            cp.startMinimodem(0);
+            
             CassetteFlowServer cfs = new CassetteFlowServer();
             cfs.setCassetteFlow(cf);
+            
+            // indicate where to access the line records
+            System.out.println("GoTo: http://localhost:8192/raw to access line records");
         } catch (IOException ex) {
             ex.printStackTrace();
         }
