@@ -1589,7 +1589,8 @@ public class CassetteFlow {
      * @param args the command line arguments
      */
     public static void main(String[] args) {        
-        // get any command line arguments
+        // get any command line arguments storing the first one so we can see
+        // if to run in command line mode
         final String cla;
         if(args.length > 0) {
             cla = args[0];

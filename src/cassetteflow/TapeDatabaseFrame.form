@@ -30,6 +30,8 @@
               <Component id="totalTimeLabel" min="-2" max="-2" attributes="0"/>
               <EmptySpace type="unrelated" max="-2" attributes="0"/>
               <Component id="combineSidesCheckBox" min="-2" max="-2" attributes="0"/>
+              <EmptySpace type="unrelated" max="-2" attributes="0"/>
+              <Component id="createDCTCheckBox" min="-2" pref="84" max="-2" attributes="0"/>
               <EmptySpace max="32767" attributes="0"/>
               <Component id="syncButton" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
@@ -56,6 +58,7 @@
                   <Component id="totalTimeLabel" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="syncButton" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="combineSidesCheckBox" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="createDCTCheckBox" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
           </Group>
       </Group>
@@ -143,8 +146,17 @@
     </Component>
     <Component class="javax.swing.JCheckBox" name="combineSidesCheckBox">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Combine Sides A&amp;B"/>
+        <Property name="text" type="java.lang.String" value="Combine A&amp;B"/>
       </Properties>
+    </Component>
+    <Component class="javax.swing.JCheckBox" name="createDCTCheckBox">
+      <Properties>
+        <Property name="selected" type="boolean" value="true"/>
+        <Property name="text" type="java.lang.String" value="Create DCT"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="createDCTCheckBoxActionPerformed"/>
+      </Events>
     </Component>
   </SubComponents>
 </Form>

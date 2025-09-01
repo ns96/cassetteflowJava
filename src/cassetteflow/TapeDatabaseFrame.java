@@ -133,6 +133,7 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
         totalTimeLabel = new javax.swing.JLabel();
         syncButton = new javax.swing.JButton();
         combineSidesCheckBox = new javax.swing.JCheckBox();
+        createDCTCheckBox = new javax.swing.JCheckBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Tape Database (Local)");
@@ -175,7 +176,15 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
             }
         });
 
-        combineSidesCheckBox.setText("Combine Sides A&B");
+        combineSidesCheckBox.setText("Combine A&B");
+
+        createDCTCheckBox.setSelected(true);
+        createDCTCheckBox.setText("Create DCT");
+        createDCTCheckBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                createDCTCheckBoxActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -187,6 +196,8 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
                 .addComponent(totalTimeLabel)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(combineSidesCheckBox)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(createDCTCheckBox, javax.swing.GroupLayout.PREFERRED_SIZE, 84, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(syncButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -208,7 +219,8 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
                     .addComponent(loadTapeButton)
                     .addComponent(totalTimeLabel)
                     .addComponent(syncButton)
-                    .addComponent(combineSidesCheckBox)))
+                    .addComponent(combineSidesCheckBox)
+                    .addComponent(createDCTCheckBox)))
         );
 
         pack();
@@ -288,6 +300,8 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
      */
     private void loadTapeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadTapeButtonActionPerformed
         String tapeID = tapeDBJList.getSelectedValue();
+        boolean createDCT = createDCTCheckBox.isSelected();
+                
         if(tapeID != null) {
             // load both records to the CassetteFlowFrame
             tapeID = tapeID.substring(0, tapeID.length() - 1);
@@ -307,10 +321,10 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
                     combineList.addAll(sideBList);
                 }
                 
-                cassetteFlowFrame.loadTapeInformation(tapeID, combineList, null, tapeLength);
+                cassetteFlowFrame.loadTapeInformation(tapeID, combineList, null, tapeLength, createDCT);
             } else {
                 int tapeLength = (currentTapeLength/60)*2;
-                cassetteFlowFrame.loadTapeInformation(tapeID, sideAList, sideBList, tapeLength);
+                cassetteFlowFrame.loadTapeInformation(tapeID, sideAList, sideBList, tapeLength, createDCT);
             }
         }
     }//GEN-LAST:event_loadTapeButtonActionPerformed
@@ -322,6 +336,10 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
     private void syncButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_syncButtonActionPerformed
         cassetteFlowFrame.mergeCurrentTapeDBToLocal();
     }//GEN-LAST:event_syncButtonActionPerformed
+
+    private void createDCTCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createDCTCheckBoxActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_createDCTCheckBoxActionPerformed
 
     /**
      * @param args the command line arguments
@@ -362,6 +380,7 @@ public class TapeDatabaseFrame extends javax.swing.JFrame {
     private javax.swing.JList<String> audioFileJList;
     private javax.swing.JButton closeButton;
     private javax.swing.JCheckBox combineSidesCheckBox;
+    private javax.swing.JCheckBox createDCTCheckBox;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JButton loadTapeButton;
