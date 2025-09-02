@@ -46,6 +46,9 @@ public class DeckCastConnector {
     // the current audio info
     private AudioInfo currentAudioInfo;
     
+    // the current track number
+    private int currentTrack;
+    
     // create a dct play for the que list
     private ArrayList<String> sideADCTList;
     private ArrayList<AudioInfo> queList;
@@ -291,7 +294,7 @@ public class DeckCastConnector {
             
             // if we are playing then update the counter
             if(playing && !queListLoaded) {
-                cassetteFlowFrame.updateStreamPlaytime(currentTapeTime, "[1]");
+                //cassetteFlowFrame.updateStreamPlaytime(currentTapeTime, "[1]");
                 
                 // update the decode panel in the main UI
                 String trackName = currentAudioInfo.getName() + " [1]";
@@ -303,8 +306,11 @@ public class DeckCastConnector {
                     + "Playtime From Tape: " + String.format("%04d", tapeTime) + " / " + String.format("%04d", currentAudioInfo.getLength()) + "\n"
                     + "Tape Counter: " + tapeTime + " (" + CassetteFlowUtil.getTimeString(tapeTime) + ")\n"
                     + "Data Errors: " + dataErrors +  "/" + logLineCount;
-
-                cassetteFlowFrame.setPlaybackInfo(message, false, "");
+                
+                if(cassetteFlowFrame != null) {
+                    cassetteFlowFrame.updateStreamPlaytime(currentTapeTime, "[1]");
+                    cassetteFlowFrame.setPlaybackInfo(message, false, "");
+                }
             }
         }
     } 
@@ -361,6 +367,7 @@ public class DeckCastConnector {
                 try {
                     playTime = Integer.parseInt(playTimeS);
                     playTimeTotal = Integer.parseInt(playTimeTotalS);
+                    currentTrack = Integer.parseInt(track);
                 } catch(NumberFormatException nfe) {
                     if(playTimeS.contains("M")) {
                         if(muteRecords == 0) {
@@ -398,7 +405,9 @@ public class DeckCastConnector {
                         obj.put("uname", "Guest");
                         obj.put("player", player);
                         obj.put("videoId", videoId);
+                        obj.put("trackNum", currentTrack);
                         socket.emit("my event", obj);
+                        
                         System.out.println(obj.toString(2));
 
                         Thread.sleep(1000);
@@ -461,6 +470,7 @@ public class DeckCastConnector {
             obj.put("uname", "Guest");
             obj.put("player", player);
             obj.put("videoId", videoId);
+            obj.put("trackNum", 1);
             socket.emit("my event", obj);
             
             System.out.println(obj.toString(2));
@@ -491,8 +501,9 @@ public class DeckCastConnector {
      * @param audioInfo
      * @param tapeTime The time video was started at
      * @param format
+     * @param trackNum
      */
-    public void displayPlayingAudioInfo(AudioInfo audioInfo, int tapeTime, String format) {
+    public void displayPlayingAudioInfo(AudioInfo audioInfo, int tapeTime, String format, int trackNum) {
         try {
             System.out.println("Sending information for " + audioInfo + " / " + tapeTime + " Client ID " + clientId);
             
@@ -509,7 +520,7 @@ public class DeckCastConnector {
                 infoHtml += "<font size=\"+3\"><span align=\"center\" id=\"tracklist\"></span></font>";
                 infoHtml += "<table cellpadding=\"2\" cellspacing=\"0\" border=\"0\" width=\"100%\">";
                 infoHtml += "<tr>";
-                infoHtml += "<td><font size=\"+5\"><span id=\"track\">Track # 1</span></font></td>";
+                infoHtml += "<td><font size=\"+5\"><span id=\"track\">Track # " + trackNum + " </span></font></td>";
                 infoHtml += "<td><font size=\"+5\"><span id=\"timer\">";
                 infoHtml += "&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;";
                 infoHtml += "</span></font></td>";
@@ -533,6 +544,7 @@ public class DeckCastConnector {
             obj.put("videoFormat", format);
             obj.put("videoUrl", videoUrl);
             obj.put("videoImg", videoImg);
+            obj.put("trackNum", trackNum);
             
             socket.emit("my event", obj);
         } catch (JSONException ex) {
@@ -664,6 +676,14 @@ public class DeckCastConnector {
      */
     public boolean isQueListLoaded() {
         return queListLoaded;
+    }
+    
+    /**
+     * Get the current track being played
+     * @return current track being played
+     */
+    public int getCurrentTrack() {
+        return currentTrack;
     }
     
     // test the functionality

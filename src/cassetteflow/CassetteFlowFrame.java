@@ -730,7 +730,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.3.0b15 (09/01/2025)");
+        setTitle("CassetteFlow v 1.3.0b17 (09/02/2025)");
 
         mainTabbedPane.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         mainTabbedPane.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -1268,7 +1268,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
 
         dctOffsetComboBox.setEditable(true);
         dctOffsetComboBox.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
-        dctOffsetComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "0", "60", "120", "180", "240", "300" }));
+        dctOffsetComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "0", "22", "44", "60", "120", "180", "240", "300" }));
         dctOffsetComboBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 dctOffsetComboBoxActionPerformed(evt);
@@ -2311,6 +2311,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
      * @param evt 
      */
     private void playButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_playButtonActionPerformed
+        // get list of selected audio files
         List selectedAudio = audioJList.getSelectedValuesList();
         
         if(selectedAudio != null && selectedAudio.size() >= 1) {
@@ -2329,7 +2330,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                     
                     // send information to deck cast about playing track
                     if (deckCastConnectorDisplay != null) {
-                        deckCastConnectorDisplay.displayPlayingAudioInfo(audioInfo, 0, "spotify");
+                        deckCastConnectorDisplay.displayPlayingAudioInfo(audioInfo, 0, "spotify", 1);
                     }
                     
                     return;
@@ -2368,7 +2369,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 
                 // send information to deck cast about playing track
                 if(deckCastConnectorDisplay != null) {
-                    deckCastConnectorDisplay.displayPlayingAudioInfo(audioInfo, 0, "mp3/FLAC");
+                    deckCastConnectorDisplay.displayPlayingAudioInfo(audioInfo, 0, "mp3/FLAC", 1);
                 }
             } catch (StreamPlayerException e) {
                 e.printStackTrace();
@@ -2516,7 +2517,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                             
                             // send information to deck cast about playing track
                             if (deckCastConnectorDisplay != null) {
-                                deckCastConnectorDisplay.displayPlayingAudioInfo(audioInfo, 0, "spotify");
+                                deckCastConnectorDisplay.displayPlayingAudioInfo(audioInfo, 0, "spotify", track);
                             }
                         } else {
                             continue;
@@ -3001,7 +3002,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         
                         // send information to deck cast about playing track
                         if (deckCastConnectorDisplay != null) {
-                            deckCastConnectorDisplay.displayPlayingAudioInfo(audioInfo, 0, "mp3/FLAC");
+                            deckCastConnectorDisplay.displayPlayingAudioInfo(audioInfo, 0, "mp3/FLAC", track);
                         }
 
                         // wait for playback to stop

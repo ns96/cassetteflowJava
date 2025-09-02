@@ -92,6 +92,9 @@ public class SpotifyConnector {
     // the current audio info
     private AudioInfo currentAudioInfo;
     
+    // the current track number
+    private int currentTrack;
+    
     // create a dct play for the que list
     private ArrayList<String> sideADCTList;
     private ArrayList<AudioInfo> queList;
@@ -640,6 +643,7 @@ public class SpotifyConnector {
             try {
                 playTime = Integer.parseInt(playTimeS);
                 playTimeTotal = Integer.parseInt(playTimeTotalS);
+                currentTrack = Integer.parseInt(track);
             } catch (NumberFormatException nfe) {
                 if (playTimeS.contains("M")) {
                     if (muteRecords == 0) {
@@ -798,7 +802,15 @@ public class SpotifyConnector {
     }
     
     /**
-     * Method to run micro-server independently
+     * Return the current playing track
+     * @return currentTrack being played
+     */
+    public int getCurrentTrack() {
+        return currentTrack;
+    }
+    
+    /**
+     * Method to run spotify connector independently
      * 
      * @param args 
      */

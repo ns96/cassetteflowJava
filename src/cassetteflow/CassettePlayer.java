@@ -370,7 +370,8 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                                     
                                     if(spotifyConnector.isPlaying() && startAt != -1) {
                                         if (deckCastConnectorDisplay != null) {
-                                            deckCastConnectorDisplay.displayPlayingAudioInfo(spotifyConnector.getCurrentAudioInfo(), startAt, "spotify");
+                                            deckCastConnectorDisplay.displayPlayingAudioInfo(spotifyConnector.getCurrentAudioInfo(), 
+                                                    startAt, "spotify", spotifyConnector.getCurrentTrack());
                                         }
                                     }
                                     
@@ -516,9 +517,11 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
         
         // get the total time from the tape data
         int totalTime;
+        int trackNum;
         
         try {
             totalTime = Integer.parseInt(sa[4]);
+            trackNum = Integer.parseInt(track);
         } catch(Exception nfe) {
             System.out.println("Invalid Record @ Total Time: " + line);
             dataErrors++;
@@ -592,7 +595,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                         "Start Time @ " + startTime + " | Track Number: " + track;
                     
                     if (deckCastConnectorDisplay != null) {
-                        deckCastConnectorDisplay.displayPlayingAudioInfo(audioInfo, startTime, "mp3/FLAC");
+                        deckCastConnectorDisplay.displayPlayingAudioInfo(audioInfo, startTime, "mp3/FLAC", trackNum);
                     }
                 } else {
                     message = "Playback Error.  Unknown Audio ID: " + audioId; 
