@@ -342,7 +342,7 @@ public class CassetteFlowServer {
     }
     
     /**
-     * Method to run mirco server independently of the GUI application
+     * Method to run micro server independently of the GUI application
      * 
      * @param args 
      */

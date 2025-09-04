@@ -324,21 +324,19 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     } 
     
     /**
-     * Process a line from the log file tailler class.
+     * Process a line from the log file tailer class.
      * @param line 
      */
     @Override
     public synchronized void newLogFileLine(String line) {
         if(line != null) {
-            line = line.trim();
+            line = line.trim();            
             rawLineRecord = line;
             
-            // if we only reading raw line records just return
-            if(rawLineRecordOnly) {
-                return;
-            }
+            // if we only reading raw line records just return here
+            if(rawLineRecordOnly) return;
             
-            if(line.length() == 29 && validCharacters(line)) {
+            if(line.length() == 29 && validCharacters(line)) {              
                 //System.out.println("Line record: " + line);
                 logLineCount++;
                 

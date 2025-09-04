@@ -484,14 +484,17 @@ public class DeckCastConnector {
     }
     
     /**
-     * Update dctlist for streaming playback
+     * Update dctList for streaming playback
      * 
-     * @param trackList 
+     * TO-DO 9/4/2025 -- Implement support for side B
+     * 
+     * @param sideAList 
+     * @param sideBList 
      * @param muteTime 
      */
-    public void updateDCTList(ArrayList<AudioInfo> trackList, int muteTime) {
-        sideADCTList = cassetteFlow.createDCTArrayListForSide("STR0A", trackList, muteTime);
-        cassetteFlow.addToTapeDB("STR0", trackList, null, false);
+    public void updateDCTList(ArrayList<AudioInfo> sideAList, ArrayList<AudioInfo> sideBList, int muteTime, int maxTimeBlock) {
+        sideADCTList = cassetteFlow.createDCTArrayListForSide("STR0A", sideAList, muteTime, maxTimeBlock);
+        cassetteFlow.addToTapeDB("STR0", sideAList, null, false);
     }
     
     /**

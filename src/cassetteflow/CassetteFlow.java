@@ -719,13 +719,13 @@ public class CassetteFlow {
      * @param sideB
      * @param muteTime 
      */
-    public void createDCTArrayList(String tapeID, ArrayList<AudioInfo> sideA, ArrayList<AudioInfo> sideB, int muteTime) {
+    public void createDCTArrayList(String tapeID, ArrayList<AudioInfo> sideA, ArrayList<AudioInfo> sideB, int muteTime, int maxTimeBlock) {
         if (sideA != null && sideA.size() >= 1) {
-            sideADCTList = createDCTArrayListForSide(tapeID + "A", sideA, muteTime);
+            sideADCTList = createDCTArrayListForSide(tapeID + "A", sideA, muteTime, maxTimeBlock);
         }
 
         if (sideB != null && sideB.size() >= 1) {
-            sideBDCTList = createDCTArrayListForSide(tapeID + "B", sideB, muteTime);
+            sideBDCTList = createDCTArrayListForSide(tapeID + "B", sideB, muteTime, maxTimeBlock);
         }
 
         // save to the tape database
@@ -750,12 +750,30 @@ public class CassetteFlow {
      * @return 
      */
     public ArrayList<String> createDCTArrayListForSide(String tapeID, ArrayList<AudioInfo> sideN, int muteTime) {
+        return createDCTArrayListForSide(tapeID, sideN, muteTime, -1);
+    }
+        
+    /**
+     * Create a array list containing line records for the audio tracks on side
+     * A or side B
+     * 
+     * @param tapeID
+     * @param sideN
+     * @param muteTime in seconds
+     * @param maxTimeBlock This is used to add mute sections so that no audio is 
+     * played past the playtime of the physical media in seconds 
+     * @return 
+     */
+    public ArrayList<String> createDCTArrayListForSide(String tapeID, ArrayList<AudioInfo> sideN, int muteTime, int maxTimeBlock) {
         System.out.println("Creating DCT Array: " + tapeID + ", Mute Time: " +  muteTime);
         System.out.println(sideN);
         
         ArrayList<String> dctList = new ArrayList<>();
         currentTimeTotal = 0;
         int fileCount = 0;
+        
+        // keep track of the number of audio blocks for correct padding
+        int blockCount = 1;
         
         for(AudioInfo audioInfo: sideN) {
             String trackS = String.format("%02d", fileCount+1);
@@ -766,8 +784,24 @@ public class CassetteFlow {
             String audioId = tapeID + "_" + trackS + "_" + cleanHash;
             
             // add line records to create a N second muted section before next song
-            if(fileCount >= 1) {                
-                for(int i = 0; i < muteTime; i++) {
+            if(fileCount >= 1) {
+                int maxMuteTime = muteTime;
+                
+                // if maxTimeBlock does not equals -1 then calculate maxMuteTime
+                if (maxTimeBlock != -1 && (audioInfo.getLength() + currentTimeTotal > maxTimeBlock*blockCount)) {
+                    maxMuteTime = audioInfo.getLength() + currentTimeTotal - maxTimeBlock*blockCount;
+                   
+                    
+                    System.out.println("\nPadding DCT Line Records For: " + maxMuteTime + 
+                            "(s) After Track: " + (fileCount - 1) + 
+                            ", Time Block Count: " + blockCount +
+                            ", Current Time: " + currentTimeTotal + "(s)");
+                    
+                    // increment the number of time blocks
+                    blockCount++;
+                }
+
+                for(int i = 0; i < maxMuteTime; i++) {
                     currentTimeTotal += 1;
                     String timeTotalString = String.format("%04d", currentTimeTotal);
                     String line = audioId + "_000M_" + timeTotalString;
@@ -1318,7 +1352,7 @@ public class CassetteFlow {
             headerAndTagInfo.genre = tag.getFirst(FieldKey.GENRE);
             headerAndTagInfo.album = tag.getFirst(FieldKey.ALBUM);
             headerAndTagInfo.year = tag.getFirst(FieldKey.YEAR);
-        } catch(IOException | CannotReadException | InvalidAudioFrameException | ReadOnlyFileException | TagException ex) {
+        } catch(NullPointerException | IOException | CannotReadException | InvalidAudioFrameException | ReadOnlyFileException | TagException ex) {
             ex.printStackTrace();
             return null;
         }
