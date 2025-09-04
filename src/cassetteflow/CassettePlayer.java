@@ -324,7 +324,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     } 
     
     /**
-     * Process a line from the log file tailer class.
+     * Process a line from the log file tailler class.
      * @param line 
      */
     @Override
@@ -607,19 +607,22 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                 
                 System.out.println("\n" + message);
             } else {
+                String muteInfo = "Mute Section ...";
+                if(playTimeS.contains("MM")) {
+                    muteInfo = "Mute Section (Padding) ...";
+                } 
+                
                 // TO-DO 3/15/2022 -- Need to calculate mute time correctly!
                 if(cassetteFlowFrame != null) {
                     if(muteRecords == 0) {
-                        cassetteFlowFrame.setPlaybackInfo("Mute Section ...", false);
+                        cassetteFlowFrame.setPlaybackInfo(muteInfo, false);
+                        System.out.println("\n");
                     } else {
-                        cassetteFlowFrame.setPlaybackInfo("Mute Section ...", true);
+                        cassetteFlowFrame.setPlaybackInfo(muteInfo, true);
                     }
-                } 
-                if(muteRecords == 0) {
-                    System.out.println("\n");
                 }
                 
-                System.out.println("Mute Section ...");
+                System.out.println(muteInfo);
                 muteRecords++;
                 return line;
             }

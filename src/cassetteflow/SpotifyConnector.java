@@ -106,6 +106,9 @@ public class SpotifyConnector {
     private int logLineCount = 0;
     private int muteRecords = 0;
     
+    // used to properly pad 
+    private int maxTimeBlock = -1;
+    
     /**
      * The default constructor
      */
@@ -122,6 +125,14 @@ public class SpotifyConnector {
         } catch (IOException ioe) {
             System.out.println("Error Starting Spotify Connector Server ...");
         }
+    }
+    
+    /**
+     * Set the maxBlockTime 
+     * @param maxTimeBlock
+     */
+    public void setMaxTimeBlock(int maxTimeBlock) {
+        this.maxTimeBlock = maxTimeBlock;
     }
     
     /**
@@ -536,8 +547,10 @@ public class SpotifyConnector {
     }
         
     /**
-     * Load the users playback queue. 4/20/2022 -- This endpoint doesn't work correctly.
-     * It does return all the items in the que. See link below
+     * Load the users playback queue. 
+     * 
+     * 4/20/2022 -- This endpoint doesn't work correctly.
+     * It does not return all the items in the que. See link below
      * https://community.spotify.com/t5/Spotify-for-Developers/Get-User-Queue-Doesn-t-Return-Full-Queue/td-p/5435038
      */
     public void loadPlaybackQue() {
@@ -560,7 +573,7 @@ public class SpotifyConnector {
      */
     private void storeAudioInfoRecords(boolean storeDCT) {
         // populate the dct list and store a dummy record
-        sideADCTList = cassetteFlow.createDCTArrayListForSide("STR0A", queList, 4);
+        sideADCTList = cassetteFlow.createDCTArrayListForSide("STR0A", queList, 4, maxTimeBlock);
         totalPlaytime = sideADCTList.size();
         
         queListHtml = getQueListHtml(-1);
@@ -650,12 +663,17 @@ public class SpotifyConnector {
                 currentTrack = Integer.parseInt(track);
             } catch (NumberFormatException nfe) {
                 if (playTimeS.contains("M")) {
+                    String muteInfo = "Mute Section ...";
+                    if(playTimeS.contains("MM")) {
+                        muteInfo = "Mute Section (Padding) ...";
+                    } 
+                    
                     if (muteRecords == 0) {
-                        System.out.println("\nMute section");
-                        cassetteFlowFrame.setPlaybackInfo("Mute Section ...", false);
+                        System.out.println(muteInfo);
+                        cassetteFlowFrame.setPlaybackInfo(muteInfo, false);
                     } else {
-                        System.out.println("Mute section ...");
-                        cassetteFlowFrame.setPlaybackInfo("Mute Section ...", true);
+                        System.out.println(muteInfo);
+                        cassetteFlowFrame.setPlaybackInfo(muteInfo, true);
                     }
 
                     muteRecords++;
@@ -814,7 +832,7 @@ public class SpotifyConnector {
     }
     
     /**
-     * Method to run spotify connector independently
+     * Method to run Spotify connector independently
      * 
      * @param args 
      */

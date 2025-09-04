@@ -786,14 +786,15 @@ public class CassetteFlow {
             // add line records to create a N second muted section before next song
             if(fileCount >= 1) {
                 int maxMuteTime = muteTime;
+                String muteString = "_000M_";
                 
                 // if maxTimeBlock does not equals -1 then calculate maxMuteTime
                 if (maxTimeBlock != -1 && (audioInfo.getLength() + currentTimeTotal > maxTimeBlock*blockCount)) {
-                    maxMuteTime = audioInfo.getLength() + currentTimeTotal - maxTimeBlock*blockCount;
-                   
+                    maxMuteTime = maxTimeBlock*blockCount - currentTimeTotal;
+                    muteString = "_00MM_";
                     
                     System.out.println("\nPadding DCT Line Records For: " + maxMuteTime + 
-                            "(s) After Track: " + (fileCount - 1) + 
+                            "(s) After Track: " + fileCount + 
                             ", Time Block Count: " + blockCount +
                             ", Current Time: " + currentTimeTotal + "(s)");
                     
@@ -804,7 +805,7 @@ public class CassetteFlow {
                 for(int i = 0; i < maxMuteTime; i++) {
                     currentTimeTotal += 1;
                     String timeTotalString = String.format("%04d", currentTimeTotal);
-                    String line = audioId + "_000M_" + timeTotalString;
+                    String line = audioId + muteString + timeTotalString;
                     dctList.add(line);
                 }
             }

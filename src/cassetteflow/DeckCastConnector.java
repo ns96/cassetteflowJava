@@ -69,6 +69,9 @@ public class DeckCastConnector {
     // store the current tracklist
     private TrackListInfo trackListInfo = null;
     
+    // used to properly pad 
+    private int maxTimeBlock = -1;
+    
     public DeckCastConnector(CassetteFlowFrame cassetteFlowFrame, CassetteFlow cassetteFlow, String url, String pin) throws URISyntaxException {
         this.cassetteFlowFrame = cassetteFlowFrame;
         this.cassetteFlow = cassetteFlow;
@@ -115,6 +118,14 @@ public class DeckCastConnector {
         
         // make a connection to the server
         socket.connect();
+    }
+    
+    /**
+     * Set the maxBlockTime 
+     * @param maxTimeBlock
+     */
+    public void setMaxTimeBlock(int maxTimeBlock) {
+        this.maxTimeBlock = maxTimeBlock;
     }
     
     /**
@@ -201,7 +212,7 @@ public class DeckCastConnector {
             }
             
             // populate the dct list and store a dummy record
-            sideADCTList = cassetteFlow.createDCTArrayListForSide("STR0A", queList, 4);
+            sideADCTList = cassetteFlow.createDCTArrayListForSide("STR0A", queList, 4, maxTimeBlock);
             cassetteFlow.addToTapeDB("STR0", queList, null, false);
             
             //String message = "QueList Loaded: " + queList.size() + " Tracks / " + sideADCTList.size() + " seconds ...";
@@ -370,11 +381,16 @@ public class DeckCastConnector {
                     currentTrack = Integer.parseInt(track);
                 } catch(NumberFormatException nfe) {
                     if(playTimeS.contains("M")) {
+                        String muteInfo = "Mute Section ...";
+                        if(playTimeS.contains("MM")) {
+                            muteInfo = "Mute Section (Padding) ...";
+                        }
+                        
                         if(muteRecords == 0) {
-                            System.out.println("\nMute section");
-                            cassetteFlowFrame.setPlaybackInfo("Mute Section ...", false);
+                            System.out.println(muteInfo);
+                            cassetteFlowFrame.setPlaybackInfo(muteInfo, false);
                         } else {
-                            System.out.println("Mute section ...");
+                            System.out.println(muteInfo);
                             cassetteFlowFrame.setPlaybackInfo("Mute Section ...", true);
                         }
                         
@@ -486,13 +502,16 @@ public class DeckCastConnector {
     /**
      * Update dctList for streaming playback
      * 
-     * TO-DO 9/4/2025 -- Implement support for side B
+     * TO-DO 9/4/2025 -- Implement support for Side B?
      * 
      * @param sideAList 
-     * @param sideBList 
+     * @param sideBList -- Currently not used ...
      * @param muteTime 
+     * @param maxTimeBlock 
      */
     public void updateDCTList(ArrayList<AudioInfo> sideAList, ArrayList<AudioInfo> sideBList, int muteTime, int maxTimeBlock) {
+        this.maxTimeBlock = maxTimeBlock;
+        
         sideADCTList = cassetteFlow.createDCTArrayListForSide("STR0A", sideAList, muteTime, maxTimeBlock);
         cassetteFlow.addToTapeDB("STR0", sideAList, null, false);
     }

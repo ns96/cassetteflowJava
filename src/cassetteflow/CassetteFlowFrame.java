@@ -731,7 +731,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.3.0b20 (09/04/2025)");
+        setTitle("CassetteFlow v 1.3.0b22 (09/04/2025)");
 
         mainTabbedPane.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         mainTabbedPane.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -4025,8 +4025,15 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             String streamUrl = streamComboBox.getSelectedItem().toString();
             String streamPin = streamPinTextField.getText();
             
+            // get the max time block if we need it
+            int maxTimeBlock = -1;
+            if(padDCTCheckBox.isSelected()) {
+                maxTimeBlock = getMaxTapeTime();
+            }
+            
             if(streamUrl.contains("spotify")) {
                 spotifyConnector = new SpotifyConnector(this, cassetteFlow);
+                spotifyConnector.setMaxTimeBlock(maxTimeBlock);
                 URI uri = spotifyConnector.getAuthorizationCodeUri();
                 
                 // launch the browser to complete login
@@ -4038,6 +4045,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 deckCastConnectorDisplay = new DeckCastConnector(null, null, streamUrl, "CF");
             } else {
                 deckCastConnector = new DeckCastConnector(this, cassetteFlow, streamUrl, streamPin);
+                deckCastConnector.setMaxTimeBlock(maxTimeBlock);
             }
         } catch (IOException | URISyntaxException ex) {
             Logger.getLogger(DeckCastConnector.class.getName()).log(Level.SEVERE, null, ex);
