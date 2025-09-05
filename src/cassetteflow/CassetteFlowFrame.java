@@ -494,17 +494,19 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     void loadTapeInformation(String tapeID, ArrayList<AudioInfo> sideA, ArrayList<AudioInfo> sideB, int tapeLength, boolean createDCT) {
         tapeIDTextField.setText(tapeID);
         
-        // set the tape type based base on length
-        if(tapeLength < 65) {
-            tapeLengthComboBox.setSelectedIndex(0);
-        } else if(tapeLength < 95) {
-            tapeLengthComboBox.setSelectedIndex(1);
-        } else if(tapeLength < 115) {
-            tapeLengthComboBox.setSelectedIndex(2);
-        } else if(tapeLength < 125) {
-            tapeLengthComboBox.setSelectedIndex(3);
-        }else {
-            tapeLengthComboBox.setSelectedIndex(4);
+        // set the tape type based base on length if we don't have the pad dct checkbox selected
+        if(!padDCTCheckBox.isSelected()) {
+            if (tapeLength < 65) {
+                tapeLengthComboBox.setSelectedIndex(0);
+            } else if (tapeLength < 95) {
+                tapeLengthComboBox.setSelectedIndex(1);
+            } else if (tapeLength < 115) {
+                tapeLengthComboBox.setSelectedIndex(2);
+            } else if (tapeLength < 125) {
+                tapeLengthComboBox.setSelectedIndex(3);
+            } else {
+                tapeLengthComboBox.setSelectedIndex(4);
+            }
         }
         
         // now load the audio information
@@ -731,7 +733,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.3.0b22 (09/04/2025)");
+        setTitle("CassetteFlow v 1.3.0b23 (09/05/2025)");
 
         mainTabbedPane.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         mainTabbedPane.addKeyListener(new java.awt.event.KeyAdapter() {
