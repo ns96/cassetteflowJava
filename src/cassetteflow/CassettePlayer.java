@@ -628,7 +628,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
             }
         }
         
-        int playTime = 0;
+        int playTime;
         try {
             playTime = Integer.parseInt(playTimeS);
         } catch(NumberFormatException nfe) {

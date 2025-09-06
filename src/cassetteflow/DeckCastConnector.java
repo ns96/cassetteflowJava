@@ -149,6 +149,12 @@ public class DeckCastConnector {
 
             String infoHtml = obj.getString("videoInfoLiteHTML");
             
+            // get the trackNumber and update that in info html
+            int trackNum = obj.getInt("trackNum");
+            if(trackNum != -1) {
+                infoHtml = infoHtml.replace("Track # 1<", "Track # " + trackNum + "<");
+            }
+            
             cassetteFlowFrame.setStreamInformation(streamId, totalPlaytime, player);
                         
             if (queListLoaded) {
@@ -477,16 +483,17 @@ public class DeckCastConnector {
     /**
      * Play 
      * @param videoId 
-     * @return  
+     * @param trackNum 
+     * @return weather or not playback succedded 
      */
-    public boolean playSingleTrack(String videoId) {
+    public boolean playSingleTrack(String videoId, int trackNum) {
         try {
             JSONObject obj = new JSONObject();
             obj.put("data", "Video Changed -- Player " + player);
             obj.put("uname", "Guest");
             obj.put("player", player);
             obj.put("videoId", videoId);
-            obj.put("trackNum", 1);
+            obj.put("trackNum", trackNum);
             socket.emit("my event", obj);
             
             System.out.println(obj.toString(2));

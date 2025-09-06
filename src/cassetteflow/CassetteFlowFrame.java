@@ -74,10 +74,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     // used when encoding on remote machine
     private int currentTrackIndex = 0;
        
-    // keep track of the currenet seconds for long running task
+    // keep trackNum of the currenet seconds for long running task
     private int encodeSeconds;
     
-    // keep track of the seconds audio has been played so for on the lyraT board
+    // keep trackNum of the seconds audio has been played so for on the lyraT board
     private int playSeconds;
     
     // holds the resently encoded wav files if any
@@ -89,13 +89,13 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     // used to indicate if reading of line records from LyraT board should be done
     private boolean lyraTReadLineRecords = false;
         
-    // keep track if we playing any audio
+    // keep trackNum if we playing any audio
     private boolean playing;
     
-    // keep track if we playing youtube track
+    // keep trackNum if we playing youtube trackNum
     private boolean playingYouTube = false;
     
-    // keep track if we playing spotify track
+    // keep trackNum if we playing spotify trackNum
     private boolean playingSpotify = false;
     
     // store a list of filtered audioIno objects
@@ -120,7 +120,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     
     // initite the objects to allow control of streaming
     // music sites. Store the id for the stream video/track being played
-    // deckCastConnectorDisplay is used only to show current playing track through web ui
+    // deckCastConnectorDisplay is used only to show current playing trackNum through web ui
     private DeckCastConnector deckCastConnector;
     private DeckCastConnector deckCastConnectorDisplay;
     private SpotifyConnector spotifyConnector;  
@@ -241,7 +241,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     }
     
     /**
-     * Set the current cassette ID so the track list can be displayed
+     * Set the current cassette ID so the trackNum list can be displayed
      * 
      * @param cassetteID 
      */
@@ -266,7 +266,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                        String trackCount = String.format("%02d", (i + 1));
                        tapeInfoTextArea.append("[" + trackCount + "] " + audioInfo.getName() + "\n");
                        
-                       // see if there is additional track information if this 
+                       // see if there is additional trackNum information if this 
                        // is for a long youtube mix for example
                        if(cassetteFlow.tracklistDB.containsKey(audioId)) {
                            TrackListInfo trackListInfo = cassetteFlow.tracklistDB.get(audioId);
@@ -293,14 +293,14 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     }
     
     /**
-     * Set the current track that's playing
+     * Set the current trackNum that's playing
      * @param track 
      */
     public void setPlayingAudioTrack(String track) {
         try {
             currentPlayingTrack = Integer.parseInt(track.trim());
             
-            // check to see if to update the playing track
+            // check to see if to update the playing trackNum
             if(tapeDBFrame != null && tapeDBFrame.isVisible()) {
                 tapeDBFrame.setSelectedTrack(currentPlayingTrack);
             }
@@ -554,7 +554,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     }
     
     /**
-     * Set select the current track being process
+     * Set select the current trackNum being process
      * 
      * @param index 
      */
@@ -733,7 +733,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.3.0b23 (09/05/2025)");
+        setTitle("CassetteFlow v 1.3.0b25 (09/06/2025)");
 
         mainTabbedPane.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         mainTabbedPane.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -2200,7 +2200,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     }
     
     /**
-     * either filter the track list or load Spotify album or tracks
+     * either filter the trackNum list or load Spotify album or tracks
      * 
      * @param evt 
      */
@@ -2224,12 +2224,19 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 loadStreamingTracks("Spotify", spotifyConnector.getQueList());
             }
         } else if(deckCastConnector != null) {
-            if(value.contains("https://www.youtube.com/playlist")) {
+            if(value.contains("youtube.com/playlist")) {
+                // see with to add https://www. if it's missing otherwise vieos don't load
+                if(!value.contains("https://www.")) {
+                    value = value.replace("https://", "https://www.");
+                }
+                
                 encodeProgressBar.setIndeterminate(true);
                 audioCountLabel.setText(" Loading YouTube playlist tracks ...");
                 deckCastConnector.loadPlaylist(value);
             } else if(value.contains("youtube:")) {
                 loadStreamingTracks("YouTube", deckCastConnector.getQueList());
+            } else {
+                System.out.println("Unable to load Youtube videos for: " + value);
             }
         } else {
             // just call the filter button audio list action
@@ -2321,6 +2328,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private void playButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_playButtonActionPerformed
         // get list of selected audio files
         List selectedAudio = audioJList.getSelectedValuesList();
+        int trackNum = audioJList.getSelectedIndex() + 1;
         
         if(selectedAudio != null && selectedAudio.size() >= 1) {
             double speedFactor = 1.0; 
@@ -2330,26 +2338,26 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             
             final AudioInfo audioInfo = (AudioInfo) selectedAudio.get(0);
             
-            // check to see if we playing a spotify track. If so return
+            // check to see if we playing a spotify trackNum. If so return
             if(spotifyConnector != null) {
                 String url = audioInfo.getUrl();
                 if(url != null && url.contains("spotify")) {
                     playSpotifyTrack(url, audioInfo.toString(), audioInfo.getLength());
                     
-                    // send information to deck cast about playing track
+                    // send information to deck cast about playing trackNum
                     if (deckCastConnectorDisplay != null) {
-                        deckCastConnectorDisplay.displayPlayingAudioInfo(audioInfo, 0, "spotify", 1);
+                        deckCastConnectorDisplay.displayPlayingAudioInfo(audioInfo, 0, "spotify", trackNum);
                     }
                     
                     return;
                 }
             } 
             
-            // check to see if we playing a youtube track. If so return
+            // check to see if we playing a youtube trackNum. If so return
             if(deckCastConnector != null) {
                 String videoId = audioInfo.getStreamId();
                 if(videoId != null) {
-                    playYouTubeTrack(videoId, audioInfo.toString(), audioInfo.getLength());
+                    playYouTubeTrack(videoId, audioInfo.toString(), audioInfo.getLength(), trackNum);
                     return;
                 }
             }
@@ -2375,16 +2383,16 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 
                 playButton.setEnabled(false);
                 
-                // send information to deck cast about playing track
+                // send information to deckcast about playing trackNum
                 if(deckCastConnectorDisplay != null) {
-                    deckCastConnectorDisplay.displayPlayingAudioInfo(audioInfo, 0, "mp3/FLAC", 1);
+                    deckCastConnectorDisplay.displayPlayingAudioInfo(audioInfo, 0, "mp3/FLAC", trackNum);
                 }
             } catch (StreamPlayerException e) {
                 e.printStackTrace();
                 JOptionPane.showMessageDialog(null, "Error playing audio file ...");
             }
             
-            // start thread to keep track of if we playing sound
+            // start thread to keep trackNum of if we playing sound
             if(playerThread == null) {
                 playerThread = new Thread(() -> {
                     try {
@@ -2414,7 +2422,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     }//GEN-LAST:event_playButtonActionPerformed
     
     /**
-     * play a Spotify track
+     * play a Spotify trackNum
      * 
      * @param trackURI 
      * @param title
@@ -2439,7 +2447,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             return;
         }
         
-        // start thread to keep track of if we playing sound
+        // start thread to keep trackNum of if we playing sound
         if (playerThread == null) {
             playerThread = new Thread(() -> {
                 try {
@@ -2496,9 +2504,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 // save to the tape database
                 cassetteFlow.addToTapeDB(tapeID, sideAList, sideBList, true);
                 
-                // play the spotify track now
+                // play the spotify trackNum now
                 try {
-                    int track = 1;
+                    int trackNum = 1;
                     int currentPlayTime = 0;
                     
                     for(AudioInfo audioInfo: audioList) {
@@ -2507,11 +2515,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                             break;
                         }
                         
-                        jlist.setSelectedIndex(track -1);
-                        //trackLabel.setText("Playing Track: " + String.format("%02d", track));
+                        jlist.setSelectedIndex(trackNum -1);
+                        //trackLabel.setText("Playing Track: " + String.format("%02d", trackNum));
                         System.out.println("Playing " + audioInfo + " on side: " + sideString);
                         
-                        // play the spotify track
+                        // play the spotify trackNum
                         String url = audioInfo.getUrl();
                         int length = audioInfo.getLength();
                         
@@ -2523,9 +2531,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                                 break;
                             }
                             
-                            // send information to deck cast about playing track
+                            // send information to deckcast about playing trackNum
                             if (deckCastConnectorDisplay != null) {
-                                deckCastConnectorDisplay.displayPlayingAudioInfo(audioInfo, 0, "spotify", track);
+                                deckCastConnectorDisplay.displayPlayingAudioInfo(audioInfo, 0, "spotify", trackNum);
                             }
                         } else {
                             continue;
@@ -2535,7 +2543,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         int playTime = 0;
                         while(playingSpotify) {
                             //update display every second
-                            String message = "Playing Track: " + String.format("%02d", track) + 
+                            String message = "Playing Track: " + String.format("%02d", trackNum) + 
                                         " (" + CassetteFlowUtil.getTimeString(playTime) + " | " +
                                         CassetteFlowUtil.getTimeString(currentPlayTime) + ")";
                             
@@ -2553,7 +2561,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         // pause a certain amount of time to create a mute section
                         Thread.sleep(muteTime*1000);
                         currentPlayTime += muteTime;
-                        track++;
+                        trackNum++;
                     }
                     
                     // stop the playback if needed
@@ -2585,13 +2593,13 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     }
     
     /**
-     * play a YouTube track
+     * play a YouTube trackNum
      * 
      * @param videoId 
      * @param title
      * @param length
      */
-    private void playYouTubeTrack(String videoId, String title, int length) {
+    private void playYouTubeTrack(String videoId, String title, int length, int trackNum) {
         // make sure we stop any previous threads
         if (player != null) {
             player.stop();
@@ -2601,7 +2609,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         playButton.setEnabled(false);
         
         System.out.println("\nPlaying YouTube Audio: " + title);
-        playingYouTube = deckCastConnector.playSingleTrack(videoId);
+        playingYouTube = deckCastConnector.playSingleTrack(videoId, trackNum);
         
         if(!playingYouTube) {
             JOptionPane.showMessageDialog(null, "Error Playing YouTube Track\n"
@@ -2610,7 +2618,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             return;
         }
         
-        // start thread to keep track of if we playing sound
+        // start thread to keep trackNum of if we playing sound
         if (playerThread == null) {
             playerThread = new Thread(() -> {
                 try {
@@ -2667,9 +2675,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 // save to the tape database
                 cassetteFlow.addToTapeDB(tapeID, sideAList, sideBList, true);
                 
-                // play the youtube track now
+                // play the youtube trackNum now
                 try {
-                    int track = 1;
+                    int trackNum = 1;
                     int currentPlayTime = 1;
                     
                     for(AudioInfo audioInfo: audioList) {
@@ -2678,16 +2686,16 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                             break;
                         }
                         
-                        jlist.setSelectedIndex(track -1);
-                        //trackLabel.setText("Playing Track: " + String.format("%02d", track));
+                        jlist.setSelectedIndex(trackNum -1);
+                        //trackLabel.setText("Playing Track: " + String.format("%02d", trackNum));
                         System.out.println("Playing " + audioInfo + " on side: " + sideString);
                         
-                        // play the spotify track
+                        // play the spotify trackNum
                         String videoId = audioInfo.getStreamId();
                         int length = audioInfo.getLength();
                         
                         if(videoId != null) {
-                            playingYouTube = deckCastConnector.playSingleTrack(videoId);
+                            playingYouTube = deckCastConnector.playSingleTrack(videoId, trackNum);
                             if(!playingYouTube) {
                                 JOptionPane.showMessageDialog(null, "Error Playing YouTube Track\n"
                                         + "No Active Player Found");
@@ -2701,7 +2709,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         int playTime = 1;
                         while(playingYouTube) {
                             //update display every second
-                            String message = "Playing Track: " + String.format("%02d", track) + 
+                            String message = "Playing Track: " + String.format("%02d", trackNum) + 
                                         " (" + CassetteFlowUtil.getTimeString(playTime) + " | " +
                                         CassetteFlowUtil.getTimeString(currentPlayTime) + ")";
                             
@@ -2719,7 +2727,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         // pause a certain amount of time to create a mute section
                         Thread.sleep(muteTime*1000);
                         currentPlayTime += muteTime;
-                        track++;
+                        trackNum++;
                     }
                     
                     // stop the playback if needed
@@ -2988,7 +2996,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 
                 // play the sound file now MP3 or FLAC
                 try {
-                    int track = 1;
+                    int trackNum = 1;
                     int currentPlayTime = 0;
                             
                     for(AudioInfo audioInfo: audioList) {
@@ -2998,8 +3006,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                             break;
                         }
                         
-                        jlist.setSelectedIndex(track -1);
-                        //trackLabel.setText("Playing Track: " + String.format("%02d", track));
+                        jlist.setSelectedIndex(trackNum -1);
+                        //trackLabel.setText("Playing Track: " + String.format("%02d", trackNum));
                         System.out.println("Playing " + audioInfo + " on side: " + sideString);
                         
                         // reset the player to free up resources here
@@ -3008,9 +3016,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         player.open(audioInfo.getFile());
                         player.play(); 
                         
-                        // send information to deck cast about playing track
+                        // send information to deck cast about playing trackNum
                         if (deckCastConnectorDisplay != null) {
-                            deckCastConnectorDisplay.displayPlayingAudioInfo(audioInfo, 0, "mp3/FLAC", track);
+                            deckCastConnectorDisplay.displayPlayingAudioInfo(audioInfo, 0, "mp3/FLAC", trackNum);
                         }
 
                         // wait for playback to stop
@@ -3021,7 +3029,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                                 int playTime = loopCount/10;
                                 currentPlayTime++;
                                         
-                                String message = "Playing Track: " + String.format("%02d", track) + 
+                                String message = "Playing Track: " + String.format("%02d", trackNum) + 
                                         " (" + CassetteFlowUtil.getTimeString(playTime) + " | " +
                                         CassetteFlowUtil.getTimeString(currentPlayTime) + ")";
                                 trackLabel.setText(message);
@@ -3034,7 +3042,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         // pause a certain amount of time to create a mute section
                         Thread.sleep(muteTime*1000);
                         currentPlayTime += muteTime;
-                        track++;
+                        trackNum++;
                     }
                                         
                     // re-enable the play side button and other buttons
@@ -3235,7 +3243,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         
         int index = jlist.getSelectedIndex();
         
-        if(direction == 1) { // move the track up the list
+        if(direction == 1) { // move the trackNum up the list
             if(index >= 1) {
                 Collections.swap(audioList, index, index - 1);
                 addTracksToTapeJList(audioList, jlist);
@@ -3251,7 +3259,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     }
     
     /**
-     * Move the track up by one if not the first track
+     * Move the trackNum up by one if not the first trackNum
      * 
      * @param evt 
      */
@@ -3260,7 +3268,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     }//GEN-LAST:event_moveTrackUpButtonActionPerformed
     
     /**
-     * Move the track down by one position of not the first item
+     * Move the trackNum down by one position of not the first item
      * 
      * @param evt 
      */
@@ -3492,7 +3500,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         }
         
         // start the thread which will continous get data from the 
-        // server to track the encoding process
+        // server to trackNum the encoding process
         // start the swing timer to show how long the encode is running for
         createButton.setEnabled(false);
         
@@ -3562,7 +3570,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         }
         
         // start the thread which will continous get data from the 
-        // server to track the playing process
+        // server to trackNum the playing process
         // start the swing timer to show how long the encode is running for
         playSeconds = 0;
         int[] timeForTracks = CassetteFlowUtil.getTimeForTracks(sideList, muteTime);
@@ -3867,7 +3875,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     }//GEN-LAST:event_reloadAudioOutputsButtonActionPerformed
     
     /**
-     * Check the track list in the A/B sides for duplicates
+     * Check the trackNum list in the A/B sides for duplicates
      * 
      * @param evt 
      */
@@ -4099,9 +4107,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     }//GEN-LAST:event_mainTabbedPaneKeyPressed
     
     /**
-     * Load the track list information for side A and B here to make easier
-     * to create J-cards using an online template such as
-     * https://ed7n.github.io/jcard-template/
+     * Load the trackNum list information for side A and B here to make easier
+ to create J-cards using an online template such as
+ https://ed7n.github.io/jcard-template/
      * 
      * @param evt 
      */
@@ -4277,7 +4285,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             spotifyConnector.loadPlaylist(info[1], true);
         } else {
             try {
-                // create a deckcast connector for displaying the current audio track playing through mp3 or spotify
+                // create a deckcast connector for displaying the current audio trackNum playing through mp3 or spotify
                 String streamUrl = streamComboBox.getSelectedItem().toString();
                 deckCastConnectorDisplay = new DeckCastConnector(null, null, streamUrl, "CF");
                 
@@ -4319,7 +4327,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     /**
      * Update the stream play time
      * @param streamPlaytime The stream playtime
-     * @param track The track number from a que list
+     * @param track The trackNum number from a que list
      */
     public void updateStreamPlaytime(int streamPlaytime, String track) {
         // update the timer label
