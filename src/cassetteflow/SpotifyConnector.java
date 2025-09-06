@@ -664,13 +664,20 @@ public class SpotifyConnector {
             } catch (NumberFormatException nfe) {
                 if (playTimeS.contains("M")) {
                     String muteInfo = "Mute Section ...";
+                    boolean incrementOffset = false;
+                    
                     if(playTimeS.contains("MM")) {
                         muteInfo = "Mute Section (Padding) ...";
+                        incrementOffset = true;
                     } 
                     
                     if (muteRecords == 0) {
                         System.out.println(muteInfo);
                         cassetteFlowFrame.setPlaybackInfo(muteInfo, false);
+                        
+                        if(incrementOffset) {
+                            cassetteFlowFrame.incrementDCTDecodeOffset();
+                        }
                     } else {
                         System.out.println(muteInfo);
                         cassetteFlowFrame.setPlaybackInfo(muteInfo, true);

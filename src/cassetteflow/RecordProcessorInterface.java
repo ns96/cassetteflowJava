@@ -14,5 +14,7 @@ public interface RecordProcessorInterface {
     
     void setPlaybackInfo(final String info, boolean append);
     
+    void incrementDCTDecodeOffset();
+    
     void processLineRecord(String lineRecord);
 }

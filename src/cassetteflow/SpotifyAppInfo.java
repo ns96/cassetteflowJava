@@ -2,7 +2,8 @@ package cassetteflow;
 
 /**
  * Store information specify to Spotify app to allow easy hiding. 
- * This should note be committed with client secrete in there;
+ * This should note be committed with client secrete in there
+ *
  * @author Nathan
  */
 public final class SpotifyAppInfo {

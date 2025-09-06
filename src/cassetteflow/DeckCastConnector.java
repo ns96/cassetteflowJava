@@ -388,16 +388,25 @@ public class DeckCastConnector {
                 } catch(NumberFormatException nfe) {
                     if(playTimeS.contains("M")) {
                         String muteInfo = "Mute Section ...";
+                        boolean incrementOffset = false;
+                        
                         if(playTimeS.contains("MM")) {
                             muteInfo = "Mute Section (Padding) ...";
+                            incrementOffset = true;
                         }
                         
                         if(muteRecords == 0) {
                             System.out.println(muteInfo);
                             cassetteFlowFrame.setPlaybackInfo(muteInfo, false);
+                            muteRecords = 1;
+
+                            // check that we have not incremented the offset before
+                            if(incrementOffset) {
+                                cassetteFlowFrame.incrementDCTDecodeOffset();
+                            }
                         } else {
                             System.out.println(muteInfo);
-                            cassetteFlowFrame.setPlaybackInfo("Mute Section ...", true);
+                            cassetteFlowFrame.setPlaybackInfo(muteInfo, true);
                         }
                         
                         muteRecords++;

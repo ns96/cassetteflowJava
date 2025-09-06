@@ -118,7 +118,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     // store the current tracks being played when decoding
     private int currentPlayingTrack = -1;
     
-    // initite the objects to allow control of streaming
+    // initiat the objects to allow control of streaming
     // music sites. Store the id for the stream video/track being played
     // deckCastConnectorDisplay is used only to show current playing trackNum through web ui
     private DeckCastConnector deckCastConnector;
@@ -127,6 +127,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private String streamId;
     private int streamTotalTime = 0;
     private int streamPlayer = 0;
+    
+    // variables to automatically change the DCT offset value if the correct mute
+    private int maxTimeBlock = -1; // the maximumum time block
     
     // The JSON object used to when creating a jcard template
     private JSONObject jcardJSON;
@@ -320,11 +323,36 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         });
     }
     
+    /**
+     * Set the playback information displayed to user
+     * @param info
+     * @param append
+     */
     @Override
     public void setPlaybackInfo(final String info, boolean append) {
         setPlaybackInfo(info, append, "\n");
     }
-        
+    
+    /**
+     * Method to increment the DCT offset based on the max block time variable
+     * and time block count
+     */
+    @Override
+    public void incrementDCTDecodeOffset() {
+        if(padDCTCheckBox.isSelected()) {
+            try {
+                int currentOffset = Integer.parseInt(dctOffsetComboBox.getSelectedItem().toString());
+                int offset = maxTimeBlock * currentOffset;
+                dctOffsetComboBox.setSelectedItem(String.valueOf(offset));
+
+                // fireoff the action event to actual do the update to cassetteflow
+                dctOffsetComboBoxActionPerformed(null);
+            } catch (NumberFormatException nfe) {
+                System.out.println("Unable to increment the DCT Offset ...");
+            }
+        }
+    }
+    
     /**
      * Process a line record from the lyraT board
      * 
@@ -733,7 +761,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.3.0b25 (09/06/2025)");
+        setTitle("CassetteFlow v 1.3.0b27 (09/06/2025)");
 
         mainTabbedPane.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         mainTabbedPane.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -1361,7 +1389,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jLabel13.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabel13.setText("Stream Server");
 
-        streamComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "http://pi86.sytes.net:5054/", "http://127.0.0.1:5054/", "http://127.0.0.1:5154/", "https://www.spotify.com/" }));
+        streamComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "http://pi86.sytes.net:5054/", "http://127.0.0.1:5054/", "http://127.0.0.1:5154/", "http://127.0.0.1:5254/", "https://www.spotify.com/" }));
 
         streamConnectButton.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         streamConnectButton.setText("CONNECT");
@@ -3969,7 +3997,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             // see what to set the max block time to in seconds. If not -1 then
             // tracks are spaced so that we do not partially play tracks before
             // the DCT tracks on the physical media runs out
-            int maxTimeBlock = -1;
+            maxTimeBlock = -1;
             if(padDCTCheckBox.isSelected()) {
                 maxTimeBlock = getMaxTapeTime();
             }
@@ -4036,7 +4064,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             String streamPin = streamPinTextField.getText();
             
             // get the max time block if we need it
-            int maxTimeBlock = -1;
+            maxTimeBlock = -1;
             if(padDCTCheckBox.isSelected()) {
                 maxTimeBlock = getMaxTapeTime();
             }

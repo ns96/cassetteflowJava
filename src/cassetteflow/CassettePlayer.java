@@ -608,8 +608,11 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                 System.out.println("\n" + message);
             } else {
                 String muteInfo = "Mute Section ...";
+                boolean incrementOffset = false;
+                
                 if(playTimeS.contains("MM")) {
                     muteInfo = "Mute Section (Padding) ...";
+                    incrementOffset = true;
                 } 
                 
                 // TO-DO 3/15/2022 -- Need to calculate mute time correctly!
@@ -617,6 +620,11 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                     if(muteRecords == 0) {
                         cassetteFlowFrame.setPlaybackInfo(muteInfo, false);
                         System.out.println("\n");
+                        
+                        // check that we have not incremented the offset before
+                        if(incrementOffset) {
+                           cassetteFlowFrame.incrementDCTDecodeOffset();
+                        }
                     } else {
                         cassetteFlowFrame.setPlaybackInfo(muteInfo, true);
                     }
