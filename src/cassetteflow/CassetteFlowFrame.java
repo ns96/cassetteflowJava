@@ -7,6 +7,7 @@ package cassetteflow;
 
 import com.goxr3plus.streamplayer.stream.StreamPlayer;
 import com.goxr3plus.streamplayer.stream.StreamPlayerException;
+import java.awt.BorderLayout;
 import java.awt.Desktop;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
@@ -27,12 +28,17 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sound.sampled.Mixer;
+import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.filechooser.FileFilter;
@@ -135,7 +141,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private JSONObject jcardJSON;
     
     // specify if to hide the lyraT tab
-    private static final boolean HIDE_LYRAT_TAB = false;
+    private static final boolean HIDE_LYRAT_TAB = true;
     
     /**
      * Creates new form CassetteFlowFrame
@@ -227,11 +233,16 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         currentAudioDirectory = CassetteFlow.AUDIO_DIR_NAME;
         
         directoryTextField.setText(currentAudioDirectory);
-        logfileTextField.setText(CassetteFlow.LOG_FILE_NAME);
         baudRateTextField.setText(CassetteFlow.BAUDE_RATE);
         lyraTHostTextField.setText(CassetteFlow.LYRA_T_HOST);
         audioDownloadServerTextField.setText(CassetteFlow.DOWNLOAD_SERVER);
         jcardSiteTextField.setText(CassetteFlow.JCARD_SITE);
+        
+        // load the list of decorders either minimodem local or a 
+        // cassetteflow server over http
+        decoderSourceComboBox.removeAllItems();
+        decoderSourceComboBox.addItem("MiniModem");
+        decoderSourceComboBox.addItem(CassetteFlow.LYRA_T_HOST);
         
         addAudioInfoToJList();
     }
@@ -342,15 +353,48 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         if(padDCTCheckBox.isSelected()) {
             try {
                 int currentOffset = Integer.parseInt(dctOffsetComboBox.getSelectedItem().toString());
-                int offset = maxTimeBlock * currentOffset;
-                dctOffsetComboBox.setSelectedItem(String.valueOf(offset));
+                int offset = (maxTimeBlock/60) + currentOffset;
+                
+                // show popup asking to reset the physical media to the begining
+                showConfirmDCTOffsetDialog(offset);
 
-                // fireoff the action event to actual do the update to cassetteflow
-                dctOffsetComboBoxActionPerformed(null);
+                //dctOffsetComboBox.setSelectedItem(String.valueOf(offset));
             } catch (NumberFormatException nfe) {
                 System.out.println("Unable to increment the DCT Offset ...");
             }
         }
+    }
+    
+    /**
+     * Non UI blocking info dialog
+     * @param owner
+     * @param title
+     * @param message 
+     */
+    private void showConfirmDCTOffsetDialog(int offset) {
+        String message = "<html>Please reset the physical media to the begining of Side A/B <br/>" + 
+                        "and hit OK to set the DCT offset to " + offset + " minutes ...</html>";
+        
+        JDialog dialog = new JDialog(this, "Reset Media", false);
+        dialog.setLayout(new BorderLayout());
+
+        JLabel messageLabel = new JLabel(message, SwingConstants.CENTER);
+        messageLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        dialog.add(messageLabel, BorderLayout.CENTER);
+
+        JButton okButton = new JButton("OK");
+        okButton.addActionListener((ActionEvent e) -> {
+            dialog.dispose();
+            dctOffsetComboBox.setSelectedItem(String.valueOf(offset));
+        });
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(okButton);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+
+        dialog.pack();
+        dialog.setLocationRelativeTo(this); // Center the dialog relative to its owner
+        dialog.setVisible(true);
     }
     
     /**
@@ -363,7 +407,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         // if we just connected to the lyraT device for record reading just pass it
         // to the cassette player
         if(cassettePlayer != null ) {
-            cassettePlayer.newLogFileLine(line);
+            cassettePlayer.newLineRecord(line);
         }
         
         printToLyraTConsole("Line Record: " + line, true);
@@ -666,8 +710,6 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         findTracksButton = new javax.swing.JButton();
         padDCTCheckBox = new javax.swing.JCheckBox();
         jPanel2 = new javax.swing.JPanel();
-        logfileTextField = new javax.swing.JTextField();
-        logfileButton = new javax.swing.JButton();
         startDecodeButton = new javax.swing.JButton();
         jScrollPane4 = new javax.swing.JScrollPane();
         tapeInfoTextArea = new javax.swing.JTextArea();
@@ -679,12 +721,12 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         tracksLabel = new javax.swing.JLabel();
         jLabel6 = new javax.swing.JLabel();
         stopDecodeButton = new javax.swing.JButton();
-        directDecodeCheckBox = new javax.swing.JCheckBox();
-        mmdelayTextField = new javax.swing.JTextField();
         tracksInfoLabel = new javax.swing.JLabel();
         viewCurrentTapeButton = new javax.swing.JButton();
         jLabel12 = new javax.swing.JLabel();
         dctOffsetComboBox = new javax.swing.JComboBox<>();
+        decoderSourceComboBox = new javax.swing.JComboBox<>();
+        decorderSourceLabel = new javax.swing.JLabel();
         jPanel8 = new javax.swing.JPanel();
         jScrollPane10 = new javax.swing.JScrollPane();
         streamEditorPane = new javax.swing.JEditorPane();
@@ -761,7 +803,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.3.0b27 (09/06/2025)");
+        setTitle("CassetteFlow v 1.3.0b32 (09/07/2025)");
 
         mainTabbedPane.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         mainTabbedPane.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -1225,12 +1267,6 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
 
         mainTabbedPane.addTab("ENCODE", jPanel1);
 
-        logfileTextField.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
-        logfileTextField.setText("logfile");
-
-        logfileButton.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        logfileButton.setText("Set Logfile");
-
         startDecodeButton.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         startDecodeButton.setText("START");
         startDecodeButton.addActionListener(new java.awt.event.ActionListener() {
@@ -1276,18 +1312,6 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             }
         });
 
-        directDecodeCheckBox.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        directDecodeCheckBox.setSelected(true);
-        directDecodeCheckBox.setText("Minimodem");
-
-        mmdelayTextField.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
-        mmdelayTextField.setText("0");
-        mmdelayTextField.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                mmdelayTextFieldActionPerformed(evt);
-            }
-        });
-
         tracksInfoLabel.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         tracksInfoLabel.setText("## Track(s)");
 
@@ -1311,6 +1335,18 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             }
         });
 
+        decoderSourceComboBox.setEditable(true);
+        decoderSourceComboBox.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        decoderSourceComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        decoderSourceComboBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                decoderSourceComboBoxActionPerformed(evt);
+            }
+        });
+
+        decorderSourceLabel.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        decorderSourceLabel.setText("Local");
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -1318,26 +1354,22 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 328, Short.MAX_VALUE)
-                    .addComponent(logfileTextField)
                     .addComponent(tracksLabel)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
                         .addComponent(tracksInfoLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(viewCurrentTapeButton)))
+                        .addComponent(viewCurrentTapeButton))
+                    .addComponent(decoderSourceComboBox, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane5)
                     .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(logfileButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(directDecodeCheckBox)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(mmdelayTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(decorderSourceLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 339, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel12)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(dctOffsetComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 158, Short.MAX_VALUE)
                         .addComponent(startDecodeButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(stopDecodeButton))
@@ -1351,15 +1383,15 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(logfileTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(logfileButton)
-                    .addComponent(startDecodeButton)
-                    .addComponent(stopDecodeButton)
-                    .addComponent(directDecodeCheckBox)
-                    .addComponent(mmdelayTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel12)
-                    .addComponent(dctOffsetComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(startDecodeButton)
+                        .addComponent(stopDecodeButton)
+                        .addComponent(jLabel12)
+                        .addComponent(dctOffsetComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(decoderSourceComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(decorderSourceLabel)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel4)
@@ -1371,7 +1403,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel6)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 135, Short.MAX_VALUE))
+                        .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 173, Short.MAX_VALUE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
                         .addComponent(jScrollPane4)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -1389,6 +1421,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jLabel13.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabel13.setText("Stream Server");
 
+        streamComboBox.setEditable(true);
+        streamComboBox.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         streamComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "http://pi86.sytes.net:5054/", "http://127.0.0.1:5054/", "http://127.0.0.1:5154/", "http://127.0.0.1:5254/", "https://www.spotify.com/" }));
 
         streamConnectButton.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
@@ -3162,8 +3196,6 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     }//GEN-LAST:event_stopDecodeButtonActionPerformed
 
     private void startDecodeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startDecodeButtonActionPerformed
-        String logfile = logfileTextField.getText();
-        
         if(cassettePlayer != null) cassettePlayer.stop();
         
         // get the playback speed factor
@@ -3175,7 +3207,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         // get the mixer to output the audio two
         String outputMixerName = audioOutputComboBox.getSelectedItem().toString();
         
-        cassettePlayer = new CassettePlayer(this, cassetteFlow, logfile);
+        cassettePlayer = new CassettePlayer(this, cassetteFlow, null);
         cassettePlayer.setMixerName(outputMixerName);
         cassettePlayer.setSpeedFactor(speedFactor);
         
@@ -3200,20 +3232,14 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             if(!lyraTReadLineRecords) {
                 lyraTGetRawButtonActionPerformed(null);
             }
-        } else if(directDecodeCheckBox.isSelected()) {
+        } else {
             try {
-                // get the delay used to synchronized the playback time indicated
-                // from the data on cassette vs the actual playback time from mp3
-                int delay = Integer.parseInt(mmdelayTextField.getText());
-                
-                cassettePlayer.startMinimodem(delay);
+                cassettePlayer.startMinimodem(0);
             } catch (Exception ex) {
                 String message = "Error Decoding With Minimodem";
                     JOptionPane.showMessageDialog(this, message, "Minimodem Error", JOptionPane.ERROR_MESSAGE);
                 Logger.getLogger(CassetteFlowFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
-        } else {
-            cassettePlayer.startLogTailer();
         }
         
         if(deckCastConnector == null && spotifyConnector == null) {
@@ -3303,10 +3329,6 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private void moveTrackDownButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_moveTrackDownButtonActionPerformed
         moveTrackPosition(0);
     }//GEN-LAST:event_moveTrackDownButtonActionPerformed
-
-    private void mmdelayTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mmdelayTextFieldActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_mmdelayTextFieldActionPerformed
 
     private void startServerCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startServerCheckBoxActionPerformed
         if(startServerCheckBox.isSelected()) {
@@ -4324,6 +4346,45 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             }
         }
     }//GEN-LAST:event_streamPinTextFieldActionPerformed
+    
+    /**
+     * Function to set the the decoder data source. Either local minimodem or a 
+     * lyraT board or cassetteflow server over http
+     * 
+     * @param evt 
+     */
+    private void decoderSourceComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_decoderSourceComboBoxActionPerformed
+        Object source = decoderSourceComboBox.getSelectedItem();
+        if(source == null) return;
+        
+        if (source.equals("MiniModem")) {
+            decorderSourceLabel.setText("Using Local Decoder ...");
+            lyraTConnect = null;
+        } else {
+            if (lyraTConnect == null) {
+                String host = source.toString().trim();
+                if (!host.endsWith("/")) {
+                    host += "/";
+                }
+
+                lyraTConnect = new ESP32LyraTConnect(host);
+
+                // try getting information to see if we connected to a lyraT boarder
+                // or cassetteflow server
+                String info = lyraTConnect.getInfo();
+                
+                if (info != null) {
+                    decorderSourceLabel.setText("Connected to Server ...");
+
+                    // save the host
+                    cassetteFlow.setLyraTHost(host);
+                } else {
+                    decorderSourceLabel.setText("Connection Error ...");
+                    lyraTConnect = null;
+                }
+            }
+        }       
+    }//GEN-LAST:event_decoderSourceComboBoxActionPerformed
 
     /**
      * 
@@ -4397,8 +4458,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JButton createDCTButton;
     private javax.swing.JButton createDownloadButton;
     private javax.swing.JComboBox<String> dctOffsetComboBox;
+    private javax.swing.JComboBox<String> decoderSourceComboBox;
+    private javax.swing.JLabel decorderSourceLabel;
     private javax.swing.JButton defaultButton;
-    private javax.swing.JCheckBox directDecodeCheckBox;
     private javax.swing.JCheckBox directEncodeCheckBox;
     private javax.swing.JTextField directoryTextField;
     private javax.swing.JTextField dummyAlbumsTextField;
@@ -4454,8 +4516,6 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JTextField jcardSiteTextField;
     private javax.swing.JTextField jcardTitleTextField;
     private javax.swing.JButton loadTemplateButton;
-    private javax.swing.JButton logfileButton;
-    private javax.swing.JTextField logfileTextField;
     private javax.swing.JButton lyraTConnectButton;
     private javax.swing.JTextArea lyraTConsoleTextArea;
     private javax.swing.JButton lyraTCreateAButton;
@@ -4479,7 +4539,6 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JButton lyraTVolDownButton;
     private javax.swing.JButton lyraTVolUpButton;
     private javax.swing.JTabbedPane mainTabbedPane;
-    private javax.swing.JTextField mmdelayTextField;
     private javax.swing.JButton moveTrackDownButton;
     private javax.swing.JButton moveTrackUpButton;
     private javax.swing.JTextField muteJTextField;

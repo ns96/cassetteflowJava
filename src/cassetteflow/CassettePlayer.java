@@ -256,7 +256,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                                     cassetteFlowFrame.printToConsole(line, true);
                                 }
                                 
-                                newLogFileLine(line);
+                                newLineRecord(line);
                             }
                         }
                         
@@ -294,7 +294,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                         line = miniModemErrReader.readLine();
                         
                         if (line != null) {
-                            newLogFileLine(line);
+                            newLineRecord(line);
                             if(cassetteFlowFrame != null) {
                                 cassetteFlowFrame.printToConsole(line, true);
                             }
@@ -324,11 +324,11 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     } 
     
     /**
-     * Process a line from the log file tailler class.
+     * Process a line from the log file tailer class.
      * @param line 
      */
     @Override
-    public synchronized void newLogFileLine(String line) {
+    public synchronized void newLineRecord(String line) {
         if(line != null) {
             line = line.trim();            
             rawLineRecord = line;
