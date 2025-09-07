@@ -798,6 +798,10 @@ public class CassetteFlow {
                             ", Time Block Count: " + blockCount +
                             ", Current Time: " + currentTimeTotal + "(s)");
                     
+                    if(cassetteFlowFrame != null) {
+                        cassetteFlowFrame.addTimeBlockEndTrack(fileCount);
+                    }
+                    
                     // increment the number of time blocks
                     blockCount++;
                 }

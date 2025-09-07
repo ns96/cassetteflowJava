@@ -44,6 +44,7 @@ import javax.swing.Timer;
 import javax.swing.filechooser.FileFilter;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.tritonus.share.ArraySet;
 
 /**
  * Main User Interface for the cassette flow program
@@ -136,6 +137,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     
     // variables to automatically change the DCT offset value if the correct mute
     private int maxTimeBlock = -1; // the maximumum time block
+    private ArrayList<Integer> timeBlockEndTracks;
     
     // The JSON object used to when creating a jcard template
     private JSONObject jcardJSON;
@@ -278,6 +280,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                        
                        AudioInfo audioInfo = cassetteFlow.audioInfoDB.get(audioId);
                        String trackCount = String.format("%02d", (i + 1));
+                       
+                       if(timeBlockEndTracks.contains(i+1)) {
+                           trackCount = "*" + trackCount;
+                       }
+                       
                        tapeInfoTextArea.append("[" + trackCount + "] " + audioInfo.getName() + "\n");
                        
                        // see if there is additional trackNum information if this 
@@ -366,6 +373,20 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     }
     
     /**
+     * Method to add tracks which are at the end of timeBlocks to make it easier
+     * when using DTC tracks to know when the physical media should be reset
+     * 
+     * @param trackNum
+     */
+    public void addTimeBlockEndTrack(int trackNum) {
+        if (timeBlockEndTracks == null) {
+            timeBlockEndTracks = new ArrayList<>();
+        }
+
+        timeBlockEndTracks.add(trackNum);
+    }
+    
+    /**
      * Non UI blocking info dialog
      * @param owner
      * @param title
@@ -398,7 +419,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     }
     
     /**
-     * Process a line record from the lyraT board
+     * Process a line record from the lyraT board or cassetteflow server
      * 
      * @param line 
      */
@@ -410,7 +431,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             cassettePlayer.newLineRecord(line);
         }
         
-        printToLyraTConsole("Line Record: " + line, true);
+        printToConsole(line, true);
+        //printToLyraTConsole("Line Record: " + line, true);
     }
     
     /**
@@ -803,7 +825,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.3.0b32 (09/07/2025)");
+        setTitle("CassetteFlow v 1.3.0b34 (09/07/2025)");
 
         mainTabbedPane.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         mainTabbedPane.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -1146,6 +1168,11 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         });
 
         padDCTCheckBox.setText("Pad");
+        padDCTCheckBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                padDCTCheckBoxActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -1419,7 +1446,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jScrollPane10.setViewportView(streamEditorPane);
 
         jLabel13.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        jLabel13.setText("Stream Server");
+        jLabel13.setText("Stream");
 
         streamComboBox.setEditable(true);
         streamComboBox.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
@@ -1468,9 +1495,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane10)
                     .addGroup(jPanel8Layout.createSequentialGroup()
-                        .addComponent(jLabel13, javax.swing.GroupLayout.PREFERRED_SIZE, 160, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(streamComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 152, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel13)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(streamComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 240, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(streamConnectButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1494,7 +1521,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                     .addComponent(streamPinTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(streamPlayClearButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane10, javax.swing.GroupLayout.DEFAULT_SIZE, 439, Short.MAX_VALUE))
+                .addComponent(jScrollPane10, javax.swing.GroupLayout.DEFAULT_SIZE, 434, Short.MAX_VALUE))
         );
 
         mainTabbedPane.addTab("STREAM PLAY", jPanel8);
@@ -4022,6 +4049,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             maxTimeBlock = -1;
             if(padDCTCheckBox.isSelected()) {
                 maxTimeBlock = getMaxTapeTime();
+                timeBlockEndTracks = new ArrayList<>();
             }
             
             if(deckCastConnector != null) {
@@ -4385,6 +4413,12 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             }
         }       
     }//GEN-LAST:event_decoderSourceComboBoxActionPerformed
+
+    private void padDCTCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_padDCTCheckBoxActionPerformed
+        if(!padDCTCheckBox.isSelected()) {
+            timeBlockEndTracks = new ArraySet<>();
+        }
+    }//GEN-LAST:event_padDCTCheckBoxActionPerformed
 
     /**
      * 
