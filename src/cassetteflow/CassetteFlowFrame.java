@@ -137,7 +137,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     
     // variables to automatically change the DCT offset value if the correct mute
     private int maxTimeBlock = -1; // the maximumum time block
-    private ArrayList<String> timeBlockEndTracks;
+    private ArrayList<String> timeBlockEndTracks = new ArrayList<>();
     
     // The JSON object used to when creating a jcard template
     private JSONObject jcardJSON;
@@ -832,7 +832,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.3.0b35 (09/08/2025)");
+        setTitle("CassetteFlow v 1.3.0b36 (09/08/2025)");
 
         mainTabbedPane.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         mainTabbedPane.addKeyListener(new java.awt.event.KeyAdapter() {
