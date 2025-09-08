@@ -137,7 +137,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     
     // variables to automatically change the DCT offset value if the correct mute
     private int maxTimeBlock = -1; // the maximumum time block
-    private ArrayList<Integer> timeBlockEndTracks;
+    private ArrayList<String> timeBlockEndTracks;
     
     // The JSON object used to when creating a jcard template
     private JSONObject jcardJSON;
@@ -270,6 +270,12 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 tracksLabel.setText(cassetteID + " Tracks");
                 tapeInfoTextArea.setText("");
                 
+                // set the side based on cassette ID
+                String tapeSide = "A";
+                if (cassetteID.endsWith("B")) {
+                    tapeSide = "B";
+                }
+                
                 ArrayList<String> audioIds = cassetteFlow.tapeDB.get(cassetteID);
                 
                 int trackTotal = 0;
@@ -281,7 +287,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                        AudioInfo audioInfo = cassetteFlow.audioInfoDB.get(audioId);
                        String trackCount = String.format("%02d", (i + 1));
                        
-                       if(timeBlockEndTracks.contains(i+1)) {
+                       String endTrack = tapeSide + (i+1);
+                       if(timeBlockEndTracks.contains(endTrack)) {
                            trackCount = "*" + trackCount;
                        }
                        
@@ -376,14 +383,14 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
      * Method to add tracks which are at the end of timeBlocks to make it easier
      * when using DTC tracks to know when the physical media should be reset
      * 
-     * @param trackNum
+     * @param sideAndTrackNum
      */
-    public void addTimeBlockEndTrack(int trackNum) {
+    public void addTimeBlockEndTrack(String sideAndTrackNum) {
         if (timeBlockEndTracks == null) {
             timeBlockEndTracks = new ArrayList<>();
         }
 
-        timeBlockEndTracks.add(trackNum);
+        timeBlockEndTracks.add(sideAndTrackNum);
     }
     
     /**
@@ -825,7 +832,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.3.0b34 (09/07/2025)");
+        setTitle("CassetteFlow v 1.3.0b35 (09/08/2025)");
 
         mainTabbedPane.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         mainTabbedPane.addKeyListener(new java.awt.event.KeyAdapter() {

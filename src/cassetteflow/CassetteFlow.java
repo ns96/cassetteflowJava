@@ -775,6 +775,11 @@ public class CassetteFlow {
         // keep track of the number of audio blocks for correct padding
         int blockCount = 1;
         
+        String tapeSide = "A";
+        if (tapeID.endsWith("B")) {
+            tapeSide = "B";
+        }
+        
         for(AudioInfo audioInfo: sideN) {
             String trackS = String.format("%02d", fileCount+1);
             
@@ -799,7 +804,7 @@ public class CassetteFlow {
                             ", Current Time: " + currentTimeTotal + "(s)");
                     
                     if(cassetteFlowFrame != null) {
-                        cassetteFlowFrame.addTimeBlockEndTrack(fileCount);
+                        cassetteFlowFrame.addTimeBlockEndTrack(tapeSide+fileCount);
                     }
                     
                     // increment the number of time blocks
