@@ -67,6 +67,9 @@ public class CassetteFlow {
     // store the audio db file in binary form to make it more efficient to load audio information
     public static String AUDIO_INDEX_FILENAME = AUDIO_DIR_NAME + File.separator + "audiodb.bin";
     
+    // store the loaded stream audio files object in a seperate db file
+    public static String STREAM_AUDIO_INDEX_FILENAME = AUDIO_DIR_NAME + File.separator + "streamAudiodb.bin";
+    
     // default directory where the text files to be encoded
     public static final String TAPE_FILE_DIR_NAME = "TapeFiles";
     
@@ -74,6 +77,9 @@ public class CassetteFlow {
     
     // stores the audioInfo object keyed by the 10 character hash
     public HashMap<String, AudioInfo> audioInfoDB = new HashMap<>();
+    
+    // stores the stream audioInfo object keyed by the 10 character hash
+    public HashMap<String, AudioInfo> streamAudioInfoDB = new HashMap<>();
     
     // also store the AudioInfo object in a list for convinience when
     // displaying in the UI
@@ -169,16 +175,16 @@ public class CassetteFlow {
         // keep track of start time so we can se how long it take to load files
         startTime = System.currentTimeMillis();
         
-        // load the audio file index to make decoding much easier
+        // load the audio file and stream audio file index to make decoding much easier
         loadAudioFileIndex();
         
         // load audio files which is displayed in the GUI, and overwrites the
         // records in the audio file index.
-        
         if(!indexLoaded) {
             loadAudioFiles(AUDIO_DIR_NAME, false);
         } else {
             loadAudioFilesFromIndex(AUDIO_DIR_NAME);
+            loadStreamAudioFileIndex();
         }
 
         File file = new File(TAPE_DB_FILENAME);
@@ -270,10 +276,12 @@ public class CassetteFlow {
             for(String key: audioInfoDB.keySet()) {
                 AudioInfo audioInfo = audioInfoDB.get(key);
                 
-                // add "/sdcard/" to the filename so they match those on the LyraT
-                String line = key + "\t" + audioInfo.getLength() + "\t" +  audioInfo.getBitRate() + "\t/sdcard/" + audioInfo.getFile().getName() + "\n";
+                if(audioInfo.getFile() != null) {
+                    // add "/sdcard/" to the filename so they match those on the LyraT
+                    String line = key + "\t" + audioInfo.getLength() + "\t" +  audioInfo.getBitRate() + "\t/sdcard/" + audioInfo.getFile().getName() + "\n";
                 
-                writer.write(line);
+                    writer.write(line);
+                }
             }
             
             writer.close();
@@ -1538,6 +1546,51 @@ public class CassetteFlow {
             } catch (IOException | ClassNotFoundException ex) {
                 ex.printStackTrace();
             }
+        }
+    }
+    
+    /**
+     * Load the stream audio file index if the file exist
+     */
+    public void loadStreamAudioFileIndex() {
+        File file = new File(STREAM_AUDIO_INDEX_FILENAME);
+        
+        if(file.canRead() && indexLoaded) {
+            try {
+                FileInputStream fis = new FileInputStream(file);
+                ObjectInputStream in = new ObjectInputStream(fis);
+                streamAudioInfoDB = (HashMap<String, AudioInfo>) in.readObject();
+                
+                // merge all the audio info objects in stream audio db into the main audioDB now
+                streamAudioInfoDB.forEach((k, v) -> {
+                    if (!audioInfoDB.containsKey(k)) {
+                        audioInfoDB.put(k, v);
+                    }
+                });
+                
+                in.close();
+                fis.close();
+            } catch (IOException | ClassNotFoundException ex) {
+                Logger.getLogger(CassetteFlow.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+    
+    
+    /**
+     * Saves the stream audio info abojects to an index so we can load those objects
+     * without have to reload then fram the deckcast backend
+     */
+    void saveStreamAudioDBIndex() {
+        try {
+            FileOutputStream fos = new FileOutputStream(new File(STREAM_AUDIO_INDEX_FILENAME));
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(streamAudioInfoDB);
+
+            oos.close();
+            fos.close();
+        } catch (IOException ex) {
+            Logger.getLogger(CassetteFlow.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     

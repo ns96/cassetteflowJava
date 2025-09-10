@@ -832,7 +832,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.3.0b36 (09/08/2025)");
+        setTitle("CassetteFlow v 1.3.0b38 (09/10/2025)");
 
         mainTabbedPane.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         mainTabbedPane.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -3106,13 +3106,31 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         //trackLabel.setText("Playing Track: " + String.format("%02d", trackNum));
                         System.out.println("Playing " + audioInfo + " on side: " + sideString);
                         
+                        // check to make sure we are not trying to play a streaming audio track
+                        if (audioInfo.getStreamId() != null || audioInfo.getUrl() != null) {
+                            String streamType = "YouTube";
+                            if(audioInfo.getUrl().contains("spotify")) {
+                                streamType = "Spotify";
+                            }
+                            
+                            String message = "Playback Error for " + streamType + " Track: " + audioInfo + 
+                                    "\nConnect to Streaming Backend ....";
+                            
+                            // display an error message dialog for user
+                            JOptionPane.showMessageDialog(null, message,
+                                    "Error Playing Side", JOptionPane.ERROR_MESSAGE);
+                           
+                            System.out.println(message);
+                            break;
+                        }
+                        
                         // reset the player to free up resources here
                         player.reset();
                         
                         player.open(audioInfo.getFile());
                         player.play(); 
                         
-                        // send information to deck cast about playing trackNum
+                        // send information to deckcast backend about playing trackNum
                         if (deckCastConnectorDisplay != null) {
                             deckCastConnectorDisplay.displayPlayingAudioInfo(audioInfo, 0, "mp3/FLAC", trackNum);
                         }
@@ -4422,7 +4440,17 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     }//GEN-LAST:event_decoderSourceComboBoxActionPerformed
 
     private void padDCTCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_padDCTCheckBoxActionPerformed
-        if(!padDCTCheckBox.isSelected()) {
+        if(padDCTCheckBox.isSelected()) {
+            maxTimeBlock = getMaxTapeTime();
+            
+            if(deckCastConnector != null) {
+                deckCastConnector.setMaxTimeBlock(maxTimeBlock);
+            }
+            
+            if(spotifyConnector != null) {
+                spotifyConnector.setMaxTimeBlock(maxTimeBlock);
+            }
+        } else {
             timeBlockEndTracks = new ArraySet<>();
         }
     }//GEN-LAST:event_padDCTCheckBoxActionPerformed

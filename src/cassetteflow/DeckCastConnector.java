@@ -174,6 +174,7 @@ public class DeckCastConnector {
                 AudioInfo audioInfo = new AudioInfo(null, streamId, totalPlaytime, lengthAsTime, 128);
                 audioInfo.setTitle(streamTitle);
                 audioInfo.setStreamId(streamId);
+                audioInfo.setUrl("https://www.youtube.com/watch?v=" + streamId);
                 currentAudioInfo = audioInfo;
                 
                 // add tracklist information for long play youtube mix
@@ -185,6 +186,8 @@ public class DeckCastConnector {
                 
                 // store this in the audio info DB and the tape db
                 cassetteFlow.audioInfoDB.put(streamId, audioInfo);
+                cassetteFlow.streamAudioInfoDB.put(streamId, audioInfo);
+                
                 queList = new ArrayList<>();
                 queList.add(audioInfo);
                 cassetteFlow.addToTapeDB("STR0", queList, null, false);
@@ -210,12 +213,18 @@ public class DeckCastConnector {
                 AudioInfo audioInfo = new AudioInfo(null, videoId, length, lengthAsTime, 128);
                 audioInfo.setTitle(title);
                 audioInfo.setStreamId(videoId);
+                audioInfo.setUrl("https://www.youtube.com/watch?v=" + videoId);
                 queList.add(audioInfo);
                 
                 // store this in the audio info DB
                 cassetteFlow.audioInfoDB.put(videoId, audioInfo);
+                cassetteFlow.streamAudioInfoDB.put(videoId, audioInfo);
+                
                 queListLoaded = true;
             }
+            
+            // save the stream audio db as binary file
+            cassetteFlow.saveStreamAudioDBIndex();
             
             // populate the dct list and store a dummy record
             sideADCTList = cassetteFlow.createDCTArrayListForSide("STR0A", queList, 4, maxTimeBlock);
@@ -223,6 +232,15 @@ public class DeckCastConnector {
             
             //String message = "QueList Loaded: " + queList.size() + " Tracks / " + sideADCTList.size() + " seconds ...";
             queListHtml = obj.getString("queListHTML");
+            
+            // remove the begining of quelist html string
+            String trimEndSequence = "0000 seconds</b></span>";
+            int trimIndex = queListHtml.indexOf(trimEndSequence);
+            
+            if(trimIndex != -1) {
+                queListHtml = queListHtml.substring(trimIndex + trimEndSequence.length());
+            }
+           
             cassetteFlowFrame.updateStreamEditorPane(queListHtml);
             cassetteFlowFrame.setPlayingCassetteID("STR0A");
             

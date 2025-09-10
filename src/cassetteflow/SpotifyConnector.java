@@ -410,9 +410,12 @@ public class SpotifyConnector {
 
             // store this in the audio info DB
             cassetteFlow.audioInfoDB.put(sha10hex, audioInfo);
+            cassetteFlow.streamAudioInfoDB.put(sha10hex, audioInfo);
         }
-    }
         
+        // save the stream audio db as binary file
+        cassetteFlow.saveStreamAudioDBIndex();
+    }       
     
     /**
      * Get the items in the album
@@ -485,7 +488,11 @@ public class SpotifyConnector {
 
             // store this in the audio info DB
             cassetteFlow.audioInfoDB.put(sha10hex, audioInfo);
+            cassetteFlow.streamAudioInfoDB.put(sha10hex, audioInfo);
         }
+        
+        // save the stream audio db as binary file
+        cassetteFlow.saveStreamAudioDBIndex();
     }
     
     /**
