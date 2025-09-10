@@ -224,6 +224,19 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
      */
     public void setCassetteFlow(CassetteFlow cassetteFlow) {
         this.cassetteFlow = cassetteFlow;
+        
+        // start the cassetteflow server here
+        try {
+            cassetteFlowServer = new CassetteFlowServer();
+            cassetteFlowServer.setCassetteFlow(cassetteFlow);
+
+            consoleTextArea.append("Local Cassette Flow Server Started ...\n\n");
+        } catch (IOException ex) {
+            consoleTextArea.append("Local Cassette Flow Server Failed To Start ...\n\n");
+            Logger.getLogger(CassetteFlowFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        // update the UI now
         updateUI();
     }
     
@@ -291,8 +304,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                        if(timeBlockEndTracks.contains(endTrack)) {
                            trackCount = "*" + trackCount;
                        }
-                       
-                       tapeInfoTextArea.append("[" + trackCount + "] " + audioInfo.getName() + "\n");
+                       String trackTitle = "[" + trackCount + "] " + audioInfo.getName();
+                       tapeInfoTextArea.append(trackTitle + "\n");
                        
                        // see if there is additional trackNum information if this 
                        // is for a long youtube mix for example

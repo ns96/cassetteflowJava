@@ -187,6 +187,28 @@ public class CassetteFlowUtil {
         return result;
     }
     
+    /**
+     * Method to return the type of audio object we have based on the filename ending, or url 
+     * of audio info object
+     * 
+     * @param audioInfo The audio info object we are inspecting
+     * @return The format of the audio object
+     */
+    public static String audioInfoFormat(AudioInfo audioInfo) {
+        if(audioInfo.getName().toLowerCase().contains(".mp3")) {
+            return "MP3";
+        } else if(audioInfo.getName().toLowerCase().contains(".flac")) {
+            return "FLAC";
+        } else if(audioInfo.getUrl().toLowerCase().contains("youtube")) {
+            return "YTB";
+        } else if(audioInfo.getUrl().toLowerCase().contains("spotify")) {
+            return "SPO";
+        } else {
+            return "UNK";
+        }
+    }
+    
+    // test main method
     public static void main(String[] args) throws IOException {
         Path path = Paths.get("C:\\mp3files\\");
         List<Path> paths = findAllAudioFiles(path);

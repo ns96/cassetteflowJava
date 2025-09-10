@@ -41,6 +41,9 @@ import org.jaudiotagger.audio.mp3.MP3File;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.TagException;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * A simple program for creating input files for the cassette flow encoding
@@ -151,7 +154,10 @@ public class CassetteFlow {
     
     // object to create dummy audio files from a spotify dataset for testing the UI with large number
     // of records
-    private SpotifyDatasetLoader spotifyDatasetLoader;
+    private SpotifyDatasetLoader spotifyDatasetLoader; 
+    
+    // create a json object which is used to capture the state of the decode process
+    private JSONObject currentDeocdeState = new JSONObject();
     
     /**
      * Default constructor that just loads the mp3/flac files and cassette 
@@ -251,6 +257,52 @@ public class CassetteFlow {
         } else {
             return "NO PLAYER";
         }
+    }
+    
+    /**
+     * Get the current state of the decode process
+     *
+     * @return JSONObject containing the state of the decode process
+    */
+    public JSONObject getCurrentDecodeState() {
+        try {
+            // Test code
+            // 1. Create your Java objects (e.g., a map, list, or custom class)
+            JSONArray tracksArray = new JSONArray();
+            
+            JSONObject track1 = new JSONObject();
+            track1.put("id", 1);
+            track1.put("title", "Morning Dew");
+            track1.put("trackType", "MP3");
+            track1.put("albumArt", "https://placehold.co/400x400/90EE90/000000?text=MD");
+            tracksArray.put(track1);
+            
+            JSONObject track2 = new JSONObject();
+            track2.put("id", 2);
+            track2.put("title", "Urban Sunset");
+            track2.put("trackType", "Flac");
+            track2.put("albumArt", "https://placehold.co/400x400/FFA07A/000000?text=US");
+            tracksArray.put(track2);
+            
+            // Add other tracks similarly...
+            currentDeocdeState.put("tracks", tracksArray);
+            currentDeocdeState.put("currentlyPlaying", track1); // Example of setting a currently playing track
+            currentDeocdeState.put("isPlaying", true);
+        } catch (JSONException ex) {
+            Logger.getLogger(CassetteFlowServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        // end of test code
+        
+        return currentDeocdeState;
+    }
+    
+    /**
+     * Set the current state of the decode process to be served to the web view
+     *
+     * @param currentDeocdeState
+     */
+    public void setCurrentDecodeState(JSONObject currentDeocdeState) {
+        this.currentDeocdeState = currentDeocdeState;
     }
     
     /**

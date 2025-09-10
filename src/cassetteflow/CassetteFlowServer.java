@@ -4,11 +4,14 @@ package cassetteflow;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -16,6 +19,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * This is class implements a simple http server for testing the ESP32LyraT Client
@@ -45,7 +51,7 @@ public class CassetteFlowServer {
     private int mute = 0;
     
     private boolean readRawData = false;
-    
+        
     /**
      * Main constructor which starts the server
      * @throws IOException 
@@ -65,6 +71,11 @@ public class CassetteFlowServer {
         server.createContext("/play", new playHandler());
         server.createContext("/stop", new stopHandler());
         
+        // define endpoint for interacting with the cassetteflow desktop program
+        server.createContext("/dcv", new DecodeViewHandler()); // send the UI
+        server.createContext("/dcs", new DecodeStateHandler()); // get the decode state json
+        server.createContext("/dcc", new DecodeCommandHandler()); // send a commend to decorder
+         
         server.setExecutor(threadPoolExecutor);
         server.start();
         
@@ -79,7 +90,7 @@ public class CassetteFlowServer {
     public void setCassetteFlow(CassetteFlow cassetteFlow) {
         this.cassetteFlow = cassetteFlow;
     }
-    
+      
     /**
      * Stop the http server
      */
@@ -335,6 +346,88 @@ public class CassetteFlowServer {
     }
     
     /**
+     * Handles serving mobile page which allows for veiwing of currently decoding data
+     * 
+     */
+    private class DecodeViewHandler implements HttpHandler {
+
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            // Define the path to your HTML file, as a resource within the JAR.
+            String resourcePath = "/decode_viewer.html";
+
+            // Use the class loader to get an InputStream for the resource.
+            try (InputStream is = getClass().getResourceAsStream(resourcePath)) {
+                if (is == null) {
+                    throw new IOException("Resource not found: " + resourcePath);
+                }
+
+                // Read the content from the InputStream into a byte array.
+                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                int nRead;
+                byte[] data = new byte[1024];
+                while ((nRead = is.read(data, 0, data.length)) != -1) {
+                    buffer.write(data, 0, nRead);
+                }
+                buffer.flush();
+                byte[] response = buffer.toByteArray();
+
+                // Send the response with a 200 OK status.
+                exchange.getResponseHeaders().set("Content-Type", "text/html");
+                exchange.sendResponseHeaders(200, response.length);
+                OutputStream os = exchange.getResponseBody();
+                os.write(response);
+                os.close();
+
+            } catch (IOException e) {
+                // Handle the case where the resource is not found.
+                String errorMessage = "404 Not Found: " + resourcePath;
+                exchange.getResponseHeaders().set("Content-Type", "text/plain");
+                exchange.sendResponseHeaders(404, errorMessage.length());
+                OutputStream os = exchange.getResponseBody();
+                os.write(errorMessage.getBytes());
+                os.close();
+                System.err.println(errorMessage);
+            }
+        }
+    }
+      
+    private class DecodeStateHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            // Convert the JSONObject to a JSON string
+            String jsonResponse = cassetteFlow.getCurrentDecodeState().toString();
+
+            // Set the response headers to indicate JSON content
+            exchange.getResponseHeaders().set("Content-Type", "application/json");
+
+            // Send the JSON string as the response body
+            byte[] jsonBytes = jsonResponse.getBytes(StandardCharsets.UTF_8);
+            exchange.sendResponseHeaders(200, jsonBytes.length);
+            OutputStream os = exchange.getResponseBody();
+            os.write(jsonBytes);
+            os.close();
+        }
+    }
+   
+    /**
+     * Class to send commands to the decoding backend
+     */
+    private class DecodeCommandHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange he) throws IOException {
+            readRawData = false;
+            
+            String query = he.getRequestURI().getQuery();
+            
+            Map params = splitQuery(query);
+            String response = "Decoding command received " + params;
+            
+            sendResponse(he, response);
+        }
+    }
+    
+    /**
      * Used by client to test encoding
      */
     public void testEncode() {
@@ -352,7 +445,13 @@ public class CassetteFlowServer {
             CassetteFlow cf = new CassetteFlow();  
             CassettePlayer cp = new CassettePlayer(cf, null);
             cp.setRawLineRecordOnly(true);
-            cp.startMinimodem(0);
+            
+            // trying starting minimodem in try block in case it's not installed
+            try {
+                cp.startMinimodem(0);
+            } catch(IOException iex) {
+                System.out.println("No Minimodem program found ...\n");
+            }
             
             CassetteFlowServer cfs = new CassetteFlowServer();
             cfs.setCassetteFlow(cf);
