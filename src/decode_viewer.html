@@ -355,16 +355,34 @@
             if (currentlyPlaying && isPlaying) {
                 // split the currently playing string into an array
                 let sa = currentlyPlaying.split(/\r?\n/);
+                //console.log(track);
+                //console.log(sa);
+                if(sa.length === 0) return;
                 
-                playingIcon.src = track.albumArt || 'https://placehold.co/400x400/C0C0C0/000000?text=CF';
-                playingTitle.textContent = sa[0] || 'Unknown Title';
-                playingTime.textContent = sa[1] || 'No Playtime Value';
-                tapeCounter.textContent = sa[2] || 'No Tape Counter Value';
-                dataErrors.textContent = sa[3] || 'No Data Error Value';
+                let trackTitle = sa[0];
+                let trackPlayTime = sa[1];
+                let trackTapeCount = "";
+                let trackDataErrors = "";
+                
+                if(sa.length === 5) { // we playing mp3 or flac        
+                    trackTapeCount = sa[3];
+                    trackDataErrors = sa[4];
+                } else {
+                    trackTapeCount = sa[2];
+                    trackDataErrors = sa[3];
+                }
+                
+                
+                let trackString = zeroPadToThreeDigits(track.id);
+                playingIcon.src = `https://placehold.co/400x400/90EE90/000000?text=${trackString}`;
+                playingTitle.textContent = trackTitle  || 'Unknown Title';
+                playingTime.textContent = trackPlayTime || 'No Playtime Value';
+                tapeCounter.textContent = trackTapeCount || 'No Tape Counter Value';
+                dataErrors.textContent = trackDataErrors || 'No Data Error Value';
                 playingType.textContent = track.trackType || 'Unknown Type';
             } else {
                 // see if we reach a padding section
-                if(currentlyPlaying.includes('Padding')) {
+                if(currentlyPlaying !== null && currentlyPlaying.includes('Padding')) {
                     currentlyPlaying = "Reset Media and Offset";
                 }
                 
@@ -375,8 +393,18 @@
                 dataErrors.textContent = "";
                 playingType.textContent = "";
             }
+            
         }
+        
+        // function to left zero pad an integer to 3 digits and return string
+        function zeroPadToThreeDigits(number) {
+            // Convert the number to a string
+            const numString = String(number);
 
+            // Use padStart to add leading zeros until the length is 3
+            return numString.padStart(3, '0');
+        }
+        
         // ------------------- Event Listeners for Buttons -------------------
 
         startButton.addEventListener('click', () => {

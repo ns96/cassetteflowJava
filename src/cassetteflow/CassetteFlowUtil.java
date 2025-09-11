@@ -218,8 +218,15 @@ public class CassetteFlowUtil {
     public static JSONObject getTrackInfoAsJSON(int trackNum, String title, AudioInfo audioInfo) {
         try {
             // get the first 2 characters of title and capilize them
-            String albumArtText = audioInfo.getBasicName().substring(0, 2).toUpperCase();
+            String basicName = audioInfo.getBasicName();
+            String albumArtText;
             
+            if (basicName.length() >= 2) {
+                albumArtText = basicName.substring(0, 2).toUpperCase();
+            } else {
+                albumArtText = basicName.toUpperCase();
+            }
+
             // get the track art
             String albumArt = TRACK_ART_URL[rand.nextInt(TRACK_ART_URL.length)] + albumArtText;
             
