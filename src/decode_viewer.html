@@ -191,6 +191,9 @@
             <img id="playingIcon" class="playing-icon" src="" alt="Album Art">
             <div class="playing-text">
                 <span id="playingTitle" class="playing-title">Loading...</span>
+                <span id="playingTime" class="playing-type"></span>
+                <span id="tapeCounter" class="playing-type"></span>
+                <span id="dataErrors" class="playing-type"></span>
                 <span id="playingType" class="playing-type"></span>
             </div>
         </div>
@@ -207,6 +210,9 @@
         const playingIcon = document.getElementById('playingIcon');
         const playingTitle = document.getElementById('playingTitle');
         const playingType = document.getElementById('playingType');
+        const playingTime = document.getElementById('playingTime');
+        const tapeCounter = document.getElementById('tapeCounter');
+        const dataErrors = document.getElementById('dataErrors');
         const startButton = document.getElementById('startButton');
         const stopButton = document.getElementById('stopButton');
         const offsetButton = document.getElementById('offsetButton');
@@ -215,7 +221,8 @@
         let currentTrackIndex = -1;
         let isPlaying = false;
         let tracks = [];
-
+        let newTrack = false;
+        
         // ------------------- Backend Communication (Simulated) -------------------
 
         /**
@@ -251,14 +258,13 @@
         async function sendControlCommand(command) {
             try {
                 // In a real application, you would uncomment this line:
-                // const response = await fetch(`${BACKEND_URL}/${command}`);
-                // if (!response.ok) {
-                //     throw new Error(`Server responded with status: ${response.status}`);
-                // }
+                const response = await fetch(`${BACKEND_URL}/dcc/?c=${command}`);
+                if (!response.ok) {
+                    throw new Error(`Server responded with status: ${response.status}`);
+                }
                 
                 // For this example with dummy data, we just log the action
                 console.log(`Command '${command}' sent to backend.`);
-                
             } catch (error) {
                 console.error(`Failed to send command '${command}':`, error);
             }
@@ -271,28 +277,32 @@
         async function fetchStateData() {
             try {
                 // In a real application, you would uncomment this:
-                // const response = await fetch(`${BACKEND_URL}/state`);
-                // if (!response.ok) {
-                //     throw new Error(`Server state fetch failed with status: ${response.status}`);
-                // }
-                // const data = await response.json();
+                const response = await fetch(`${BACKEND_URL}/dcs`);
+                if (!response.ok) {
+                    throw new Error(`Server state fetch failed with status: ${response.status}`);
+                }
+                
+                const data = await response.json();
                 
                 // For this example, we use the dummy data
-                const data = getDummyStateData();
+                //const data = getDummyStateData();
                 
                 tracks = data.tracks || [];
                 const currentlyPlaying = data.currentlyPlaying || null;
                 isPlaying = data.isPlaying || false;
+                newTracks = data.newTrack || false;
 
                 // Update the current track index to match the backend's state
-                if (currentlyPlaying) {
-                    currentTrackIndex = tracks.findIndex(t => t.id === currentlyPlaying.id);
+                if (isPlaying) {
+                    currentTrackIndex = data.currentlyPlayingId;
+                    let track = tracks[currentTrackIndex]
+                    updatePlayingPanel(track, currentlyPlaying);
                 } else {
                     currentTrackIndex = -1;
+                    updatePlayingPanel(null, currentlyPlaying);
                 }
                 
                 renderTrackList();
-                updatePlayingPanel(currentlyPlaying);
             } catch (error) {
                 console.error("Error fetching state data:", error);
                 playingTitle.textContent = "Error loading data.";
@@ -332,11 +342,6 @@
                     </div>
                 `;
                 
-                trackItem.addEventListener('click', () => {
-                    // Send a request to play this specific track ID
-                    sendControlCommand(`play?id=${track.id}`);
-                });
-
                 trackListPanel.appendChild(trackItem);
             });
         }
@@ -344,15 +349,30 @@
         /**
          * Updates the "currently playing" panel.
          * @param {object} track - The currently playing track object.
+         * @param {string} currentlyPlaying - information about currently playing
          */
-        function updatePlayingPanel(track) {
-            if (track && isPlaying) {
-                playingIcon.src = track.albumArt || 'https://placehold.co/400x400/C0C0C0/000000?text=NA';
-                playingTitle.textContent = track.title || 'Unknown Title';
+        function updatePlayingPanel(track, currentlyPlaying) {
+            if (currentlyPlaying && isPlaying) {
+                // split the currently playing string into an array
+                let sa = currentlyPlaying.split(/\r?\n/);
+                
+                playingIcon.src = track.albumArt || 'https://placehold.co/400x400/C0C0C0/000000?text=CF';
+                playingTitle.textContent = sa[0] || 'Unknown Title';
+                playingTime.textContent = sa[1] || 'No Playtime Value';
+                tapeCounter.textContent = sa[2] || 'No Tape Counter Value';
+                dataErrors.textContent = sa[3] || 'No Data Error Value';
                 playingType.textContent = track.trackType || 'Unknown Type';
             } else {
-                playingIcon.src = "";
-                playingTitle.textContent = "Select a track to play";
+                // see if we reach a padding section
+                if(currentlyPlaying.includes('Padding')) {
+                    currentlyPlaying = "Reset Media and Offset";
+                }
+                
+                playingIcon.src = "https://placehold.co/400x400/C0C0C0/000000?text=CF";
+                playingTitle.textContent = currentlyPlaying;
+                playingTime.textContent = "";
+                tapeCounter.textContent = "";
+                dataErrors.textContent = "";
                 playingType.textContent = "";
             }
         }

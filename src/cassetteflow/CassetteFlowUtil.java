@@ -11,16 +11,37 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * A class containing utility methods
  * @author Nathan
  */
 public class CassetteFlowUtil {
+    // define some icons of different colors to send to web client
+    public static final String[] TRACK_ART_URL = {"https://placehold.co/400x400/90EE90/000000?text=",
+        "https://placehold.co/400x400/FFA07A/000000?text=",
+        "https://placehold.co/400x400/87CEFA/000000?text=",
+        "https://placehold.co/400x400/DDA0DD/000000?text=",
+        "https://placehold.co/400x400/C0C0C0/000000?text=",
+        "https://placehold.co/400x400/ADD8E6/000000?text=",
+        "https://placehold.co/400x400/F0E68C/000000?text=",
+        "https://placehold.co/400x400/2E8B57/000000?text=",
+        "https://placehold.co/400x400/F8F8FF/000000?text=",
+        "https://placehold.co/400x400/8A2BE2/000000?text="
+    };
+    
+    // define random number generator
+    private static Random rand = new Random();
+    
     /**
      * Get a file as a string
      * 
@@ -188,13 +209,44 @@ public class CassetteFlowUtil {
     }
     
     /**
+     * Return information about the audio info object as a json object
+     * @param trackNum
+     * @param title
+     * @param audioInfo
+     * @return 
+     */
+    public static JSONObject getTrackInfoAsJSON(int trackNum, String title, AudioInfo audioInfo) {
+        try {
+            // get the first 2 characters of title and capilize them
+            String albumArtText = audioInfo.getBasicName().substring(0, 2).toUpperCase();
+            
+            // get the track art
+            String albumArt = TRACK_ART_URL[rand.nextInt(TRACK_ART_URL.length)] + albumArtText;
+            
+            // get the track type
+            String trackType = getAudioInfoFormat(audioInfo);
+            
+            JSONObject track = new JSONObject();
+            track.put("id", trackNum);
+            track.put("title", title);
+            track.put("trackType", trackType);
+            track.put("albumArt", albumArt);
+            
+            return track;
+        } catch (JSONException ex) {
+            Logger.getLogger(CassetteFlowUtil.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+    }
+    
+    /**
      * Method to return the type of audio object we have based on the filename ending, or url 
      * of audio info object
      * 
      * @param audioInfo The audio info object we are inspecting
      * @return The format of the audio object
      */
-    public static String audioInfoFormat(AudioInfo audioInfo) {
+    public static String getAudioInfoFormat(AudioInfo audioInfo) {
         if(audioInfo.getName().toLowerCase().contains(".mp3")) {
             return "MP3";
         } else if(audioInfo.getName().toLowerCase().contains(".flac")) {

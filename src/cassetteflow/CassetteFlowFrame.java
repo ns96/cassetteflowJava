@@ -42,6 +42,7 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.filechooser.FileFilter;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.tritonus.share.ArraySet;
@@ -123,7 +124,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private String currentCassetteId;
     
     // store the current tracks being played when decoding
-    private int currentPlayingTrack = -1;
+    private int currentPlayingTrack = 0;
     
     // initiat the objects to allow control of streaming
     // music sites. Store the id for the stream video/track being played
@@ -141,6 +142,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     
     // The JSON object used to when creating a jcard template
     private JSONObject jcardJSON;
+    
+    // dialog used to tell user that the physical media needs to be reset
+    private JDialog resetMediaDialog = null;
     
     // specify if to hide the lyraT tab
     private static final boolean HIDE_LYRAT_TAB = true;
@@ -291,6 +295,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 
                 ArrayList<String> audioIds = cassetteFlow.tapeDB.get(cassetteID);
                 
+                // json array of tracks to send to mobile clients
+                JSONArray tracksArray = new JSONArray();
+                
                 int trackTotal = 0;
                 
                 if(audioIds != null) {
@@ -307,6 +314,12 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                        String trackTitle = "[" + trackCount + "] " + audioInfo.getName();
                        tapeInfoTextArea.append(trackTitle + "\n");
                        
+                       // add a jsonobject to the tracks array
+                       JSONObject trackObject = CassetteFlowUtil.getTrackInfoAsJSON((i + 1), trackTitle, audioInfo);
+                       if(trackObject != null) {
+                           tracksArray.put(trackObject);
+                       }
+                                             
                        // see if there is additional trackNum information if this 
                        // is for a long youtube mix for example
                        if(cassetteFlow.tracklistDB.containsKey(audioId)) {
@@ -317,6 +330,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                            trackTotal++;
                        }
                    }
+                   
+                   // send information to create the current decode state oject
+                   cassetteFlow.setCurrentDecodeState(tracksArray, cassetteID, 0, false);
                 } else {
                    tapeInfoTextArea.setText("Invalid Tape ID ...");
                 }
@@ -346,7 +362,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 tapeDBFrame.setSelectedTrack(currentPlayingTrack);
             }
         } catch (NumberFormatException nfe) {
-            currentPlayingTrack = -1;
+            currentPlayingTrack = 0;
         }
     }
     
@@ -359,6 +375,13 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 playbackInfoTextArea.append(info + newLine);
             }
         });
+        
+        // update the decode state information in the cassetteflow object
+        boolean trackPlaying = true;
+        if(info.toLowerCase().contains("mute") || info.toLowerCase().contains("stop")) {
+            trackPlaying = false;
+        }
+        cassetteFlow.setCurrentDecodeState(info, (currentPlayingTrack - 1), trackPlaying);
     }
     
     /**
@@ -369,6 +392,37 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     @Override
     public void setPlaybackInfo(final String info, boolean append) {
         setPlaybackInfo(info, append, "\n");
+    }
+    
+    /**
+     * Method to execute basic decode command so that the web client can control
+     * the decode process
+     * 
+     * @param command 
+     */
+    public void runDecodeCommand(String command) {
+        if(command.equals("start") && startDecodeButton.isEnabled()) {
+            startDecodeButtonActionPerformed(null);
+        } else if(command.equals("stop") && !startDecodeButton.isEnabled()) {
+            stopDecodeButtonActionPerformed(null);
+        } else if(command.equals("offset") && resetMediaDialog != null) {
+            int currentOffset = Integer.parseInt(dctOffsetComboBox.getSelectedItem().toString());
+            int offset = (maxTimeBlock/60) + currentOffset;
+            
+            resetMediaDialog.dispose();
+            resetMediaDialog = null;
+            
+            dctOffsetComboBox.setSelectedItem(String.valueOf(offset));
+        } else if(command.equals("reset")) {
+            if(resetMediaDialog != null) {
+                resetMediaDialog.dispose();
+                resetMediaDialog = null;
+            }
+            
+            dctOffsetComboBox.setSelectedItem(String.valueOf(0));
+        } else {
+            System.out.println("Invalid Command or Can't Execute:" + command);
+        } 
     }
     
     /**
@@ -391,6 +445,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             }
         }
     }
+    
+    
     
     /**
      * Method to add tracks which are at the end of timeBlocks to make it easier
@@ -416,26 +472,26 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         String message = "<html>Please reset the physical media to the begining of Side A/B <br/>" + 
                         "and hit OK to set the DCT offset to " + offset + " minutes ...</html>";
         
-        JDialog dialog = new JDialog(this, "Reset Media", false);
-        dialog.setLayout(new BorderLayout());
+        resetMediaDialog = new JDialog(this, "Reset Media", false);
+        resetMediaDialog.setLayout(new BorderLayout());
 
         JLabel messageLabel = new JLabel(message, SwingConstants.CENTER);
         messageLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        dialog.add(messageLabel, BorderLayout.CENTER);
+        resetMediaDialog.add(messageLabel, BorderLayout.CENTER);
 
         JButton okButton = new JButton("OK");
         okButton.addActionListener((ActionEvent e) -> {
-            dialog.dispose();
+            resetMediaDialog.dispose();
             dctOffsetComboBox.setSelectedItem(String.valueOf(offset));
         });
 
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(okButton);
-        dialog.add(buttonPanel, BorderLayout.SOUTH);
+        resetMediaDialog.add(buttonPanel, BorderLayout.SOUTH);
 
-        dialog.pack();
-        dialog.setLocationRelativeTo(this); // Center the dialog relative to its owner
-        dialog.setVisible(true);
+        resetMediaDialog.pack();
+        resetMediaDialog.setLocationRelativeTo(this); // Center the dialog relative to its owner
+        resetMediaDialog.setVisible(true);
     }
     
     /**
@@ -845,7 +901,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.3.0b38 (09/10/2025)");
+        setTitle("CassetteFlow v 1.3.0b40 (09/11/2025)");
 
         mainTabbedPane.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         mainTabbedPane.addKeyListener(new java.awt.event.KeyAdapter() {

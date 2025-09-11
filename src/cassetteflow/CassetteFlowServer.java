@@ -19,9 +19,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 /**
  * This is class implements a simple http server for testing the ESP32LyraT Client
@@ -173,7 +170,7 @@ public class CassetteFlowServer {
             
             switch (currentMode) {
                 case DECODE:
-                    response = "DECODE " + cassetteFlow.getCurrentLineRecord();
+                    response = "DECODE " + cassetteFlow.getRawLineRecord();
                     break;
                 case ENCODE:
                     response = "ENCODE " + cassetteFlow.currentTapeID + " " + cassetteFlow.currentTimeTotal;
@@ -419,10 +416,11 @@ public class CassetteFlowServer {
             readRawData = false;
             
             String query = he.getRequestURI().getQuery();
-            
             Map params = splitQuery(query);
-            String response = "Decoding command received " + params;
+            String command = params.get("c").toString();
+            cassetteFlow.runDecodeCommand(command);
             
+            String response = "Decoding command received " + command;
             sendResponse(he, response);
         }
     }

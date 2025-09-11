@@ -157,7 +157,7 @@ public class CassetteFlow {
     private SpotifyDatasetLoader spotifyDatasetLoader; 
     
     // create a json object which is used to capture the state of the decode process
-    private JSONObject currentDeocdeState = new JSONObject();
+    private final JSONObject currentDeocdeState = new JSONObject();
     
     /**
      * Default constructor that just loads the mp3/flac files and cassette 
@@ -201,6 +201,17 @@ public class CassetteFlow {
         
         long elapsedTime = System.currentTimeMillis() - startTime;
         System.out.println("\nTotal time to load sound files: " + elapsedTime + " Milliseconds\n");
+        
+        // iniate the state java script
+        try {
+            currentDeocdeState.put("tracks", new JSONArray());
+            currentDeocdeState.put("currentlyPlaying", "None");
+            currentDeocdeState.put("currentlyPlayingId", 0);
+            currentDeocdeState.put("isPlaying", false);
+            currentDeocdeState.put("newTracks", false); // are the tracks new?
+        } catch (JSONException ex) {
+            Logger.getLogger(CassetteFlow.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
     /**
@@ -241,7 +252,7 @@ public class CassetteFlow {
             e.printStackTrace();
         }
     }
-    
+        
     /**
      * Set the current cassette player
      * 
@@ -251,11 +262,43 @@ public class CassetteFlow {
         this.cassettePlayer = cassettePlayer;
     }
     
-    public String getCurrentLineRecord() {
-        if(cassettePlayer != null) {
-            return cassettePlayer.getCurrentLineRecord();
-        } else {
-            return "NO PLAYER";
+    /**
+     * Set the current state of the decode process to be served to the web view
+     *
+     * @param currentlyPlaying
+     * @param currentlyPlayingId
+     * @param isPlaying
+     */
+    public synchronized void setCurrentDecodeState(String currentlyPlaying, 
+            int currentlyPlayingId, boolean isPlaying) {
+        try {            
+            currentDeocdeState.put("currentlyPlaying", currentlyPlaying);
+            currentDeocdeState.put("currentlyPlayingId", currentlyPlayingId);
+            currentDeocdeState.put("isPlaying", isPlaying);
+            currentDeocdeState.put("newTracks", false); 
+        } catch (JSONException ex) {
+            Logger.getLogger(CassetteFlow.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    /**
+     * Set the current state of the decode process to be served to the web view
+     *
+     * @param tracks
+     * @param currentlyPlaying
+     * @param currentlyPlayingId
+     * @param isPlaying
+     */
+    public synchronized void setCurrentDecodeState(JSONArray tracks, 
+            String currentlyPlaying, int currentlyPlayingId, boolean isPlaying) {
+        try {
+            currentDeocdeState.put("tracks", tracks);
+            currentDeocdeState.put("currentlyPlaying", currentlyPlaying);
+            currentDeocdeState.put("currentlyPlayingId", currentlyPlayingId);
+            currentDeocdeState.put("isPlaying", isPlaying);
+            currentDeocdeState.put("newTracks", true); // are the tracks new?
+        } catch (JSONException ex) {
+            Logger.getLogger(CassetteFlow.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
@@ -264,49 +307,26 @@ public class CassetteFlow {
      *
      * @return JSONObject containing the state of the decode process
     */
-    public JSONObject getCurrentDecodeState() {
-        try {
-            // Test code
-            // 1. Create your Java objects (e.g., a map, list, or custom class)
-            JSONArray tracksArray = new JSONArray();
-            
-            JSONObject track1 = new JSONObject();
-            track1.put("id", 1);
-            track1.put("title", "Morning Dew");
-            track1.put("trackType", "MP3");
-            track1.put("albumArt", "https://placehold.co/400x400/90EE90/000000?text=MD");
-            tracksArray.put(track1);
-            
-            JSONObject track2 = new JSONObject();
-            track2.put("id", 2);
-            track2.put("title", "Urban Sunset");
-            track2.put("trackType", "Flac");
-            track2.put("albumArt", "https://placehold.co/400x400/FFA07A/000000?text=US");
-            tracksArray.put(track2);
-            
-            // Add other tracks similarly...
-            currentDeocdeState.put("tracks", tracksArray);
-            currentDeocdeState.put("currentlyPlaying", track1); // Example of setting a currently playing track
-            currentDeocdeState.put("isPlaying", true);
-        } catch (JSONException ex) {
-            Logger.getLogger(CassetteFlowServer.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        // end of test code
-        
+    public synchronized JSONObject getCurrentDecodeState() {
         return currentDeocdeState;
     }
     
     /**
-     * Set the current state of the decode process to be served to the web view
-     *
-     * @param currentDeocdeState
+     * Run a decode command, either start, stop, offset, reset
+     * 
+     * @param command
      */
-    public void setCurrentDecodeState(JSONObject currentDeocdeState) {
-        this.currentDeocdeState = currentDeocdeState;
+    public void runDecodeCommand(String command) {
+        if(cassetteFlowFrame != null) {
+            cassetteFlowFrame.runDecodeCommand(command);
+        }
+        
+        System.out.println("Decode Command Received: " + command);
     }
     
     /**
-     * Get the raw line record from the minimodem program
+     * Get the rawline record from the minimodem program
+     * 
      * @return 
      */
     public String getRawLineRecord() {
