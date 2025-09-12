@@ -226,7 +226,13 @@ public class CassetteFlowUtil {
             } else {
                 albumArtText = basicName.toUpperCase();
             }
-
+            
+            // if the first two chracters can be converted to a number then just use the track number
+            try {
+                Integer.valueOf(albumArtText);
+                albumArtText = String.valueOf(trackNum);
+            } catch(NumberFormatException nfe) {}  
+            
             // get the track art
             String albumArt = TRACK_ART_URL[rand.nextInt(TRACK_ART_URL.length)] + albumArtText;
             

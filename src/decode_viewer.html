@@ -295,11 +295,10 @@
                 // Update the current track index to match the backend's state
                 if (isPlaying) {
                     currentTrackIndex = data.currentlyPlayingId;
-                    let track = tracks[currentTrackIndex]
-                    updatePlayingPanel(track, currentlyPlaying);
+                    updatePlayingPanel(currentlyPlaying);
                 } else {
                     currentTrackIndex = -1;
-                    updatePlayingPanel(null, currentlyPlaying);
+                    updatePlayingPanel(currentlyPlaying);
                 }
                 
                 renderTrackList();
@@ -348,52 +347,38 @@
 
         /**
          * Updates the "currently playing" panel.
-         * @param {object} track - The currently playing track object.
          * @param {string} currentlyPlaying - information about currently playing
          */
-        function updatePlayingPanel(track, currentlyPlaying) {
-            if (currentlyPlaying && isPlaying) {
-                // split the currently playing string into an array
-                let sa = currentlyPlaying.split(/\r?\n/);
-                //console.log(track);
-                //console.log(sa);
-                if(sa.length === 0) return;
-                
-                let trackTitle = sa[0];
-                let trackPlayTime = sa[1];
-                let trackTapeCount = "";
-                let trackDataErrors = "";
-                
-                if(sa.length === 5) { // we playing mp3 or flac        
-                    trackTapeCount = sa[3];
-                    trackDataErrors = sa[4];
-                } else {
-                    trackTapeCount = sa[2];
-                    trackDataErrors = sa[3];
-                }
-                
-                
+        function updatePlayingPanel(currentlyPlaying) {
+            if(currentlyPlaying === null) return;
+            //console.log(currentlyPlaying);
+            
+            if (isPlaying) {
+                let track = tracks[currentTrackIndex];
                 let trackString = zeroPadToThreeDigits(track.id);
+                
                 playingIcon.src = `https://placehold.co/400x400/90EE90/000000?text=${trackString}`;
-                playingTitle.textContent = trackTitle  || 'Unknown Title';
-                playingTime.textContent = trackPlayTime || 'No Playtime Value';
-                tapeCounter.textContent = trackTapeCount || 'No Tape Counter Value';
-                dataErrors.textContent = trackDataErrors || 'No Data Error Value';
+                playingTitle.textContent = currentlyPlaying.title  || 'Unknown Title';
+                playingTime.textContent = currentlyPlaying.playTime || 'No Playtime Value';
+                tapeCounter.textContent = currentlyPlaying.tapeCount || 'No Tape Counter Value';
+                dataErrors.textContent = currentlyPlaying.dataErrors || 'No Data Error Value';
                 playingType.textContent = track.trackType || 'Unknown Type';
             } else {
+                let message = currentlyPlaying.message;
+                //console.log(currentlyPlaying);
+                
                 // see if we reach a padding section
-                if(currentlyPlaying !== null && currentlyPlaying.includes('Padding')) {
-                    currentlyPlaying = "Reset Media and Offset";
+                if(message !== undefined && message.includes('Padding')) {
+                    message = "Reset Media / Offset++";
                 }
                 
                 playingIcon.src = "https://placehold.co/400x400/C0C0C0/000000?text=CF";
-                playingTitle.textContent = currentlyPlaying;
+                playingTitle.textContent = message;
                 playingTime.textContent = "";
                 tapeCounter.textContent = "";
                 dataErrors.textContent = "";
                 playingType.textContent = "";
             }
-            
         }
         
         // function to left zero pad an integer to 3 digits and return string

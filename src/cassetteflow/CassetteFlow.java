@@ -263,6 +263,40 @@ public class CassetteFlow {
     }
     
     /**
+     * Return Javascript object from the currently playing information
+     *
+     * @param currentlyPlaying
+     * @return
+     */
+    private JSONObject getCurrentPlayingAsJsonObject(String currentlyPlaying) {
+        JSONObject infoObject = new JSONObject();
+        try {
+            // split the currently playing string into an string array by newline character    
+            infoObject.put("version", 1.0);
+            infoObject.put("message", currentlyPlaying);
+            
+            String[] sa = currentlyPlaying.split("\n");
+            
+            if(sa.length > 1) {
+                infoObject.put("title", sa[0]);
+                infoObject.put("playTime", sa[1]);
+
+                if (sa.length == 5) {
+                    infoObject.put("tapeCount", sa[3]);
+                    infoObject.put("dataErrors", sa[4]);
+                } else {
+                    infoObject.put("tapeCount", sa[2]);
+                    infoObject.put("dataErrors", sa[3]);
+                }
+            }
+        } catch (JSONException ex) {
+            Logger.getLogger(CassetteFlow.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return infoObject;
+    }
+
+    /**
      * Set the current state of the decode process to be served to the web view
      *
      * @param currentlyPlaying
@@ -272,7 +306,7 @@ public class CassetteFlow {
     public synchronized void setCurrentDecodeState(String currentlyPlaying, 
             int currentlyPlayingId, boolean isPlaying) {
         try {            
-            currentDeocdeState.put("currentlyPlaying", currentlyPlaying);
+            currentDeocdeState.put("currentlyPlaying", getCurrentPlayingAsJsonObject(currentlyPlaying));
             currentDeocdeState.put("currentlyPlayingId", currentlyPlayingId);
             currentDeocdeState.put("isPlaying", isPlaying);
             currentDeocdeState.put("newTracks", false); 
@@ -293,7 +327,7 @@ public class CassetteFlow {
             String currentlyPlaying, int currentlyPlayingId, boolean isPlaying) {
         try {
             currentDeocdeState.put("tracks", tracks);
-            currentDeocdeState.put("currentlyPlaying", currentlyPlaying);
+            currentDeocdeState.put("currentlyPlaying", getCurrentPlayingAsJsonObject(currentlyPlaying));
             currentDeocdeState.put("currentlyPlayingId", currentlyPlayingId);
             currentDeocdeState.put("isPlaying", isPlaying);
             currentDeocdeState.put("newTracks", true); // are the tracks new?
