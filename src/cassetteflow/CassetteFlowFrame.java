@@ -901,7 +901,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.3.0b44 (09/12/2025)");
+        setTitle("CassetteFlow v 1.3.0b45 (09/13/2025)");
 
         mainTabbedPane.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         mainTabbedPane.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -3314,6 +3314,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         tapeInfoTextArea.setText("");
         trackInfoTextArea.setText("");
         playbackInfoTextArea.setText("Decoding process stopped ...");
+        
+        // send the stop encode information to any web clients getting data 
+        cassetteFlow.setCurrentDecodeState("Decode Stopped", 0, false);
     }//GEN-LAST:event_stopDecodeButtonActionPerformed
 
     private void startDecodeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startDecodeButtonActionPerformed

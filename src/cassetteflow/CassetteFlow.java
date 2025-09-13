@@ -305,6 +305,7 @@ public class CassetteFlow {
      */
     public synchronized void setCurrentDecodeState(String currentlyPlaying, 
             int currentlyPlayingId, boolean isPlaying) {
+        
         try {            
             currentDeocdeState.put("currentlyPlaying", getCurrentPlayingAsJsonObject(currentlyPlaying));
             currentDeocdeState.put("currentlyPlayingId", currentlyPlayingId);
@@ -342,6 +343,13 @@ public class CassetteFlow {
      * @return JSONObject containing the state of the decode process
     */
     public synchronized JSONObject getCurrentDecodeState() {
+        try {
+            currentDeocdeState.put("rawLineRecord", getRawLineRecord());
+            currentDeocdeState.put("currentLineRecord", getCurrentLineRecord());
+        } catch (JSONException ex) {
+            Logger.getLogger(CassetteFlow.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
         return currentDeocdeState;
     }
     
@@ -359,17 +367,34 @@ public class CassetteFlow {
     }
     
     /**
-     * Get the rawline record from the minimodem program
+     * Get the raw line record from the minimodem program. That's the record
+     * read from the tape
      * 
      * @return 
      */
-    public String getRawLineRecord() {
+    public synchronized String getRawLineRecord() {
         if(cassettePlayer != null) {
             return cassettePlayer.getRawLineRecord();
         } else {
             return "NO PLAYER ...";
         }
     } 
+    
+    /**
+     * Get the raw line record from the minimodem program. That's the record
+     * read from the tape then processed. So if it was a DCT record from the
+     * tape it's then translated to the actual line record used to control 
+     * playback
+     * 
+     * @return 
+     */
+    public synchronized String getCurrentLineRecord() {
+        if(cassettePlayer != null) {
+            return cassettePlayer.getCurrentLineRecord();
+        } else {
+            return "NO PLAYER ...";
+        }
+    }
     
     /**
      * Save the MP3/Flac map as a tab delimited file. Not currently used 
