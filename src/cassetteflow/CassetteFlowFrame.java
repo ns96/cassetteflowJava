@@ -901,7 +901,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.3.0b45 (09/13/2025)");
+        setTitle("CassetteFlow v 1.3.0b47 (09/17/2025)");
 
         mainTabbedPane.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         mainTabbedPane.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -940,7 +940,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 324, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 315, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(trackALabel)
@@ -4157,11 +4157,23 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 cassetteFlow.createDCTArrayList(tapeID, sideAList, sideBList, muteTime, maxTimeBlock);
             }
             
-            String newText = sideALabel.getText() + " || Set As Dynamic Content ...";
-            sideALabel.setText(newText);
+            String newLabelText;
             
-            newText = sideBLabel.getText() + " || Set As Dynamic Content ...";
-            sideBLabel.setText(newText);
+            String labelText = sideALabel.getText();
+            if(!labelText.contains("Set As Dynamic Content")) {
+                newLabelText = labelText + " || Set As Dynamic Content ...";
+            } else {
+                newLabelText = labelText + ".";
+            }
+            sideALabel.setText(newLabelText);
+            
+            labelText = sideBLabel.getText();
+            if(!labelText.contains("Set As Dynamic Content")) {
+                newLabelText = labelText + " || Set As Dynamic Content ...";
+            } else {
+                newLabelText = labelText + ".";
+            }
+            sideBLabel.setText(newLabelText);
         }
     }//GEN-LAST:event_createDCTButtonActionPerformed
 

@@ -375,6 +375,8 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                                     
                                     spotifyConnector.setDataErrors(dataErrors, logLineCount);
                                 }
+                                
+                                currentLineRecord = dctLine;
                             }
                         } else {
                             String stopMessage = "DCT Lookup Error {# errors " + dataErrors + "/" + logLineCount + "} ...";

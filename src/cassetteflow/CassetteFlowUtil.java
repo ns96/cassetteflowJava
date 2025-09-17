@@ -265,11 +265,11 @@ public class CassetteFlowUtil {
         } else if(audioInfo.getName().toLowerCase().contains(".flac")) {
             return "FLAC";
         } else if(audioInfo.getUrl().toLowerCase().contains("youtube")) {
-            return "YTB";
+            return "Youtube";
         } else if(audioInfo.getUrl().toLowerCase().contains("spotify")) {
-            return "SPO";
+            return "Spotify";
         } else {
-            return "UNK";
+            return "Unknown";
         }
     }
     
