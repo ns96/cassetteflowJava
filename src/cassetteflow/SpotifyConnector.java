@@ -75,7 +75,9 @@ public class SpotifyConnector {
             .scope(AuthorizationScope.STREAMING, 
                     AuthorizationScope.USER_MODIFY_PLAYBACK_STATE,
                     AuthorizationScope.USER_READ_PLAYBACK_STATE,
-                    AuthorizationScope.USER_READ_CURRENTLY_PLAYING)
+                    AuthorizationScope.USER_READ_CURRENTLY_PLAYING,
+                    AuthorizationScope.PLAYLIST_READ_COLLABORATIVE,
+                    AuthorizationScope.PLAYLIST_READ_PRIVATE)
             .build();
     
     private boolean connected = false;
@@ -402,9 +404,16 @@ public class SpotifyConnector {
             audioInfo.setStreamId(trackId);
             audioInfo.setUrl(url);
             
-            // set the image url now
-            String imageUrl = track.getAlbum().getImages()[0].getUrl();
-            audioInfo.setImageUrl(imageUrl);
+            // set the image url now making sure to catch array index out of bounds exceptions
+            // for tracks that can't be played anyway. For those just continue
+            try {
+                String imageUrl = track.getAlbum().getImages()[0].getUrl();
+                audioInfo.setImageUrl(imageUrl);
+            } catch(ArrayIndexOutOfBoundsException ex) {
+                //audioInfo.setImageUrl("https://storage.googleapis.com/pr-newsroom-wp/1/2023/05/Spotify_Primary_Logo_RGB_Green.png");
+                System.out.println("Unplayable spotify track: " + audioInfo.getBasicName());
+                continue;
+            }
             
             queList.add(audioInfo);
 

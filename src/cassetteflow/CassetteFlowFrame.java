@@ -446,7 +446,12 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         }
     }
     
-    
+    /**
+     * Reset the end block array list
+     */
+    public void resetTimeBlockEndTracks() {
+        timeBlockEndTracks = new ArrayList<>();
+    }
     
     /**
      * Method to add tracks which are at the end of timeBlocks to make it easier
@@ -901,7 +906,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.3.0b47 (09/17/2025)");
+        setTitle("CassetteFlow v 1.3.0b53 (09/24/2025)");
 
         mainTabbedPane.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         mainTabbedPane.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -4535,7 +4540,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 spotifyConnector.setMaxTimeBlock(maxTimeBlock);
             }
         } else {
-            timeBlockEndTracks = new ArraySet<>();
+            timeBlockEndTracks = new ArrayList<>();
         }
     }//GEN-LAST:event_padDCTCheckBoxActionPerformed
 
@@ -4547,6 +4552,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         SwingUtilities.invokeLater(() -> {
             String html = "<html>" + text + "</html>";
             streamEditorPane.setText(html);
+            streamEditorPane.setCaretPosition(0); // Scroll to the top
         });
     }
     

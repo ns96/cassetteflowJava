@@ -223,9 +223,6 @@ public class DeckCastConnector {
                 queListLoaded = true;
             }
             
-            // save the stream audio db as binary file
-            cassetteFlow.saveStreamAudioDBIndex();
-            
             // populate the dct list and store a dummy record
             sideADCTList = cassetteFlow.createDCTArrayListForSide("STR0A", queList, 4, maxTimeBlock);
             cassetteFlow.addToTapeDB("STR0", queList, null, false);
@@ -249,6 +246,9 @@ public class DeckCastConnector {
                 waitingOnQueList = false;
                 cassetteFlowFrame.loadStreamingTracks("YouTube", queList);
             }
+            
+            // save the stream audio db as binary file
+            cassetteFlow.saveStreamAudioDBIndex();
         } else {
             System.out.println("Unused message\n" + obj.toString(2));
         }

@@ -919,6 +919,11 @@ public class CassetteFlow {
             tapeSide = "B";
         }
         
+        // if the maxtime block != -1 and cassetteflowframe doesn't == null then reset the endtimes array
+        if(maxTimeBlock != -1 && cassetteFlowFrame != null) {
+            cassetteFlowFrame.resetTimeBlockEndTracks();
+        }
+        
         for(AudioInfo audioInfo: sideN) {
             String trackS = String.format("%02d", fileCount+1);
             
@@ -1709,7 +1714,7 @@ public class CassetteFlow {
     
     
     /**
-     * Saves the stream audio info abojects to an index so we can load those objects
+     * Saves the stream audio info objects to an index so we can load those objects
      * without have to reload then fram the deckcast backend
      */
     void saveStreamAudioDBIndex() {
@@ -1720,7 +1725,7 @@ public class CassetteFlow {
 
             oos.close();
             fos.close();
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(CassetteFlow.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -1788,6 +1793,7 @@ public class CassetteFlow {
     public void setDefaultAudioDirectory(String audioDirectory) {
         AUDIO_DIR_NAME = audioDirectory;
         AUDIO_INDEX_FILENAME = AUDIO_DIR_NAME + File.separator + "audiodb.bin";
+        STREAM_AUDIO_INDEX_FILENAME = AUDIO_DIR_NAME + File.separator + "streamAudiodb.bin";
         AUDIO_DB_FILENAME = AUDIO_DIR_NAME + File.separator + "audiodb.txt";
         TAPE_DB_FILENAME = AUDIO_DIR_NAME + File.separator + "tapedb.txt";
         TRACK_LIST_FILENAME = AUDIO_DIR_NAME + File.separator + "tracklist.txt";
