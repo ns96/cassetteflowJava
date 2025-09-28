@@ -45,7 +45,6 @@ import javax.swing.filechooser.FileFilter;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.tritonus.share.ArraySet;
 
 /**
  * Main User Interface for the cassette flow program
@@ -906,7 +905,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.3.0b53 (09/24/2025)");
+        setTitle("CassetteFlow v 1.3.0b54 (09/28/2025)");
 
         mainTabbedPane.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         mainTabbedPane.addKeyListener(new java.awt.event.KeyAdapter() {

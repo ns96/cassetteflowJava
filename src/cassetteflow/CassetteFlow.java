@@ -920,7 +920,7 @@ public class CassetteFlow {
         }
         
         // if the maxtime block != -1 and cassetteflowframe doesn't == null then reset the endtimes array
-        if(maxTimeBlock != -1 && cassetteFlowFrame != null) {
+        if(maxTimeBlock != -1 && cassetteFlowFrame != null && tapeSide.equals("A")) {
             cassetteFlowFrame.resetTimeBlockEndTracks();
         }
         
