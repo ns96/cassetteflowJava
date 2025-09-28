@@ -296,7 +296,7 @@ public class SpotifyConnector {
     }
     
     /**
-     * Check to make sure we sucessfully authenticated
+     * Check to make sure we successfully authenticated
      * 
      * @return 
      */
