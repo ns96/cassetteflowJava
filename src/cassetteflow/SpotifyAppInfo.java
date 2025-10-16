@@ -9,7 +9,7 @@ package cassetteflow;
 public final class SpotifyAppInfo {
     static final String CLIENT_ID = "dc143ecbc3aa42a5aa6505be98169dfd";
     static final String CLIENT_SECRET = "";
-    static final String REDIRECT_URI = "http://localhost:3000";
+    static final String REDIRECT_URI = "http://127.0.0.1:3000";
     
     private SpotifyAppInfo() {}  
 }

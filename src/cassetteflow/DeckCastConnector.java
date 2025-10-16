@@ -52,6 +52,7 @@ public class DeckCastConnector {
     // create a dct play for the que list
     private ArrayList<String> sideADCTList;
     private ArrayList<AudioInfo> queList;
+    private JSONArray currentQueArray;
     private boolean queListLoaded = false;
     private String queVideoId = "";
     private String oldQueVideoId = "";
@@ -203,6 +204,15 @@ public class DeckCastConnector {
             queList = new ArrayList<>();
             
             JSONArray queArray = obj.getJSONArray("queListData");
+            
+            // check that the queArray is not the same as the currentQueArray object
+            if(queArray == currentQueArray) {
+                System.out.println("YouTube Que List Already Loaded ...");
+                return;
+            } 
+            
+            currentQueArray = queArray;
+            
             for(int i = 0; i < queArray.length(); i++) {
                 String[] record = queArray.getString(i).split("\t");
                 String videoId = record[0];
@@ -219,8 +229,6 @@ public class DeckCastConnector {
                 // store this in the audio info DB
                 cassetteFlow.audioInfoDB.put(videoId, audioInfo);
                 cassetteFlow.streamAudioInfoDB.put(videoId, audioInfo);
-                
-                queListLoaded = true;
             }
             
             // populate the dct list and store a dummy record
@@ -241,6 +249,9 @@ public class DeckCastConnector {
             cassetteFlowFrame.updateStreamEditorPane(queListHtml);
             cassetteFlowFrame.setPlayingCassetteID("STR0A");
             
+            // indicate the que list was loaded
+            queListLoaded = true;
+                        
             // see if to load the que list that was just loaded
             if(waitingOnQueList) {
                 waitingOnQueList = false;
