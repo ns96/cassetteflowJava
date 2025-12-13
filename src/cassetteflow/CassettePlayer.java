@@ -301,21 +301,19 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                 
                 // check the buffer length if more than 50 characters then it's noise
                 // process it quickly stop playback
-                if(buffer.size() > 50) {
+                if(buffer.size() > 40) {
                     String line = buffer.toString("UTF-8");
-                    processLine(line);
-                    buffer.reset();
+                    if(isNoisyData(line)) {
+                        line = "### NOCARRIER (Noisy Data) ###";
+                        processLine(line);
+                        buffer.reset();
+                    }
                 }
             }
         }
         
         private void processLine(String line) {
-            if (!paused && line != null) {
-                // check to see if it's noise data
-                if(isNoisyData(line)) {
-                    line = "### NOCARRIER (Noisy Data) ###";
-                }
-                
+            if (!paused && line != null) {                
                 if (cassetteFlowFrame != null) {
                     cassetteFlowFrame.printToConsole(line, true);
                 }
