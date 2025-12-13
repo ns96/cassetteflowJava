@@ -259,7 +259,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         // load the list of decorders either minimodem local or a 
         // cassetteflow server over http
         decoderSourceComboBox.removeAllItems();
-        decoderSourceComboBox.addItem("MiniModem");
+        decoderSourceComboBox.addItem("JMinimodem");
         decoderSourceComboBox.addItem(CassetteFlow.LYRA_T_HOST);
         
         addAudioInfoToJList();
@@ -905,7 +905,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 1.3.0b57 (10/16/2025)");
+        setTitle("CassetteFlow v 2.0.0b2 (12/13/2025)");
 
         mainTabbedPane.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         mainTabbedPane.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -4498,7 +4498,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         Object source = decoderSourceComboBox.getSelectedItem();
         if(source == null) return;
         
-        if (source.equals("MiniModem")) {
+        if (source.equals("JMinimodem")) {
             decorderSourceLabel.setText("Using Local Decoder ...");
             lyraTConnect = null;
         } else {

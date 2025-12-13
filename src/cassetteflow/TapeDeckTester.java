@@ -1,24 +1,29 @@
 package cassetteflow;
 
-import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.text.DecimalFormat;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.DataLine;
+import javax.sound.sampled.TargetDataLine;
 
 /**
- * This class read processes data on cassette/reel to reel tape to get accurate error counts
- * It's makes use of the minimodem program to read data from the tape decks
- * 
- * @author Nathan
+ * This class reads processes data on cassette/reel to reel tape to get accurate error counts.
+ * UPDATED: Uses the pure Java JMinimodem class instead of the external minimodem binary.
+ * * @author Nathan
  */
 public class TapeDeckTester {        
-    // keep track of the total log lines which have been process so far
+    // keep track of the total log lines which have been processed so far
     private int logLineCount = 0;
     
-    // keep track off the number of stop and mute records
+    // keep track of the number of stop and mute records
     private int stopRecords = 0;
     
     private int totalStops = 0;
@@ -30,15 +35,12 @@ public class TapeDeckTester {
     // keep track of data length errors. Those usually occurs at the start and stop of the tape
     private int dataLengthErrors = 0;
     
-    // variables used for calling minimodem
-    private final String COMMAND_MINIMODEM = "minimodem -r 1200";
-    private final String COMMAND_PULSEAUDIO = "pulseaudio";
-    private Process process;
-    private BufferedReader miniModemReader;
-    private BufferedReader miniModemErrReader;
+    // Threading and Audio Control
+    private Thread decoderThread;
+    private TargetDataLine microphoneLine;
     
-    // used to indicate if the minimodem program is running
-    private boolean decoding;
+    // used to indicate if the decoding is running
+    private volatile boolean decoding = false;
     
     // the current line record
     private String currentLineRecord;
@@ -53,10 +55,10 @@ public class TapeDeckTester {
     private static final DecimalFormat df = new DecimalFormat("0.0000");
    
     /**
-     * Default constructor which just adds shutdown hook to terminate the minimodem process
+     * Default constructor
      */
     public TapeDeckTester() {
-        System.out.println("Tape Deck Tester Version 1.2.1");
+        System.out.println("Tape Deck Tester Version 1.2.1 (JMinimodem Integrated)");
     }
     
     /**
@@ -68,103 +70,125 @@ public class TapeDeckTester {
     }
     
     /**
-     * Gets the decoding stats such as total errors
-     * @return 
-     */
-    public String getStats() {
-        return "Test ...";
-    }
-    
-    /**
-     * Grab data directly from minimodem
-     * 
-     * @throws IOException 
+     * Grab data directly from JMinimodem (Internal Library)
+     * * @throws IOException 
      */
     public void startMinimodem() throws IOException {
-        // kill any previous process
-        if(process != null) process.destroy();
+        // Kill any previous session
+        stop();
         
-        // if we running on mac os then we need to stat pulseaudio as well
-        if(CassetteFlow.isMacOs) {
-            try {
-                Runtime.getRuntime().exec(COMMAND_PULSEAUDIO);
-                Thread.sleep(1000);
-                System.out.println("Starting pulseaudio ...");
-            } catch (InterruptedException ex) { }
+        System.out.println("\nInitializing JMinimodem Audio Capture...");
+
+        // 1. Setup Audio Format (48kHz, 16-bit, Mono)
+        float sampleRate = 48000.0f;
+        AudioFormat format = new AudioFormat(sampleRate, 16, 1, true, false);
+        
+        try {
+            // Open Microphone
+            DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
+            if (!AudioSystem.isLineSupported(info)) {
+                System.err.println("Error: Microphone line not supported.");
+                return;
+            }
+            microphoneLine = (TargetDataLine) AudioSystem.getLine(info);
+            microphoneLine.open(format);
+            microphoneLine.start();
+        } catch (Exception e) {
+            throw new IOException("Failed to open microphone", e);
         }
-        
-        // start new process
-        process = Runtime.getRuntime().exec(COMMAND_MINIMODEM);
-        
-        String message = "\nReading data from minimodem ...";
-        System.out.println(message);
-        
+
         decoding = true;
         
-        // start thread to read from tape
-        Thread soutThread = new Thread("Standard Output Reader") {
-            @Override
-            public void run() {
-                miniModemReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                
-                String line;
-                try {
-                    while (true) {
-                        line = miniModemReader.readLine();
+        // 2. Start the Decoder Thread
+        decoderThread = new Thread(() -> {
+            // Create Config
+            JMinimodem.Config config = new JMinimodem.Config();
+            config.rxMode = true;
+            config.baudRate = 1200.0;
+            config.sampleRate = sampleRate;
+            config.quiet = false; // We need this FALSE so it generates "### NOCARRIER"
+            
+            // Wrap the Mic Line in a Stream
+            AudioInputStream audioStream = new AudioInputStream(microphoneLine);
 
-                        if (line != null) { //check for pause again
-                            newLogFileLine(line);
-                        }
-                        
-                        if(!decoding) {
-                            break;
-                        }
-                    }
-                    
-                    miniModemReader.close();
-                } catch (IOException ex) {
+            // Setup Custom OutputStream to capture decoded text and feed it to newLogFileLine
+            LineAccumulator dataOutput = new LineAccumulator();
+            
+            // Setup System.err Interceptor to capture "### NOCARRIER" and feed it to newLogFileLine
+            PrintStream originalErr = System.err;
+            StatusInterceptor statusInterceptor = new StatusInterceptor(originalErr);
+            System.setErr(statusInterceptor);
+
+            try {
+                // *** BLOCKING CALL - Runs until stop() closes the line ***
+                JMinimodem.receive(config, audioStream, dataOutput);
+            } catch (Exception ex) {
+                // If we stopped manually, an IO exception is expected when the line closes
+                if (decoding) {
                     Logger.getLogger(TapeDeckTester.class.getName()).log(Level.SEVERE, null, ex);
                 }
+            } finally {
+                // Restore System.err
+                System.setErr(originalErr);
             }
-        };
-        soutThread.start();
+        }, "JMinimodem Decoder Thread");
         
-        Thread serrThread = new Thread("Standard Error Reader") {
-            @Override
-            public void run() {
-                miniModemErrReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-                String line;
-                try {
-                    while (true) {
-                        line = miniModemErrReader.readLine();
-                        
-                        if (line != null) {
-                            newLogFileLine(line);
-                        }
-                        
-                        if(!decoding) {
-                            break;
-                        }
-                    }
-                    
-                    miniModemErrReader.close();
-                } catch (IOException ex) {
-                    Logger.getLogger(TapeDeckTester.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-        };
-        serrThread.start();
+        decoderThread.start();
     }
     
     /**
-     * Process a line from running the minimodem program
+     * Helper Class: Captures decoded bytes, builds strings, and calls newLogFileLine on newlines.
+     */
+    private class LineAccumulator extends OutputStream {
+        private ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
+        @Override
+        public void write(int b) throws IOException {
+            if (b == '\n' || b == '\r') {
+                if (buffer.size() > 0) {
+                    String line = buffer.toString("UTF-8");
+                    newLogFileLine(line);
+                    buffer.reset();
+                }
+            } else {
+                buffer.write(b);
+            }
+        }
+    }
+
+    /**
+     * Helper Class: Intercepts System.err to detect JMinimodem status messages (NOCARRIER).
+     */
+    private class StatusInterceptor extends PrintStream {
+        public StatusInterceptor(OutputStream out) {
+            super(out);
+        }
+        @Override
+        public void println(String x) {
+            super.println(x); // Print to console so user sees it
+            if (x != null && x.contains("###")) {
+                newLogFileLine(x); // Pass to logic
+            }
+        }
+        @Override
+        public void print(String x) {
+            super.print(x);
+            if (x != null && x.contains("###")) {
+                newLogFileLine(x);
+            }
+        }
+    }
+
+    /**
+     * Process a line (either decoded data OR a status message)
      * @param line 
      */
     public synchronized void newLogFileLine(String line) {
         if(line != null) {
             line = line.trim();
             
-            if(line.length() == 29) {
+            // CASE 1: Valid Data Record
+            if(line.length() == 29 && !line.startsWith("#")) {
                 logLineCount++;
                 updateSideLineCount();
                 
@@ -174,17 +198,12 @@ public class TapeDeckTester {
                 processRecord(line);
                 stopRecords = 0;
                 
-                if(logLineCount %10 == 0) {
-                    String message = "CURRENT PROGRESS (errors/line records): " + dataErrors +  "/" + logLineCount + 
-                            " { " + getPercentError() + "% }\n" +
-                            "SIDE A ERRORS: " + sideAErrors + "/"  + sideALineCount + "\t{ " + getSidePercentError('A') + "% }\n" +
-                            "SIDE B ERRORS: " + sideBErrors + "/"  + sideBLineCount + "\t{ " + getSidePercentError('B') + "% }\n" +
-                            "DATA LENGTH ERRORS: " + dataLengthErrors  + "\n" + 
-                            "TOTAL STOPS: " + totalStops + "\n";
-                    
-                    System.out.println(message);
+                if(logLineCount % 10 == 0) {
+                    printStats();
                 }
-            } else if(line.contains("### NOCARRIER")) {
+            } 
+            // CASE 2: Carrier Lost
+            else if(line.contains("### NOCARRIER")) {
                 if(stopRecords == 0) {
                     String stopMessage = "PLAYBACK STOPPED (errors/line records): " + dataErrors +  "/" + logLineCount + 
                         " { " + getPercentError() + "%}\n" + 
@@ -195,20 +214,31 @@ public class TapeDeckTester {
                     
                     System.out.println("\n");
                     System.out.println(stopMessage);
-                    System.out.println(line + "\n");
+                    // System.out.println(line + "\n"); // Optional: Don't reprint the raw NOCARRIER line
                     
                     totalStops++;
                 }
-                
                 stopRecords++;
-            } else {
-                // count errors when line is not long enough but should contain data
+            } 
+            // CASE 3: Data Length Errors (Noise or bad decode)
+            else {
+                // count errors when line is not long enough but should contain data (has underscore)
                 if(!line.contains("###") && line.contains("_")) {
                     dataLengthErrors++;
                     System.out.println("\nInvalid Data Length @: " + line + " (# Data Length Errors: " + dataLengthErrors +  ")\n");
                 }
             }
         }
+    }
+
+    private void printStats() {
+        String message = "CURRENT PROGRESS (errors/line records): " + dataErrors +  "/" + logLineCount + 
+                " { " + getPercentError() + "% }\n" +
+                "SIDE A ERRORS: " + sideAErrors + "/"  + sideALineCount + "\t{ " + getSidePercentError('A') + "% }\n" +
+                "SIDE B ERRORS: " + sideBErrors + "/"  + sideBLineCount + "\t{ " + getSidePercentError('B') + "% }\n" +
+                "DATA LENGTH ERRORS: " + dataLengthErrors  + "\n" + 
+                "TOTAL STOPS: " + totalStops + "\n";
+        System.out.println(message);
     }
     
     /**
@@ -272,8 +302,7 @@ public class TapeDeckTester {
     
     /**
      * Make sure we only processing ascii characters
-     * 
-     * @param input
+     * * @param input
      * @return 
      */
     private boolean validCharacters(String input) {
@@ -293,7 +322,7 @@ public class TapeDeckTester {
     }
     
     /**
-     * Process a record from the minimodem to check to see if we getting good data
+     * Process a record to check to see if we getting good data
      * @param line 
      * @return
      */
@@ -350,25 +379,13 @@ public class TapeDeckTester {
     }
     
     /**
-     * Method to get the time in seconds as a string
-     * 
-     * @param totalSecs
-     * @return 
+     * Stop reading from JMinimodem and close the audio line
      */
-    private String getTimeString(int totalSecs) {
-        int hours = totalSecs / 3600;
-        int minutes = (totalSecs % 3600) / 60;
-        int seconds = totalSecs % 60;
-        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
-    }
-     
-    // stop reading from minimodem and close it 
     public void stop() {
         decoding = false;
-
-        // stop the minimodem program
-        if (process != null) {
-            process.destroy();
+        // Closing the line causes the blocked JMinimodem.receive() call to throw an exception and exit.
+        if (microphoneLine != null && microphoneLine.isOpen()) {
+            microphoneLine.close();
         }
     }
     

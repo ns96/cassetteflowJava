@@ -3,6 +3,8 @@
 import com.formdev.flatlaf.FlatDarculaLaf;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -1160,38 +1162,58 @@ public class CassetteFlow {
      * @throws IOException 
      */
     private void runMinimodem(File wavFile, String data) throws IOException {
-        // call minimodem to do encoding
-        String command = "minimodem --tx " + BAUDE_RATE + " -f " + wavFile.toString().replace("\\", "/");
-        Process process = Runtime.getRuntime().exec(command);
-                
-        System.out.println("\nSending data to for encoding minimodem ...");
-        
-        BufferedWriter writer = new BufferedWriter(
-            new OutputStreamWriter(process.getOutputStream()));
-        writer.write(data);
-        writer.close();
-        
-        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-        String line;
-        while ((line = reader.readLine()) != null) {
-            System.out.println(line);
-        }
- 
-        reader.close();
+        System.out.println("\nEncoding data via JMinimodem...");
         
         try {
-            process.waitFor();
-        } catch (InterruptedException ex) {
-            Logger.getLogger(CassetteFlow.class.getName()).log(Level.SEVERE, null, ex);
+            // 1. Setup Configuration
+            JMinimodem.Config config = new JMinimodem.Config();
+            config.txMode = true;
+            config.sampleRate = 48000.0f; // Standard high quality rate
+            config.quiet = true;          // Suppress internal logging
+            
+            try {
+                config.baudRate = Double.parseDouble(BAUDE_RATE);
+            } catch (NumberFormatException e) {
+                config.baudRate = 1200.0; // Default fallback
+                System.err.println("Invalid BAUDE_RATE, defaulting to 1200");
+            }
+
+            // 2. Prepare Streams
+            // Input: The string data to encode (ensure UTF-8)
+            java.io.ByteArrayInputStream textInput = new java.io.ByteArrayInputStream(data.getBytes("UTF-8"));
+            
+            // Output: A byte buffer to hold the raw PCM audio data
+            java.io.ByteArrayOutputStream pcmOutput = new java.io.ByteArrayOutputStream();
+
+            // 3. Run Encoding (JMinimodem Core)
+            // This generates raw PCM samples (no WAV header yet)
+            JMinimodem.transmit(config, textInput, pcmOutput);
+            
+            // 4. Save to WAV File
+            byte[] rawAudio = pcmOutput.toByteArray();
+            
+            // Define format: 48kHz, 16-bit, Mono, Signed, Little Endian
+            javax.sound.sampled.AudioFormat format = new javax.sound.sampled.AudioFormat(
+                config.sampleRate, 16, 1, true, false
+            );
+            
+            // Write the raw bytes + header to the file
+            try (javax.sound.sampled.AudioInputStream ais = new javax.sound.sampled.AudioInputStream(
+                    new java.io.ByteArrayInputStream(rawAudio), format, rawAudio.length / 2)) {
+                javax.sound.sampled.AudioSystem.write(ais, javax.sound.sampled.AudioFileFormat.Type.WAVE, wavFile);
+            }
+
+            System.out.println("Done Encoding: " + wavFile.getAbsolutePath() + " (" + rawAudio.length + " bytes)");
+
+        } catch (Exception ex) {
+            // Re-throw as IOException to maintain method signature compatibility
+            throw new IOException("JMinimodem encoding failed", ex);
         }
-        
-        process.destroy();
-        
-        System.out.println("\nDone Encoding Command: " + command);
     }
     
     /**
-     * Encode directly using minimodem without first creating a wave file
+     * Encode directly using JMinimodem, instead of minimodem C program and play the resulting
+     * wavefile
      * 
      * @param tapeID
      * @param sideN
@@ -1216,43 +1238,72 @@ public class CassetteFlow {
         
         wavPlayer = new WavPlayer();
         
-        // if we running on mac os then we need to stat pulseaudio as well
-        if(CassetteFlow.isMacOs) {
-            try {
-                Runtime.getRuntime().exec("pulseaudio");
-                Thread.sleep(1000);
-                System.out.println("Started pulseaudio ...");
-            } catch (InterruptedException ex) { }
-        }
+        // PulseAudio restart removed: JMinimodem uses Java Sound directly, 
+        // so external PulseAudio resets are usually unnecessary.
         
         for(AudioInfo audioInfo: sideN) {
-            long startTime = System.currentTimeMillis();
+            long encodeStartTime = System.currentTimeMillis();
             
             currentAudioID = audioInfo.getHash10C();
             String data = createInputDataForAudio(tapeID, audioInfo, currentAudioCount, 1);
             
-            // indicate the current track being procecessed 
+            // indicate the current track being processed 
             if(cassetteFlowFrame != null)
                 cassetteFlowFrame.setSelectedIndexForSideJList(currentAudioCount - 1);
             
-            message = "Minimodem Encoding: " + tapeID + " Track [ " + currentAudioCount + " ] ( " + audioInfo.getLengthAsTime() + " )";
+            message = "JMinimodem Encoding: " + tapeID + " Track [ " + currentAudioCount + " ] ( " + audioInfo.getLengthAsTime() + " )";
             printToGUIConsole(message, false);
             System.out.println("\n" + message);
                         
             String filename = saveDirectoryName + File.separator + "track_" + currentAudioCount + "-" + BAUDE_RATE + ".wav";
-            String command = "minimodem --tx " + BAUDE_RATE + " -f " + filename;
-            
-            Process process = Runtime.getRuntime().exec(command);
-            OutputStreamWriter writer = new OutputStreamWriter(process.getOutputStream());
-            writer.write(data, 0, data.length());
-            writer.close();
-            process.waitFor();
-            process.destroy();
+            File wavFile = new File(filename);
+
+            // --- JMinimodem Encoding Start ---
+            try {
+                // 1. Configure JMinimodem
+                JMinimodem.Config config = new JMinimodem.Config();
+                config.txMode = true;
+                config.sampleRate = 48000.0f; // High quality sample rate
+                config.quiet = true;          // Suppress internal logging
+                try {
+                    config.baudRate = Double.parseDouble(BAUDE_RATE);
+                } catch (NumberFormatException e) {
+                    config.baudRate = 1200.0;
+                }
+
+                // 2. Prepare Streams
+                // Input: Data string to bytes
+                ByteArrayInputStream textInput = new ByteArrayInputStream(data.getBytes("UTF-8"));
+                // Output: Buffer for Raw PCM
+                ByteArrayOutputStream pcmOutput = new ByteArrayOutputStream();
+
+                // 3. Generate Audio Data (Core Logic)
+                JMinimodem.transmit(config, textInput, pcmOutput);
+                
+                // 4. Write to WAV File
+                byte[] rawAudio = pcmOutput.toByteArray();
+                javax.sound.sampled.AudioFormat format = new javax.sound.sampled.AudioFormat(
+                    config.sampleRate, 16, 1, true, false
+                );
+                
+                try (javax.sound.sampled.AudioInputStream ais = new javax.sound.sampled.AudioInputStream(
+                        new ByteArrayInputStream(rawAudio), format, rawAudio.length / 2)) {
+                    javax.sound.sampled.AudioSystem.write(ais, javax.sound.sampled.AudioFileFormat.Type.WAVE, wavFile);
+                }
+                
+            } catch (Exception e) {
+                 message = "Encoding Failed: " + e.getMessage();
+                 printToGUIConsole(message, true);
+                 System.err.println(message);
+                 e.printStackTrace();
+                 return false;
+            }
+            // --- JMinimodem Encoding End ---
             
             long endTime = System.currentTimeMillis();
-            long encodeTime = endTime - startTime;
+            long encodeTime = endTime - encodeStartTime;
             
-            message = "Minimodem Encode Time: " + encodeTime + " milliseconds";
+            message = "JMinimodem Encode Time: " + encodeTime + " milliseconds";
             printToGUIConsole(message, true);
             System.out.println(message);
             
@@ -1280,6 +1331,7 @@ public class CassetteFlow {
                     currentTimeTotal += encodeTimeSeconds;
                 }
             }
+            
             // playback the wav file and wait for it to be done
             message = "\nPlaying Wav File: " + filename;
             printToGUIConsole(message, true);
@@ -1287,7 +1339,6 @@ public class CassetteFlow {
             
             try {
                 if(wavPlayer != null) { // check for null here since we could have stop encoding
-                    File wavFile = new File(filename);
                     wavPlayer.playBigWav(wavFile, soundOutput);
                 }
             } catch(IOException | LineUnavailableException | UnsupportedAudioFileException e) {
@@ -1302,6 +1353,7 @@ public class CassetteFlow {
             }
             
             // TO-DO -- Delete the Wav file here
+            // wavFile.delete(); 
             
             if(stopEncoding) {
                 message = "\nReal Time Encoding Stopped ...";

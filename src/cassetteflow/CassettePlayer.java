@@ -5,10 +5,13 @@ import com.goxr3plus.streamplayer.stream.StreamPlayerEvent;
 import com.goxr3plus.streamplayer.stream.StreamPlayerException;
 import com.goxr3plus.streamplayer.stream.StreamPlayerListener;
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -20,13 +23,18 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.DataLine;
+import javax.sound.sampled.TargetDataLine;
 
 /**
  * This class processes data on cassette tape for playback
  * it uses the https://github.com/goxr3plus/java-stream-player
- * for all playback functionality
- * 
- * @author Nathan
+ * for all playback functionality.
+ * * UPDATED: Uses JMinimodem for internal FSK decoding.
+ * * @author Nathan
  */
 public class CassettePlayer implements LogFileTailerListener, StreamPlayerListener {
     private CassetteFlow cassetteFlow;
@@ -41,7 +49,6 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     private SpotifyConnector spotifyConnector;
         
     // used to read the log file outputted by the minimodem program
-    // "minimodem -r 1200 &> >(tee -a tape.log)"
     public LogFileTailer tailer;
     
     private String logfile;
@@ -74,16 +81,12 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     // has been read in.
     private int dataErrors = 0;
     
-    // variables used for calling minimodem
-    private final String COMMAND_MINIMODEM = "minimodem -r " + cassetteFlow.BAUDE_RATE;
-    private final String COMMAND_PULSEAUDIO = "pulseaudio";
-    private Process process;
-    private BufferedReader miniModemReader;
-    private BufferedReader miniModemErrReader;
-    private int readDelay = 0;
+    // JMinimodem & Audio Control
+    private Thread decoderThread;
+    private TargetDataLine microphoneLine;
     
     // used to indicate if the minimodem program is running
-    private boolean decoding;
+    private volatile boolean decoding = false;
     
     // variable to track when we are paused to allowing clearing the buffer
     private boolean paused = false;
@@ -138,8 +141,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     
     /**
      * Set the output mixer name to redirect audio to the selected speaker
-     * 
-     * @param outputMixerName 
+     * * @param outputMixerName 
      */
     void setMixerName(String outputMixerName) {
         this.outputMixerName = outputMixerName;
@@ -147,8 +149,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     
     /**
      * Set the speed factor for playback
-     * 
-     * @param speedFactor 
+     * * @param speedFactor 
      */
     public void setSpeedFactor(double speedFactor) {
        this.speedFactor = speedFactor; 
@@ -156,8 +157,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     
     /**
      * Set the deckcast connector object
-     * 
-     * @param deckCastConnect 
+     * * @param deckCastConnector 
      */
     public void setDeckCastConnector(DeckCastConnector deckCastConnector) {
        this.deckCastConnector = deckCastConnector; 
@@ -165,8 +165,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     
     /**
      * Set the deckcast connector object used to display information through browser
-     * 
-     * @param deckCastConnectorDisplay 
+     * * @param deckCastConnectorDisplay 
      */
     public void setDeckCastConnectorDisplay(DeckCastConnector deckCastConnectorDisplay) {
        this.deckCastConnectorDisplay = deckCastConnectorDisplay; 
@@ -174,8 +173,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     
     /**
      * Set the Spotify connector object
-     * 
-     * @param spotifyConnector  
+     * * @param spotifyConnector  
      */
     public void setSpotifyConnector(SpotifyConnector spotifyConnector) {
         this.spotifyConnector = spotifyConnector; 
@@ -207,111 +205,177 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     }
     
     /**
-     * Grab data directly from minimodem
-     * 
-     * @param delay
+     * Grab data directly from JMinimodem (Internal Library)
+     * * @param delay (Deprecated in JMinimodem implementation, kept for signature compatibility)
      * @throws IOException 
      */
     public void startMinimodem(int delay) throws IOException {
-        readDelay = delay;
+        // Kill any previous session
+        stop();
         
-        // kill any previous process
-        if(process != null) process.destroy();
-        
-        // if we running on mac os then we need to stat pulseaudio as well
-        if(CassetteFlow.isMacOs) {
-            try {
-                Runtime.getRuntime().exec(COMMAND_PULSEAUDIO);
-                Thread.sleep(1000);
-                System.out.println("Starting pulseaudio ...");
-            } catch (InterruptedException ex) { }
-        }
-        
-        // start new process
-        process = Runtime.getRuntime().exec(COMMAND_MINIMODEM);
-        
-        String message = "\nReading data from minimodem ...";
+        String message = "\nListening for data via JMinimodem ...";
         System.out.println(message);
         
         if(cassetteFlowFrame != null) {
             cassetteFlowFrame.printToConsole(message, false);
         }
+
+        // 1. Setup Audio Format (48kHz, 16-bit, Mono)
+        float sampleRate = 48000.0f;
+        AudioFormat format = new AudioFormat(sampleRate, 16, 1, true, false);
         
+        try {
+            // Open Microphone
+            DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
+            if (!AudioSystem.isLineSupported(info)) {
+                throw new IOException("Microphone line not supported.");
+            }
+            microphoneLine = (TargetDataLine) AudioSystem.getLine(info);
+            microphoneLine.open(format);
+            microphoneLine.start();
+        } catch (Exception e) {
+            throw new IOException("Failed to open microphone", e);
+        }
+
         decoding = true;
         
-        // start thread to read from tape
-        Thread soutThread = new Thread("Standard Output Reader") {
-            @Override
-            public void run() {
-                miniModemReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                
-                String line;
-                try {
-                    while (true) {
-                        if(!paused) {
-                            line = miniModemReader.readLine();
+        // 2. Start the Decoder Thread
+        decoderThread = new Thread(() -> {
+            // Create Config
+            JMinimodem.Config config = new JMinimodem.Config();
+            config.rxMode = true;
+            try {
+                config.baudRate = Double.parseDouble(cassetteFlow.BAUDE_RATE);
+            } catch (NumberFormatException e) {
+                config.baudRate = 1200.0; // Default
+            }
+            config.sampleRate = sampleRate;
+            config.quiet = false; // Must be false to generate "### NOCARRIER"
+            
+            // Wrap the Mic Line in a Stream
+            AudioInputStream audioStream = new AudioInputStream(microphoneLine);
 
-                            if (line != null && !paused) { //check for pause again
-                                if (cassetteFlowFrame != null) {
-                                    cassetteFlowFrame.printToConsole(line, true);
-                                }
-                                
-                                newLineRecord(line);
-                            }
-                        }
-                        
-                        if(!decoding) {
-                            break;
-                        }
-                        
-                        // Take a pause to keep timing of tape inline with mp3 
-                        // playback time
-                        if(delay > 0) {
-                            Thread.sleep(delay);
-                        }
-                    }
-                    
-                    miniModemReader.close();
-                } catch (Exception ex) {
+            // Setup Custom OutputStream to capture decoded text and feed it to newLineRecord
+            LineAccumulator dataOutput = new LineAccumulator();
+            
+            // Setup System.err Interceptor to capture "### NOCARRIER"
+            PrintStream originalErr = System.err;
+            StatusInterceptor statusInterceptor = new StatusInterceptor(originalErr);
+            System.setErr(statusInterceptor);
+
+            try {
+                // *** BLOCKING CALL - Runs until stop() closes the line ***
+                JMinimodem.receive(config, audioStream, dataOutput);
+            } catch (Exception ex) {
+                // If we stopped manually, an IO exception is expected when the line closes
+                if (decoding) {
                     Logger.getLogger(CassettePlayer.class.getName()).log(Level.SEVERE, null, ex);
                 }
+            } finally {
+                // Restore System.err
+                System.setErr(originalErr);
             }
-        };
-        soutThread.start();
+        }, "JMinimodem Decoder Thread");
         
-        Thread serrThread = new Thread("Standard Error Reader") {
-            @Override
-            public void run() {
-                miniModemErrReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-                String line;
-                try {
-                    while (true) {
-                        if(paused) {
-                            Thread.sleep(50);
-                            continue;
-                        }
-                        
-                        line = miniModemErrReader.readLine();
-                        
-                        if (line != null) {
-                            newLineRecord(line);
-                            if(cassetteFlowFrame != null) {
-                                cassetteFlowFrame.printToConsole(line, true);
-                            }
-                        }
-                        
-                        if(!decoding) {
-                            break;
-                        }
-                    }
-                    
-                    miniModemErrReader.close();
-                } catch (Exception ex) {
-                    Logger.getLogger(CassettePlayer.class.getName()).log(Level.SEVERE, null, ex);
+        decoderThread.start();
+    }
+    
+    /**
+     * Helper Class: Captures decoded bytes, builds strings, and calls newLineRecord.
+     */
+    private class LineAccumulator extends OutputStream {
+        private ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
+        @Override
+        public void write(int b) throws IOException {
+            if (paused) return; // Skip if paused
+
+            if (b == '\n' || b == '\r') {
+                if (buffer.size() > 0) {
+                    String line = buffer.toString("UTF-8");
+                    processLine(line);
+                    buffer.reset();
+                }
+            } else {
+                buffer.write(b);
+            }
+        }
+        
+        private void processLine(String line) {
+            if (!paused && line != null) {
+                // check to see if it's noise data
+                if(isNoisyData(line)) {
+                    line = "### NOCARRIER (Noisy Data) ###";
+                }
+                
+                if (cassetteFlowFrame != null) {
+                    cassetteFlowFrame.printToConsole(line, true);
+                }
+                newLineRecord(line);
+            }
+        }
+        
+        /**
+         * Returns true if the line is considered noise. Valid lines must
+         * either: 1. Start with "###" (Status messages) 2. Contain ONLY
+         * letters, numbers, and underscores (Data IDs)
+         */
+        private boolean isNoisyData(String input) {
+            if (input == null || input.trim().isEmpty()) {
+                return true; // Treat empty lines as noise/skippable
+            }
+
+            // 1. ALLOW LIST: Status Messages
+            // If the line starts with "###", we trust it (it contains spaces/parens, which are valid here)
+            if (input.startsWith("###")) {
+                return false;
+            }
+
+            // 2. STRICT CHECK: Data IDs
+            // If it's not a status message, it MUST be a data ID.
+            // Data IDs cannot have spaces, brackets, or weird symbols.
+            // They can ONLY have letters, digits, and underscores.
+            for (int i = 0; i < input.length(); i++) {
+                char c = input.charAt(i);
+                if (!Character.isLetterOrDigit(c) && c != '_') {
+                    return true; // Found a bad symbol (like '?', ' ', '~') -> It's NOISE
                 }
             }
-        };
-        serrThread.start();
+
+            // If we passed the loop, it's a valid Data ID
+            return false;
+        }
+    }
+
+    /**
+     * Helper Class: Intercepts System.err to detect JMinimodem status messages (NOCARRIER).
+     */
+    private class StatusInterceptor extends PrintStream {
+        public StatusInterceptor(OutputStream out) {
+            super(out);
+        }
+        @Override
+        public void println(String x) {
+            // super.println(x); // Uncomment to debug raw status messages to console
+            checkTrigger(x);
+        }
+        @Override
+        public void print(String x) {
+            // super.print(x);
+            checkTrigger(x);
+        }
+        
+        private void checkTrigger(String x) {
+             if (x != null && x.contains("###")) {
+                 if(paused) return;
+                 
+                 // Pass status messages (like NOCARRIER) to the main logic
+                 if (cassetteFlowFrame != null) {
+                    cassetteFlowFrame.printToConsole(x, true);
+                 }
+                 newLineRecord(x);
+            }
+        }
     }
     
     /**
@@ -324,7 +388,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     } 
     
     /**
-     * Process a line from the log file tailer class.
+     * Process a line from the JMinimodem or log file.
      * @param line 
      */
     @Override
@@ -436,26 +500,11 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                     spotifyConnector.stopStream();
                 }
                 
-                // check to make sure we close the minimodem read
-                if(miniModemReader != null && stopRecords == 1 && readDelay > 0) {
-                    try {
-                        paused = true;
-                        
-                        if(miniModemReader != null) miniModemReader.close();
-                        if(miniModemErrReader != null) miniModemErrReader.close();
-                        if(process != null) process.destroyForcibly();
-                        
-                        process = Runtime.getRuntime().exec(COMMAND_MINIMODEM);
-                        miniModemReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                        miniModemErrReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-                        
-                        // take a quick pause
-                        Thread.sleep(1000);
-                        
-                        paused = false;
-                    } catch (IOException | InterruptedException ex) {
-                        Logger.getLogger(CassettePlayer.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+                // RESTART LOGIC REMOVED: JMinimodem is a continuous stream, we don't need to restart the process
+                // on stopRecords == 1 like the external process version did. 
+                // However, if logic requires a "reset", we can just toggle paused.
+                if(stopRecords == 1) {
+                     // Optionally clear internal buffers here if needed.
                 }
 
                 currentAudioId = "";
@@ -480,8 +529,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     
     /**
      * Make sure we only processing ascii characters
-     * 
-     * @param input
+     * * @param input
      * @return 
      */
     private boolean validCharacters(String input) {
@@ -504,7 +552,6 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     /**
      * Process a record from the minimodem log file in order to playback the
      * correct mp3 file
-     * 
      * @param line 
      * @return  
      */
@@ -688,8 +735,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     
     /**
      * Print out the tracks for a particular cassette
-     * 
-     * @param tapeId 
+     * * @param tapeId 
      */
     private void printTracks(String tapeId) {
         ArrayList<String> audioIds = cassetteFlow.tapeDB.get(tapeId);
@@ -709,8 +755,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     
     /**
      * Play mp3 or flac indicated by the file object in another thread
-     * 
-     * @param file 
+     * * @param file 
      */
     private void playAudio(File file, int duration) {
         // make sure we stop any previous threads
@@ -763,17 +808,16 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
         
         decoding  = false;
         
-        // stop the minimodem program
-        if(process != null) {
-            process.destroy();
+        // Stop JMinimodem by closing the line
+        if (microphoneLine != null && microphoneLine.isOpen()) {
+            microphoneLine.close();
         }
     }
     
     /**
      * Download mp3/flac from a server and add to the audio and tape database
      * 1/30/2022 -- This is a work in progress
-     * 
-     * @param indexFileId 
+     * * @param indexFileId 
      */
     public void startAudioDownload(String indexFileId) {
          String message;
@@ -861,8 +905,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     
     /**
      * Method to encode a url string
-     * 
-     * @param value
+     * * @param value
      * @return 
      */
     private String encodeValue(String value) throws UnsupportedEncodingException {
