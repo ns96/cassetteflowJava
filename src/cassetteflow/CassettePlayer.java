@@ -298,6 +298,14 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                 }
             } else {
                 buffer.write(b);
+                
+                // check the buffer length if more than 50 characters then it's noise
+                // process it quickly stop playback
+                if(buffer.size() > 50) {
+                    String line = buffer.toString("UTF-8");
+                    processLine(line);
+                    buffer.reset();
+                }
             }
         }
         
