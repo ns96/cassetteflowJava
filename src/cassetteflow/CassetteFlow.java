@@ -2,7 +2,6 @@
 
 import com.formdev.flatlaf.FlatDarculaLaf;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -13,10 +12,8 @@ import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -1567,7 +1564,7 @@ public class CassetteFlow {
     }
     
     /**
-     * Method to get the mp3 of flac files in a directory
+     * Method to get the mp3 or flac files in a directory
      * 
      * @param directory
      * @param storeParentDirectory 
@@ -1650,9 +1647,8 @@ public class CassetteFlow {
      * functionality and speed up the startup time of the gui
      * 
      * @param directory 
-     * @param dummyAlbums This loads a sample of albums/tracks from the spotify dataset
      */
-    public final void buildAudioFileIndex(String directory, int dummyAlbums) {
+    public final void buildAudioFileIndex(String directory) {
         try {
             System.out.println("Building Audio File Index Starting @ " + directory);
             startTime = System.currentTimeMillis();
@@ -1674,29 +1670,6 @@ public class CassetteFlow {
             
             String message;
             
-            // see if to load any dummy records from the spotify dataset
-            File spotifyFile = new File(AUDIO_DIR_NAME, "spotify_tracks.tsv");
-            if(dummyAlbums > 0 && spotifyFile.canRead()) {
-                message = "\nLoading " + dummyAlbums + " albums from Spotify dataset: " + spotifyFile.getPath();
-                System.out.println(message);
-                if(cassetteFlowFrame != null) {
-                    cassetteFlowFrame.printToConsole(message, true);
-                }
-                
-                if(spotifyDatasetLoader == null) {
-                    spotifyDatasetLoader = new SpotifyDatasetLoader();
-                    spotifyDatasetLoader.loadDataset(spotifyFile);
-                }
-                
-                int tracks = spotifyDatasetLoader.getSample(dummyAlbums, audioInfoDB);
-                
-                message = tracks + " dummy tracks loaded from Spotify dataset ...";
-                System.out.println(message);
-                if(cassetteFlowFrame != null) {
-                    cassetteFlowFrame.printToConsole(message, true);
-                }
-            }
-            
             // save the audiodb db as a binary file
             FileOutputStream fos = new FileOutputStream(new File(AUDIO_INDEX_FILENAME));
             ObjectOutputStream oos = new ObjectOutputStream(fos);
@@ -1708,6 +1681,9 @@ public class CassetteFlow {
             long elapsedTime = System.currentTimeMillis() - startTime;
             message = "\n" + audioFiles.size() + "/"  + audioInfoDB.size() +  " Audio Files Indexed (" + elapsedTime +" milliseconds)...";
             System.out.println(message);
+            
+            // also save it as a text file mainly for use by outside programs
+            saveAudioInfoDB();
             
             if(cassetteFlowFrame != null) {
                 cassetteFlowFrame.printToConsole(message, true);

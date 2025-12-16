@@ -2129,7 +2129,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jPanel7Layout.setVerticalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel7Layout.createSequentialGroup()
-                .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 415, Short.MAX_VALUE)
+                .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 410, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(filterShuffleCheckBox)
@@ -3568,10 +3568,6 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         tapeDBFrame.setCassetteFlowFrame(this, remoteDB);
         tapeDBFrame.setVisible(true);
     }//GEN-LAST:event_viewTapeDBButtonActionPerformed
-
-    private void clearConsoleButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearConsoleButtonActionPerformed
-        consoleTextArea.setText("Output Console >\n");
-    }//GEN-LAST:event_clearConsoleButtonActionPerformed
     
     private void lyraTServerTestDBButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lyraTServerTestDBButtonActionPerformed
         String host = lyraTHostTextField.getText();
@@ -3871,20 +3867,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         realTimeEncoding = true;
         directEncode(false, true);
     }//GEN-LAST:event_realtimeEncodeButtonActionPerformed
-
-    private void baudRateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_baudRateButtonActionPerformed
-        try {
-            String baud = baudRateTextField.getText().trim();
-            Integer.parseInt(baud);
-            cassetteFlow.BAUDE_RATE = baud;
-        } catch(NumberFormatException nfe) { }
-    }//GEN-LAST:event_baudRateButtonActionPerformed
-    
-    private void setAudioDownloadServerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_setAudioDownloadServerButtonActionPerformed
-        String mp3DownloadServer = audioDownloadServerTextField.getText();
-        cassetteFlow.setDownloadServer(mp3DownloadServer);        
-    }//GEN-LAST:event_setAudioDownloadServerButtonActionPerformed
-    
+        
     private void clearLyraTConsoleButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearLyraTConsoleButtonActionPerformed
         lyraTConsoleTextArea.setText("");
     }//GEN-LAST:event_clearLyraTConsoleButtonActionPerformed
@@ -3969,14 +3952,6 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         calculateTotalTime();
     }//GEN-LAST:event_tapeLengthComboBoxActionPerformed
 
-    private void filterShuffleCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_filterShuffleCheckBoxActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_filterShuffleCheckBoxActionPerformed
-
-    private void shuffleFilterTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_shuffleFilterTextFieldActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_shuffleFilterTextFieldActionPerformed
-
     private void lyraTMuteToggleButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lyraTMuteToggleButtonActionPerformed
         if(lyraTConnect == null) return;
         
@@ -4043,15 +4018,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         }
     }//GEN-LAST:event_filterAudioListButtonActionPerformed
     
-    /**
-     * Reload the audio output devices
-     * 
-     * @param evt 
-     */
-    private void reloadAudioOutputsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_reloadAudioOutputsButtonActionPerformed
-        loadAudioOuputDevices();
-    }//GEN-LAST:event_reloadAudioOutputsButtonActionPerformed
-    
+   
     /**
      * Check the trackNum list in the A/B sides for duplicates
      * 
@@ -4187,28 +4154,6 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         tapeDBFrame.setSelectedTrack(currentPlayingTrack);
     }//GEN-LAST:event_viewCurrentTapeButtonActionPerformed
     
-    /**
-     * Find all audio files in the root/subdirectories then build index
-     * @param evt 
-     */
-    private void buildAudioIndexButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buildAudioIndexButtonActionPerformed
-        printToConsole("Finding All Audio Files ...\n", false);
-                
-        Thread thread = new Thread("Audio Indexer Thread") {
-            @Override
-            public void run() {
-                // see if to load any dummy records from the spotify dataset
-                int dummyAlbums = 0;
-                try {
-                    dummyAlbums = Integer.parseInt(dummyAlbumsTextField.getText());
-                } catch (NumberFormatException nfe) { }
-                
-                cassetteFlow.buildAudioFileIndex(currentAudioDirectory, dummyAlbums);
-            }
-        };
-        thread.start();
-    }//GEN-LAST:event_buildAudioIndexButtonActionPerformed
-
     private void dctOffsetComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dctOffsetComboBoxActionPerformed
         try {
             String value = dctOffsetComboBox.getSelectedItem().toString();
@@ -4542,6 +4487,51 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             timeBlockEndTracks = new ArrayList<>();
         }
     }//GEN-LAST:event_padDCTCheckBoxActionPerformed
+
+    /**
+     * Find all audio files in the root/subdirectories then build index
+     * @param evt 
+     */
+    private void buildAudioIndexButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buildAudioIndexButtonActionPerformed
+        printToConsole("Finding All Audio Files ...\n", false);
+
+        Thread thread = new Thread("Audio Indexer Thread") {
+            @Override
+            public void run() {
+                cassetteFlow.buildAudioFileIndex(currentAudioDirectory);
+            }
+        };
+        thread.start();
+    }//GEN-LAST:event_buildAudioIndexButtonActionPerformed
+
+    private void reloadAudioOutputsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_reloadAudioOutputsButtonActionPerformed
+
+    }//GEN-LAST:event_reloadAudioOutputsButtonActionPerformed
+
+    private void shuffleFilterTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_shuffleFilterTextFieldActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_shuffleFilterTextFieldActionPerformed
+
+    private void filterShuffleCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_filterShuffleCheckBoxActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_filterShuffleCheckBoxActionPerformed
+
+    private void setAudioDownloadServerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_setAudioDownloadServerButtonActionPerformed
+        String mp3DownloadServer = audioDownloadServerTextField.getText();
+        cassetteFlow.setDownloadServer(mp3DownloadServer);
+    }//GEN-LAST:event_setAudioDownloadServerButtonActionPerformed
+
+    private void baudRateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_baudRateButtonActionPerformed
+        try {
+            String baud = baudRateTextField.getText().trim();
+            Integer.parseInt(baud);
+            cassetteFlow.BAUDE_RATE = baud;
+        } catch(NumberFormatException nfe) { }
+    }//GEN-LAST:event_baudRateButtonActionPerformed
+
+    private void clearConsoleButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearConsoleButtonActionPerformed
+        consoleTextArea.setText("Output Console >\n");
+    }//GEN-LAST:event_clearConsoleButtonActionPerformed
 
     /**
      * 
