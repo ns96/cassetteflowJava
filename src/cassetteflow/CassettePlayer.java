@@ -563,6 +563,15 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
      */
     public String processRecord(String line) {        
         String[] sa = line.split("_");
+        
+        // check to see that the size of sa is exactly 5 other the
+        // whole decode thread dies
+        if (sa.length != 5) {
+            System.out.println("Delimiter Error: Expected 5 parts, found " + sa.length + " in line: " + line);
+            dataErrors++;
+            return "DELIMITER ERROR @ "  + line;
+        }
+        
         String tapeId = sa[0];
         String track = sa[1];
         String audioId = sa[2];
