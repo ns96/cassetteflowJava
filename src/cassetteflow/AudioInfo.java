@@ -4,7 +4,8 @@ import java.io.File;
 import java.io.Serializable;
 
 /**
- * This class hold information about mp3 or flac files such as file or url locations
+ * This class hold information about mp3 or flac files such as file or url
+ * locations
  * 
  * @author Nathan
  */
@@ -23,7 +24,9 @@ public class AudioInfo implements Serializable {
     private String year;
     private String streamId;
     private String imageUrl;
-    
+    private String relativePath; // the relative path of the file from the root directory
+    private String sdCardFilename; // the filename to use on the SD card (handling collisions)
+
     public AudioInfo(File file, String hash10C, int length, String lengthAsTime, int bitRate) {
         this.file = file;
         this.hash10C = hash10C;
@@ -31,16 +34,12 @@ public class AudioInfo implements Serializable {
         this.lengthAsTime = lengthAsTime;
         this.bitRate = bitRate;
     }
-    
+
     public void setParentDirectoryName(String parentDirectoryName) {
         this.parentDirectoryName = parentDirectoryName;
     }
-    
+
     public String getUrl() {
-        if(Url == null) {
-            Url = "unknown";
-        }
-        
         return Url;
     }
 
@@ -59,26 +58,26 @@ public class AudioInfo implements Serializable {
     public int getLength() {
         return length;
     }
-    
+
     public String getLengthAsTime() {
         return lengthAsTime;
     }
-    
+
     public int getBitRate() {
         return bitRate;
     }
-    
+
     public String getName() {
-        if(file != null) {
+        if (file != null) {
             return file.getName() + " (" + lengthAsTime + ")";
         } else {
             // we should have a title then
             return title + " (" + lengthAsTime + ")";
         }
     }
-    
+
     public String getBasicName() {
-        if(file != null) {
+        if (file != null) {
             String fn = file.getName();
             return fn.substring(0, fn.lastIndexOf("."));
         } else {
@@ -87,21 +86,21 @@ public class AudioInfo implements Serializable {
             return sa[0];
         }
     }
-    
+
     public String getTitle() {
         return title;
     }
-    
+
     public void setTitle(String title) {
         this.title = title;
     }
-    
+
     public String getGenre() {
         return genre;
     }
 
     public void setGenre(String genre) {
-        if(!genre.isBlank()) {
+        if (!genre.isBlank()) {
             this.genre = genre;
         }
     }
@@ -111,21 +110,21 @@ public class AudioInfo implements Serializable {
     }
 
     public void setArtist(String artist) {
-        if(!artist.isBlank()) {
+        if (!artist.isBlank()) {
             this.artist = artist;
         }
     }
-    
+
     public String getAlbum() {
         return album;
     }
 
     public void setAlbum(String album) {
-        if(!album.isBlank()) {
+        if (!album.isBlank()) {
             this.album = album;
         }
     }
-    
+
     public String getYear() {
         return year;
     }
@@ -133,7 +132,7 @@ public class AudioInfo implements Serializable {
     public void setYear(String year) {
         this.year = year;
     }
-    
+
     public String getStreamId() {
         return streamId;
     }
@@ -143,35 +142,54 @@ public class AudioInfo implements Serializable {
     }
 
     public String getImageUrl() {
-        if(imageUrl == null) {
+        if (imageUrl == null) {
             imageUrl = "https://img.youtube.com/vi/MwsGULCvMBk/0.jpg";
         }
-        
+
         return imageUrl;
     }
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
     }
-    
+
+    public String getRelativePath() {
+        return relativePath;
+    }
+
+    public void setRelativePath(String relativePath) {
+        this.relativePath = relativePath;
+    }
+
+    public String getSdCardFilename() {
+        if (sdCardFilename != null && !sdCardFilename.isEmpty()) {
+            return sdCardFilename;
+        }
+        return file != null ? file.getName() : "";
+    }
+
+    public void setSdCardFilename(String sdCardFilename) {
+        this.sdCardFilename = sdCardFilename;
+    }
+
     @Override
     public String toString() {
-        if(!parentDirectoryName.isEmpty()) {
+        if (!parentDirectoryName.isEmpty()) {
             return "[" + parentDirectoryName + "] " + file.getName() + " (" + lengthAsTime + ")";
         } else {
             return getName();
         }
     }
-    
+
     /**
      * Return the full info for the tracks
      * 
-     * @return 
+     * @return
      */
     public String getFullInfo() {
-        String info = "File: " + getName() + "\nTitle: " + title + "\nArtist: " + artist + "\nAlbum: " + 
+        String info = "File: " + getName() + "\nTitle: " + title + "\nArtist: " + artist + "\nAlbum: " +
                 album + "\nYear: " + year + "\nGenre: " + genre;
-        
+
         return info;
     }
 }
