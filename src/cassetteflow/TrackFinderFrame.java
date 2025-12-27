@@ -2,6 +2,7 @@ package cassetteflow;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -24,7 +25,7 @@ public class TrackFinderFrame extends javax.swing.JFrame {
     private TreeMap<String, ArrayList<AudioInfo>> yearMap;
     private TreeMap<String, ArrayList<AudioInfo>> folderMap;
     
-    // also store the found AudioInfo object in the list
+    // store the found AudioInfo object in the list
     private ArrayList<AudioInfo> foundAudioInfoList = new ArrayList<>();
     
     // indicate if we pressed found folders
@@ -221,11 +222,27 @@ public class TrackFinderFrame extends javax.swing.JFrame {
         
         foundAudioInfoList = new ArrayList<>();
         
+        // create hashmap to make sure we not putting duplicate audioInfo objects
+        // in found list. Duplicates are there to maintain compatiblity with the
+        // older way the 10 character hash was generated with just the filename prior.
+        HashMap<String, String> audioTitles = new HashMap<>();
+        
         Thread thread = new Thread("Searcher Thread") {
+            int duplicateCount = 0;
+            
             @Override
             public void run() {
                 for (AudioInfo audioInfo : cassetteFlow.audioInfoDB.values()) {
                     String title = audioInfo.getName();
+                    
+                    // make sure we not checking objects that have already been checked
+                    if(audioTitles.containsKey(title)){
+                        duplicateCount++;
+                        //System.out.println(duplicateCount +  " Audio Track Already Found: " + title);
+                        continue;
+                    } else {
+                        audioTitles.put(title, title);
+                    }
                     
                     String searchIn;
                     if(searchBy == 0) {

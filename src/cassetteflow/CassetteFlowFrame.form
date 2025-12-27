@@ -11,7 +11,7 @@
   </NonVisualComponents>
   <Properties>
     <Property name="defaultCloseOperation" type="int" value="3"/>
-    <Property name="title" type="java.lang.String" value="CassetteFlow v 2.0.8 (12/26/2025)"/>
+    <Property name="title" type="java.lang.String" value="CassetteFlow v 2.0.9 (12/27/2025)"/>
   </Properties>
   <AccessibilityProperties>
     <Property name="AccessibleContext.accessibleName" type="java.lang.String" value=""/>
