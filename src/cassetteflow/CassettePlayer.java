@@ -726,22 +726,22 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
             if (trackListInfo != null) {
                 trackName = trackListInfo.getTrackAtTime(mp3Time, track);
             }
-                
+            
+            String message = trackName + "\n"
+                    + "Playtime From Tape: " + String.format("%04d", currentPlayTime) + " / " + String.format("%04d", audioTotalPlayTime) + "\n"
+                    + "Playtime From File:  " + timeFromFile + "\n"
+                    + "Tape Counter: " + totalTime + " (" + CassetteFlowUtil.getTimeString(totalTime) + ")\n"
+                    + "Data Errors: " + dataErrors + "/" + logLineCount;
+             
             if(cassetteFlowFrame != null) {
-                String message = trackName + "\n"
-                        + "Playtime From Tape: " + String.format("%04d", currentPlayTime) + " / " + String.format("%04d", audioTotalPlayTime) + "\n"
-                        + "Playtime From File:  " + timeFromFile + "\n"
-                        + "Tape Counter: " + totalTime + " (" + CassetteFlowUtil.getTimeString(totalTime) + ")\n"
-                        + "Data Errors: " + dataErrors +  "/" + logLineCount;
-                
                 cassetteFlowFrame.setPlaybackInfo(message, false, "");
             } else {
-                //String message = "[ " + mp3Filename + " {" + track + "} Time: " + currentPlayTime + "/" + 
-                //    mp3PlayTime + " | MP3 Time: " + timeFromFile + " | Tape Counter: " + totalTime + " ]";
+                message = trackName + " | Tape Time: " + currentPlayTime + "/" + 
+                    audioTotalPlayTime + " | File Time:  " + timeFromFile + " | Tape Counter: " + totalTime + " | " +
+                        "Data Errors: " + dataErrors +  "/" + logLineCount;
                 
-                String message = "Tape Time: " + currentPlayTime + "/" + 
-                    audioTotalPlayTime + " | File Time:  " + timeFromFile + " | Tape Counter: " + totalTime + " ]";
                 System.out.print(message + "\r");
+                //System.out.println(message);
             }
         }
         

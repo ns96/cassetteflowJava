@@ -79,6 +79,9 @@ public class CassetteFlow {
     // default directory where the text files to be encoded
     public static final String TAPE_FILE_DIR_NAME = "TapeFiles";
 
+    // store the DCT info in a binary file
+    public static String DCT_INFO_FILENAME = AUDIO_DIR_NAME + File.separator + "dctinfo.bin";
+
     public static String LOG_FILE_NAME = AUDIO_DIR_NAME + File.separator + TAPE_FILE_DIR_NAME + File.separator
             + "tape.log";
 
@@ -886,6 +889,7 @@ public class CassetteFlow {
      * @param sideA
      * @param sideB
      * @param muteTime
+     * @param maxTimeBlock
      */
     public void createDCTArrayList(String tapeID, ArrayList<AudioInfo> sideA, ArrayList<AudioInfo> sideB, int muteTime,
             int maxTimeBlock) {
@@ -899,6 +903,57 @@ public class CassetteFlow {
 
         // save to the tape database
         addToTapeDB(tapeID, sideA, sideB, true);
+
+        // save to the DCT Info to a binary file
+        saveDCTInfo(sideADCTList, sideBDCTList, tapeID, sideA, sideB);
+    }
+
+    /**
+     * Save the DCT info to a file
+     * 
+     * @param tapeID
+     * @param sideADCTList
+     * @param sideBDCTList
+     * @param sideA
+     * @param sideB
+     */
+    public void saveDCTInfo(ArrayList<String> sideADCTList, ArrayList<String> sideBDCTList, String tapeID,
+            ArrayList<AudioInfo> sideA, ArrayList<AudioInfo> sideB) {
+        DCTInfo dctInfo = new DCTInfo(sideADCTList, sideBDCTList, tapeID, sideA, sideB);
+
+        // save the dctInfo to the default DCT binary file
+        try {
+            FileOutputStream fileOut = new FileOutputStream(DCT_INFO_FILENAME);
+            ObjectOutputStream out = new ObjectOutputStream(fileOut);
+            out.writeObject(dctInfo);
+            out.close();
+            fileOut.close();
+            System.out.println("Saved DCT Info to file: " + DCT_INFO_FILENAME + " " + dctInfo.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Load the DCT info from a file
+     */
+    public void loadDCTInfo() {
+        try {
+            FileInputStream fileIn = new FileInputStream(DCT_INFO_FILENAME);
+            ObjectInputStream in = new ObjectInputStream(fileIn);
+            DCTInfo dctInfo = (DCTInfo) in.readObject();
+            in.close();
+            
+            sideADCTList = dctInfo.getSideADCTList();
+            sideBDCTList = dctInfo.getSideBDCTList();
+
+            // save to the tape database
+            addToTapeDB(dctInfo.getTapeID(), dctInfo.getSideA(), dctInfo.getSideB(), true);
+
+            System.out.println("Loaded DCT Info from file: " + DCT_INFO_FILENAME + " " + dctInfo.toString());
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -1917,7 +1972,7 @@ public class CassetteFlow {
      * @param url
      */
     public void setDownloadServer(String url) {
-        this.DOWNLOAD_SERVER = url;
+        DOWNLOAD_SERVER = url;
         saveProperties();
     }
 
@@ -1934,6 +1989,7 @@ public class CassetteFlow {
         TAPE_DB_FILENAME = AUDIO_DIR_NAME + File.separator + "tapedb.txt";
         TRACK_LIST_FILENAME = AUDIO_DIR_NAME + File.separator + "tracklist.txt";
         LOG_FILE_NAME = AUDIO_DIR_NAME + File.separator + TAPE_FILE_DIR_NAME + File.separator + "tape.log";
+        DCT_INFO_FILENAME = AUDIO_DIR_NAME + File.separator + "dctinfo.bin";
     }
 
     /**
@@ -1983,25 +2039,30 @@ public class CassetteFlow {
 
         CassetteFlow cassetteFlow = new CassetteFlow();
 
-        // check to see if to load other directories
+        // check to see if to load other directories or run the indexer
         if (args.length > 1) {
             for (int i = 1; i < args.length; i++) {
                 String dirName = args[i];
-                File dir = new File(dirName);
 
-                System.out.println("Loading MP3s from " + dirName);
+                // check to see we not indexing all files
+                if (dirName.equals("index")) {
+                    cassetteFlow.buildAudioFileIndex(AUDIO_DIR_NAME);
+                } else {
+                    File dir = new File(dirName);
 
-                if (dir.isDirectory()) {
-                    cassetteFlow.loadAudioFiles(dirName, true);
-                    System.out.println("Done with " + dirName);
+                    if (dir.isDirectory()) {
+                        System.out.println("Loading Audio Files From: " + dirName);
+                        cassetteFlow.loadAudioFiles(dirName, true);
+                        System.out.println("Done with " + dirName);
+                    }
                 }
             }
         }
 
         if (DEBUG || (args.length > 0 && cla.equals("cli"))) {
             try {
+                cassetteFlow.loadDCTInfo();
                 CassettePlayer cassettePlayer = new CassettePlayer(cassetteFlow, LOG_FILE_NAME);
-                // cassettePlayer.startLogTailer();
                 cassettePlayer.startMinimodem(0);
             } catch (IOException ex) {
                 ex.printStackTrace();
