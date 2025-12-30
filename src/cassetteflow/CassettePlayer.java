@@ -493,7 +493,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                     
                     if(cassetteFlowFrame != null) {
                         cassetteFlowFrame.setPlaybackInfo(stopMessage, false);
-                    } 
+                    }
                 }
                 
                 // check to see if we have  deckcast object and stop it's playback as well
@@ -509,8 +509,9 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                 // RESTART LOGIC REMOVED: JMinimodem is a continuous stream, we don't need to restart the process
                 // on stopRecords == 1 like the external process version did. 
                 // However, if logic requires a "reset", we can just toggle paused.
-                if(stopRecords == 1) {
-                     // Optionally clear internal buffers here if needed.
+                if(stopRecords == 1 && player != null) {
+                    player = null;
+                    System.out.println("Player Set to Null ...");
                 }
 
                 currentAudioId = "";
@@ -525,7 +526,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                         System.out.println("\n");
                     }
                     
-                    System.out.println(stopMessage);
+                    System.out.println(stopRecords + " -> " + stopMessage);
                 }
                 
                 currentLineRecord = "PLAYBACK STOPPED # " + stopRecords; 

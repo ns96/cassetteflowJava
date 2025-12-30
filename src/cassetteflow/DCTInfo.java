@@ -86,6 +86,23 @@ public class DCTInfo implements Serializable {
 
     @Override
     public String toString() {
-        return "DCTInfo{" + "tapeID=" + tapeID + "} Side A: " + sideA.size() + " Side B: " + sideB.size();
+        String info = "DCTInfo{" + "tapeID=" + tapeID + "} Side Tracks A: " + sideA.size() + " Side Tracks B: "
+                + sideB.size();
+
+        int count = 0;
+        info += "\nSide A: ";
+        for (AudioInfo ai : sideA) {
+            info += "\n[" + count + "] " + ai.getName();
+            count++;
+        }
+
+        count = 0;
+        info += "\nSide B: ";
+        for (AudioInfo ai : sideB) {
+            info += "\n[" + count + "] " + ai.getName();
+            count++;
+        }
+
+        return info;
     }
 }

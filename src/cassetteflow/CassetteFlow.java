@@ -943,7 +943,7 @@ public class CassetteFlow {
             ObjectInputStream in = new ObjectInputStream(fileIn);
             DCTInfo dctInfo = (DCTInfo) in.readObject();
             in.close();
-            
+
             sideADCTList = dctInfo.getSideADCTList();
             sideBDCTList = dctInfo.getSideBDCTList();
 
@@ -952,7 +952,7 @@ public class CassetteFlow {
 
             System.out.println("Loaded DCT Info from file: " + DCT_INFO_FILENAME + " " + dctInfo.toString());
         } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+            System.out.println("Failed to load DCT Info from file: " + DCT_INFO_FILENAME);
         }
     }
 
@@ -2039,10 +2039,22 @@ public class CassetteFlow {
 
         CassetteFlow cassetteFlow = new CassetteFlow();
 
+        // keeps track of default output device
+        int defaultOutputDeviceIndex = 0;
+
         // check to see if to load other directories or run the indexer
         if (args.length > 1) {
             for (int i = 1; i < args.length; i++) {
                 String dirName = args[i];
+
+                // check to see if dir name is an integer which would
+                // make it the default output device index
+                try {
+                    defaultOutputDeviceIndex = Integer.parseInt(dirName);
+                    continue;
+                } catch (NumberFormatException nfe) {
+                    // do nothing just continue
+                }
 
                 // check to see we not indexing all files
                 if (dirName.equals("index")) {
@@ -2060,10 +2072,25 @@ public class CassetteFlow {
         }
 
         if (DEBUG || (args.length > 0 && cla.equals("cli"))) {
+            System.out.println("CassetteFlow CLI v2.0.11 (12/30/2025)\n");
+
             try {
+                // load any saved DCT info records
                 cassetteFlow.loadDCTInfo();
+
+                // set the default output device
+                System.out.println("\nDefault Output Device Index: " + defaultOutputDeviceIndex);
+                String defaultOutputDevice = WavPlayer.getOutputDevice(defaultOutputDeviceIndex);
+                System.out.println("Default Output Device: " + defaultOutputDevice + "\n");
+
+                // start the mp3/flac player
                 CassettePlayer cassettePlayer = new CassettePlayer(cassetteFlow, LOG_FILE_NAME);
+                cassettePlayer.setMixerName(defaultOutputDevice);
                 cassettePlayer.startMinimodem(0);
+
+                // start the cassette flow server
+                CassetteFlowServer cassetteFlowServer = new CassetteFlowServer();
+                cassetteFlowServer.setCassetteFlow(cassetteFlow);
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
