@@ -2024,64 +2024,153 @@ public class CassetteFlow {
         }
     }
 
+    private static void printHelp() {
+        System.out.println("Usage: java -jar CassetteFlow.jar [options]");
+        System.out.println("Options:");
+        System.out.println("  -h, --help            Show this help message");
+        System.out.println("  -cli                  Run in Command Line Interface mode");
+        System.out.println("  -d, --device <index>  Select output device by index");
+        System.out.println("  -dir <path> ...       Load audio files from specified directory(s).");
+        System.out.println("                        Can accept multiple space-separated paths.");
+        System.out.println("  -index                Rebuild audio file index");
+        System.out.println("  fsm                   Run in Full Screen Mode (GUI)");
+    }
+
+    private static int selectOutputDeviceInteractive() {
+        HashMap<String, Mixer.Info> devices = WavPlayer.getOutputDevices();
+        ArrayList<String> deviceNames = new ArrayList<>(devices.keySet());
+
+        if (devices.isEmpty()) {
+            System.out.println("No audio output devices found.");
+            return 0; // Fallback to 0
+        }
+
+        System.out.println("\nAvailable Audio Output Devices:");
+        for (int i = 0; i < deviceNames.size(); i++) {
+            System.out.println("[" + i + "] " + deviceNames.get(i));
+        }
+
+        System.out.print("\nSelect device index: ");
+
+        // Use Scanner to get user input from console
+        try (java.util.Scanner scanner = new java.util.Scanner(System.in)) {
+            if (scanner.hasNextInt()) {
+                int index = scanner.nextInt();
+                if (index >= 0 && index < deviceNames.size()) {
+                    return index;
+                } else {
+                    System.out.println("Invalid index. Defaulting to 0.");
+                }
+            } else {
+                System.out.println("Invalid input. Defaulting to 0.");
+            }
+        } catch (Exception e) {
+            System.out.println("Error reading input. Defaulting to 0.");
+        }
+
+        return 0;
+    }
+
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // get any command line arguments storing the first one so we can see
-        // if to run in command line mode
-        final String cla;
-        if (args.length > 0) {
-            cla = args[0];
-        } else {
-            cla = "";
-        }
-
         CassetteFlow cassetteFlow = new CassetteFlow();
 
-        // keeps track of default output device
-        int defaultOutputDeviceIndex = 0;
+        boolean cliMode = false;
+        boolean indexMode = false;
+        boolean fsm = false;
+        int defaultOutputDeviceIndex = -1; // -1 indicates not set
+        List<String> audioDirs = new ArrayList<>();
 
-        // check to see if to load other directories or run the indexer
-        if (args.length > 1) {
-            for (int i = 1; i < args.length; i++) {
-                String dirName = args[i];
-
-                // check to see if dir name is an integer which would
-                // make it the default output device index
-                try {
-                    defaultOutputDeviceIndex = Integer.parseInt(dirName);
-                    continue;
-                } catch (NumberFormatException nfe) {
-                    // do nothing just continue
-                }
-
-                // check to see we not indexing all files
-                if (dirName.equals("index")) {
-                    cassetteFlow.buildAudioFileIndex(AUDIO_DIR_NAME);
-                } else {
-                    File dir = new File(dirName);
-
-                    if (dir.isDirectory()) {
-                        System.out.println("Loading Audio Files From: " + dirName);
-                        cassetteFlow.loadAudioFiles(dirName, true);
-                        System.out.println("Done with " + dirName);
+        // Parse arguments
+        for (int i = 0; i < args.length; i++) {
+            String arg = args[i];
+            switch (arg) {
+                case "-h":
+                case "--help":
+                    printHelp();
+                    return;
+                case "-cli":
+                case "cli":
+                    cliMode = true;
+                    break;
+                case "-d":
+                case "--device":
+                    if (i + 1 < args.length) {
+                        try {
+                            defaultOutputDeviceIndex = Integer.parseInt(args[++i]);
+                        } catch (NumberFormatException e) {
+                            System.err.println("Invalid device index: " + args[i]);
+                            return;
+                        }
+                    } else {
+                        System.err.println("Device index missing");
+                        return;
                     }
-                }
+                    break;
+                case "-dir":
+                    while (i + 1 < args.length && !args[i + 1].startsWith("-")) {
+                        audioDirs.add(args[++i]);
+                    }
+                    if (audioDirs.isEmpty()) {
+                        System.err.println("Directory path(s) missing for -dir");
+                        return;
+                    }
+                    break;
+                case "-index":
+                case "index":
+                    indexMode = true;
+                    break;
+                case "fsm":
+                    fsm = true;
+                    break;
+                default:
+                    // Backward compatibility
+                    try {
+                        defaultOutputDeviceIndex = Integer.parseInt(arg);
+                    } catch (NumberFormatException e) {
+                        if (new File(arg).isDirectory()) {
+                            audioDirs.add(arg);
+                        }
+                    }
+                    break;
             }
         }
 
-        if (DEBUG || (args.length > 0 && cla.equals("cli"))) {
-            System.out.println("CassetteFlow CLI v2.0.11 (12/30/2025)\n");
+        if (indexMode) {
+            cassetteFlow.buildAudioFileIndex(AUDIO_DIR_NAME);
+            if (!cliMode && !fsm)
+                return;
+        }
+
+        for (String dirName : audioDirs) {
+            File dir = new File(dirName);
+            if (dir.isDirectory()) {
+                System.out.println("Loading Audio Files From: " + dirName);
+                cassetteFlow.loadAudioFiles(dirName, true);
+                System.out.println("Done with " + dirName);
+            } else {
+                System.out.println("Invalid Directory: " + dirName);
+            }
+        }
+
+        if (DEBUG || cliMode) {
+            System.out.println("CassetteFlow CLI v2.0.12 (12/31/2025)\n");
 
             try {
                 // load any saved DCT info records
                 cassetteFlow.loadDCTInfo();
 
+                // Interactive Device Selection if not specified
+                if (defaultOutputDeviceIndex == -1) {
+                    defaultOutputDeviceIndex = selectOutputDeviceInteractive();
+                }
+
                 // set the default output device
                 System.out.println("\nDefault Output Device Index: " + defaultOutputDeviceIndex);
                 String defaultOutputDevice = WavPlayer.getOutputDevice(defaultOutputDeviceIndex);
-                System.out.println("Default Output Device: " + defaultOutputDevice + "\n");
+                System.out.println("Default Output Device Name: " + defaultOutputDevice + "\n");
 
                 // start the mp3/flac player
                 CassettePlayer cassettePlayer = new CassettePlayer(cassetteFlow, LOG_FILE_NAME);
@@ -2094,12 +2183,11 @@ public class CassetteFlow {
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
-
-            // TEST CODE
-            // cassettePlayer.startMP3Download("2ff38e2276");
         } else {
             // set the look and feel
             FlatDarculaLaf.setup();
+
+            final boolean finalFsm = fsm;
 
             // ** Start main application UI here
             SwingUtilities.invokeLater(new Runnable() {
@@ -2108,7 +2196,7 @@ public class CassetteFlow {
                     cassetteFlowFrame = new CassetteFlowFrame();
                     cassetteFlowFrame.setCassetteFlow(cassetteFlow);
 
-                    if (cla.equals("fsm")) {
+                    if (finalFsm) {
                         cassetteFlowFrame.initFullScreen();
                     } else {
                         cassetteFlowFrame.pack();
