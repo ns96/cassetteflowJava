@@ -62,6 +62,9 @@ import org.json.JSONObject;
  * @author Nathan Stevens 09/05/2021
  */
 public class CassetteFlow {
+    // static variable that holds the application version
+    public static String VERSION = "CassetteFlow v2.0.15 (01/02/2026)";
+
     // The default mp3 directory name
     public static String AUDIO_DIR_NAME = "c:\\mp3files";
 
@@ -549,11 +552,13 @@ public class CassetteFlow {
                 reader.close();
 
                 System.out.println("\nCassette database file loaded ... ");
-
-                for (String key : localTapeDB.keySet()) {
-                    ArrayList<String> audioIds = localTapeDB.get(key);
-                    System.out.println(key + " >> " + audioIds);
-                }
+                System.out.println("Number of Entries: " + localTapeDB.size());
+                /*
+                 * for (String key : localTapeDB.keySet()) {
+                 * ArrayList<String> audioIds = localTapeDB.get(key);
+                 * System.out.println(key + " >> " + audioIds);
+                 * }
+                 */
             }
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -912,10 +917,10 @@ public class CassetteFlow {
      * Create a Dynamic Content Track Array for a particular tape ID
      * 
      * @param tapeID
-     * @param muteTime
+     * @param offset
      * @return true if successful, false otherwise
      */
-    public boolean createDCTArrayList(String tapeID, int muteTime) {
+    public boolean createDCTArrayList(String tapeID, int offset) {
         // get the arraylist of audio info objects from the tape database
         ArrayList<String> sideAList = tapeDB.get(tapeID + "A");
         ArrayList<String> sideBList = tapeDB.get(tapeID + "B");
@@ -929,7 +934,7 @@ public class CassetteFlow {
                 sideA.add(audioInfo);
             }
 
-            sideADCTList = createDCTArrayListForSide(tapeID + "A", sideA, muteTime, -1);
+            sideADCTList = createDCTArrayListForSide(tapeID + "A", sideA, 4, -1);
         }
 
         if (sideBList != null && sideBList.size() >= 1) {
@@ -939,11 +944,12 @@ public class CassetteFlow {
                 sideB.add(audioInfo);
             }
 
-            sideBDCTList = createDCTArrayListForSide(tapeID + "B", sideB, muteTime, -1);
+            sideBDCTList = createDCTArrayListForSide(tapeID + "B", sideB, 4, -1);
         }
 
         // save to the DCT Info to a binary file if at least sideA or sideB is not null
         if (sideA != null || sideB != null) {
+            setDCTOffset(offset);
             saveDCTInfo(sideADCTList, sideBDCTList, tapeID, sideA, sideB);
             return true;
         }
@@ -2199,8 +2205,6 @@ public class CassetteFlow {
         }
 
         if (DEBUG || cliMode) {
-            System.out.println("CassetteFlow CLI v2.0.14 (01/01/2026)\n");
-
             try {
                 // load any saved DCT info records
                 cassetteFlow.loadDCTInfo();
@@ -2223,6 +2227,8 @@ public class CassetteFlow {
                 // start the cassette flow server
                 CassetteFlowServer cassetteFlowServer = new CassetteFlowServer();
                 cassetteFlowServer.setCassetteFlow(cassetteFlow);
+
+                System.out.println(VERSION + " -- CLI Mode\n");
             } catch (IOException ex) {
                 ex.printStackTrace();
             }

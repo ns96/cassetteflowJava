@@ -48,6 +48,9 @@ public class CassetteFlowServer {
     // the mute time between tracks
     private int mute = 0;
 
+    // the offset time when playing dct tracks
+    private int offset = 0;
+
     private boolean readRawData = false;
 
     /**
@@ -274,10 +277,10 @@ public class CassetteFlowServer {
 
             Map params = splitQuery(query);
             tapeID = params.get("tapeID").toString();
-            mute = Integer.parseInt(params.get("mute").toString());
+            offset = Integer.parseInt(params.get("offset").toString());
 
             // create the DCT record
-            boolean success = cassetteFlow.createDCTArrayList(tapeID, mute);
+            boolean success = cassetteFlow.createDCTArrayList(tapeID, offset);
 
             String response = "Creating DCT Record for Tape ID: " + tapeID;
 
