@@ -65,6 +65,7 @@ public class CassetteFlowServer {
         server.createContext("/tapedb", new getTapeDBHandler());
         server.createContext("/info", new getInfoHandler());
         server.createContext("/raw", new getRawHandler());
+        server.createContext("/rawdct", new getRawDCTHandler());
         server.createContext("/dct", new getDCTHandler());
         server.createContext("/create", new createHandler());
         server.createContext("/start", new startHandler());
@@ -155,7 +156,7 @@ public class CassetteFlowServer {
         }
     }
 
-    // class to handle getting the mp3 database
+    // class to handle getting the tape database
     private class getTapeDBHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange he) throws IOException {
@@ -224,7 +225,7 @@ public class CassetteFlowServer {
     }
 
     // class to handle getting continous information with dct translation
-    private class getDCTHandler implements HttpHandler {
+    private class getRawDCTHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange he) throws IOException {
             readRawData = true;
@@ -260,6 +261,33 @@ public class CassetteFlowServer {
                 }
             };
             thread.start();
+        }
+    }
+
+    // class to handle creating a DCT record from a tapedb id
+    private class getDCTHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange he) throws IOException {
+            readRawData = false;
+
+            String query = he.getRequestURI().getQuery();
+
+            Map params = splitQuery(query);
+            tapeID = params.get("tapeID").toString();
+            mute = Integer.parseInt(params.get("mute").toString());
+
+            // create the DCT record
+            boolean success = cassetteFlow.createDCTArrayList(tapeID, mute);
+
+            String response = "Creating DCT Record for Tape ID: " + tapeID;
+
+            if (success) {
+                response += " -- Success";
+            } else {
+                response += " -- Failed";
+            }
+
+            sendResponse(he, response);
         }
     }
 
@@ -390,7 +418,7 @@ public class CassetteFlowServer {
     }
 
     /**
-     * Handles serving mobile page which allows for veiwing of currently decoding
+     * Handles serving mobile page which allows for viewing of currently decoding
      * data
      * 
      */

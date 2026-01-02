@@ -909,6 +909,49 @@ public class CassetteFlow {
     }
 
     /**
+     * Create a Dynamic Content Track Array for a particular tape ID
+     * 
+     * @param tapeID
+     * @param muteTime
+     * @return true if successful, false otherwise
+     */
+    public boolean createDCTArrayList(String tapeID, int muteTime) {
+        // get the arraylist of audio info objects from the tape database
+        ArrayList<String> sideAList = tapeDB.get(tapeID + "A");
+        ArrayList<String> sideBList = tapeDB.get(tapeID + "B");
+        ArrayList<AudioInfo> sideA = null;
+        ArrayList<AudioInfo> sideB = null;
+
+        if (sideAList != null && sideAList.size() >= 1) {
+            sideA = new ArrayList<AudioInfo>();
+            for (String audioId : sideAList) {
+                AudioInfo audioInfo = audioInfoDB.get(audioId);
+                sideA.add(audioInfo);
+            }
+
+            sideADCTList = createDCTArrayListForSide(tapeID + "A", sideA, muteTime, -1);
+        }
+
+        if (sideBList != null && sideBList.size() >= 1) {
+            sideB = new ArrayList<AudioInfo>();
+            for (String audioId : sideBList) {
+                AudioInfo audioInfo = audioInfoDB.get(audioId);
+                sideB.add(audioInfo);
+            }
+
+            sideBDCTList = createDCTArrayListForSide(tapeID + "B", sideB, muteTime, -1);
+        }
+
+        // save to the DCT Info to a binary file if at least sideA or sideB is not null
+        if (sideA != null || sideB != null) {
+            saveDCTInfo(sideADCTList, sideBDCTList, tapeID, sideA, sideB);
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Save the DCT info to a file
      * 
      * @param tapeID
@@ -2156,7 +2199,7 @@ public class CassetteFlow {
         }
 
         if (DEBUG || cliMode) {
-            System.out.println("CassetteFlow CLI v2.0.12 (12/31/2025)\n");
+            System.out.println("CassetteFlow CLI v2.0.14 (01/01/2026)\n");
 
             try {
                 // load any saved DCT info records

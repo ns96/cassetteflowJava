@@ -904,7 +904,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("CassetteFlow v 2.0.12 (12/31/2025)");
+        setTitle("CassetteFlow v 2.0.14 (01/01/2026)");
 
         mainTabbedPane.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         mainTabbedPane.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -1354,7 +1354,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                                 .addComponent(shuffleButton)
                                 .addComponent(directEncodeCheckBox)))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(tapeJTabbedPane))
+                        .addComponent(tapeJTabbedPane, javax.swing.GroupLayout.DEFAULT_SIZE, 382, Short.MAX_VALUE))
                     .addComponent(jScrollPane1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
