@@ -65,6 +65,10 @@ public class TapeDeckTester {
 
     private static final DecimalFormat df = new DecimalFormat("0.0000");
 
+    // the default baud rate
+    private static double baudRate = 1200.0;
+
+    // used to indicate if we are in DCT mode
     private boolean isDctMode = false;
 
     private CassetteFlow cassetteFlow;
@@ -130,7 +134,7 @@ public class TapeDeckTester {
             // Create Config
             JMinimodem.Config config = new JMinimodem.Config();
             config.rxMode = true;
-            config.baudRate = 1200.0;
+            config.baudRate = baudRate;
             config.sampleRate = sampleRate;
             config.quiet = false; // We need this FALSE so it generates "### NOCARRIER"
 
@@ -473,8 +477,18 @@ public class TapeDeckTester {
      */
     public static void main(String[] args) {
         boolean dctMode = false;
-        if (args.length > 0 && args[0].equalsIgnoreCase("DCT")) {
-            dctMode = true;
+
+        // interate through the args to see if there is a baud rate specified and see
+        // what mode we are in
+        for (String arg : args) {
+            if (arg.equalsIgnoreCase("DCT")) {
+                dctMode = true;
+            } else {
+                try {
+                    baudRate = Double.parseDouble(arg);
+                } catch (NumberFormatException nfe) {
+                }
+            }
         }
 
         // initialize a cassette flow object
@@ -495,6 +509,8 @@ public class TapeDeckTester {
 
             sc.close();
             tapeDeckDataTester.stop();
+
+            System.exit(0);
         } catch (IOException ex) {
             Logger.getLogger(TapeDeckTester.class.getName()).log(Level.SEVERE, null, ex);
         }
