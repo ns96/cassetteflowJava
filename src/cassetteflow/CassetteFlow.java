@@ -63,7 +63,7 @@ import org.json.JSONObject;
  */
 public class CassetteFlow {
     // static variable that holds the application version
-    public static String VERSION = "CassetteFlow v2.0.15 (01/02/2026)";
+    public static String VERSION = "CassetteFlow v2.0.15 (01/04/2026)";
 
     // The default mp3 directory name
     public static String AUDIO_DIR_NAME = "c:\\mp3files";
@@ -2218,7 +2218,10 @@ public class CassetteFlow {
                 System.out.println("\nDefault Output Device Index: " + defaultOutputDeviceIndex);
                 String defaultOutputDevice = WavPlayer.getOutputDevice(defaultOutputDeviceIndex);
                 System.out.println("Default Output Device Name: " + defaultOutputDevice + "\n");
-
+                
+                // print out version number
+                System.out.println(VERSION + " -- CLI Mode");
+                
                 // start the mp3/flac player
                 CassettePlayer cassettePlayer = new CassettePlayer(cassetteFlow, LOG_FILE_NAME);
                 cassettePlayer.setMixerName(defaultOutputDevice);
@@ -2227,8 +2230,6 @@ public class CassetteFlow {
                 // start the cassette flow server
                 CassetteFlowServer cassetteFlowServer = new CassetteFlowServer();
                 cassetteFlowServer.setCassetteFlow(cassetteFlow);
-
-                System.out.println(VERSION + " -- CLI Mode\n");
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
