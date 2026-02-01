@@ -76,6 +76,10 @@ def sync_tracks(source_root, dest_root, dry_run=False, limit=None):
     
     print(f"DEBUG: Loaded {len(file_map)} mappings from DB.")
     
+    unique_dests = set(file_map.values())
+    print(f"DEBUG: These mappings point to {len(unique_dests)} unique destination files (Duplicates will be overwritten).")
+
+    
     if not file_map:
         print("Aborting: No valid mappings found in audiodb.txt")
         return

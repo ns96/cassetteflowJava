@@ -63,7 +63,7 @@ import org.json.JSONObject;
  */
 public class CassetteFlow {
     // static variable that holds the application version
-    public static String VERSION = "CassetteFlow v2.0.15 (01/04/2026)";
+    public static String VERSION = "CassetteFlow v2.0.18 (02/01/2026)";
 
     // The default mp3 directory name
     public static String AUDIO_DIR_NAME = "c:\\mp3files";
@@ -153,6 +153,9 @@ public class CassetteFlow {
     // indicate if the index has been loaded
     private boolean indexLoaded = false;
 
+    // indicate index loaded from text file
+    private boolean indexLoadedFromTextFile = false;
+
     // indicates if we are running on mac so we start pusle audio in addition
     // to minimodem
     public static boolean isMacOs = false;
@@ -165,7 +168,7 @@ public class CassetteFlow {
     // object to create dummy audio files from a spotify dataset for testing the UI
     // with large number
     // of records
-    private SpotifyDatasetLoader spotifyDatasetLoader;
+    // private SpotifyDatasetLoader spotifyDatasetLoader;
 
     // create a json object which is used to capture the state of the decode process
     private final JSONObject currentDeocdeState = new JSONObject();
@@ -200,7 +203,10 @@ public class CassetteFlow {
         if (!indexLoaded) {
             loadAudioFiles(AUDIO_DIR_NAME, false);
         } else {
-            loadAudioFilesFromIndex(AUDIO_DIR_NAME);
+            if (!indexLoadedFromTextFile) {
+                loadAudioFilesFromIndex(AUDIO_DIR_NAME);
+            }
+
             loadStreamAudioFileIndex();
         }
 
@@ -1749,7 +1755,7 @@ public class CassetteFlow {
 
             System.out.println("Loading " + files.length + " audio files using saved index info ...\n");
 
-            // add the files in the root directory
+            // add the files in the root directory so they are displayed in the GUI
             for (File file : files) {
                 String filename = file.getName();
                 String sha10hex = CassetteFlowUtil.get10CharacterHash(filename);
@@ -1900,7 +1906,59 @@ public class CassetteFlow {
                 in.close();
                 fis.close();
                 indexLoaded = true;
+                return;
             } catch (IOException | ClassNotFoundException ex) {
+                ex.printStackTrace();
+            }
+        }
+
+        // check if we can read the audio db text file instead and generate
+        // index from that instead
+        file = new File(AUDIO_DB_FILENAME);
+        if (file.canRead() && !indexLoaded) {
+            try {
+                System.out.println("Loading audio file index from text file...");
+                // track start time
+                long startTime = System.currentTimeMillis();
+
+                // interate through the tab delimited text file and generate index
+                // the format is:
+                // hash\tplaytime(s)\tbitrate\tsdcard filename\torginal filename
+                BufferedReader br = new BufferedReader(new FileReader(file));
+                String line;
+
+                while ((line = br.readLine()) != null) {
+                    String[] parts = line.split("\t");
+                    if (parts.length == 5) {
+                        String hash = parts[0];
+                        String sdCardFilename = parts[3];
+                        String filename = sdCardFilename.substring(sdCardFilename.lastIndexOf("/") + 1);
+                        File audioFile = new File(AUDIO_DIR_NAME + File.separator + filename);
+
+                        if (audioFile.exists()) {
+                            // addAudioFileToDatabase(audioFile, hash, filename, filename, false, false);
+                            int length = Integer.parseInt(parts[1]);
+                            int bitrate = Integer.parseInt(parts[2]);
+
+                            String lengthAsTime = CassetteFlowUtil.getTimeString(length);
+
+                            AudioInfo audioInfo = new AudioInfo(audioFile, hash, length, lengthAsTime, bitrate);
+                            audioInfo.setRelativePath(filename);
+                            audioInfo.setSdCardFilename(sdCardFilename);
+
+                            audioInfoDB.put(hash, audioInfo);
+                        }
+                    }
+                }
+
+                br.close();
+                indexLoaded = true;
+                indexLoadedFromTextFile = true;
+
+                long endTime = System.currentTimeMillis();
+                System.out.println("Audio file index loaded from text file in " + (endTime - startTime) + " ms");
+                System.out.println("Audio file index has " + audioInfoDB.size() + " records");
+            } catch (Exception ex) {
                 ex.printStackTrace();
             }
         }
@@ -2218,10 +2276,10 @@ public class CassetteFlow {
                 System.out.println("\nDefault Output Device Index: " + defaultOutputDeviceIndex);
                 String defaultOutputDevice = WavPlayer.getOutputDevice(defaultOutputDeviceIndex);
                 System.out.println("Default Output Device Name: " + defaultOutputDevice + "\n");
-                
+
                 // print out version number
                 System.out.println(VERSION + " -- CLI Mode");
-                
+
                 // start the mp3/flac player
                 CassettePlayer cassettePlayer = new CassettePlayer(cassetteFlow, LOG_FILE_NAME);
                 cassettePlayer.setMixerName(defaultOutputDevice);

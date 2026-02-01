@@ -1768,4 +1768,27 @@ is divided into following sections:
             </propertyset>
         </ant>
     </target>
+    <target name="package-cassetteflow" description="Moves dist to CassetteFlow, zips it, then deletes folder">
+    
+        <fail message="Error: 'dist' directory not found. Please build the project first.">
+            <condition>
+                <not>
+                    <available file="dist" type="dir"/>
+                </not>
+            </condition>
+        </fail>
+
+        <delete file="CassetteFlow.zip"/>
+
+        <echo message="Renaming dist to CassetteFlow..."/>
+        <move file="dist" tofile="CassetteFlow"/>
+
+        <echo message="Zipping..."/>
+        <zip destfile="CassetteFlow.zip" basedir="." includes="CassetteFlow/**"/>
+
+        <echo message="Cleaning up directory..."/>
+        <delete dir="CassetteFlow"/>
+
+        <echo message="SUCCESS: CassetteFlow.zip created."/>
+    </target>
 </project>
