@@ -63,7 +63,7 @@ import org.json.JSONObject;
  */
 public class CassetteFlow {
     // static variable that holds the application version
-    public static String VERSION = "CassetteFlow v2.0.18 (02/01/2026)";
+    public static String VERSION = "CassetteFlow v2.0.19 (02/02/2026)";
 
     // The default mp3 directory name
     public static String AUDIO_DIR_NAME = "c:\\mp3files";
@@ -1913,7 +1913,8 @@ public class CassetteFlow {
         }
 
         // check if we can read the audio db text file instead and generate
-        // index from that instead
+        // index from it. Used when I am using audio files that have been saved
+        // to an sdcard or flat directory structure
         file = new File(AUDIO_DB_FILENAME);
         if (file.canRead() && !indexLoaded) {
             try {
@@ -1923,7 +1924,7 @@ public class CassetteFlow {
 
                 // interate through the tab delimited text file and generate index
                 // the format is:
-                // hash\tplaytime(s)\tbitrate\tsdcard filename\torginal filename
+                // hash \t playtime(s) \t bitrate \t sdcard filename \t orginal filename
                 BufferedReader br = new BufferedReader(new FileReader(file));
                 String line;
 
@@ -1936,7 +1937,6 @@ public class CassetteFlow {
                         File audioFile = new File(AUDIO_DIR_NAME + File.separator + filename);
 
                         if (audioFile.exists()) {
-                            // addAudioFileToDatabase(audioFile, hash, filename, filename, false, false);
                             int length = Integer.parseInt(parts[1]);
                             int bitrate = Integer.parseInt(parts[2]);
 
@@ -2188,6 +2188,8 @@ public class CassetteFlow {
         boolean indexMode = false;
         boolean fsm = false;
         int defaultOutputDeviceIndex = -1; // -1 indicates not set
+        String dctTapeId = null; // use to map dct to a particular tape
+
         List<String> audioDirs = new ArrayList<>();
 
         // Parse arguments
@@ -2214,6 +2216,14 @@ public class CassetteFlow {
                     } else {
                         System.err.println("Device index missing");
                         return;
+                    }
+                    break;
+                case "-dct":
+                    if (i + 1 < args.length) {
+                        dctTapeId = args[++i];
+                        System.out.println("Mapping DCT to Tape ID: " + dctTapeId);
+                    } else {
+                        System.err.println("DCT Tape ID missing");
                     }
                     break;
                 case "-dir":
@@ -2264,8 +2274,13 @@ public class CassetteFlow {
 
         if (DEBUG || cliMode) {
             try {
-                // load any saved DCT info records
-                cassetteFlow.loadDCTInfo();
+                if (dctTapeId == null) {
+                    // load any saved DCT info records
+                    cassetteFlow.loadDCTInfo();
+                } else {
+                    cassetteFlow.createDCTArrayList(dctTapeId, 0);
+                    System.out.println("Created DCT ArrayList for tape ID: " + dctTapeId);
+                }
 
                 // Interactive Device Selection if not specified
                 if (defaultOutputDeviceIndex == -1) {
