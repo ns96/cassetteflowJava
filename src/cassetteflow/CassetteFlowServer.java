@@ -78,6 +78,7 @@ public class CassetteFlowServer {
         // define endpoint for interacting with the cassetteflow desktop program
         server.createContext("/dcv", new DecodeViewHandler()); // send the UI
         server.createContext("/dcs", new DecodeStateHandler()); // get the decode state json
+        server.createContext("/dcs_lite", new DecodeLiteStateHandler()); // get lightweight decode state json for ESP32
         server.createContext("/dcc", new DecodeCommandHandler()); // send a commend to decorder
 
         server.setExecutor(threadPoolExecutor);
@@ -476,6 +477,25 @@ public class CassetteFlowServer {
 
             // Set the response headers to indicate JSON content
             exchange.getResponseHeaders().set("Content-Type", "application/json");
+
+            // Send the JSON string as the response body
+            byte[] jsonBytes = jsonResponse.getBytes(StandardCharsets.UTF_8);
+            exchange.sendResponseHeaders(200, jsonBytes.length);
+            OutputStream os = exchange.getResponseBody();
+            os.write(jsonBytes);
+            os.close();
+        }
+    }
+
+    private class DecodeLiteStateHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            // Convert the lightweight JSONObject to a JSON string
+            String jsonResponse = cassetteFlow.getLightweightDecodeState().toString();
+
+            // Set the response headers to indicate JSON content and close connection promptly
+            exchange.getResponseHeaders().set("Content-Type", "application/json");
+            exchange.getResponseHeaders().set("Connection", "close");
 
             // Send the JSON string as the response body
             byte[] jsonBytes = jsonResponse.getBytes(StandardCharsets.UTF_8);

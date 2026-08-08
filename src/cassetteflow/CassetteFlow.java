@@ -63,7 +63,7 @@ import org.json.JSONObject;
  */
 public class CassetteFlow {
     // static variable that holds the application version
-    public static String VERSION = "CassetteFlow v2.0.20 (07/14/2026)";
+    public static String VERSION = "CassetteFlow v2.1.0 (08/08/2026)";
 
     // The default mp3 directory name
     public static String AUDIO_DIR_NAME = "c:\\mp3files";
@@ -368,6 +368,44 @@ public class CassetteFlow {
         }
 
         return currentDeocdeState;
+    }
+
+    /**
+     * Get a lightweight version of the decode state (omitting the heavy tracks array)
+     * specifically for microcontrollers (ESP32) and fast polling clients.
+     *
+     * @return JSONObject containing essential decode state
+     */
+    public synchronized JSONObject getLightweightDecodeState() {
+        JSONObject liteState = new JSONObject();
+        try {
+            if (currentDeocdeState.has("currentlyPlaying")) {
+                liteState.put("currentlyPlaying", currentDeocdeState.get("currentlyPlaying"));
+            } else {
+                liteState.put("currentlyPlaying", "None");
+            }
+
+            if (currentDeocdeState.has("currentlyPlayingId")) {
+                liteState.put("currentlyPlayingId", currentDeocdeState.get("currentlyPlayingId"));
+            } else {
+                liteState.put("currentlyPlayingId", 0);
+            }
+
+            if (currentDeocdeState.has("isPlaying")) {
+                liteState.put("isPlaying", currentDeocdeState.get("isPlaying"));
+            } else {
+                liteState.put("isPlaying", false);
+            }
+
+            liteState.put("newTracks", false);
+            liteState.put("rawLineRecord", getRawLineRecord());
+            liteState.put("currentLineRecord", getCurrentLineRecord());
+            liteState.remove("tracks");
+        } catch (JSONException ex) {
+            Logger.getLogger(CassetteFlow.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return liteState;
     }
 
     /**
