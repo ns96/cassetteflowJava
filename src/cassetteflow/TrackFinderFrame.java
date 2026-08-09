@@ -685,6 +685,9 @@ public class TrackFinderFrame extends javax.swing.JFrame {
                 ArrayList<AudioInfo> audioInfoList;
 
                 for (AudioInfo audioInfo : searchAudioInfoList) {
+                    // do null check on files
+                    if(audioInfo.getFile() == null) continue;
+                    
                     String folder = CassetteFlowUtil.getParentDirectoryName(audioInfo.getFile());
 
                     if (folderMap.containsKey(folder)) {

@@ -63,7 +63,7 @@ import org.json.JSONObject;
  */
 public class CassetteFlow {
     // static variable that holds the application version
-    public static String VERSION = "CassetteFlow v2.1.0 (08/08/2026)";
+    public static String VERSION = "CassetteFlow v2.1.1 (08/09/2026)";
 
     // The default mp3 directory name
     public static String AUDIO_DIR_NAME = "c:\\mp3files";
