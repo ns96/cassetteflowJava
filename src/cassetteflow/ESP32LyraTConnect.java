@@ -324,6 +324,50 @@ public class ESP32LyraTConnect {
     }
     
     /**
+     * Send playing track string (plain text) to M5Core / R2RWatch /playing endpoint asynchronously
+     * 
+     * @param trackName 
+     */
+    public void sendPlaying(String trackName) {
+        if (host == null || host.isEmpty() || trackName == null) return;
+
+        new Thread(() -> {
+            try {
+                String clean = trackName.trim();
+                if (clean.isEmpty()) return;
+                String encoded = URLEncoder.encode(clean, StandardCharsets.UTF_8.toString());
+                String url = host + (host.endsWith("/") ? "" : "/") + "playing?track=" + encoded;
+                sendGet(url);
+            } catch (Exception ex) {
+                // Silently ignore if device is offline or unreachable
+            }
+        }, "LyraT-NowPlaying").start();
+    }
+
+    /**
+     * Send AudioInfo metadata to M5Core / R2RWatch /playing endpoint
+     * 
+     * @param audioInfo
+     * @param trackNum
+     */
+    public void sendPlaying(AudioInfo audioInfo, int trackNum) {
+        if (audioInfo == null) return;
+        String trackName = audioInfo.getName();
+        if (audioInfo.getArtist() != null && !audioInfo.getArtist().isEmpty() &&
+            audioInfo.getTitle() != null && !audioInfo.getTitle().isEmpty()) {
+            trackName = audioInfo.getTitle() + " - " + audioInfo.getArtist();
+        }
+        sendPlaying(trackName);
+    }
+
+    /**
+     * Send Stopped status to M5Core / R2RWatch /playing endpoint
+     */
+    public void sendStopped() {
+        sendPlaying("Stopped");
+    }
+    
+    /**
      * Method to send a get request to the LyraT http server
      *
      * @param url

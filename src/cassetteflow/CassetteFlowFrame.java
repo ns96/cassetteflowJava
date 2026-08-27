@@ -2510,6 +2510,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                     if (deckCastConnectorDisplay != null) {
                         deckCastConnectorDisplay.displayPlayingAudioInfo(audioInfo, 0, "spotify", trackNum);
                     }
+                    if (lyraTConnect != null) {
+                        lyraTConnect.sendPlaying(audioInfo, trackNum);
+                    }
                     
                     return;
                 }
@@ -2548,6 +2551,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 // send information to deckcast about playing trackNum
                 if(deckCastConnectorDisplay != null) {
                     deckCastConnectorDisplay.displayPlayingAudioInfo(audioInfo, 0, "mp3/FLAC", trackNum);
+                }
+                if(lyraTConnect != null) {
+                    lyraTConnect.sendPlaying(audioInfo, trackNum);
                 }
             } catch (StreamPlayerException e) {
                 e.printStackTrace();
@@ -2697,6 +2703,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                             if (deckCastConnectorDisplay != null) {
                                 deckCastConnectorDisplay.displayPlayingAudioInfo(audioInfo, 0, "spotify", trackNum);
                             }
+                            if (lyraTConnect != null) {
+                                lyraTConnect.sendPlaying(audioInfo, trackNum);
+                            }
                         } else {
                             continue;
                         }
@@ -2744,6 +2753,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                     
                     if (deckCastConnectorDisplay != null) {
                         deckCastConnectorDisplay.clearAudioInfoDisplay();
+                    }
+                    if (lyraTConnect != null) {
+                        lyraTConnect.sendStopped();
                     }
                 } catch (InterruptedException e) {
                     JOptionPane.showMessageDialog(null, "Error playing Spotify stream");
@@ -2963,6 +2975,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         
         if(deckCastConnectorDisplay != null) {
             deckCastConnectorDisplay.clearAudioInfoDisplay();
+        }
+        if(lyraTConnect != null) {
+            lyraTConnect.sendStopped();
         }
     }//GEN-LAST:event_stopButtonActionPerformed
 
@@ -3346,6 +3361,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         if(deckCastConnectorDisplay != null) {
             cassettePlayer.setDeckCastConnectorDisplay(deckCastConnectorDisplay);
         }
+        if(lyraTConnect != null) {
+            cassettePlayer.setLyraTConnect(lyraTConnect);
+        }
         
         // check to see if we not getting the line record from the lyraT device 
         if(lyraTConnect != null && lyraTRawDataReadCheckBox.isSelected()) {
@@ -3473,6 +3491,9 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private void lyraTDisconnectButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lyraTDisconnectButtonActionPerformed
         if(lyraTConnect != null) {
             lyraTConnect = null;
+            if(cassettePlayer != null) {
+                cassettePlayer.setLyraTConnect(null);
+            }
             lyraTConsoleTextArea.append("Disconnected From Cassette Flow Server\n\n");
             
             // reaload the default tape databases and update the UI with loaded information
@@ -3502,6 +3523,10 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 
                 // save the host
                 cassetteFlow.setLyraTHost(host);
+                
+                if(cassettePlayer != null) {
+                    cassettePlayer.setLyraTConnect(lyraTConnect);
+                }
                 
                 if(!lyraTRawDataReadCheckBox.isSelected()) {
                     // clear the UI and databases

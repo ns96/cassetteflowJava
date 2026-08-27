@@ -47,6 +47,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     private DeckCastConnector deckCastConnectorDisplay;
     
     private SpotifyConnector spotifyConnector;
+    private ESP32LyraTConnect lyraTConnect;
         
     // used to read the log file outputted by the minimodem program
     public LogFileTailer tailer;
@@ -178,6 +179,14 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     public void setSpotifyConnector(SpotifyConnector spotifyConnector) {
         this.spotifyConnector = spotifyConnector; 
         System.out.println("\n\nSpotifyConnector Set ...\n");
+    }
+    
+    /**
+     * Set the ESP32LyraT / M5Core / R2RWatch connector object
+     * @param lyraTConnect 
+     */
+    public void setLyraTConnect(ESP32LyraTConnect lyraTConnect) {
+        this.lyraTConnect = lyraTConnect;
     }
     
     /**
@@ -441,6 +450,9 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                                             deckCastConnectorDisplay.displayPlayingAudioInfo(spotifyConnector.getCurrentAudioInfo(), 
                                                     startAt, "spotify", spotifyConnector.getCurrentTrack());
                                         }
+                                        if (lyraTConnect != null) {
+                                            lyraTConnect.sendPlaying(spotifyConnector.getCurrentAudioInfo(), spotifyConnector.getCurrentTrack());
+                                        }
                                     }
                                     
                                     spotifyConnector.setDataErrors(dataErrors, logLineCount);
@@ -504,6 +516,10 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                 // check to see if we have  spotify object and stop it's playback as well
                 if (spotifyConnector != null) {
                     spotifyConnector.stopStream();
+                }
+                
+                if (lyraTConnect != null) {
+                    lyraTConnect.sendStopped();
                 }
                 
                 // RESTART LOGIC REMOVED: JMinimodem is a continuous stream, we don't need to restart the process
@@ -660,6 +676,9 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                     if (deckCastConnectorDisplay != null) {
                         deckCastConnectorDisplay.displayPlayingAudioInfo(audioInfo, startTime, "mp3/FLAC", trackNum);
                     }
+                    if (lyraTConnect != null) {
+                        lyraTConnect.sendPlaying(audioInfo, trackNum);
+                    }
                 } else {
                     message = "Playback Error.  Unknown Audio ID: " + audioId; 
                 }
@@ -693,6 +712,10 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                     } else {
                         cassetteFlowFrame.setPlaybackInfo(muteInfo, true);
                     }
+                }
+                
+                if (lyraTConnect != null) {
+                    lyraTConnect.sendStopped();
                 }
                 
                 System.out.println(muteInfo);
@@ -820,6 +843,10 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
         
         if(tailer != null) {
             tailer.stopTailing();
+        }
+        
+        if (lyraTConnect != null) {
+            lyraTConnect.sendStopped();
         }
         
         decoding  = false;
