@@ -106,6 +106,9 @@ public class CassetteFlowUtil {
      * @return
      */
     public static String getParentDirectoryName(File file) {
+        // check to see that the file is not null, if so just return null
+        if(file == null) return null;
+        
         String parentName = "";
 
         String parentPath = file.getParent();
