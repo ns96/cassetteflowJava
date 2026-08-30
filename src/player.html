@@ -1,0 +1,2934 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>CassetteFlow Web Player</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #090d13;
+      --bg-surface: #131922;
+      --bg-card: rgba(22, 29, 41, 0.75);
+      --bg-card-active: rgba(30, 41, 59, 0.9);
+      --border-subtle: rgba(240, 246, 252, 0.08);
+      --border-focus: rgba(88, 166, 255, 0.45);
+      --text-main: #f0f6fc;
+      --text-muted: #8b949e;
+      --accent-blue: #58a6ff;
+      --accent-cyan: #39c5bb;
+      --accent-green: #3fb950;
+      --accent-amber: #d29922;
+      --accent-red: #f85149;
+      --accent-purple: #bc8cff;
+      --tape-gold: #e3b341;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: radial-gradient(circle at 50% -20%, #1a2538 0%, var(--bg-dark) 80%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 80px;
+      /* Space for bottom tab bar */
+    }
+
+    /* Top App Header */
+    header {
+      background: rgba(9, 13, 19, 0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      font-size: 22px;
+      filter: drop-shadow(0 0 8px var(--tape-gold));
+    }
+
+    .brand h1 {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      background: linear-gradient(90deg, #fff, var(--accent-blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent-red);
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+
+    .status-dot.connected {
+      background: var(--accent-green);
+      box-shadow: 0 0 8px var(--accent-green);
+    }
+
+    /* Desktop Navigation Tabs (Hidden on mobile) */
+    .desktop-nav {
+      display: flex;
+      gap: 6px;
+    }
+
+    @media (max-width: 768px) {
+      .desktop-nav {
+        display: none;
+      }
+    }
+
+    .nav-btn {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .nav-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .nav-btn.active {
+      color: var(--accent-blue);
+      background: rgba(88, 166, 255, 0.12);
+      border-color: rgba(88, 166, 255, 0.25);
+    }
+
+    /* Main Content Area & Tab Views */
+    main {
+      flex: 1;
+      max-width: 900px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tab-view {
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+      animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .tab-view.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Card Component */
+    .card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* High-Contrast Animated Cassette Graphic */
+    .cassette-box {
+      background: linear-gradient(180deg, #18202d 0%, #0d121a 100%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .cassette-shell {
+      width: 100%;
+      max-width: 380px;
+      height: 175px;
+      background: linear-gradient(180deg, #263142 0%, #171f2c 100%);
+      border: 2px solid #3d4c66;
+      border-radius: 12px;
+      box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.12), 0 12px 28px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 12px 14px;
+      position: relative;
+    }
+
+    .cassette-label {
+      background: linear-gradient(90deg, #d4a029 0%, #ffd060 50%, #d4a029 100%);
+      color: #0f141c;
+      padding: 6px 12px;
+      border-radius: 5px;
+      font-weight: 800;
+      font-size: 11px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      letter-spacing: 0.8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      text-transform: uppercase;
+    }
+
+    .cassette-window {
+      background: #080b10;
+      height: 72px;
+      border-radius: 8px;
+      border: 2px solid #2d394d;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.9), 0 0 15px rgba(0, 0, 0, 0.4);
+    }
+
+    .cassette-window::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 50%;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 100%);
+      pointer-events: none;
+      z-index: 4;
+    }
+
+    /* Cassette Reel Spools & High-Contrast Rotating Teeth */
+    .reel-wrapper {
+      position: relative;
+      width: 54px;
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+    }
+
+    .tape-pack {
+      position: absolute;
+      border-radius: 50%;
+      background: #2b1d09;
+      border: 1px solid #543c15;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+      transition: width 0.6s ease, height 0.6s ease;
+      z-index: 1;
+    }
+
+    .reel {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 3px solid #111722;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.9);
+      z-index: 2;
+    }
+
+    /* 6 Distinct Spoke Teeth with High-Contrast Dark Slots */
+    .reel-spokes {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+    }
+
+    .reel-spokes::before,
+    .reel-spokes::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 40px;
+      height: 10px;
+      margin-top: -5px;
+      margin-left: -20px;
+      background: #0d121b;
+      border-radius: 2px;
+    }
+
+    .reel-spokes::after {
+      transform: rotate(60deg);
+    }
+
+    .reel-spokes-extra {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 40px;
+      height: 10px;
+      margin-top: -5px;
+      margin-left: -20px;
+      background: #0d121b;
+      border-radius: 2px;
+      transform: rotate(120deg);
+    }
+
+    .reel-center {
+      position: relative;
+      width: 18px;
+      height: 18px;
+      background: radial-gradient(circle, #ff453a 28%, #ffffff 32%, #111722 68%, #ffffff 100%);
+      border-radius: 50%;
+      border: 2px solid #fff;
+      z-index: 3;
+      box-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+    }
+
+    .spinning {
+      animation: spinReel 1.8s linear infinite;
+    }
+
+    @keyframes spinReel {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .tape-strip {
+      position: absolute;
+      width: 130px;
+      height: 12px;
+      background: repeating-linear-gradient(90deg, #3d2f14, #3d2f14 4px, #201708 4px, #201708 8px);
+      border-radius: 2px;
+      border-top: 1px solid #5a431c;
+      border-bottom: 1px solid #5a431c;
+      z-index: 1;
+      opacity: 0.9;
+    }
+
+    .tape-strip.active {
+      background: repeating-linear-gradient(90deg, #4d3c1a, #4d3c1a 4px, #221908 4px, #221908 8px);
+      animation: tapeScroll 0.3s linear infinite;
+    }
+
+    @keyframes tapeScroll {
+      0% {
+        background-position: 0 0;
+      }
+      100% {
+        background-position: 16px 0;
+      }
+    }
+
+    /* Now Playing Info */
+    .now-playing-block {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .now-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .now-artist {
+      font-size: 13px;
+      color: var(--accent-blue);
+      font-weight: 500;
+    }
+
+    .now-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 2px;
+      font-family: var(--font-mono);
+    }
+
+    /* Progress & Controls */
+    .progress-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 7px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+      width: 0%;
+      border-radius: 4px;
+      transition: width 0.12s ease-out;
+    }
+
+    .progress-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    .player-controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 18px;
+      margin-top: 4px;
+    }
+
+    .ctrl-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: #fff;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .ctrl-btn:active {
+      transform: scale(0.92);
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .ctrl-btn.play-main {
+      width: 56px;
+      height: 56px;
+      font-size: 22px;
+      background: linear-gradient(135deg, #1f6feb 0%, #1158c7 100%);
+      border-color: #388bfd;
+      box-shadow: 0 4px 16px rgba(31, 111, 235, 0.4);
+    }
+
+    .ctrl-btn.play-main:active {
+      transform: scale(0.94);
+    }
+
+    /* Tracklist Items */
+    .track-item {
+      display: grid;
+      grid-template-columns: 28px 1fr 50px;
+      align-items: center;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background 0.15s;
+    }
+
+    .track-item:active {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .track-item.active {
+      background: rgba(88, 166, 255, 0.12);
+      border-color: var(--border-focus);
+    }
+
+    .track-item.active .track-title {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .track-item.active .track-index {
+      color: var(--accent-blue);
+      font-weight: 700;
+    }
+
+    .track-index {
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+
+    .track-title {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text-main);
+      padding-right: 8px;
+    }
+
+    .track-dur {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: right;
+    }
+
+    /* Form Controls */
+    .form-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-row label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .form-input,
+    .form-select {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      color: #fff;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      width: 100%;
+    }
+
+    .form-input:focus,
+    .form-select:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    .btn-action {
+      background: linear-gradient(135deg, #1f6feb 0%, #1158c7 100%);
+      border: 1px solid #388bfd;
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s;
+    }
+
+    .btn-action:active {
+      transform: scale(0.98);
+      box-shadow: 0 2px 8px rgba(31, 111, 235, 0.5);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Telemetry Grid & Terminal */
+    .telemetry-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .stat-card {
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .stat-card span.label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-card span.val {
+      font-family: var(--font-mono);
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .terminal-box {
+      background: #06090e;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-sm);
+      padding: 10px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      height: 200px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .term-line {
+      display: flex;
+      gap: 6px;
+      line-height: 1.35;
+      word-break: break-all;
+    }
+
+    .term-t {
+      color: #555;
+    }
+
+    .term-raw {
+      color: #7ee787;
+    }
+
+    .term-map {
+      color: #79c0ff;
+      font-weight: 600;
+    }
+
+    .term-err {
+      color: #ff7b72;
+      font-weight: 600;
+    }
+
+    .term-stop {
+      color: #d29922;
+    }
+
+    /* Persistent Mini-Player Bar (shown when not on Player tab) */
+    .mini-player-bar {
+      position: fixed;
+      bottom: 60px;
+      left: 0;
+      right: 0;
+      background: rgba(19, 25, 34, 0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border-subtle);
+      padding: 8px 16px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 90;
+      cursor: pointer;
+    }
+
+    .mini-player-bar.visible {
+      display: flex;
+    }
+
+    .mini-info {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding-right: 12px;
+    }
+
+    .mini-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .mini-sub {
+      font-size: 11px;
+      color: var(--accent-blue);
+      font-family: var(--font-mono);
+    }
+
+    /* Bottom Mobile Navigation Bar */
+    .bottom-tab-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: rgba(9, 13, 19, 0.96);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 100;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      flex: 1;
+      height: 100%;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: color 0.15s;
+      font-size: 10px;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+    }
+
+    .tab-item .tab-icon {
+      font-size: 18px;
+    }
+
+    .tab-item.active {
+      color: var(--accent-blue);
+    }
+
+    .tab-item.active .tab-icon {
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Audio Element -->
+  <audio id="audioPlayer" preload="auto"></audio>
+
+  <!-- Top App Header -->
+  <header>
+    <div class="brand">
+      <span class="brand-icon">📼</span>
+      <h1>CassetteFlow</h1>
+    </div>
+
+    <!-- Desktop Navigation Tabs -->
+    <nav class="desktop-nav">
+      <button class="nav-btn active" data-tab="player"><span>📼</span> Player</button>
+      <button class="nav-btn" data-tab="tracks"><span>📋</span> Tracks</button>
+      <button class="nav-btn" data-tab="tapedb"><span>🗃️</span> Tape DB</button>
+      <button class="nav-btn" data-tab="folders"><span>📁</span> Folders</button>
+      <button class="nav-btn" data-tab="telemetry"><span>📶</span> Telemetry</button>
+      <button class="nav-btn" data-tab="settings"><span>⚙️</span> Settings</button>
+    </nav>
+
+    <!-- Header Status Indicator -->
+    <div class="header-status">
+      <div id="dbStatusBadge" class="status-badge" style="color: var(--accent-cyan);">
+        <span>📁 Loading DBs...</span>
+      </div>
+      <div class="status-badge">
+        <div id="statusDot" class="status-dot"></div>
+        <span id="statusText">M5: Offline</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Interactive Autoplay Unlock Banner -->
+  <div id="autoplayBanner"
+    style="display: none; background: linear-gradient(90deg, #d29922, #f85149); color: #fff; text-align: center; padding: 12px 16px; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,0.5); z-index: 1000; position: sticky; top: 56px;">
+    🔔 Cassette FSK stream active! Click or tap anywhere to enable audio playback
+  </div>
+
+  <!-- Main Views Container -->
+  <main>
+
+    <!-- TAB 1: PLAYER VIEW -->
+    <section id="tab-player" class="tab-view active">
+      <div class="cassette-box">
+        <div class="cassette-shell">
+          <div class="cassette-label">
+            <span id="cassetteTapeLabel">CASSETTEFLOW • HIGH BIAS</span>
+            <span id="cassetteSideLabel">SIDE A</span>
+          </div>
+          <div class="cassette-window">
+            <div class="reel-wrapper">
+              <div id="leftTapePack" class="tape-pack" style="width: 52px; height: 52px;"></div>
+              <div id="leftReel" class="reel">
+                <div class="reel-spokes"></div>
+                <div class="reel-spokes-extra"></div>
+                <div class="reel-center"></div>
+              </div>
+            </div>
+
+            <div id="tapeStrip" class="tape-strip"></div>
+
+            <div class="reel-wrapper">
+              <div id="rightTapePack" class="tape-pack" style="width: 42px; height: 42px;"></div>
+              <div id="rightReel" class="reel">
+                <div class="reel-spokes"></div>
+                <div class="reel-spokes-extra"></div>
+                <div class="reel-center"></div>
+              </div>
+            </div>
+          </div>
+          <div
+            style="display: flex; justify-content: space-between; font-size: 9px; color: #888; font-family: var(--font-mono);">
+            <span>FSK MODEM SYNC</span>
+            <span id="tapeCounterDisplay">00:00:00</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="now-playing-block">
+          <div id="trackTitle" class="now-title">Ready for Tape Playback</div>
+          <div id="trackArtist" class="now-artist">Select a tape from tapedb.txt or start tape</div>
+          <div class="now-meta">
+            <span id="metaDuration">--:--</span> •
+            <span id="metaBitrate">--- kbps</span> •
+            <span id="metaTapeSide">Tape: None</span>
+          </div>
+        </div>
+
+        <!-- Real-Time Audio Waveform Visualizer -->
+        <div style="background: rgba(8, 12, 20, 0.85); border: 1px solid rgba(88, 166, 255, 0.18); border-radius: var(--radius-sm); padding: 6px 8px; margin: 10px 0; overflow: hidden; box-shadow: inset 0 2px 6px rgba(0,0,0,0.5);">
+          <canvas id="waveformCanvas" width="600" height="96" style="width: 100%; height: 76px; display: block;"></canvas>
+        </div>
+
+        <div class="progress-wrap">
+          <div id="progressBar" class="progress-bar">
+            <div id="progressFill" class="progress-fill"></div>
+          </div>
+          <div class="progress-labels">
+            <span id="timeElapsed">00:00</span>
+            <span id="timeTotal">00:00</span>
+          </div>
+        </div>
+
+        <div class="player-controls">
+          <button id="prevBtn" class="ctrl-btn" title="Previous Track">⏮</button>
+          <button id="playBtn" class="ctrl-btn play-main" title="Play/Pause">▶</button>
+          <button id="stopBtn" class="ctrl-btn" title="Stop">⏹</button>
+          <button id="nextBtn" class="ctrl-btn" title="Next Track">⏭</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: TRACKS VIEW -->
+    <section id="tab-tracks" class="tab-view">
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <h2 style="font-size: 15px; font-weight: 600;">📋 Current Tape Tracklist</h2>
+            <span id="tracksTapeIdBadge" class="status-badge"
+              style="color: var(--tape-gold); background: rgba(227, 179, 65, 0.12); border-color: rgba(227, 179, 65, 0.3); font-size: 11px; font-family: var(--font-mono); font-weight: 600;">--</span>
+          </div>
+          <span id="tracksCountBadge"
+            style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);">0 Tracks</span>
+        </div>
+        <div id="trackListContainer"
+          style="display: flex; flex-direction: column; gap: 6px; max-height: 480px; overflow-y: auto;">
+          <div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px;">No tape loaded.
+            Open Tape DB to select a tape.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: TAPE DB SELECTOR -->
+    <section id="tab-tapedb" class="tab-view">
+      <div class="card">
+        <h2 style="font-size: 15px; font-weight: 600;">🗃️ Tape Database Selector</h2>
+
+        <div class="form-row">
+          <label>Select Tape (from tapedb.txt)</label>
+          <select id="tapeSelectDropdown" class="form-select"></select>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="form-row">
+            <label>Tape Side</label>
+            <select id="sideSelectDropdown" class="form-select">
+              <option value="A">Side A</option>
+              <option value="B">Side B</option>
+              <option value="COMBINE">Combine A &amp; B</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>DCT Offset</label>
+            <select id="dctOffsetDropdown" class="form-select">
+              <option value="0">0 min</option>
+              <option value="22">22 min</option>
+              <option value="44">44 min</option>
+              <option value="60">60 min (1 hr)</option>
+              <option value="120">120 min (2 hr)</option>
+              <option value="custom">Custom...</option>
+            </select>
+            <input type="number" id="dctCustomInput" class="form-input" style="display: none; margin-top: 6px;" placeholder="Custom offset in minutes" min="0" step="1" value="0">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label>Track Preview for Selected Tape</label>
+          <div id="tapePreviewBox"
+            style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 10px; font-size: 12px; max-height: 180px; overflow-y: auto; line-height: 1.5; color: var(--text-muted);">
+            Select a tape above to preview tracks.
+          </div>
+        </div>
+
+        <button id="activateTapeBtn" class="btn-action">⚡ Load Tape &amp; Build DCT Map</button>
+        <button id="reloadDbsBtn" class="btn-secondary">⟳ Reload tapedb.txt &amp; audiodb.txt</button>
+      </div>
+    </section>
+
+    <!-- TAB 4: FOLDERS VIEW (NODE FOLDERS & ROOT) -->
+    <section id="tab-folders" class="tab-view">
+      <div class="card">
+        <h2 style="font-size: 15px; font-weight: 600;">📁 Music Folder Browser</h2>
+
+        <div class="form-row">
+          <label id="folderSelectLabel">Select Folder (Node Folders &amp; Root)</label>
+          <select id="folderSelectDropdown" class="form-select"></select>
+        </div>
+
+        <div class="form-row">
+          <label>DCT Offset</label>
+          <select id="folderDctOffsetDropdown" class="form-select">
+            <option value="0">0 min</option>
+            <option value="22">22 min</option>
+            <option value="44">44 min</option>
+            <option value="60">60 min (1 hr)</option>
+            <option value="120">120 min (2 hr)</option>
+            <option value="custom">Custom...</option>
+          </select>
+          <input type="number" id="folderDctCustomInput" class="form-input" style="display: none; margin-top: 6px;" placeholder="Custom offset in minutes" min="0" step="1" value="0">
+        </div>
+
+        <div class="form-row">
+          <label>Track Preview for Selected Folder</label>
+          <div id="folderPreviewBox"
+            style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 10px; font-size: 12px; max-height: 180px; overflow-y: auto; line-height: 1.5; color: var(--text-muted);">
+            Select a folder above to preview tracks.
+          </div>
+        </div>
+
+        <button id="activateFolderBtn" class="btn-action">⚡ Load Folder &amp; Build DCT</button>
+        <button id="reloadAudiodbBtn" class="btn-secondary">⟳ Reload audiodb.txt</button>
+      </div>
+    </section>
+
+    <!-- TAB 5: TELEMETRY & SIMULATION VIEW -->
+    <section id="tab-telemetry" class="tab-view">
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h2 style="font-size: 15px; font-weight: 600;">📶 Modem &amp; Signal Telemetry</h2>
+          <span id="carrierPill" class="status-badge" style="color: var(--accent-red);">NO CARRIER</span>
+        </div>
+
+        <div class="telemetry-row">
+          <div class="stat-card">
+            <span id="statLabel1" class="label">Baud Rate</span>
+            <span id="statBaud" class="val">1200</span>
+          </div>
+          <div class="stat-card">
+            <span id="statLabel2" class="label">Speed Error</span>
+            <span id="statSpeedErr" class="val">0.0%</span>
+          </div>
+          <div class="stat-card">
+            <span id="statLabel3" class="label">Modem SNR</span>
+            <span id="statSNR" class="val">-- dB</span>
+          </div>
+          <div class="stat-card">
+            <span id="statLabel4" class="label">Decode Errors</span>
+            <span id="statErrors" class="val">0 / 0</span>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+          <h3 style="font-size: 13px; font-weight: 600;">Decoded FSK Stream</h3>
+          <div style="display: flex; gap: 6px;">
+            <button id="pauseScrollBtn"
+              style="padding: 2px 8px; font-size: 10px; background: transparent; border: 1px solid var(--border-subtle); color: var(--text-muted); border-radius: 4px; cursor: pointer;">⏸ Auto-scroll: ON</button>
+            <button id="clearTermBtn"
+              style="padding: 2px 8px; font-size: 10px; background: transparent; border: 1px solid var(--border-subtle); color: var(--text-muted); border-radius: 4px; cursor: pointer;">Clear</button>
+          </div>
+        </div>
+
+        <div id="terminalWindow" class="terminal-box">
+          <div class="term-line"><span class="term-t">[SYS]</span> <span class="term-raw">FSK Stream Listener
+              Initialized.</span></div>
+        </div>
+      </div>
+
+      <!-- Simulation Card for Desktop / Debug -->
+      <div class="card">
+        <h2 style="font-size: 14px; font-weight: 600;">⚙️ Desktop Simulator</h2>
+        <div class="form-row">
+          <label>Tape Timecode: <span id="simTimeDisplay"
+              style="font-family: var(--font-mono); color: var(--accent-blue);">00:00:00</span></label>
+          <input type="range" id="simTimeSlider" min="0" max="1800" value="0" style="width: 100%;">
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button id="simAutoPlayBtn" class="btn-action" style="flex: 1; padding: 8px 12px; font-size: 12px;">▶ Simulate
+            Play</button>
+          <button id="simStopBtn" class="btn-secondary" style="flex: 1; padding: 8px 12px; font-size: 12px;">⏹ Stop
+            (NOCARRIER)</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: SETTINGS VIEW -->
+    <section id="tab-settings" class="tab-view">
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+          <h2 style="font-size: 15px; font-weight: 600;">⚙️ Settings &amp; Server Configuration</h2>
+          <!-- Easy to edit version number & release date badge -->
+          <span id="appVersionBadge" class="status-badge"
+            style="font-family: var(--font-mono); font-size: 11px; color: var(--accent-blue); background: rgba(88, 166, 255, 0.12); border-color: rgba(88, 166, 255, 0.35); font-weight: 600;">v0.11.0 • 08/29/2026</span>
+        </div>
+
+        <div class="form-row">
+          <label>CassetteFlow Server (CFS) Music Base URL</label>
+          <input type="text" id="cfgServerUrl" class="form-input" value="/music/" placeholder="/music/ or http://localhost:8192/music/">
+        </div>
+
+        <div class="form-row">
+          <label>CassetteFlow Server (CFS) Host / IP (leave blank for local server)</label>
+          <input type="text" id="cfgM5Host" class="form-input" value="" placeholder="e.g. http://localhost:8192 (or leave blank for auto)">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+          <div class="form-row">
+            <label>Drift Tolerance (s)</label>
+            <input type="number" id="cfgDrift" class="form-input" value="2.5" step="0.5">
+          </div>
+          <div class="form-row">
+            <label>Mute Padding (s)</label>
+            <input type="number" id="cfgMutePadding" class="form-input" value="4" step="1">
+          </div>
+          <div class="form-row">
+            <label>Carrier Holdover (ms)</label>
+            <input type="number" id="cfgHoldover" class="form-input" value="700" step="100" min="0" max="5000">
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap;">
+          <button id="saveSettingsBtn" class="btn-action" style="flex: 1; min-width: 140px;">💾 Save Settings</button>
+          <button id="disconnectDeviceBtn" class="btn-secondary" style="flex: 1; min-width: 140px;">🔌 Disconnect CFS</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Persistent Mini Player Bar (shown when on other tabs) -->
+  <div id="miniPlayerBar" class="mini-player-bar">
+    <div class="mini-info">
+      <span id="miniTrackTitle" class="mini-title">No Track Playing</span>
+      <span id="miniTrackTime" class="mini-sub">00:00 / 00:00</span>
+    </div>
+    <button id="miniPlayBtn" class="ctrl-btn" style="width: 38px; height: 38px; font-size: 14px;">▶</button>
+  </div>
+
+  <!-- Bottom Mobile Tab Bar -->
+  <nav class="bottom-tab-bar">
+    <button class="tab-item active" data-tab="player">
+      <span class="tab-icon">📼</span>
+      <span>Player</span>
+    </button>
+    <button class="tab-item" data-tab="tracks">
+      <span class="tab-icon">📋</span>
+      <span>Tracks</span>
+    </button>
+    <button class="tab-item" data-tab="tapedb">
+      <span class="tab-icon">🗃️</span>
+      <span>Tape DB</span>
+    </button>
+    <button class="tab-item" data-tab="folders">
+      <span class="tab-icon">📁</span>
+      <span>Folders</span>
+    </button>
+    <button class="tab-item" data-tab="telemetry">
+      <span class="tab-icon">📶</span>
+      <span>Telemetry</span>
+    </button>
+    <button class="tab-item" data-tab="settings">
+      <span class="tab-icon">⚙️</span>
+      <span>Settings</span>
+    </button>
+  </nav>
+
+  <!-- Script Logic -->
+  <script>
+    function getInitialHost() {
+      // If loaded directly from a server/device, auto-bind to this host!
+      if (window.location.origin && window.location.origin.startsWith('http')) {
+        const saved = localStorage.getItem('cfg_m5_host');
+        if (saved !== null) return saved;
+        return ''; // Default to same-origin for CFS
+      }
+      return localStorage.getItem('cfg_m5_host') || '';
+    }
+
+    // --- State ---
+    const state = {
+      currentTab: 'player',
+      serverBaseUrl: localStorage.getItem('cfg_server_url') || (window.location.origin && window.location.origin.startsWith('http') ? window.location.origin + '/music/' : '/music/'),
+      m5Host: getInitialHost(),
+      driftThreshold: parseFloat(localStorage.getItem('cfg_drift') || '2.5'),
+      mutePadding: parseInt(localStorage.getItem('cfg_mute_padding') || '4'),
+      noCarrierHoldoverMs: parseInt(localStorage.getItem('cfg_holdover_ms') || '700', 10),
+      noCarrierTimer: null,
+      carrierActive: false,
+      deviceDisconnected: false,
+      streamAbortController: null,
+
+      tapeDB: new Map(),
+      audioDB: new Map(),
+      folderDB: new Map(),
+      nodeFolders: [],
+
+      selectedTapeId: null,
+      selectedSide: 'A',
+      dctOffsetSec: 0,
+
+      activeTracklist: [],
+      dctMap: [],
+      tracklistA: [],
+      tracklistB: [],
+      tracklistCombine: [],
+      sideADCTMap: [],
+      sideBDCTMap: [],
+      combineDCTMap: [],
+
+      currentHash: null,
+      currentTrackIndex: -1,
+
+      logLineCount: 0,
+      dataErrors: 0,
+      simInterval: null,
+      simCurrentSec: 0
+    };
+
+    // --- DOM Elements ---
+    const audio = document.getElementById('audioPlayer') || new Audio();
+    audio.crossOrigin = 'anonymous';
+    const waveformCanvas = document.getElementById('waveformCanvas');
+    const canvasCtx = waveformCanvas ? waveformCanvas.getContext('2d') : null;
+    const vuDbText = document.getElementById('vuDbText');
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    const cassetteTapeLabel = document.getElementById('cassetteTapeLabel');
+    const cassetteSideLabel = document.getElementById('cassetteSideLabel');
+    const leftReel = document.getElementById('leftReel');
+    const rightReel = document.getElementById('rightReel');
+    const tapeCounterDisplay = document.getElementById('tapeCounterDisplay');
+    const trackTitle = document.getElementById('trackTitle');
+    const trackArtist = document.getElementById('trackArtist');
+    const metaDuration = document.getElementById('metaDuration');
+    const metaBitrate = document.getElementById('metaBitrate');
+    const metaTapeSide = document.getElementById('metaTapeSide');
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
+    const timeElapsed = document.getElementById('timeElapsed');
+    const timeTotal = document.getElementById('timeTotal');
+    const playBtn = document.getElementById('playBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const trackListContainer = document.getElementById('trackListContainer');
+    const tracksCountBadge = document.getElementById('tracksCountBadge');
+    const tracksTapeIdBadge = document.getElementById('tracksTapeIdBadge');
+    const tapeSelectDropdown = document.getElementById('tapeSelectDropdown');
+    const sideSelectDropdown = document.getElementById('sideSelectDropdown');
+    const dctOffsetDropdown = document.getElementById('dctOffsetDropdown');
+    const dctCustomInput = document.getElementById('dctCustomInput');
+    const tapePreviewBox = document.getElementById('tapePreviewBox');
+    const folderSelectDropdown = document.getElementById('folderSelectDropdown');
+    const folderDctOffsetDropdown = document.getElementById('folderDctOffsetDropdown');
+    const folderDctCustomInput = document.getElementById('folderDctCustomInput');
+    const folderPreviewBox = document.getElementById('folderPreviewBox');
+    const activateFolderBtn = document.getElementById('activateFolderBtn');
+    const reloadAudiodbBtn = document.getElementById('reloadAudiodbBtn');
+    const carrierPill = document.getElementById('carrierPill');
+    const statLabel1 = document.getElementById('statLabel1');
+    const statLabel2 = document.getElementById('statLabel2');
+    const statLabel3 = document.getElementById('statLabel3');
+    const statLabel4 = document.getElementById('statLabel4');
+    const statBaud = document.getElementById('statBaud');
+    const statSpeedErr = document.getElementById('statSpeedErr');
+    const statSNR = document.getElementById('statSNR');
+    const statErrors = document.getElementById('statErrors');
+    const terminalWindow = document.getElementById('terminalWindow');
+    const miniPlayerBar = document.getElementById('miniPlayerBar');
+    const miniTrackTitle = document.getElementById('miniTrackTitle');
+    const miniTrackTime = document.getElementById('miniTrackTime');
+    const miniPlayBtn = document.getElementById('miniPlayBtn');
+    const dbStatusBadge = document.getElementById('dbStatusBadge');
+
+    // --- Tab Navigation Switcher ---
+    function switchTab(tabId) {
+      state.currentTab = tabId;
+
+      document.querySelectorAll('.tab-view').forEach(view => {
+        view.classList.toggle('active', view.id === `tab-${tabId}`);
+      });
+
+      document.querySelectorAll('.tab-item, .nav-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabId);
+      });
+
+      // Toggle floating mini-player bar
+      if (tabId !== 'player' && state.currentTrackIndex >= 0) {
+        miniPlayerBar.classList.add('visible');
+      } else {
+        miniPlayerBar.classList.remove('visible');
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    document.querySelectorAll('.tab-item, .nav-btn').forEach(btn => {
+      btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    });
+
+    miniPlayerBar.addEventListener('click', (e) => {
+      if (e.target !== miniPlayBtn) {
+        switchTab('player');
+      }
+    });
+
+    // --- Time Formatting ---
+    function formatTime(s) {
+      if (isNaN(s) || s < 0) return '00:00';
+      const m = Math.floor(s / 60);
+      const sec = Math.floor(s % 60);
+      return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+    }
+
+    function formatTimeHours(s) {
+      if (isNaN(s) || s < 0) return '00:00:00';
+      const h = Math.floor(s / 3600);
+      const m = Math.floor((s % 3600) / 60);
+      const sec = Math.floor(s % 60);
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+    }
+
+    let autoScrollTerminal = true;
+
+    function logTerminal(type, text) {
+      const line = document.createElement('div');
+      line.className = 'term-line';
+      const now = new Date().toTimeString().split(' ')[0];
+      line.innerHTML = `<span class="term-t">[${now}]</span> <span class="term-${type}">${text}</span>`;
+      terminalWindow.appendChild(line);
+      if (autoScrollTerminal) {
+        terminalWindow.scrollTop = terminalWindow.scrollHeight;
+      }
+      while (terminalWindow.children.length > 200) {
+        terminalWindow.removeChild(terminalWindow.firstChild);
+      }
+    }
+
+    // --- URL Resolution ---
+    function resolveAudioUrl(sourcePath) {
+      if (!sourcePath) return '';
+      let relativePath = sourcePath;
+      const sourceIdx = sourcePath.toUpperCase().indexOf('SOURCE/');
+      if (sourceIdx >= 0) {
+        relativePath = sourcePath.substring(sourceIdx + 7);
+      } else {
+        const backslashIdx = sourcePath.toUpperCase().indexOf('SOURCE\\');
+        if (backslashIdx >= 0) {
+          relativePath = sourcePath.substring(backslashIdx + 7);
+        }
+      }
+      const sdIdx = relativePath.toUpperCase().indexOf('SDCARD/');
+      if (sdIdx === 0 || sdIdx === 1) {
+        relativePath = relativePath.substring(sdIdx + 7);
+      } else {
+        const sdBackslash = relativePath.toUpperCase().indexOf('SDCARD\\');
+        if (sdBackslash === 0 || sdBackslash === 1) {
+          relativePath = relativePath.substring(sdBackslash + 7);
+        }
+      }
+      relativePath = relativePath.replace(/^[\\\/]+/, '');
+      const encoded = relativePath.split(/[\\\/]/).map(segment => encodeURIComponent(segment));
+      const cleanBase = state.serverBaseUrl.endsWith('/') ? state.serverBaseUrl : state.serverBaseUrl + '/';
+      return cleanBase + encoded.join('/');
+    }
+
+    // --- Helper to normalize M5Core / R2RWatch host URL ---
+    function getFormattedHost() {
+      let host = state.m5Host ? state.m5Host.trim() : '';
+      if (!host) return '';
+      if (!host.startsWith('http://') && !host.startsWith('https://')) {
+        host = 'http://' + host;
+      }
+      try {
+        const u = new URL(host);
+        // If the URL matches the current page hostname, use empty string for relative paths
+        if (window.location.hostname && u.hostname === window.location.hostname) {
+          return '';
+        }
+      } catch (e) { }
+      return host.replace(/\/+$/, '');
+    }
+
+    // --- IndexedDB Caching Engine ---
+    const IDB_NAME = 'CassetteFlowDB';
+    const IDB_STORE = 'app_cache';
+    const IDB_VERSION = 1;
+
+    function openIndexedDB() {
+      return new Promise((resolve, reject) => {
+        if (!window.indexedDB) {
+          return reject(new Error('IndexedDB not supported'));
+        }
+        const req = indexedDB.open(IDB_NAME, IDB_VERSION);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(IDB_STORE)) {
+            db.createObjectStore(IDB_STORE);
+          }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error || new Error('Failed to open IndexedDB'));
+      });
+    }
+
+    async function idbGet(key) {
+      try {
+        const db = await openIndexedDB();
+        return new Promise((resolve) => {
+          const tx = db.transaction(IDB_STORE, 'readonly');
+          const store = tx.objectStore(IDB_STORE);
+          const req = store.get(key);
+          req.onsuccess = () => resolve(req.result || null);
+          req.onerror = () => resolve(null);
+        });
+      } catch (e) {
+        return null;
+      }
+    }
+
+    async function idbSet(key, value) {
+      try {
+        const db = await openIndexedDB();
+        return new Promise((resolve) => {
+          const tx = db.transaction(IDB_STORE, 'readwrite');
+          const store = tx.objectStore(IDB_STORE);
+          const req = store.put(value, key);
+          req.onsuccess = () => resolve(true);
+          req.onerror = () => resolve(false);
+        });
+      } catch (e) {
+        return false;
+      }
+    }
+
+    async function idbClear() {
+      try {
+        const db = await openIndexedDB();
+        return new Promise((resolve) => {
+          const tx = db.transaction(IDB_STORE, 'readwrite');
+          const store = tx.objectStore(IDB_STORE);
+          const req = store.clear();
+          req.onsuccess = () => resolve(true);
+          req.onerror = () => resolve(false);
+        });
+      } catch (e) {
+        return false;
+      }
+    }
+
+    // --- Database Fetching ---
+    async function fetchFileWithFallback(filename) {
+      console.log(`[CassetteFlow] fetchFileWithFallback('${filename}') initiated.`);
+
+      const candidates = [];
+
+      // 1. Direct local server endpoints
+      if (filename === 'audiodb.txt') {
+        candidates.push('/audiodb.txt', '/mp3db', '/audiodb', '/music/audiodb.txt', '/player/audiodb.txt');
+      } else if (filename === 'tapedb.txt') {
+        candidates.push('/tapedb.txt', '/tapedb', '/music/tapedb.txt', '/player/tapedb.txt');
+      } else {
+        candidates.push(`/${filename}`, `/music/${filename}`, `/player/${filename}`);
+      }
+
+      // 2. Music Server Base URL candidate endpoints
+      if (state.serverBaseUrl) {
+        const cleanBase = state.serverBaseUrl.replace(/\/+$/, '');
+        candidates.push(
+          `${cleanBase}/${filename}`,
+          `${cleanBase}/player/${filename}`,
+          `${cleanBase}/../${filename}`
+        );
+        if (filename === 'audiodb.txt') {
+          candidates.push(`${cleanBase}/mp3db`, `${cleanBase}/audiodb`);
+        } else if (filename === 'tapedb.txt') {
+          candidates.push(`${cleanBase}/tapedb`);
+        }
+      }
+
+      // 3. Relative local paths
+      candidates.push(`./${filename}`);
+
+      // 4. Remote host candidate endpoints
+      const host = getFormattedHost();
+      if (host) {
+        candidates.push(`${host}/${filename}`, `${host}/player/${filename}`);
+        if (filename === 'audiodb.txt') candidates.push(`${host}/mp3db`, `${host}/audiodb.txt`);
+        if (filename === 'tapedb.txt') candidates.push(`${host}/tapedb`, `${host}/tapedb.txt`);
+      }
+
+      // Remove duplicate URLs
+      const uniqueUrls = [...new Set(candidates)];
+
+      for (const url of uniqueUrls) {
+        try {
+          const cacheBusterUrl = url.includes('?') ? `${url}&_cb=${Date.now()}` : `${url}?_cb=${Date.now()}`;
+          console.log(`[CassetteFlow] Trying DB URL: ${cacheBusterUrl}`);
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 3000);
+          const res = await fetch(cacheBusterUrl, {
+            signal: controller.signal,
+            cache: 'no-store'
+          });
+          clearTimeout(timer);
+          if (res.ok) {
+            const text = await res.text();
+            if (text && text.trim().length > 0 && !text.includes('<!DOCTYPE html>') && !text.includes('<html')) {
+              console.log(`[CassetteFlow] Successfully fetched ${filename} from ${url} (${text.length} bytes)`);
+              return { text, source: url };
+            }
+          }
+        } catch (e) {
+          console.warn(`[CassetteFlow] Fetch failed for ${url}:`, e.message);
+        }
+      }
+
+      console.error(`[CassetteFlow] Could not find ${filename} in any checked location.`);
+      return null;
+    }
+
+    async function loadDatabases(forceRefresh = false) {
+      console.info(`%c[CassetteFlow] Starting database load sequence (forceRefresh=${forceRefresh})...`, 'color: #58a6ff; font-weight: bold;');
+      if (dbStatusBadge) {
+        dbStatusBadge.innerHTML = '<span>📁 Loading DBs...</span>';
+        dbStatusBadge.style.color = 'var(--accent-amber)';
+      }
+
+      let tapeText = null;
+      let audioText = null;
+      let fromCache = false;
+
+      // 1. Check browser IndexedDB cache if not forced
+      if (!forceRefresh) {
+        console.log('[CassetteFlow] Checking IndexedDB storage for cached databases...');
+        try {
+          const cachedTape = await idbGet('tapedb_text');
+          const cachedAudio = await idbGet('audiodb_text');
+          if (cachedTape && cachedTape.trim().length > 10 && !cachedTape.includes('<html') &&
+              cachedAudio && cachedAudio.trim().length > 10 && !cachedAudio.includes('<html')) {
+            tapeText = cachedTape;
+            audioText = cachedAudio;
+            fromCache = true;
+            console.info('%c[CassetteFlow] ✅ Stored databases FOUND in IndexedDB! Loading from local browser cache...', 'color: #3fb950; font-weight: bold; font-size: 12px;');
+            console.info(`[CassetteFlow] Cached tapedb: ${(cachedTape.length / 1024).toFixed(1)} KB | Cached audiodb: ${(cachedAudio.length / (1024 * 1024)).toFixed(2)} MB`);
+          } else {
+            console.warn('[CassetteFlow] ⚠️ No valid stored databases found in IndexedDB. Will fetch fresh copies from server.');
+          }
+        } catch (e) {
+          console.warn('[CassetteFlow] IndexedDB read error:', e);
+        }
+      } else {
+        console.info('%c[CassetteFlow] 🔄 Force refresh requested. Bypassing IndexedDB cache to fetch latest files.', 'color: #d29922; font-weight: bold;');
+      }
+
+      // 2. Fetch fresh files from SD card/server if not in cache or if forced
+      if (!tapeText) {
+        console.log('[CassetteFlow] Fetching tapedb.txt over network...');
+        logTerminal('raw', 'Fetching tapedb.txt from server/SD card...');
+        const tapeResult = await fetchFileWithFallback('tapedb.txt');
+        if (tapeResult) {
+          tapeText = tapeResult.text;
+          await idbSet('tapedb_text', tapeText);
+          console.info(`%c[CassetteFlow] 💾 Saved fresh tapedb.txt to IndexedDB (${(tapeText.length / 1024).toFixed(1)} KB)`, 'color: #39c5bb;');
+        } else {
+          logTerminal('err', 'Could not locate tapedb.txt');
+          console.error('[CassetteFlow] ❌ tapedb.txt not found in any checked location');
+        }
+      }
+
+      if (!audioText) {
+        console.log('[CassetteFlow] Fetching audiodb.txt (3.3 MB) over network...');
+        logTerminal('raw', 'Fetching audiodb.txt from server/SD card (3.3MB)...');
+        const audioResult = await fetchFileWithFallback('audiodb.txt');
+        if (audioResult) {
+          audioText = audioResult.text;
+          await idbSet('audiodb_text', audioText);
+          console.info(`%c[CassetteFlow] 💾 Saved fresh audiodb.txt to IndexedDB (${(audioText.length / (1024 * 1024)).toFixed(2)} MB)`, 'color: #39c5bb;');
+        } else {
+          logTerminal('err', 'Could not locate audiodb.txt');
+          console.error('[CassetteFlow] ❌ audiodb.txt not found in any checked location');
+        }
+      }
+
+      // 3. Parse databases into Map objects
+      if (tapeText) {
+        parseTapeDB(tapeText);
+        if (fromCache) {
+          logTerminal('map', `Loaded ${state.tapeDB.size} tape sides from Browser Cache (IndexedDB) ⚡`);
+        } else {
+          logTerminal('map', `Loaded ${state.tapeDB.size} tape sides from ${forceRefresh ? 'SD Card / Server' : 'source'}`);
+        }
+        console.log(`[CassetteFlow] Parsed ${state.tapeDB.size} tape sides from tapedb.txt [Source: ${fromCache ? 'IndexedDB Cache ⚡' : 'Network/SD'}]`);
+      }
+
+      if (audioText) {
+        const t0 = performance.now();
+        parseAudioDB(audioText);
+        const t1 = performance.now();
+        if (fromCache) {
+          logTerminal('map', `Loaded ${state.audioDB.size} audio records from Browser Cache ⚡ (${(t1 - t0).toFixed(0)}ms)`);
+        } else {
+          logTerminal('map', `Loaded ${state.audioDB.size} audio records (${(t1 - t0).toFixed(0)}ms)`);
+        }
+        console.log(`[CassetteFlow] Parsed ${state.audioDB.size} audio records in ${(t1 - t0).toFixed(0)}ms [Source: ${fromCache ? 'IndexedDB Cache ⚡' : 'Network/SD'}]`);
+      }
+
+      if (dbStatusBadge) {
+        if (state.tapeDB.size > 0 || state.audioDB.size > 0) {
+          const cacheTag = fromCache ? ' ⚡' : '';
+          dbStatusBadge.innerHTML = `<span>📁 ${state.tapeDB.size} Tapes • ${(state.audioDB.size / 1000).toFixed(1)}k Tracks${cacheTag}</span>`;
+          dbStatusBadge.style.color = 'var(--accent-green)';
+        } else {
+          dbStatusBadge.innerHTML = '<span>📁 DB Error</span>';
+          dbStatusBadge.style.color = 'var(--accent-red)';
+        }
+      }
+
+      populateTapeDropdown();
+      buildFolderDatabase();
+
+      if (!state.selectedTapeId && state.tapeDB.size > 0) {
+        const preferred = ['DCT1', 'DCT2', 'RR01', 'EX03', 'EX04', 'EX05', 'KD41', 'SYM2', 'CS00', 'W701'];
+        let chosenTape = null;
+        for (const pref of preferred) {
+          if (state.tapeDB.has(`${pref}A`) || state.tapeDB.has(pref)) {
+            chosenTape = pref;
+            break;
+          }
+        }
+        if (!chosenTape) {
+          const firstKey = state.tapeDB.keys().next().value;
+          chosenTape = firstKey.endsWith('A') || firstKey.endsWith('B') ? firstKey.slice(0, -1) : firstKey;
+        }
+        if (tapeSelectDropdown) tapeSelectDropdown.value = chosenTape;
+        updateTapePreview(chosenTape);
+        activateTape(chosenTape, 'A');
+      }
+    }
+
+    function parseTapeDB(text) {
+      state.tapeDB.clear();
+      if (!text) return;
+      const lines = text.split(/\r?\n/);
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+        let parts = trimmed.split('\t');
+        if (parts.length < 2) {
+          parts = trimmed.split(',');
+        }
+        if (parts.length >= 2) {
+          const tapeKey = parts[0].trim();
+          const tracks = parts.slice(1).map(p => p.trim()).filter(p => p.length > 0);
+          state.tapeDB.set(tapeKey, tracks);
+        }
+      }
+    }
+
+    function parseAudioDB(text) {
+      state.audioDB.clear();
+      if (!text) return;
+      const lines = text.split(/\r?\n/);
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+        let parts = trimmed.split('\t');
+        if (parts.length < 2) {
+          parts = trimmed.split(',');
+        }
+        if (parts.length >= 2) {
+          const hash = parts[0].trim();
+          const duration = parts.length > 1 ? (parseInt(parts[1], 10) || 0) : 0;
+          let rawBitrate = parts.length > 2 ? (parseInt(parts[2], 10) || 0) : 0;
+          const bitrate = rawBitrate >= 1000 ? Math.round(rawBitrate / 1000) : rawBitrate;
+          const devicePath = parts.length > 3 ? parts[3].trim() : hash;
+          const sourcePath = parts.length > 4 ? parts[4].trim() : devicePath;
+
+          const pathSegments = sourcePath.split(/[\\\/]/);
+          const filename = pathSegments[pathSegments.length - 1].replace(/\.[^/.]+$/, "");
+          
+          let title = '';
+          const trimmedFn = filename.trim();
+          if (/^\d+$/.test(trimmedFn)) {
+            title = `Track # ${trimmedFn}`;
+          } else {
+            const match = trimmedFn.match(/^(\d{1,3})\s*[\-–_\.]\s*(.*)$/) || trimmedFn.match(/^(\d{1,2})_(.*)$/);
+            if (match && match[2] && match[2].trim().length > 0) {
+              title = match[2].replace(/_/g, ' ').trim();
+            } else {
+              title = trimmedFn.replace(/_/g, ' ');
+            }
+          }
+          if (!title) {
+            title = `Track # ${trimmedFn}`;
+          }
+          const artist = pathSegments.length >= 3 ? pathSegments[pathSegments.length - 3].replace(/_/g, ' ') : (pathSegments.length >= 2 ? pathSegments[0].replace(/_/g, ' ') : 'Audio');
+          const album = pathSegments.length >= 2 ? pathSegments[pathSegments.length - 2].replace(/_/g, ' ') : '';
+
+          state.audioDB.set(hash, {
+            hash,
+            duration,
+            bitrate,
+            devicePath,
+            sourcePath,
+            title,
+            artist,
+            album
+          });
+        }
+      }
+    }
+
+    function populateTapeDropdown() {
+      tapeSelectDropdown.innerHTML = '';
+      const unique = new Set();
+      for (const key of state.tapeDB.keys()) {
+        const base = key.endsWith('A') || key.endsWith('B') ? key.slice(0, -1) : key;
+        unique.add(base);
+      }
+
+      unique.forEach(tapeId => {
+        const opt = document.createElement('option');
+        opt.value = tapeId;
+        opt.textContent = `Tape ${tapeId}`;
+        tapeSelectDropdown.appendChild(opt);
+      });
+
+      if (tapeSelectDropdown.value) {
+        updateTapePreview(tapeSelectDropdown.value);
+      }
+    }
+
+    function updateTapePreview(tapeId) {
+      const side = sideSelectDropdown.value;
+      let hashes = [];
+
+      if (side === 'COMBINE') {
+        const hashesA = state.tapeDB.get(`${tapeId}A`) || [];
+        const hashesB = state.tapeDB.get(`${tapeId}B`) || [];
+        hashes = [...hashesA, ...hashesB];
+      } else {
+        const key = `${tapeId}${side}`;
+        hashes = state.tapeDB.get(key) || [];
+      }
+
+      let html = `<strong>${tapeId} (${side === 'COMBINE' ? 'Side A+B' : 'Side ' + side})</strong><br>`;
+      let totalTime = 0;
+
+      hashes.forEach((h, i) => {
+        const info = state.audioDB.get(h);
+        if (info) {
+          html += `[${String(i + 1).padStart(2, '0')}] ${info.title} (${formatTime(info.duration)})<br>`;
+          totalTime += info.duration + state.mutePadding;
+        } else {
+          html += `[${String(i + 1).padStart(2, '0')}] Hash: ${h}<br>`;
+        }
+      });
+
+      html += `<br><em>Total Playtime: ${formatTimeHours(totalTime)}</em>`;
+      tapePreviewBox.innerHTML = html;
+    }
+
+    tapeSelectDropdown.addEventListener('change', () => updateTapePreview(tapeSelectDropdown.value));
+    sideSelectDropdown.addEventListener('change', () => updateTapePreview(tapeSelectDropdown.value));
+
+    // --- DCT Engine & Tape Activation ---
+    function buildDCTList(tapeSideKey, trackList) {
+      const dctList = [];
+      let currentTotal = 0;
+      let count = 0;
+
+      for (const track of trackList) {
+        const trackStr = String(count + 1).padStart(2, '0');
+        const cleanHash = track.hash.replace(/_/g, '$');
+        const audioId = `${tapeSideKey}_${trackStr}_${cleanHash}`;
+
+        if (count >= 1) {
+          for (let i = 0; i < state.mutePadding; i++) {
+            currentTotal += 1;
+            dctList.push(`${audioId}_000M_${String(currentTotal).padStart(4, '0')}`);
+          }
+        }
+
+        for (let i = 0; i < track.duration; i++) {
+          dctList.push(`${audioId}_${String(i).padStart(4, '0')}_${String(currentTotal).padStart(4, '0')}`);
+          currentTotal += 1;
+        }
+
+        count++;
+      }
+      return dctList;
+    }
+
+    function activateTape(tapeId, side = 'A') {
+      state.selectedTapeId = tapeId;
+
+      // 1. Build Side A tracks & map
+      const hashesA = state.tapeDB.get(`${tapeId}A`) || state.tapeDB.get(tapeId) || [];
+      state.tracklistA = hashesA.map(h => state.audioDB.get(h)).filter(Boolean);
+      state.sideADCTMap = buildDCTList(`${tapeId}A`, state.tracklistA);
+
+      // 2. Build Side B tracks & map
+      const hashesB = state.tapeDB.get(`${tapeId}B`) || [];
+      state.tracklistB = hashesB.map(h => state.audioDB.get(h)).filter(Boolean);
+      state.sideBDCTMap = buildDCTList(`${tapeId}B`, state.tracklistB);
+
+      // 3. Build Combined tracks & map
+      state.tracklistCombine = [...state.tracklistA, ...state.tracklistB];
+      state.combineDCTMap = buildDCTList('CS00', state.tracklistCombine);
+
+      // 4. Activate the requested side
+      updateActiveSide(side, true);
+
+      logTerminal('map', `Tape ${tapeId} Loaded: Side A (${state.tracklistA.length} tracks, ${formatTimeHours(state.sideADCTMap.length)}), Side B (${state.tracklistB.length} tracks, ${formatTimeHours(state.sideBDCTMap.length)})`);
+    }
+
+    function updateActiveSide(side, triggerInitialSelect = false) {
+      state.selectedSide = side;
+
+      if (side === 'COMBINE') {
+        state.activeTracklist = state.tracklistCombine;
+        state.dctMap = state.combineDCTMap;
+      } else if (side === 'B') {
+        state.activeTracklist = state.tracklistB;
+        state.dctMap = state.sideBDCTMap;
+      } else {
+        state.activeTracklist = state.tracklistA;
+        state.dctMap = state.sideADCTMap;
+      }
+
+      if (sideSelectDropdown) sideSelectDropdown.value = side;
+      cassetteTapeLabel.textContent = `TAPE ${state.selectedTapeId || '--'}`;
+      cassetteSideLabel.textContent = `SIDE ${side}`;
+      metaTapeSide.textContent = `Tape: ${state.selectedTapeId || '--'} (${side})`;
+
+      if (tracksTapeIdBadge) {
+        tracksTapeIdBadge.textContent = side === 'COMBINE' ? `${state.selectedTapeId} (Side A+B)` : `${state.selectedTapeId} (Side ${side})`;
+      }
+
+      renderTracklist();
+      if (triggerInitialSelect && state.activeTracklist.length > 0) {
+        selectTrack(0, false);
+      }
+    }
+
+    function getSelectedDctOffsetMinutes() {
+      if (!dctOffsetDropdown) return 0;
+      if (dctOffsetDropdown.value === 'custom') {
+        return parseInt(dctCustomInput ? dctCustomInput.value : '0', 10) || 0;
+      }
+      return parseInt(dctOffsetDropdown.value, 10) || 0;
+    }
+
+    if (dctOffsetDropdown) {
+      dctOffsetDropdown.addEventListener('change', () => {
+        if (dctOffsetDropdown.value === 'custom') {
+          if (dctCustomInput) {
+            dctCustomInput.style.display = 'block';
+            dctCustomInput.focus();
+          }
+        } else {
+          if (dctCustomInput) {
+            dctCustomInput.style.display = 'none';
+          }
+        }
+        state.dctOffsetSec = getSelectedDctOffsetMinutes() * 60;
+      });
+    }
+
+    if (dctCustomInput) {
+      dctCustomInput.addEventListener('input', () => {
+        state.dctOffsetSec = getSelectedDctOffsetMinutes() * 60;
+      });
+    }
+
+    document.getElementById('activateTapeBtn').addEventListener('click', () => {
+      const tapeId = tapeSelectDropdown.value;
+      const side = sideSelectDropdown.value;
+      const offset = getSelectedDctOffsetMinutes();
+      state.dctOffsetSec = offset * 60;
+
+      activateTape(tapeId, side);
+      switchTab('player');
+    });
+
+    document.getElementById('reloadDbsBtn').addEventListener('click', () => {
+      loadDatabases(true);
+    });
+
+    // --- Node Folders Engine & Folder Activation ---
+    function getNormalizedFolder(sourcePath) {
+      if (!sourcePath) return 'Root';
+      let rel = sourcePath.replace(/\\/g, '/').trim();
+      const srcIdx = rel.toUpperCase().indexOf('SOURCE/');
+      if (srcIdx >= 0) {
+        rel = rel.substring(srcIdx + 7);
+      }
+      rel = rel.replace(/^\/+|\/+$/g, '');
+      const lastSlash = rel.lastIndexOf('/');
+      if (lastSlash === -1) {
+        return 'Root';
+      }
+      const folder = rel.substring(0, lastSlash).trim();
+      return folder || 'Root';
+    }
+
+    function buildFolderDatabase() {
+      state.folderDB.clear();
+      const parentDirsSet = new Set();
+      const folderSeenFiles = new Map();
+
+      for (const track of state.audioDB.values()) {
+        const folder = getNormalizedFolder(track.sourcePath);
+        if (!state.folderDB.has(folder)) {
+          state.folderDB.set(folder, []);
+          folderSeenFiles.set(folder, new Set());
+        }
+
+        // Deduplicate tracks within the same folder by normalized file path
+        let normPath = (track.sourcePath || track.devicePath || '').replace(/\\/g, '/').trim();
+        const srcIdx = normPath.toUpperCase().indexOf('SOURCE/');
+        if (srcIdx >= 0) normPath = normPath.substring(srcIdx + 7);
+        normPath = normPath.replace(/^\/+/, '').toLowerCase();
+
+        const seenSet = folderSeenFiles.get(folder);
+        if (!seenSet.has(normPath)) {
+          seenSet.add(normPath);
+          state.folderDB.get(folder).push(track);
+        }
+
+        if (folder !== 'Root') {
+          const parts = folder.split('/');
+          let curPath = '';
+          for (let i = 0; i < parts.length - 1; i++) {
+            curPath = curPath ? `${curPath}/${parts[i]}` : parts[i];
+            parentDirsSet.add(curPath);
+          }
+        }
+      }
+
+      // Sort tracks within each folder naturally by filename / track title
+      for (const [folder, tracks] of state.folderDB.entries()) {
+        tracks.sort((a, b) => {
+          const fnA = (a.sourcePath || a.title || '').split(/[\\\/]/).pop();
+          const fnB = (b.sourcePath || b.title || '').split(/[\\\/]/).pop();
+          return fnA.localeCompare(fnB, undefined, { numeric: true, sensitivity: 'base' });
+        });
+      }
+
+      // Filter to node folders (no child sub-folders)
+      const allFolders = Array.from(state.folderDB.keys());
+      const nodeFolders = allFolders.filter(f => f !== 'Root' && !parentDirsSet.has(f));
+
+      // Natural alphabetical sort of node folders
+      nodeFolders.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+
+      // Prepend 'Root' if it exists and has tracks
+      const finalFolderList = [];
+      if (state.folderDB.has('Root') && state.folderDB.get('Root').length > 0) {
+        finalFolderList.push('Root');
+      }
+      finalFolderList.push(...nodeFolders);
+
+      state.nodeFolders = finalFolderList;
+      console.log(`[CassetteFlow] Indexed ${finalFolderList.length} node folders (including Root) across ${state.audioDB.size} tracks`);
+      populateFolderDropdown();
+    }
+
+    function populateFolderDropdown() {
+      if (!folderSelectDropdown) return;
+      folderSelectDropdown.innerHTML = '';
+
+      const folderCount = state.nodeFolders ? state.nodeFolders.length : 0;
+      const folderSelectLabel = document.getElementById('folderSelectLabel');
+      if (folderSelectLabel) {
+        folderSelectLabel.textContent = `Select Folder (Node Folders & Root • ${folderCount} Folders)`;
+      }
+
+      if (!state.nodeFolders || state.nodeFolders.length === 0) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'No folders available';
+        folderSelectDropdown.appendChild(opt);
+        if (folderPreviewBox) folderPreviewBox.innerHTML = 'No audio tracks found in audiodb.txt.';
+        return;
+      }
+
+      state.nodeFolders.forEach(folder => {
+        const tracks = state.folderDB.get(folder) || [];
+        const opt = document.createElement('option');
+        opt.value = folder;
+        if (folder === 'Root') {
+          opt.textContent = `📁 Root (Test Tracks • ${tracks.length} tracks)`;
+        } else {
+          opt.textContent = `📁 ${folder} (${tracks.length} tracks)`;
+        }
+        folderSelectDropdown.appendChild(opt);
+      });
+
+      if (folderSelectDropdown.value) {
+        updateFolderPreview(folderSelectDropdown.value);
+      }
+    }
+
+    function updateFolderPreview(folderKey) {
+      if (!folderPreviewBox) return;
+      const tracks = state.folderDB.get(folderKey) || [];
+      if (tracks.length === 0) {
+        folderPreviewBox.innerHTML = 'No tracks in this folder.';
+        return;
+      }
+
+      const folderLabel = folderKey === 'Root' ? 'Root Folder (Test Tracks)' : folderKey;
+      let html = `<strong>${folderLabel}</strong> (${tracks.length} Tracks)<br><br>`;
+      let totalTime = 0;
+
+      tracks.forEach((t, i) => {
+        html += `[${String(i + 1).padStart(2, '0')}] ${t.title} (${formatTime(t.duration)})<br>`;
+        totalTime += (t.duration || 0) + state.mutePadding;
+      });
+
+      html += `<br><em>Total Playtime: ${formatTimeHours(totalTime)}</em>`;
+      folderPreviewBox.innerHTML = html;
+    }
+
+    function getSelectedFolderDctOffsetMinutes() {
+      if (!folderDctOffsetDropdown) return 0;
+      if (folderDctOffsetDropdown.value === 'custom') {
+        return parseInt(folderDctCustomInput ? folderDctCustomInput.value : '0', 10) || 0;
+      }
+      return parseInt(folderDctOffsetDropdown.value, 10) || 0;
+    }
+
+    if (folderDctOffsetDropdown) {
+      folderDctOffsetDropdown.addEventListener('change', () => {
+        if (folderDctOffsetDropdown.value === 'custom') {
+          if (folderDctCustomInput) {
+            folderDctCustomInput.style.display = 'block';
+            folderDctCustomInput.focus();
+          }
+        } else {
+          if (folderDctCustomInput) {
+            folderDctCustomInput.style.display = 'none';
+          }
+        }
+      });
+    }
+
+    if (folderSelectDropdown) {
+      folderSelectDropdown.addEventListener('change', () => {
+        updateFolderPreview(folderSelectDropdown.value);
+      });
+    }
+
+    if (activateFolderBtn) {
+      activateFolderBtn.addEventListener('click', () => {
+        const folderKey = folderSelectDropdown ? folderSelectDropdown.value : '';
+        if (folderKey) {
+          activateFolder(folderKey);
+          switchTab('player');
+        }
+      });
+    }
+
+    if (reloadAudiodbBtn) {
+      reloadAudiodbBtn.addEventListener('click', () => {
+        loadDatabases(true);
+      });
+    }
+
+    function activateFolder(folderKey) {
+      const tracks = state.folderDB.get(folderKey);
+      if (!tracks || tracks.length === 0) {
+        logTerminal('err', `Folder "${folderKey}" contains no audio tracks.`);
+        return;
+      }
+
+      const cleanFolderKey = folderKey === 'Root' ? 'ROOT' : folderKey.replace(/[^A-Za-z0-9]/g, '_').substring(0, 8).toUpperCase();
+      state.selectedTapeId = cleanFolderKey;
+      state.selectedSide = 'A';
+
+      // 1. Set active tracklists and maps for Side A, Side B, Combine
+      state.activeTracklist = [...tracks];
+      state.tracklistA = [...tracks];
+      state.tracklistB = [];
+      state.tracklistCombine = [...tracks];
+
+      // 2. Build DCT Map for folder (used for both DIR0 and DCT0A modem translation)
+      state.dctMap = buildDCTList('DIR0', state.activeTracklist);
+      state.sideADCTMap = state.dctMap;
+      state.sideBDCTMap = [];
+      state.combineDCTMap = state.dctMap;
+
+      // 3. Set DCT Offset
+      const offsetMinutes = getSelectedFolderDctOffsetMinutes();
+      state.dctOffsetSec = offsetMinutes * 60;
+
+      // 4. Update UI labels
+      const nodeName = folderKey === 'Root' ? 'ROOT' : (folderKey.split(/[\\\/]/).pop() || folderKey);
+      cassetteTapeLabel.textContent = nodeName.toUpperCase();
+      cassetteSideLabel.textContent = '';
+      metaTapeSide.textContent = `Folder: ${folderKey}`;
+
+      if (tracksTapeIdBadge) {
+        tracksTapeIdBadge.textContent = folderKey === 'Root' ? 'Root (Test Tracks)' : nodeName;
+      }
+
+      renderTracklist();
+      if (!audio.paused) audio.pause();
+      selectTrack(0, false);
+      logTerminal('map', `Folder Loaded: ${folderKey} (${tracks.length} tracks, ${formatTimeHours(state.dctMap.length)})`);
+    }
+
+    // --- Tracklist Rendering ---
+    function renderTracklist() {
+      trackListContainer.innerHTML = '';
+      const totalDurationSec = state.activeTracklist.reduce((sum, t) => sum + (t.duration || 0), 0);
+      const totalPlaytimeStr = totalDurationSec >= 3600 ? formatTimeHours(totalDurationSec) : formatTime(totalDurationSec);
+      tracksCountBadge.textContent = `${state.activeTracklist.length} Tracks • ${totalPlaytimeStr}`;
+
+      if (state.activeTracklist.length === 0) {
+        trackListContainer.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px;">No tracks found for this tape.</div>`;
+        return;
+      }
+
+      state.activeTracklist.forEach((track, index) => {
+        const item = document.createElement('div');
+        item.className = `track-item ${index === state.currentTrackIndex ? 'active' : ''}`;
+        item.innerHTML = `
+          <span class="track-index">${String(index + 1).padStart(2, '0')}</span>
+          <span class="track-title">${track.title}</span>
+          <span class="track-dur">${formatTime(track.duration)}</span>
+        `;
+        item.addEventListener('click', () => {
+          selectTrack(index, true);
+        });
+        trackListContainer.appendChild(item);
+      });
+    }
+
+    // --- Autoplay Policy Helpers ---
+    const autoplayBanner = document.getElementById('autoplayBanner');
+
+    function showAutoplayBanner() {
+      if (autoplayBanner) autoplayBanner.style.display = 'block';
+    }
+
+    function hideAutoplayBanner() {
+      if (autoplayBanner) autoplayBanner.style.display = 'none';
+    }
+
+    if (autoplayBanner) {
+      autoplayBanner.addEventListener('click', () => {
+        hideAutoplayBanner();
+        safePlayAudio();
+      });
+    }
+
+    async function safePlayAudio() {
+      if (!audio.src || audio.src === window.location.href) {
+        if (state.activeTracklist.length > 0) {
+          selectTrack(Math.max(0, state.currentTrackIndex), true);
+        } else {
+          logTerminal('err', 'No tape loaded. Open Tape DB tab to select a tape.');
+        }
+        return;
+      }
+
+      try {
+        await audio.play();
+        hideAutoplayBanner();
+      } catch (err) {
+        console.warn('[CassetteFlow] audio.play() caught:', err.message);
+        if (err.name === 'NotAllowedError') {
+          showAutoplayBanner();
+          logTerminal('stop', 'Browser autoplay blocked. Tap "Enable Playback" banner or Play button to listen.');
+        } else if (err.name === 'NotSupportedError') {
+          logTerminal('err', `Audio not found on server (404/CORS) for: ${audio.src}`);
+        } else {
+          logTerminal('err', `Playback error: ${err.message}`);
+        }
+      }
+    }
+
+    function safeTogglePlay() {
+      hideAutoplayBanner();
+      if (audio.paused) {
+        safePlayAudio();
+      } else {
+        audio.pause();
+      }
+    }
+
+    function getTapeTimeStr(cur = (audio ? audio.currentTime : 0)) {
+      if (state.carrierActive && tapeCounterDisplay && tapeCounterDisplay.textContent && tapeCounterDisplay.textContent !== '00:00:00') {
+        return tapeCounterDisplay.textContent;
+      }
+      if (state.currentTrackIndex >= 0 && state.activeTracklist.length > 0) {
+        let startSec = 0;
+        for (let i = 0; i < state.currentTrackIndex; i++) {
+          startSec += (state.activeTracklist[i].duration || 0) + (state.mutePadding || 4);
+        }
+        const currentTapeSec = startSec + (cur || 0);
+        return formatTimeHours(currentTapeSec);
+      }
+      return tapeCounterDisplay ? tapeCounterDisplay.textContent : '00:00:00';
+    }
+
+    function updateMiniPlayerTime(cur, dur) {
+      if (!miniTrackTime) return;
+      const current = cur !== undefined ? cur : (audio ? audio.currentTime : 0);
+      const total = dur !== undefined ? dur : (audio ? (audio.duration || 0) : 0);
+      const tapeTimeStr = getTapeTimeStr(current);
+      miniTrackTime.textContent = `${formatTime(current)} / ${formatTime(total)} | Tape Time: ${tapeTimeStr}`;
+    }
+
+    function notifyDeviceNowPlaying(trackText) {
+      if (!trackText) return;
+      const host = getFormattedHost();
+      const clean = trackText.trim();
+      const url = host ? `${host}/playing?track=${encodeURIComponent(clean)}` : `/playing?track=${encodeURIComponent(clean)}`;
+      console.log(`[CassetteFlow] Notifying device of active track: ${clean} (${url})`);
+      fetch(url, { method: 'GET', cache: 'no-store' }).catch(() => {});
+    }
+
+    function selectTrack(index, autoPlay = true) {
+      if (index < 0 || index >= state.activeTracklist.length) return;
+
+      state.currentTrackIndex = index;
+      const track = state.activeTracklist[index];
+      state.currentHash = track.hash;
+
+      const trackNumStr = String(index + 1).padStart(2, '0');
+      const formattedTitle = `${trackNumStr}. ${track.title}`;
+
+      trackTitle.textContent = formattedTitle;
+      trackArtist.textContent = track.album ? `${track.artist} • ${track.album}` : (track.artist || 'Home Server');
+      metaDuration.textContent = formatTime(track.duration);
+      metaBitrate.textContent = `${track.bitrate} kbps`;
+      timeTotal.textContent = formatTime(track.duration);
+
+      miniTrackTitle.textContent = formattedTitle;
+      updateMiniPlayerTime(0, track.duration);
+
+      const displayTrackName = track.artist ? `${trackNumStr}. ${track.title} - ${track.artist}` : formattedTitle;
+      notifyDeviceNowPlaying(displayTrackName);
+
+      const url = resolveAudioUrl(track.sourcePath);
+      audio.src = url;
+      console.log(`[CassetteFlow] Selected track #${index + 1}: "${track.title}" -> ${url}`);
+
+      if (autoPlay) {
+        safePlayAudio();
+      }
+
+      renderTracklist();
+    }
+
+    // --- Audio Player Handlers ---
+    audio.addEventListener('error', () => {
+      const err = audio.error;
+      let detail = 'Audio source could not be loaded';
+      if (err) {
+        if (err.code === 1) detail = 'Audio loading aborted';
+        else if (err.code === 2) detail = 'Network error downloading audio';
+        else if (err.code === 3) detail = 'Audio decoding failed';
+        else if (err.code === 4) detail = 'Audio file not found on server (404) or unsupported format';
+      }
+      console.error('[CassetteFlow] Audio Element Error:', detail, audio.src);
+      logTerminal('err', `⚠️ ${detail}: ${audio.src}`);
+    });
+
+    const tapeStrip = document.getElementById('tapeStrip');
+    const leftTapePack = document.getElementById('leftTapePack');
+    const rightTapePack = document.getElementById('rightTapePack');
+
+    audio.addEventListener('timeupdate', () => {
+      const cur = audio.currentTime;
+      const dur = audio.duration || 1;
+      progressFill.style.width = `${(cur / dur) * 100}%`;
+      timeElapsed.textContent = formatTime(cur);
+      updateMiniPlayerTime(cur, dur);
+
+      if (leftTapePack && rightTapePack) {
+        const pct = Math.min(1, Math.max(0, cur / dur));
+        const leftSize = Math.round(52 - (pct * 14));
+        const rightSize = Math.round(38 + (pct * 14));
+        leftTapePack.style.width = `${leftSize}px`;
+        leftTapePack.style.height = `${leftSize}px`;
+        rightTapePack.style.width = `${rightSize}px`;
+        rightTapePack.style.height = `${rightSize}px`;
+      }
+    });
+
+    audio.addEventListener('play', () => {
+      playBtn.textContent = '⏸';
+      miniPlayBtn.textContent = '⏸';
+      leftReel.classList.add('spinning');
+      rightReel.classList.add('spinning');
+      if (tapeStrip) tapeStrip.classList.add('active');
+      const curTrack = state.activeTracklist[state.currentTrackIndex];
+      if (curTrack) {
+        const displayTrackName = curTrack.artist ? `${curTrack.title} - ${curTrack.artist}` : curTrack.title;
+        notifyDeviceNowPlaying(displayTrackName);
+      }
+    });
+
+    audio.addEventListener('pause', () => {
+      playBtn.textContent = '▶';
+      miniPlayBtn.textContent = '▶';
+      leftReel.classList.remove('spinning');
+      rightReel.classList.remove('spinning');
+      if (tapeStrip) tapeStrip.classList.remove('active');
+      if (audio.ended || audio.currentTime === 0) {
+        notifyDeviceNowPlaying('Stopped');
+      }
+    });
+
+    audio.addEventListener('ended', () => {
+      if (state.currentTrackIndex < state.activeTracklist.length - 1) {
+        selectTrack(state.currentTrackIndex + 1, true);
+      }
+    });
+
+    progressBar.addEventListener('click', (e) => {
+      const rect = progressBar.getBoundingClientRect();
+      const pct = (e.clientX - rect.left) / rect.width;
+      if (audio.duration) audio.currentTime = pct * audio.duration;
+    });
+
+    playBtn.addEventListener('click', safeTogglePlay);
+    miniPlayBtn.addEventListener('click', safeTogglePlay);
+    stopBtn.addEventListener('click', () => {
+      if (state.noCarrierTimer) {
+        clearTimeout(state.noCarrierTimer);
+        state.noCarrierTimer = null;
+      }
+      audio.pause();
+      audio.currentTime = 0;
+      notifyDeviceNowPlaying('Stopped');
+    });
+    prevBtn.addEventListener('click', () => selectTrack(state.currentTrackIndex - 1, true));
+    nextBtn.addEventListener('click', () => selectTrack(state.currentTrackIndex + 1, true));
+
+    // --- Native Real-Time Audio Visualizer (Web Audio API + Canvas) ---
+    let audioCtx = null;
+    let analyserNode = null;
+    let audioSourceNode = null;
+    let visualizerLoopStarted = false;
+
+    function initWebAudio() {
+      if (audioCtx) {
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume().catch(() => {});
+        }
+        return;
+      }
+      try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return;
+
+        audioCtx = new AudioContextClass();
+        analyserNode = audioCtx.createAnalyser();
+        analyserNode.fftSize = 256;
+        analyserNode.smoothingTimeConstant = 0.82;
+
+        try {
+          audioSourceNode = audioCtx.createMediaElementSource(audio);
+          audioSourceNode.connect(analyserNode);
+          analyserNode.connect(audioCtx.destination);
+          console.log('[CassetteFlow] Web Audio API visualizer connected to media element.');
+        } catch (mediaErr) {
+          console.warn('[CassetteFlow] Media element audio node notice:', mediaErr.message);
+        }
+      } catch (e) {
+        console.warn('[CassetteFlow] Web Audio API initialization notice:', e.message);
+      }
+    }
+
+    // Initialize audio context on first user interaction anywhere on page
+    ['click', 'touchstart', 'keydown'].forEach(evt => {
+      document.addEventListener(evt, () => initWebAudio(), { once: true, passive: true });
+    });
+
+    audio.addEventListener('play', () => {
+      initWebAudio();
+    });
+
+    function renderWaveform() {
+      requestAnimationFrame(renderWaveform);
+      if (!canvasCtx || !waveformCanvas) return;
+
+      const width = waveformCanvas.width;
+      const height = waveformCanvas.height;
+      const isPlaying = !audio.paused && !audio.ended && audio.currentTime > 0;
+
+      // 1. Dark sleek background
+      canvasCtx.fillStyle = '#080c14';
+      canvasCtx.fillRect(0, 0, width, height);
+
+      // 2. Subtle center reference grid line
+      canvasCtx.strokeStyle = 'rgba(88, 166, 255, 0.1)';
+      canvasCtx.lineWidth = 1;
+      canvasCtx.beginPath();
+      canvasCtx.moveTo(0, height / 2);
+      canvasCtx.lineTo(width, height / 2);
+      canvasCtx.stroke();
+
+      const bufferLen = analyserNode ? analyserNode.frequencyBinCount : 64;
+      const timeArray = new Uint8Array(bufferLen);
+      let hasData = false;
+
+      if (analyserNode && isPlaying) {
+        try {
+          analyserNode.getByteTimeDomainData(timeArray);
+          // Check if data is active
+          for (let i = 0; i < bufferLen; i++) {
+            if (Math.abs(timeArray[i] - 128) > 2) {
+              hasData = true;
+              break;
+            }
+          }
+        } catch (e) {}
+      }
+
+      // If playing but cross-origin buffer restricted, synthesize dynamic audio rhythm waveform
+      if (isPlaying && !hasData) {
+        const t = performance.now() * 0.006;
+        for (let i = 0; i < bufferLen; i++) {
+          const s1 = Math.sin(t + i * 0.25);
+          const s2 = Math.cos(t * 1.8 - i * 0.18);
+          timeArray[i] = Math.floor(128 + (s1 * 35 + s2 * 25));
+        }
+      }
+
+      // 3. Draw Clean Oscilloscope Waveform Line
+      canvasCtx.lineWidth = isPlaying ? 2 : 1.5;
+      canvasCtx.strokeStyle = isPlaying ? '#39c5bb' : 'rgba(88, 166, 255, 0.4)';
+      canvasCtx.shadowBlur = isPlaying ? 6 : 0;
+      canvasCtx.shadowColor = '#39c5bb';
+
+      canvasCtx.beginPath();
+      const sliceWidth = width / (bufferLen - 1);
+      let xPos = 0;
+
+      for (let i = 0; i < bufferLen; i++) {
+        let v = 128;
+        if (isPlaying) {
+          v = timeArray[i] || 128;
+        } else {
+          // Calm resting center line with subtle ambient breathing
+          v = 128 + Math.sin(performance.now() * 0.002 + (i * 0.15)) * 1.5;
+        }
+        const yPos = (v / 255) * height;
+
+        if (i === 0) {
+          canvasCtx.moveTo(xPos, yPos);
+        } else {
+          canvasCtx.lineTo(xPos, yPos);
+        }
+        xPos += sliceWidth;
+      }
+
+      canvasCtx.stroke();
+      canvasCtx.shadowBlur = 0;
+    }
+
+    // Start 60 FPS animation loop
+    renderWaveform();
+
+    // --- Line Record Validation (Matches Java CassettePlayer validCharacters & structure checks) ---
+    function isValidLineRecord(line) {
+      if (!line || typeof line !== 'string') return false;
+      const clean = line.trim();
+
+      // 1. Length check: Valid CassetteFlow records range from 12 to 36 characters
+      if (clean.length < 12 || clean.length > 36) {
+        return false;
+      }
+
+      // 2. ASCII & Printable validation (reject control chars, high-ASCII glitch bytes > 126, or Unicode replacement )
+      for (let i = 0; i < clean.length; i++) {
+        const code = clean.charCodeAt(i);
+        if (code < 32 || code > 126) {
+          return false;
+        }
+      }
+
+      // 3. Delimiter count: Must have exactly 4 underscores (5 fields)
+      const parts = clean.split('_');
+      if (parts.length !== 5) {
+        return false;
+      }
+
+      const [tapeKey, trackNum, hash, elapsed, total] = parts;
+
+      // 4. Validate Tape Key (e.g. 'EX01A', 'DCT0A', 'DCT0B', 'RR01B', 'CS00A')
+      if (!/^[A-Za-z0-9]{3,6}$/.test(tapeKey)) {
+        return false;
+      }
+
+      // 5. Validate Track Number (1 or 2 digits)
+      if (!/^\d{1,2}$/.test(trackNum)) {
+        return false;
+      }
+
+      // 6. Validate Hash or placeholder (4 to 12 alphanumeric/hex/symbol chars, e.g. '0000', 'aaaaaaaaaa', 'a516a5e955')
+      if (!/^[a-zA-Z0-9$]{4,12}$/.test(hash)) {
+        return false;
+      }
+
+      // 7. Validate Elapsed and Total (digits or mute format like '000M' / '000MM')
+      if (!/^\d{1,5}(M|MM)?$/i.test(elapsed)) {
+        return false;
+      }
+      if (!/^\d{1,5}$/.test(total)) {
+        return false;
+      }
+
+      return true;
+    }
+
+    // --- FSK Stream Processing ---
+    function processFSKLine(line) {
+      line = line.trim();
+      if (!line) return;
+
+      state.logLineCount++;
+      console.log('[CassetteFlow] Incoming FSK line:', line);
+
+      if (line.includes('### NOCARRIER') || line.includes('NOISY')) {
+        // Start or maintain Carrier Loss Holdover timer instead of instantly cutting audio
+        if (state.noCarrierTimer === null) {
+          carrierPill.style.color = 'var(--accent-amber)';
+          carrierPill.textContent = `HOLDING (${state.noCarrierHoldoverMs}ms)...`;
+          logTerminal('raw', `${line}  [Holdover ${state.noCarrierHoldoverMs}ms started]`);
+
+          state.noCarrierTimer = setTimeout(() => {
+            state.noCarrierTimer = null;
+            state.carrierActive = false;
+            carrierPill.style.color = 'var(--accent-red)';
+            carrierPill.textContent = 'NO CARRIER';
+            logTerminal('stop', `Tape Stopped / Carrier Lost (${state.noCarrierHoldoverMs}ms holdover expired)`);
+            if (!audio.paused) audio.pause();
+          }, state.noCarrierHoldoverMs);
+        }
+        return;
+      }
+
+      // Validate line record integrity (ignore and drop corrupted noise records)
+      if (!isValidLineRecord(line)) {
+        state.dataErrors++;
+        console.warn(`[CassetteFlow] Corrupted line record ignored (${state.dataErrors} errors):`, line);
+        logTerminal('err', `Corrupted Record Ignored: ${line}`);
+        return;
+      }
+
+      // A valid line record arrived: instantly cancel & reset any pending holdover timer
+      if (state.noCarrierTimer) {
+        clearTimeout(state.noCarrierTimer);
+        state.noCarrierTimer = null;
+      }
+
+      state.carrierActive = true;
+      carrierPill.style.color = 'var(--accent-green)';
+      carrierPill.textContent = 'CARRIER ACTIVE';
+
+      let translated = line;
+      if (line.startsWith('DCT0')) {
+        const parts = line.split('_');
+        const dctTapeId = parts[0]; // e.g. 'DCT0A' or 'DCT0B'
+        const incomingSide = dctTapeId.endsWith('B') ? 'B' : 'A';
+
+        // Auto-switch active side if tape flipped from Side A to Side B or vice versa
+        if (state.selectedSide !== 'COMBINE' && state.selectedSide !== incomingSide) {
+          console.log(`[CassetteFlow] Auto-detected DCT Side Flip: switching to Side ${incomingSide}`);
+          logTerminal('map', `Auto-detected DCT tape flipped to Side ${incomingSide}`);
+          updateActiveSide(incomingSide, false);
+        }
+
+        const rawTotal = parseInt(parts[4], 10) || parseInt(parts[3], 10) || 0;
+        const mappedTime = rawTotal + state.dctOffsetSec;
+        tapeCounterDisplay.textContent = formatTimeHours(mappedTime);
+        updateMiniPlayerTime();
+
+        const activeMap = state.selectedSide === 'COMBINE' ? state.combineDCTMap : (incomingSide === 'B' ? state.sideBDCTMap : state.sideADCTMap);
+
+        if (activeMap && mappedTime < activeMap.length) {
+          translated = activeMap[mappedTime];
+          logTerminal('raw', `${line}  -->  ${translated}`);
+        } else {
+          const mapLen = activeMap ? activeMap.length : 0;
+          logTerminal('raw', `${line} (Time ${formatTimeHours(mappedTime)} > Side ${incomingSide} DCT Map: ${formatTimeHours(mapLen)})`);
+          trackTitle.textContent = `No Mapped Line Record (${formatTimeHours(mappedTime)})`;
+          trackArtist.textContent = `Tape timecode exceeds Side ${incomingSide} map (Ends at ${formatTimeHours(mapLen)})`;
+          if (!audio.paused) audio.pause();
+          return;
+        }
+      } else {
+        logTerminal('raw', line);
+      }
+
+      const sa = translated.split('_');
+      if (sa.length >= 4) {
+        const lineTapeKey = sa[0];
+        const hash = sa.length >= 5 ? sa[2] : sa[1];
+        const playSecStr = sa.length >= 5 ? sa[3] : sa[2];
+        const totalSec = sa.length >= 5 ? (parseInt(sa[4], 10) || 0) : (parseInt(sa[3], 10) || 0);
+
+        tapeCounterDisplay.textContent = formatTimeHours(totalSec);
+        updateMiniPlayerTime();
+
+        if (playSecStr.includes('M')) {
+          logTerminal('stop', 'Mute padding between songs...');
+          if (!audio.paused) audio.pause();
+          return;
+        }
+
+        const targetPlaySec = parseInt(playSecStr, 10) || 0;
+
+        // Auto-switch tape if incoming line has a known different Tape ID
+        if (lineTapeKey && !lineTapeKey.startsWith('DCT0')) {
+          const incomingTapeId = lineTapeKey.endsWith('A') || lineTapeKey.endsWith('B') ? lineTapeKey.slice(0, -1) : lineTapeKey;
+          const incomingSide = lineTapeKey.endsWith('A') || lineTapeKey.endsWith('B') ? lineTapeKey.slice(-1) : 'A';
+
+          const isKnownTape = state.tapeDB.has(`${incomingTapeId}A`) || state.tapeDB.has(`${incomingTapeId}B`) || state.tapeDB.has(incomingTapeId);
+          if (isKnownTape && (incomingTapeId !== state.selectedTapeId || incomingSide !== state.selectedSide)) {
+            console.log(`[CassetteFlow] Auto-detected tape: ${incomingTapeId} (Side ${incomingSide})`);
+            logTerminal('map', `Auto-detected tape ${incomingTapeId} (Side ${incomingSide})`);
+            if (tapeSelectDropdown) tapeSelectDropdown.value = incomingTapeId;
+            if (sideSelectDropdown) sideSelectDropdown.value = incomingSide;
+            activateTape(incomingTapeId, incomingSide);
+          }
+        }
+
+        // Change track or sync playback position
+        if (state.currentHash !== hash) {
+          let idx = state.activeTracklist.findIndex(t => t.hash === hash);
+
+          // If track hash is not in active tracklist, look up directly in audioDB
+          if (idx < 0 && state.audioDB.has(hash)) {
+            const extraTrack = state.audioDB.get(hash);
+            console.log(`[CassetteFlow] Hash ${hash} found directly in audioDB: "${extraTrack.title}"`);
+            state.activeTracklist.unshift(extraTrack);
+            renderTracklist();
+            idx = 0;
+          }
+
+          if (idx >= 0) {
+            selectTrack(idx, false);
+            audio.currentTime = targetPlaySec;
+            safePlayAudio();
+          } else {
+            console.warn(`[CassetteFlow] Track hash "${hash}" not found in audiodb.txt`);
+            logTerminal('err', `Track hash "${hash}" not found in audiodb.txt`);
+          }
+        } else {
+          // Same track -> verify playback and check drift
+          const drift = Math.abs(audio.currentTime - targetPlaySec);
+          if (drift > state.driftThreshold) {
+            logTerminal('map', `Drift ${drift.toFixed(1)}s -> seeking to ${targetPlaySec}s`);
+            audio.currentTime = targetPlaySec;
+            if (audio.paused) safePlayAudio();
+          } else if (audio.paused) {
+            safePlayAudio();
+          }
+        }
+      }
+    }
+
+    // --- Stream Client (/raw HTTP Persistent Stream) ---
+    async function startStreamClient() {
+      // Abort any existing stream client immediately before opening a new one
+      if (state.streamAbortController) {
+        state.streamAbortController.abort();
+      }
+      if (state.deviceDisconnected) {
+        statusDot.className = 'status-dot';
+        statusText.textContent = 'Device: Disconnected';
+        return;
+      }
+
+      state.streamAbortController = new AbortController();
+      const signal = state.streamAbortController.signal;
+
+      const host = getFormattedHost();
+      const streamUrl = host ? `${host}/raw` : `/raw`;
+      statusDot.className = 'status-dot';
+      statusText.textContent = host ? `Connecting to ${host}...` : 'Connecting...';
+      logTerminal('map', `Opening stream to ${streamUrl}...`);
+
+      try {
+        const res = await fetch(streamUrl, { signal });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        statusDot.className = 'status-dot connected';
+        statusText.textContent = 'CFS Stream: Connected';
+        logTerminal('map', `Connected to real-time CFS stream (${streamUrl}).`);
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split(/\r?\n/);
+          buffer = lines.pop();
+
+          for (const line of lines) {
+            if (line.trim()) processFSKLine(line);
+          }
+        }
+      } catch (err) {
+        if (err.name === 'AbortError' || signal.aborted) {
+          console.log(`[CassetteFlow] Stream connection to ${streamUrl} aborted.`);
+          return;
+        }
+        statusDot.className = 'status-dot';
+        statusText.textContent = 'Offline (Reconnecting)';
+        logTerminal('err', `Stream unreachable (${streamUrl}): ${err.message}. Retrying in 5s...`);
+        setTimeout(() => {
+          if (!signal.aborted && !state.deviceDisconnected) startStreamClient();
+        }, 5000);
+      }
+    }
+
+    // --- Telemetry Polling (Auto-detects CFS vs M5CoreFSK vs R2RWatch) ---
+    async function pollStatus() {
+      if (state.deviceDisconnected) return;
+      const host = getFormattedHost();
+      const statusUrl = host ? `${host}/api/status` : `/api/status`;
+      const dcsLiteUrl = host ? `${host}/dcs_lite` : `/dcs_lite`;
+      const telemetryUrl = host ? `${host}/api/telemetry` : `/api/telemetry`;
+
+      // 1. Try /dcs_lite or /api/status (CassetteFlow Server or M5CoreFSK)
+      try {
+        let res = await fetch(dcsLiteUrl);
+        if (!res.ok) res = await fetch(statusUrl);
+        if (res.ok) {
+          const d = await res.json();
+          // Check for CassetteFlow Server (CFS) telemetry
+          if ('speedOffset' in d || 'baud' in d) {
+            statusDot.className = 'status-dot active';
+            statusText.textContent = 'CFS: Online';
+
+            if (statLabel1) statLabel1.textContent = 'Baud Rate';
+            if (statLabel2) statLabel2.textContent = 'Speed Drift';
+            if (statLabel3) statLabel3.textContent = 'Modem SNR';
+            if (statLabel4) statLabel4.textContent = 'Decode Errors';
+
+            statBaud.textContent = d.baud ? `${d.baud} Baud` : '1200 Baud';
+            const sOff = d.speedOffset || 0;
+            const sign = sOff >= 0 ? '+' : '';
+            statSpeedErr.textContent = `${sign}${sOff.toFixed(1)}%`;
+            statSNR.textContent = `${(d.snr || 0).toFixed(1)} dB`;
+            const errs = d.data_errors !== undefined ? d.data_errors : state.dataErrors;
+            const total = d.total_recs !== undefined ? d.total_recs : state.logLineCount;
+            statErrors.textContent = `${errs} / ${total}`;
+            return;
+          } else if ('param_baud' in d || 'data_errors' in d || 'param_speed_error' in d) {
+            statusDot.className = 'status-dot active';
+            const bat = d.bat ?? d.param_bat;
+            const batText = (bat !== undefined && bat >= 0) ? ` (🔋 ${bat}%)` : '';
+            statusText.textContent = `CFS / M5Core: Online${batText}`;
+
+            if (statLabel1) statLabel1.textContent = 'Baud Rate';
+            if (statLabel2) statLabel2.textContent = 'Speed Error';
+            if (statLabel3) statLabel3.textContent = 'Modem SNR';
+            if (statLabel4) statLabel4.textContent = 'Decode Errors';
+
+            statBaud.textContent = d.param_measured_baud ? d.param_measured_baud.toFixed(0) : (d.param_baud || 1200);
+            statSpeedErr.textContent = `${(d.param_speed_error || 0).toFixed(1)}%`;
+            statSNR.textContent = `${(d.snr || 0).toFixed(1)} dB`;
+            statErrors.textContent = `${d.data_errors || 0} / ${d.total_recs || 0}`;
+            return;
+          } else if ('rpm' in d || 'flutter' in d || d.device === 'R2RWatch') {
+            statusDot.className = 'status-dot active';
+            const bat = d.bat;
+            const batText = (bat !== undefined && bat >= 0) ? ` (🔋 ${bat}%)` : '';
+            statusText.textContent = `CFS / R2R Watch: Online${batText}`;
+
+            if (statLabel1) statLabel1.textContent = 'Tape Speed';
+            if (statLabel2) statLabel2.textContent = 'Speed Drift';
+            if (statLabel3) statLabel3.textContent = 'Wow / Flutter';
+            if (statLabel4) statLabel4.textContent = 'Reel Motion';
+
+            statBaud.textContent = `${(d.ips || 0).toFixed(1)} IPS (${(d.rpm || 0).toFixed(0)} RPM)`;
+            statSpeedErr.textContent = `${(d.drift || 0).toFixed(2)}%`;
+            statSNR.textContent = `${(d.flutter || 0).toFixed(2)}%`;
+            statErrors.textContent = `${d.dir || (d.playState || 'STOPPED')}`;
+            return;
+          }
+        }
+      } catch (e) { }
+
+      // 2. Try R2RWatch legacy route (/api/telemetry)
+      try {
+        const res = await fetch(telemetryUrl);
+        if (res.ok) {
+          const d = await res.json();
+          if ('rpm' in d || 'flutter' in d || 'bat' in d || d.device === 'R2RWatch') {
+            statusDot.className = 'status-dot active';
+            const bat = d.bat;
+            const batText = (bat !== undefined && bat >= 0) ? ` (🔋 ${bat}%)` : '';
+            statusText.textContent = `R2R Watch: Online${batText}`;
+
+            if (statLabel1) statLabel1.textContent = 'Tape Speed';
+            if (statLabel2) statLabel2.textContent = 'Speed Drift';
+            if (statLabel3) statLabel3.textContent = 'Wow / Flutter';
+            if (statLabel4) statLabel4.textContent = 'Reel Motion';
+
+            statBaud.textContent = `${(d.ips || 0).toFixed(1)} IPS (${(d.rpm || 0).toFixed(0)} RPM)`;
+            statSpeedErr.textContent = `${(d.drift || 0).toFixed(2)}%`;
+            statSNR.textContent = `${(d.flutter || 0).toFixed(2)}%`;
+            statErrors.textContent = `${d.dir || (d.playState || 'STOPPED')}`;
+            return;
+          }
+        }
+      } catch (e) { }
+    }
+    setInterval(pollStatus, 2000);
+
+    // --- Disconnect / Connect Device Button ---
+    const disconnectDeviceBtn = document.getElementById('disconnectDeviceBtn');
+    if (disconnectDeviceBtn) {
+      disconnectDeviceBtn.addEventListener('click', () => {
+        state.deviceDisconnected = !state.deviceDisconnected;
+        if (state.deviceDisconnected) {
+          if (state.streamAbortController) {
+            state.streamAbortController.abort();
+          }
+          statusDot.className = 'status-dot';
+          statusText.textContent = 'CFS: Disconnected';
+          disconnectDeviceBtn.textContent = '🔗 Connect CFS';
+          disconnectDeviceBtn.className = 'btn-action';
+          logTerminal('stop', '🔌 Disconnected from CFS stream. Audio test mode enabled.');
+        } else {
+          disconnectDeviceBtn.textContent = '🔌 Disconnect CFS';
+          disconnectDeviceBtn.className = 'btn-secondary';
+          logTerminal('map', '🔗 Reconnecting to CFS...');
+          startStreamClient();
+          pollStatus();
+        }
+      });
+    }
+
+    // --- Settings Saving ---
+    document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+      state.serverBaseUrl = document.getElementById('cfgServerUrl').value.trim();
+      state.m5Host = document.getElementById('cfgM5Host').value.trim();
+      state.driftThreshold = parseFloat(document.getElementById('cfgDrift').value) || 2.5;
+      state.mutePadding = parseInt(document.getElementById('cfgMutePadding').value) || 4;
+      state.noCarrierHoldoverMs = parseInt(document.getElementById('cfgHoldover').value, 10) || 700;
+
+      localStorage.setItem('cfg_server_url', state.serverBaseUrl);
+      localStorage.setItem('cfg_m5_host', state.m5Host);
+      localStorage.setItem('cfg_drift', state.driftThreshold);
+      localStorage.setItem('cfg_mute_padding', state.mutePadding);
+      localStorage.setItem('cfg_holdover_ms', state.noCarrierHoldoverMs);
+
+      alert('Settings saved successfully!');
+      loadDatabases();
+      if (!state.deviceDisconnected) {
+        startStreamClient();
+        pollStatus();
+      }
+      switchTab('player');
+    });
+
+    const pauseScrollBtn = document.getElementById('pauseScrollBtn');
+    if (pauseScrollBtn) {
+      pauseScrollBtn.addEventListener('click', () => {
+        autoScrollTerminal = !autoScrollTerminal;
+        if (autoScrollTerminal) {
+          pauseScrollBtn.textContent = '⏸ Auto-scroll: ON';
+          pauseScrollBtn.style.color = 'var(--text-muted)';
+          pauseScrollBtn.style.borderColor = 'var(--border-subtle)';
+          terminalWindow.scrollTop = terminalWindow.scrollHeight;
+        } else {
+          pauseScrollBtn.textContent = '▶ Auto-scroll: PAUSED';
+          pauseScrollBtn.style.color = 'var(--accent-amber)';
+          pauseScrollBtn.style.borderColor = 'var(--accent-amber)';
+        }
+      });
+    }
+
+    document.getElementById('clearTermBtn').addEventListener('click', () => {
+      terminalWindow.innerHTML = '';
+    });
+
+    // --- Simulation Controls ---
+    const simTimeSlider = document.getElementById('simTimeSlider');
+    const simTimeDisplay = document.getElementById('simTimeDisplay');
+    const simAutoPlayBtn = document.getElementById('simAutoPlayBtn');
+
+    simTimeSlider.addEventListener('input', (e) => {
+      state.simCurrentSec = parseInt(e.target.value, 10);
+      simTimeDisplay.textContent = `${formatTimeHours(state.simCurrentSec)} (${state.simCurrentSec}s)`;
+      const simSide = state.selectedSide === 'B' ? 'B' : 'A';
+      processFSKLine(`DCT0${simSide}_1_0000_${state.simCurrentSec}_${state.simCurrentSec}`);
+    });
+
+    simAutoPlayBtn.addEventListener('click', () => {
+      if (state.simInterval) {
+        clearInterval(state.simInterval);
+        state.simInterval = null;
+        simAutoPlayBtn.textContent = '▶ Simulate Play';
+      } else {
+        simAutoPlayBtn.textContent = '⏸ Pause Sim';
+        state.simInterval = setInterval(() => {
+          state.simCurrentSec += 1;
+          simTimeSlider.value = state.simCurrentSec;
+          simTimeDisplay.textContent = `${formatTimeHours(state.simCurrentSec)} (${state.simCurrentSec}s)`;
+          const simSide = state.selectedSide === 'B' ? 'B' : 'A';
+          processFSKLine(`DCT0${simSide}_1_0000_${state.simCurrentSec}_${state.simCurrentSec}`);
+        }, 1000);
+      }
+    });
+
+    document.getElementById('simStopBtn').addEventListener('click', () => {
+      if (state.simInterval) {
+        clearInterval(state.simInterval);
+        state.simInterval = null;
+        simAutoPlayBtn.textContent = '▶ Simulate Play';
+      }
+      if (state.noCarrierTimer) {
+        clearTimeout(state.noCarrierTimer);
+        state.noCarrierTimer = null;
+      }
+      processFSKLine('### NOCARRIER ###');
+    });
+
+    // --- Init ---
+    document.getElementById('cfgServerUrl').value = state.serverBaseUrl;
+    document.getElementById('cfgM5Host').value = state.m5Host;
+    document.getElementById('cfgDrift').value = state.driftThreshold;
+    document.getElementById('cfgMutePadding').value = state.mutePadding;
+    document.getElementById('cfgHoldover').value = state.noCarrierHoldoverMs;
+
+    loadDatabases();
+    startStreamClient();
+  </script>
+</body>
+
+</html>

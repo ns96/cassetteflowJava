@@ -63,7 +63,7 @@ import org.json.JSONObject;
  */
 public class CassetteFlow {
     // static variable that holds the application version
-    public static String VERSION = "CassetteFlow v2.1.3 (08/27/2026)";
+    public static String VERSION = "CassetteFlow v2.2.0 (08/30/2026)";
 
     // The default mp3 directory name
     public static String AUDIO_DIR_NAME = "c:\\mp3files";
@@ -363,6 +363,19 @@ public class CassetteFlow {
         try {
             currentDeocdeState.put("rawLineRecord", getRawLineRecord());
             currentDeocdeState.put("currentLineRecord", getCurrentLineRecord());
+            if (cassettePlayer != null) {
+                currentDeocdeState.put("speedOffset", cassettePlayer.getSpeedOffset());
+                currentDeocdeState.put("measuredBaud", (int) Math.round(cassettePlayer.getLastMeasuredBaud()));
+                currentDeocdeState.put("snr", cassettePlayer.getSNR());
+                currentDeocdeState.put("signalPercent", cassettePlayer.getSignalPercent());
+                currentDeocdeState.put("diagnosticStats", cassettePlayer.getDiagnosticString());
+            } else {
+                currentDeocdeState.put("speedOffset", 0.0);
+                currentDeocdeState.put("measuredBaud", 0);
+                currentDeocdeState.put("snr", 0.0);
+                currentDeocdeState.put("signalPercent", 0);
+                currentDeocdeState.put("diagnosticStats", "");
+            }
         } catch (JSONException ex) {
             Logger.getLogger(CassetteFlow.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -373,6 +386,7 @@ public class CassetteFlow {
     /**
      * Get a lightweight version of the decode state (omitting the heavy tracks array)
      * specifically for microcontrollers (ESP32) and fast polling clients.
+     * Includes speedOffset, baud, snr, and sig for fast telemetry monitoring.
      *
      * @return JSONObject containing essential decode state
      */
@@ -400,12 +414,37 @@ public class CassetteFlow {
             liteState.put("newTracks", false);
             liteState.put("rawLineRecord", getRawLineRecord());
             liteState.put("currentLineRecord", getCurrentLineRecord());
+
+            if (cassettePlayer != null) {
+                liteState.put("speedOffset", cassettePlayer.getSpeedOffset());
+                liteState.put("baud", (int) Math.round(cassettePlayer.getLastMeasuredBaud()));
+                liteState.put("snr", cassettePlayer.getSNR());
+                liteState.put("sig", cassettePlayer.getSignalPercent());
+                liteState.put("data_errors", cassettePlayer.getDataErrors());
+                liteState.put("total_recs", cassettePlayer.getLogLineCount());
+            } else {
+                liteState.put("speedOffset", 0.0);
+                liteState.put("baud", 0);
+                liteState.put("snr", 0.0);
+                liteState.put("sig", 0);
+                liteState.put("data_errors", 0);
+                liteState.put("total_recs", 0);
+            }
+
             liteState.remove("tracks");
         } catch (JSONException ex) {
             Logger.getLogger(CassetteFlow.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         return liteState;
+    }
+
+    /**
+     * Get diagnostic telemetry string from active CassettePlayer
+     * @return
+     */
+    public String getDiagnosticStats() {
+        return cassettePlayer != null ? cassettePlayer.getDiagnosticString() : "";
     }
 
     /**
@@ -458,22 +497,43 @@ public class CassetteFlow {
     private void saveAudioInfoDB() {
         try {
             FileWriter writer = new FileWriter(AUDIO_DB_FILENAME);
+            Path rootPath = null;
+            try {
+                if (AUDIO_DIR_NAME != null) {
+                    rootPath = Paths.get(AUDIO_DIR_NAME).toAbsolutePath().normalize();
+                }
+            } catch (Exception ignored) {
+            }
 
             for (String key : audioInfoDB.keySet()) {
                 AudioInfo audioInfo = audioInfoDB.get(key);
 
-                if (audioInfo.getFile() != null) {
-                    // add "/sdcard/" to the designated sdCardFilename
-                    // Also include relativePath as 5th column for sync script
+                if (audioInfo != null && audioInfo.getFile() != null) {
                     String filenameToCheck = audioInfo.getSdCardFilename();
                     String relativePath = audioInfo.getRelativePath();
 
-                    // Fallbacks just in case
                     if (filenameToCheck == null || filenameToCheck.isEmpty()) {
                         filenameToCheck = audioInfo.getFile().getName();
                     }
-                    if (relativePath == null) {
-                        relativePath = audioInfo.getFile().getName();
+
+                    if (relativePath != null && !relativePath.isEmpty()) {
+                        relativePath = relativePath.replace("\\", "/");
+                    }
+
+                    if (relativePath == null || relativePath.isEmpty() || !relativePath.contains("/")) {
+                        if (audioInfo.getFile() != null && rootPath != null) {
+                            try {
+                                Path fp = audioInfo.getFile().toPath().toAbsolutePath().normalize();
+                                if (fp.startsWith(rootPath) && !fp.equals(rootPath)) {
+                                    relativePath = rootPath.relativize(fp).toString().replace("\\", "/");
+                                }
+                            } catch (Exception ignored) {
+                            }
+                        }
+                    }
+
+                    if (relativePath == null || relativePath.isEmpty()) {
+                        relativePath = filenameToCheck;
                     }
 
                     String line = key + "\t" + audioInfo.getLength() + "\t" + audioInfo.getBitRate()
@@ -491,18 +551,65 @@ public class CassetteFlow {
     }
 
     /**
-     * Get the audio info database has a string. Used for testing the
-     * cassette flow server
+     * Get the audio info database as a string. Used by the cassette flow server
      * 
      * @return audio data as a single string
      */
     public String getAudioInfoDBAsString() {
+        if (audioInfoDB == null) {
+            return "";
+        }
         StringBuilder sb = new StringBuilder();
+        Path rootPath = null;
+        try {
+            if (AUDIO_DIR_NAME != null) {
+                rootPath = Paths.get(AUDIO_DIR_NAME).toAbsolutePath().normalize();
+            }
+        } catch (Exception ignored) {
+        }
 
         for (String key : audioInfoDB.keySet()) {
             AudioInfo audioInfo = audioInfoDB.get(key);
-            String line = key + "\t" + audioInfo.getLength() + "\t" + audioInfo.getBitRate() + "\t"
-                    + audioInfo.getFile().getName() + "\n";
+            if (audioInfo == null) {
+                continue;
+            }
+
+            String filenameToCheck = audioInfo.getSdCardFilename();
+            if (filenameToCheck == null || filenameToCheck.isEmpty()) {
+                if (audioInfo.getFile() != null) {
+                    filenameToCheck = audioInfo.getFile().getName();
+                } else if (audioInfo.getTitle() != null) {
+                    filenameToCheck = audioInfo.getTitle();
+                } else {
+                    filenameToCheck = key;
+                }
+            }
+
+            String relativePath = audioInfo.getRelativePath();
+            if (relativePath != null && !relativePath.isEmpty()) {
+                relativePath = relativePath.replace("\\", "/");
+            }
+
+            // If relativePath is missing or just the bare filename, resolve against rootPath
+            if (relativePath == null || relativePath.isEmpty() || !relativePath.contains("/")) {
+                if (audioInfo.getFile() != null && rootPath != null) {
+                    try {
+                        Path fp = audioInfo.getFile().toPath().toAbsolutePath().normalize();
+                        if (fp.startsWith(rootPath) && !fp.equals(rootPath)) {
+                            relativePath = rootPath.relativize(fp).toString().replace("\\", "/");
+                        }
+                    } catch (Exception ignored) {
+                    }
+                }
+            }
+
+            if (relativePath == null || relativePath.isEmpty()) {
+                relativePath = filenameToCheck;
+            }
+
+            String line = key + "\t" + audioInfo.getLength() + "\t" + audioInfo.getBitRate()
+                    + "\t/sdcard/" + filenameToCheck
+                    + "\t" + relativePath + "\n";
             sb.append(line);
         }
 
@@ -773,11 +880,17 @@ public class CassetteFlow {
      * @return
      */
     public String getTapeDBAsString() {
+        if (tapeDB == null) {
+            return "";
+        }
         StringBuilder sb = new StringBuilder();
 
         for (String key : tapeDB.keySet()) {
-            String line = key + "\t" + String.join("\t", tapeDB.get(key)) + "\n";
-            sb.append(line);
+            List<String> tracks = tapeDB.get(key);
+            if (tracks != null) {
+                String line = key + "\t" + String.join("\t", tracks) + "\n";
+                sb.append(line);
+            }
         }
 
         return sb.toString();
@@ -2178,6 +2291,9 @@ public class CassetteFlow {
         System.out.println("  -dir <path> ...       Load audio files from specified directory(s).");
         System.out.println("                        Can accept multiple space-separated paths.");
         System.out.println("  -index                Rebuild audio file index");
+        System.out.println("  -dct <tapeId>         Map DCT records to a specific tape ID");
+        System.out.println("  -dct-load, -load-dct  Load saved DCT records (tape.dct) on startup");
+        System.out.println("  -nodct                Explicitly disable DCT record loading");
         System.out.println("  fsm                   Run in Full Screen Mode (GUI)");
     }
 
@@ -2225,6 +2341,7 @@ public class CassetteFlow {
         boolean cliMode = false;
         boolean indexMode = false;
         boolean fsm = false;
+        boolean loadSavedDct = false;
         int defaultOutputDeviceIndex = -1; // -1 indicates not set
         String dctTapeId = null; // use to map dct to a particular tape
 
@@ -2263,6 +2380,16 @@ public class CassetteFlow {
                     } else {
                         System.err.println("DCT Tape ID missing");
                     }
+                    break;
+                case "-dct-load":
+                case "-load-dct":
+                case "--load-dct":
+                    loadSavedDct = true;
+                    break;
+                case "-nodct":
+                case "--nodct":
+                    loadSavedDct = false;
+                    dctTapeId = null;
                     break;
                 case "-dir":
                     while (i + 1 < args.length && !args[i + 1].startsWith("-")) {
@@ -2312,12 +2439,14 @@ public class CassetteFlow {
 
         if (DEBUG || cliMode) {
             try {
-                if (dctTapeId == null) {
+                if (dctTapeId != null) {
+                    cassetteFlow.createDCTArrayList(dctTapeId, 0);
+                    System.out.println("Created DCT ArrayList for tape ID: " + dctTapeId);
+                } else if (loadSavedDct) {
                     // load any saved DCT info records
                     cassetteFlow.loadDCTInfo();
                 } else {
-                    cassetteFlow.createDCTArrayList(dctTapeId, 0);
-                    System.out.println("Created DCT ArrayList for tape ID: " + dctTapeId);
+                    System.out.println("DCT Decoding: Disabled (Raw Pass-Through / Web Stream Mode)");
                 }
 
                 // Interactive Device Selection if not specified

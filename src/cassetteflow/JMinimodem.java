@@ -17,10 +17,32 @@ import java.util.*;
  * <li><b>Soft PLL Sync:</b> Digital Phase-Locked Loop to track signal drift without "snapping" on noise.</li>
  * <li><b>DC Blocker:</b> Removes microphone offset voltage (hum) to improve dynamic range.</li>
  * <li><b>Noise Kill Switch:</b> Drops carrier if framing errors (static) exceed a threshold.</li>
+ * <li><b>Speed Measurement:</b> Measures edge deltas to determine instantaneous and average tape playback speed / baud rate.</li>
  * <li><b>Dual Mode:</b> Works as a CLI tool or a Library API.</li>
  * </ul>
  */
 public class JMinimodem {
+
+    /**
+     * Structured container for live FSK diagnostic and speed metrics.
+     */
+    public static class DiagnosticData {
+        public double measuredBaud = 0.0;
+        public double speedOffsetPercent = 0.0;
+        public double snr = 0.0;
+        public int signalPercent = 0;
+        public char currentSide = '?';
+        public int totalStops = 0;
+        public int logLineCount = 0;
+        public int dataErrors = 0;
+        public int sideAErrors = 0;
+        public int sideALineCount = 0;
+        public int sideBErrors = 0;
+        public int sideBLineCount = 0;
+        public int dataLengthErrors = 0;
+        public boolean carrier = false;
+        public String rawDiagnosticString = "";
+    }
 
     /**
      * Configuration container for all modem settings.
@@ -51,13 +73,32 @@ public class JMinimodem {
         /** Minimum Signal-to-Noise Ratio (SNR) required to decode */
         public double confidenceThreshold = 1.0; 
         
-        /** * Minimum absolute volume (0.0-1.0) to trigger squelch.
+        /** Minimum absolute volume (0.0-1.0) to trigger squelch.
          * Set to 0.2 to filter out background microphone noise and static.
          */
         public double noiseFloor = 0.2;         
         
         /** Suppress status messages */
-        public boolean quiet = false;            
+        public boolean quiet = false;
+        
+        // --- Added for Decoder Telemetry & Speed Diagnostics ---
+        public DiagnosticListener diagListener = null;
+        public DiagnosticDataListener diagDataListener = null;
+        public volatile boolean resetDiagnostics = false;
+    }
+    
+    /**
+     * Callback interface to receive periodic FSK diagnostic strings from the decoder thread.
+     */
+    public interface DiagnosticListener {
+        void onDiagnostic(String diagLine);
+    }
+
+    /**
+     * Callback interface to receive structured FSK diagnostic data from the decoder thread.
+     */
+    public interface DiagnosticDataListener {
+        void onDiagnosticData(DiagnosticData data);
     }
 
     // =========================================================================
@@ -196,31 +237,46 @@ public class JMinimodem {
         }
 
         double phase = 0; // Continuous phase accumulator to prevent clicks
+        double sampleAccum = 0; // Accumulates fractional samples
 
         // 1. Generate Leader Tone (1000ms Mark)
         // This wakes up the receiver and lets the PLL lock on.
-        phase = emit(cfg, cfg.freqMark, 1000, phase, output, speaker);
+        phase = emit(cfg, cfg.freqMark, cfg.sampleRate * 1.0, phase, output, speaker);
         
         int b;
+        double samplesPerBit = cfg.sampleRate / cfg.baudRate;
+
         // Read input byte-by-byte
         while((b = input.read()) != -1) {
             
+            // We must accumulate fractional samples across bit boundaries!
+            // If samples=160.5, we emit 160 this time, and carry 0.5 over to the next bit.
+            
             // --- START BIT (Space / 0) ---
-            phase = emit(cfg, cfg.freqSpace, 1000/cfg.baudRate, phase, output, speaker);
+            sampleAccum += samplesPerBit;
+            int nToEmit = (int)sampleAccum;
+            sampleAccum -= nToEmit;
+            phase = emit(cfg, cfg.freqSpace, nToEmit, phase, output, speaker);
             
             // --- 8 DATA BITS (LSB First) ---
             for(int i=0; i<8; i++) {
                 // Check if bit i is 1 or 0
                 double f = ((b >> i) & 1) == 1 ? cfg.freqMark : cfg.freqSpace;
-                phase = emit(cfg, f, 1000/cfg.baudRate, phase, output, speaker);
+                sampleAccum += samplesPerBit;
+                nToEmit = (int)sampleAccum;
+                sampleAccum -= nToEmit;
+                phase = emit(cfg, f, nToEmit, phase, output, speaker);
             }
             
             // --- STOP BIT (Mark / 1) ---
-            phase = emit(cfg, cfg.freqMark, 1000/cfg.baudRate, phase, output, speaker);
+            sampleAccum += samplesPerBit;
+            nToEmit = (int)sampleAccum;
+            sampleAccum -= nToEmit;
+            phase = emit(cfg, cfg.freqMark, nToEmit, phase, output, speaker);
         }
         
         // 2. Trailer Tone (500ms Mark) to flush buffers safely
-        emit(cfg, cfg.freqMark, 500, phase, output, speaker);
+        emit(cfg, cfg.freqMark, cfg.sampleRate * 0.5, phase, output, speaker);
         
         // Cleanup
         if(speaker != null) { speaker.drain(); speaker.close(); }
@@ -228,15 +284,15 @@ public class JMinimodem {
     }
 
     /**
-     * Helper: Generates sine wave samples for a specific duration.
+     * Helper: Generates sine wave samples.
      * @return The new phase angle (preserves continuity)
      */
-    private static double emit(Config c, double freq, double ms, double phase, OutputStream out, SourceDataLine line) throws IOException {
-        int samples = (int)(c.sampleRate * ms / 1000.0);
-        byte[] buf = new byte[samples * 2]; // 16-bit = 2 bytes per sample
+    private static double emit(Config c, double freq, double samples, double phase, OutputStream out, SourceDataLine line) throws IOException {
+        int nSamples = (int)samples;
+        byte[] buf = new byte[nSamples * 2]; // 16-bit = 2 bytes per sample
         double inc = 2 * Math.PI * freq / c.sampleRate;
         
-        for(int i=0; i<samples; i++) {
+        for(int i=0; i<nSamples; i++) {
             // Generate Sine Wave
             short s = (short)(Math.sin(phase) * 32000); // 32000 = ~Full Volume
             phase += inc;
@@ -259,8 +315,8 @@ public class JMinimodem {
 
     /**
      * Decodes FSK Audio into text.
-     * Includes High Sensitivity DSP, Digital PLL, and Noise Rejection Kill Switch.
-     * * @param cfg Configuration
+     * Includes High Sensitivity DSP, Digital PLL, Noise Rejection Kill Switch, and Speed Measurement.
+     * @param cfg Configuration
      * @param audioSrc Audio Source (Mic or File Stream)
      * @param textOut Text Destination (Where decoded chars are written)
      */
@@ -269,65 +325,152 @@ public class JMinimodem {
 
         // --- DSP Initialization ---
         double samplesPerBit = cfg.sampleRate / cfg.baudRate;
+        long lastDiagTime = System.currentTimeMillis();
         
-        // FIX: Use 1.0 (Full Width) window. 
-        // 0.8 is too narrow for 1200Hz tone @ 1200 baud (period is exactly 1 bit).
-        // A full window captures the entire wave cycle, preventing phase-dependent fading.
-        int windowSize = (int)Math.round(samplesPerBit * 1.0); 
+        // Use 1.0 (Full Width) window
+        double windowWidth = 1.0; 
         
-        // Create Matched Filters
-        SlidingFilter filterMark = new SlidingFilter(cfg.invert ? cfg.freqSpace : cfg.freqMark, cfg.sampleRate, windowSize);
-        SlidingFilter filterSpace = new SlidingFilter(cfg.invert ? cfg.freqMark : cfg.freqSpace, cfg.sampleRate, windowSize);
+        SlidingFilter filterMark = new SlidingFilter(cfg.invert ? cfg.freqSpace : cfg.freqMark, cfg.sampleRate, (int)(samplesPerBit * windowWidth));
+        SlidingFilter filterSpace = new SlidingFilter(cfg.invert ? cfg.freqMark : cfg.freqSpace, cfg.sampleRate, (int)(samplesPerBit * windowWidth));
         
         byte[] buf = new byte[2048];
         int bytesRead;
         
-        // --- State Machine Constants ---
-        final int STATE_IDLE = 0;   // Waiting for Start Bit edge
-        final int STATE_VERIFY = 1; // Waiting 0.5 bits to confirm Start
-        final int STATE_DATA = 2;   // Reading 8 data bits
+        // --- State Machine ---
+        final int STATE_IDLE = 0;
+        final int STATE_VERIFY = 1;
+        final int STATE_DATA = 2;
         int state = STATE_IDLE; 
-        
         double timer = 0.0;
         int bitIndex = 0;
         int currentByte = 0;
         
-        // --- Sync Variables ---
+        // --- Sync & Diag Variables ---
         boolean carrier = false;
-        int carrierCounter = 0;     // Squelch debounce
-        boolean lastBitMark = true; // For edge detection
-        int framingErrorCount = 0;  // Noise Kill Switch counter
-        double dcOffset = 0.0;      // DC Blocker state
+        int carrierCounter = 0;
+        boolean lastBitMark = true;
+        int framingErrorCount = 0;
+        double dcOffset = 0.0;
+        long lastEdgeSample = 0;
+        long sampleCount = 0;
+        double lastMeasuredBaud = 0.0;
+        
+        // TapeStats Tracking
+        int totalStops = 0;
+        int logLineCount = 0;
+        int dataErrors = 0;
+        int dataLengthErrors = 0;
+        int sideALineCount = 0;
+        int sideAErrors = 0;
+        int sideBLineCount = 0;
+        int sideBErrors = 0;
+        char currentSide = '?';
+        boolean isDctMode = false;
+        
+        ByteArrayOutputStream lineBuffer = new ByteArrayOutputStream();
 
         while ((bytesRead = audioSrc.read(buf)) != -1) {
-            // Process samples (16-bit Little Endian)
+            // Check for Reset Request
+            if (cfg.resetDiagnostics) {
+                totalStops = 0;
+                logLineCount = 0;
+                dataErrors = 0;
+                dataLengthErrors = 0;
+                sideALineCount = 0;
+                sideAErrors = 0;
+                sideBLineCount = 0;
+                sideBErrors = 0;
+                lastMeasuredBaud = 0.0;
+                sampleCount = 0;
+                lastEdgeSample = 0;
+                cfg.resetDiagnostics = false;
+            }
+
             for (int i = 0; i < bytesRead; i += 2) {
-                // Convert PCM to normalized double
                 short raw = (short)((buf[i] & 0xFF) | (buf[i+1] << 8));
                 double sample = raw / 32768.0;
 
-                // FIX: DC Bias Removal (High Pass Filter)
-                // Removes microphone hum/offset that deafens the filters
+                // DC Bias Removal
                 dcOffset = (sample * 0.01) + (dcOffset * 0.99);
                 sample -= dcOffset;
 
-                // 1. Run DSP Filters
                 filterMark.process(sample);
                 filterSpace.process(sample);
                 
-                double mMag = filterMark.getMag(); // Mark Magnitude
-                double sMag = filterSpace.getMag(); // Space Magnitude
-                
+                double mMag = filterMark.getMag();
+                double sMag = filterSpace.getMag();
                 boolean isMark = mMag > sMag;
                 double total = mMag + sMag;
-
-                // 2. Calculate Confidence (SNR)
-                // Ratio of Dominant Tone / (Weak Tone + epsilon)
                 double conf = isMark ? mMag/(sMag+0.0001) : sMag/(mMag+0.0001);
-
-                // 3. Carrier Squelch
-                // Total energy must be > noiseFloor (0.2).
-                // Confidence must be decent (> 0.5) to prevent triggering on white noise.
+                
+                // --- 1000ms Polling Loop for Diagnostic Telemetry ---
+                long now = System.currentTimeMillis();
+                if (now - lastDiagTime >= 1000) {
+                    lastDiagTime = now;
+                    if ((cfg.diagListener != null || cfg.diagDataListener != null) && carrier) {
+                        double signalLevel = total > 1.0 ? 1.0 : total;
+                        
+                        // Calculate speed offset percentage
+                        float speedOffset = 0;
+                        if (lastMeasuredBaud > 0) {
+                            speedOffset = (float)((lastMeasuredBaud - cfg.baudRate) * 100.0 / cfg.baudRate);
+                        }
+                        char sign = (speedOffset >= 0) ? '+' : '-';
+                        
+                        StringBuilder sb = new StringBuilder();
+                        // 1. Baud & SNR
+                        sb.append(String.format("Baud: %d (%c%.1f%%) | SNR: %.2f | Sig: %d%%\n", 
+                                  (int)lastMeasuredBaud, sign, Math.abs(speedOffset), conf, (int)(signalLevel * 100.0)));
+                        
+                        // 2. Side & Stops
+                        sb.append(String.format("Side: %c | Stops: %d\n", currentSide, totalStops));
+                        
+                        // 3. Mode
+                        sb.append(String.format("Mode: %s\n", isDctMode ? "DCT" : "Generic"));
+                        
+                        // 4. Total Lines
+                        sb.append(String.format("Total: %d\n", logLineCount));
+                        
+                        // 5. Total Errors
+                        sb.append(String.format("Errors: %d\n", dataErrors));
+                        
+                        // 6. Side A Stats
+                        float saPerc = (sideALineCount > 0) ? ((float)sideAErrors * 100.0f / (float)sideALineCount) : 0.0f;
+                        sb.append(String.format("Side A: %d/%d (%.2f%%)\n", sideAErrors, sideALineCount, saPerc));
+                        
+                        // 7. Side B Stats
+                        float sbPerc = (sideBLineCount > 0) ? ((float)sideBErrors * 100.0f / (float)sideBLineCount) : 0.0f;
+                        sb.append(String.format("Side B: %d/%d (%.2f%%)\n", sideBErrors, sideBLineCount, sbPerc));
+                        
+                        // 8. Format Errors
+                        sb.append(String.format("Format Err: L=%d N=%d", dataLengthErrors, dataErrors));
+                        
+                        String diagStr = sb.toString();
+                        if (cfg.diagListener != null) {
+                            cfg.diagListener.onDiagnostic(diagStr);
+                        }
+                        if (cfg.diagDataListener != null) {
+                            DiagnosticData data = new DiagnosticData();
+                            data.measuredBaud = lastMeasuredBaud;
+                            data.speedOffsetPercent = speedOffset;
+                            data.snr = conf;
+                            data.signalPercent = (int)(signalLevel * 100.0);
+                            data.currentSide = currentSide;
+                            data.totalStops = totalStops;
+                            data.logLineCount = logLineCount;
+                            data.dataErrors = dataErrors;
+                            data.sideAErrors = sideAErrors;
+                            data.sideALineCount = sideALineCount;
+                            data.sideBErrors = sideBErrors;
+                            data.sideBLineCount = sideBLineCount;
+                            data.dataLengthErrors = dataLengthErrors;
+                            data.carrier = carrier;
+                            data.rawDiagnosticString = diagStr;
+                            cfg.diagDataListener.onDiagnosticData(data);
+                        }
+                    }
+                }
+                
                 if (total > cfg.noiseFloor && conf > 0.5) {
                     if (carrierCounter < samplesPerBit * 2) carrierCounter++;
                 } else {
@@ -337,76 +480,97 @@ public class JMinimodem {
                 if (!carrier && carrierCounter > samplesPerBit) {
                     carrier = true;
                     if(!cfg.quiet) System.err.printf("\n### CARRIER DETECTED (Conf: %.2f) ###\n", conf);
-                    state = STATE_IDLE; // Reset logic on new signal
+                    state = STATE_IDLE;
                     framingErrorCount = 0;
                 } else if (carrier && carrierCounter < 0) {
-                    carrier = false;
                     if(!cfg.quiet) System.err.println("\n### NOCARRIER ###");
+                    totalStops++;
+                    carrier = false;
                     state = STATE_IDLE;
                 }
 
                 if (!carrier) continue;
+                sampleCount++;
 
-                // 4. Soft Digital PLL (Phase-Locked Loop)
-                // If the signal flips (Mark<->Space), we align our internal clock.
+                // Track edge transitions to measure instantaneous baud rate
                 if (isMark != lastBitMark) {
-                     // If we are IDLE and see a flip to Space (0), that is a Start Bit Edge.
-                     if (state == STATE_IDLE && !isMark) {
-                         // Align timer to sample exactly in the middle of the Start Bit (0.5 bits from now)
-                         timer = samplesPerBit * 0.5;
-                         state = STATE_VERIFY;
-                     } else {
-                         // Soft Nudge logic could go here for data-bit transitions
-                     }
+                    if (lastEdgeSample > 0) {
+                        long delta = sampleCount - lastEdgeSample;
+                        double bits = (double)delta / samplesPerBit;
+                        int k = (int)(bits + 0.5);
+                        if (k >= 1 && k <= 12) {
+                            double instBaud = ((double)k * cfg.sampleRate / (double)delta);
+                            if (lastMeasuredBaud < 1.0) lastMeasuredBaud = instBaud;
+                            else lastMeasuredBaud = (lastMeasuredBaud * 0.98) + (instBaud * 0.02);
+                        }
+                    }
+                    lastEdgeSample = sampleCount;
+                    if (state == STATE_IDLE && !isMark) {
+                        timer = samplesPerBit * 0.5;
+                        state = STATE_VERIFY;
+                    }
                 }
                 lastBitMark = isMark;
 
-                // 5. UART Logic
                 switch (state) {
                     case STATE_VERIFY:
                         timer -= 1.0;
                         if (timer <= 0) {
-                            if (!isMark) { // Confirmed Start Bit (Still Space)
+                            if (!isMark) {
                                 state = STATE_DATA;
-                                timer = samplesPerBit; // Schedule next read
+                                timer = samplesPerBit;
                                 bitIndex = 0;
                                 currentByte = 0;
                             } else {
-                                state = STATE_IDLE; // Glitch (flipped back to Mark)
+                                state = STATE_IDLE;
                             }
                         }
                         break;
-
                     case STATE_DATA:
                         timer -= 1.0;
                         if (timer <= 0) {
                             int bit = isMark ? 1 : 0;
-                            
                             if (bitIndex < 8) {
-                                // Accumulate Data Bits
                                 currentByte |= (bit << bitIndex);
                                 bitIndex++;
                                 timer = samplesPerBit;
                             } else {
-                                // Stop Bit Check (Must be Mark)
                                 if (isMark) {
-                                    framingErrorCount = 0; // Valid byte, reset error counter
-                                    int ascii = currentByte & 0x7F; // 7-bit clean
-                                    // Print valid chars
+                                    framingErrorCount = 0;
+                                    int ascii = currentByte & 0x7F;
                                     if (ascii >= 32 || ascii == 10 || ascii == 13 || ascii == 9) {
                                         textOut.write(ascii);
                                         textOut.flush();
+                                        if (ascii == '\n') {
+                                            String lineStr = lineBuffer.toString("US-ASCII").trim();
+                                            lineBuffer.reset();
+                                            if (lineStr.length() > 0) {
+                                                logLineCount++;
+                                                if (lineStr.startsWith("DCT0")) {
+                                                    isDctMode = true;
+                                                    char side = lineStr.length() > 4 ? lineStr.charAt(4) : '?';
+                                                    if (side == 'A') { sideALineCount++; currentSide = 'A'; }
+                                                    else if (side == 'B') { sideBLineCount++; currentSide = 'B'; }
+                                                    if (lineStr.length() != 29) {
+                                                        dataLengthErrors++;
+                                                        if (side == 'A') sideAErrors++;
+                                                        if (side == 'B') sideBErrors++;
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            lineBuffer.write(ascii);
+                                        }
                                     }
                                 } else {
                                     framingErrorCount++;
-                                    // KILL SWITCH: 6 consecutive errors = signal lost / static
                                     if (framingErrorCount > 6) {
                                         carrier = false;
                                         carrierCounter = -((int)samplesPerBit * 2); 
                                         if(!cfg.quiet) System.err.println("\n### NOCARRIER (Signal Lost) ###");
                                     }
                                 }
-                                state = STATE_IDLE; // Ready for next byte
+                                state = STATE_IDLE;
                             }
                         }
                         break;

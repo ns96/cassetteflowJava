@@ -63,6 +63,11 @@ public class TapeDeckTester {
     private int sideBErrors = 0;
     private int sideBLineCount = 0;
 
+    // Telemetry & Speed diagnostics
+    private volatile JMinimodem.DiagnosticData lastDiagnosticData = new JMinimodem.DiagnosticData();
+    private volatile String lastDiagnosticString = "";
+    private JMinimodem.Config activeConfig;
+
     private static final DecimalFormat df = new DecimalFormat("0.0000");
 
     // the default baud rate
@@ -137,6 +142,15 @@ public class TapeDeckTester {
             config.baudRate = baudRate;
             config.sampleRate = sampleRate;
             config.quiet = false; // We need this FALSE so it generates "### NOCARRIER"
+            activeConfig = config;
+
+            // Hook diagnostic listeners for speed measurement & tape stats
+            config.diagListener = diagStr -> {
+                lastDiagnosticString = diagStr;
+            };
+            config.diagDataListener = diagData -> {
+                lastDiagnosticData = diagData;
+            };
 
             // Wrap the Mic Line in a Stream
             AudioInputStream audioStream = new AudioInputStream(microphoneLine);
@@ -289,7 +303,16 @@ public class TapeDeckTester {
     }
 
     private void printStats() {
-        String message = "CURRENT PROGRESS (errors/line records): " + dataErrors + "/" + logLineCount +
+        String speedInfo = "";
+        if (lastDiagnosticData != null && lastDiagnosticData.measuredBaud > 0) {
+            char sign = (lastDiagnosticData.speedOffsetPercent >= 0) ? '+' : '-';
+            speedInfo = String.format("SPEED / QUALITY: Baud %d (%c%.1f%%) | SNR: %.2f | Sig: %d%%\n",
+                    (int) lastDiagnosticData.measuredBaud, sign, Math.abs(lastDiagnosticData.speedOffsetPercent),
+                    lastDiagnosticData.snr, lastDiagnosticData.signalPercent);
+        }
+
+        String message = (speedInfo.isEmpty() ? "" : speedInfo) +
+                "CURRENT PROGRESS (errors/line records): " + dataErrors + "/" + logLineCount +
                 " { " + getPercentError() + "% }\n" +
                 "SIDE A ERRORS: " + sideAErrors + "/" + sideALineCount + "\t{ " + getSidePercentError('A') + "% }\n" +
                 "SIDE B ERRORS: " + sideBErrors + "/" + sideBLineCount + "\t{ " + getSidePercentError('B') + "% }\n" +
@@ -498,13 +521,21 @@ public class TapeDeckTester {
         try {
             tapeDeckDataTester.startMinimodem();
 
-            // start the scanner to close the program
+            // start the scanner to close the program or query stats
             Scanner sc = new Scanner(System.in);
             String input = null;
 
+            System.out.println("\nCommands: [S] Show Speed & Stats | [R] Reset Stats | [X] Exit");
             do {
-                System.out.println("Type X and hit Enter to exit program");
                 input = sc.next();
+                if (input.equalsIgnoreCase("s")) {
+                    tapeDeckDataTester.printStats();
+                } else if (input.equalsIgnoreCase("r")) {
+                    if (tapeDeckDataTester.activeConfig != null) {
+                        tapeDeckDataTester.activeConfig.resetDiagnostics = true;
+                    }
+                    System.out.println("Diagnostics reset requested.");
+                }
             } while (!input.equalsIgnoreCase("x"));
 
             sc.close();

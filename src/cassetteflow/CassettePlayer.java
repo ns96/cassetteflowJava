@@ -115,6 +115,10 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     // used to display tracks from long youtube mix
     private TrackListInfo trackListInfo = null;
     
+    // Telemetry & Speed diagnostics
+    private volatile JMinimodem.DiagnosticData lastDiagnosticData = new JMinimodem.DiagnosticData();
+    private volatile String lastDiagnosticString = "";
+    
     private final int STOP_RECORD_LIMIT = 0;
     
     public CassettePlayer(CassetteFlowFrame cassetteFlowFrame, CassetteFlow cassetteFlow, String logfile) {
@@ -210,7 +214,39 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
      * @return 
      */
     public String getStats() {
-        return "Test ...";
+        return lastDiagnosticString != null && !lastDiagnosticString.isEmpty() ? lastDiagnosticString : "No diagnostic stats yet...";
+    }
+    
+    public JMinimodem.DiagnosticData getDiagnosticData() {
+        return lastDiagnosticData;
+    }
+    
+    public String getDiagnosticString() {
+        return lastDiagnosticString;
+    }
+    
+    public double getLastMeasuredBaud() {
+        return lastDiagnosticData != null ? lastDiagnosticData.measuredBaud : 0.0;
+    }
+    
+    public double getSpeedOffset() {
+        return lastDiagnosticData != null ? lastDiagnosticData.speedOffsetPercent : 0.0;
+    }
+    
+    public double getSNR() {
+        return lastDiagnosticData != null ? lastDiagnosticData.snr : 0.0;
+    }
+    
+    public int getSignalPercent() {
+        return lastDiagnosticData != null ? lastDiagnosticData.signalPercent : 0;
+    }
+
+    public int getDataErrors() {
+        return dataErrors;
+    }
+
+    public int getLogLineCount() {
+        return logLineCount;
     }
     
     /**
@@ -260,6 +296,14 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
             }
             config.sampleRate = sampleRate;
             config.quiet = false; // Must be false to generate "### NOCARRIER"
+            
+            // Attach diagnostic listeners to capture speed & tape stats
+            config.diagListener = diagStr -> {
+                lastDiagnosticString = diagStr;
+            };
+            config.diagDataListener = diagData -> {
+                lastDiagnosticData = diagData;
+            };
             
             // Wrap the Mic Line in a Stream
             AudioInputStream audioStream = new AudioInputStream(microphoneLine);
