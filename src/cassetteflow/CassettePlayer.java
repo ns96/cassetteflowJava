@@ -121,18 +121,32 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     
     private final int STOP_RECORD_LIMIT = 0;
     
+    // Flag to enable/disable host machine local speaker audio output
+    private boolean audioPlaybackEnabled = true;
+    
     public CassettePlayer(CassetteFlowFrame cassetteFlowFrame, CassetteFlow cassetteFlow, String logfile) {
-        this(cassetteFlow, logfile);
+        this(cassetteFlow, logfile, true);
         this.cassetteFlowFrame = cassetteFlowFrame;
     }
     
     public CassettePlayer(CassetteFlow cassetteFlow, String logfile) {
+        this(cassetteFlow, logfile, true);
+    }
+    
+    public CassettePlayer(CassetteFlow cassetteFlow, String logfile, boolean audioPlaybackEnabled) {
         this.cassetteFlow = cassetteFlow;
         cassetteFlow.setCassettePlayer(this);
-        
         this.logfile = logfile;
-        
+        this.audioPlaybackEnabled = audioPlaybackEnabled;
         DOWNLOAD_DIR = CassetteFlow.AUDIO_DIR_NAME + File.separator + "downloads";
+    }
+
+    public boolean isAudioPlaybackEnabled() {
+        return audioPlaybackEnabled;
+    }
+
+    public void setAudioPlaybackEnabled(boolean audioPlaybackEnabled) {
+        this.audioPlaybackEnabled = audioPlaybackEnabled;
     }
     
     /**
@@ -586,7 +600,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                         System.out.println("\n");
                     }
                     
-                    System.out.println(stopRecords + " -> " + stopMessage);
+                    System.out.println("Stop Count: " + stopRecords + " -> " + stopMessage);
                 }
                 
                 currentLineRecord = "PLAYBACK STOPPED # " + stopRecords; 
@@ -841,6 +855,10 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
      * * @param file 
      */
     private void playAudio(File file, int duration) {
+        if (!audioPlaybackEnabled) {
+            return;
+        }
+
         // make sure we stop any previous threads
         if (player != null) {
             player.stop();

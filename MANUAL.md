@@ -42,12 +42,26 @@
 The CassetteFlow desktop interface is organized into distinct workflow tabs:
 
 ### 2.1. ENCODE Tab
-The **ENCODE** tab manages your digital music library, builds mixtape playlists for Side A and Side B, and generates both printable cassette J-Cards and encoded FSK audio signals.
-
+* **Multi-Function Directory & Smart Search/Import Input**:
+  The text field at the top of the ENCODE tab (defaulting to `C:\mp3files`) serves as an interactive multi-purpose command and input bar with 4 distinct operational modes:
+  1. **Audio Directory Path & Indexing**:
+     - Displays and sets the active working audio library directory (`currentAudioDirectory`).
+     - Typing a directory path and loading will recursively scan, parse ID3 tags, and index all audio files.
+     - Designates the base storage directory for generated tape data files (`<AudioDir>\TapeFiles`).
+  2. **Live Library Keyword Filter**:
+     - Typing any search string (e.g. artist name, song title, album, or filename) and pressing **Enter** (or clicking the **(F)** filter button) instantly filters the library list in real time.
+     - Clearing the text field and pressing **Enter** clears the filter and restores the full library list and directory display.
+  3. **Spotify Playlist & Track Importer**:
+     - Pasting a Spotify URL or URI and pressing **Enter** automatically detects the media type via the integrated Spotify connector and loads tracks directly into the track list:
+       - `https://open.spotify.com/playlist/<id>` $\to$ Loads entire Spotify playlist.
+       - `https://open.spotify.com/album/<id>` $\to$ Loads full Spotify album tracks.
+       - `https://open.spotify.com/track/<id>` $\to$ Imports a single Spotify track.
+       - `spotify:...` URI $\to$ Imports active Spotify player queue.
+  4. **YouTube & DeckCast Playlist Importer**:
+     - Pasting a YouTube playlist URL (e.g. `https://www.youtube.com/playlist?list=...`) or a `youtube:...` URI and pressing **Enter** communicates with the DeckCast connector to automatically extract and populate video audio tracks into the playlist builder.
 * **Audio Library Browser**:
-  * Scans your configured audio directory (`C:\mp3files` by default) and displays all indexed MP3 and FLAC tracks.
+  * Scans your configured audio directory and displays all indexed MP3 and FLAC tracks.
   * Shows track duration, bitrate, filename, and ID3 tags (Title, Artist, Album, Year, Genre).
-  * Includes a real-time search filter to quickly find tracks.
 * **Side A & Side B Tracklist Builder**:
   * Add selected tracks to **Side A** or **Side B** with dedicated controls.
   * Displays total running time for each side and compares it against standard tape lengths (C-46, C-60, C-90, C-120) with remaining minute/second indicators.
@@ -136,20 +150,22 @@ CassetteFlow can run completely headless without a graphical user interface—id
 
 ### Running in CLI Mode
 ```bash
-# Basic CLI mode (interactive audio output prompt)
+# Basic CLI mode (Headless server & streamer, local host audio muted by default)
 java -jar dist/CassetteFlow.jar -cli
 
-# Headless mode with audio output device 0 pre-selected
-java -jar dist/CassetteFlow.jar -cli -d 0
+# CLI mode with local host speaker audio playback enabled on device 0
+java -jar dist/CassetteFlow.jar -cli -play -d 0
 
 # Headless mode with audio index rebuilt on startup
-java -jar dist/CassetteFlow.jar -cli -index -d 0
+java -jar dist/CassetteFlow.jar -cli -index
 ```
 
 ### CLI Command Options
 | Flag | Parameter | Description |
 |---|---|---|
 | `-cli` | *None* | Runs in Command Line Interface (headless) mode |
+| `-play`, `-audio` | *None* | Enables local speaker audio playback on host machine |
+| `-noaudio`, `-mute`| *None* | Disables local speaker audio playback on host machine (default in CLI) |
 | `-d`, `--device` | `<index>` | Selects audio output mixer by numeric index (e.g. `-d 0`) |
 | `-index` | *None* | Scans audio directory and rebuilds `audiodb.bin` & `audiodb.txt` |
 | `-dir` | `<path>` | Loads audio files from specified custom directory |
@@ -192,6 +208,7 @@ CassetteFlow includes a high-performance, multithreaded embedded HTTP server (`C
 | `/tapedb.txt` | `GET` | `text/plain` | Tape collection database (from disk or memory) |
 | `/tracklist.txt` | `GET` | `text/plain` | Current active tracklist |
 | `/dcc?command=<cmd>` | `GET` | `text/plain` | Executes remote decoder commands (`start`, `stop`, `reset`) |
+| `/playing` | `GET`, `POST` | `application/json` | Client Now Playing synchronization (receives track title/artist/hash on track change) |
 | `/play?track=<num>` | `GET` | `text/plain` | Triggers playback of specified track |
 | `/stop` | `GET` | `text/plain` | Stops playback |
 

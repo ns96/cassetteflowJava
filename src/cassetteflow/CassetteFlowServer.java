@@ -22,6 +22,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * This is class implements a simple http server for testing the ESP32LyraT
@@ -95,6 +97,7 @@ public class CassetteFlowServer {
         server.createContext("/tracklist.txt", new DatabaseFileHandler("tracklist.txt")); // Static tracklist database
         server.createContext("/audiodb", new getMp3DBHandler()); // Audio DB alias
         server.createContext("/api/status", new DecodeLiteStateHandler()); // Status alias for web player
+        server.createContext("/playing", new PlayingHandler()); // Client Now Playing synchronization
 
         server.setExecutor(executor);
         server.start();
@@ -776,6 +779,93 @@ public class CassetteFlowServer {
                 try (OutputStream os = exchange.getResponseBody()) {
                     os.write(data);
                 }
+            }
+        }
+    }
+
+    /**
+     * Handler to receive now-playing track updates from web/client players
+     * Endpoint: GET /playing?track=01.+Song+-+Artist&hash=...
+     *       or: POST /playing (with url-encoded params or json body)
+     */
+    private class PlayingHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            addCorsHeaders(exchange);
+            if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+                exchange.sendResponseHeaders(204, -1);
+                return;
+            }
+
+            String track = "";
+            String hash = "";
+            boolean isPlaying = true;
+
+            // 1. Check query parameters
+            String query = exchange.getRequestURI().getRawQuery();
+            if (query != null && !query.isEmpty()) {
+                Map<String, String> params = splitQuery(query);
+                if (params.containsKey("track")) {
+                    track = params.get("track");
+                } else if (params.containsKey("title")) {
+                    track = params.get("title");
+                    if (params.containsKey("artist")) {
+                        track += " - " + params.get("artist");
+                    }
+                }
+                if (params.containsKey("hash")) {
+                    hash = params.get("hash");
+                }
+                if (params.containsKey("playing")) {
+                    isPlaying = !"false".equalsIgnoreCase(params.get("playing"));
+                } else if (params.containsKey("state") || params.containsKey("status")) {
+                    String st = params.containsKey("state") ? params.get("state") : params.get("status");
+                    if ("paused".equalsIgnoreCase(st) || "stopped".equalsIgnoreCase(st) || "idle".equalsIgnoreCase(st)) {
+                        isPlaying = false;
+                    }
+                }
+            }
+
+            // 2. If POST body and track not in query, inspect request body
+            if (track.isEmpty() && "POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+                try (InputStream is = exchange.getRequestBody()) {
+                    String body = new String(is.readAllBytes(), StandardCharsets.UTF_8).trim();
+                    if (body.startsWith("{") && body.endsWith("}")) {
+                        try {
+                            JSONObject json = new JSONObject(body);
+                            if (json.has("track")) track = json.getString("track");
+                            else if (json.has("title")) {
+                                track = json.getString("title");
+                                if (json.has("artist")) track += " - " + json.getString("artist");
+                            }
+                            if (json.has("hash")) hash = json.getString("hash");
+                            if (json.has("playing")) isPlaying = json.getBoolean("playing");
+                        } catch (Exception ignored) {}
+                    } else if (body.contains("=")) {
+                        Map<String, String> formParams = splitQuery(body);
+                        if (formParams.containsKey("track")) track = formParams.get("track");
+                        if (formParams.containsKey("hash")) hash = formParams.get("hash");
+                    } else {
+                        track = body;
+                    }
+                }
+            }
+
+            if (track != null && !track.trim().isEmpty()) {
+                try {
+                    track = URLDecoder.decode(track, StandardCharsets.UTF_8).trim();
+                } catch (Exception ignored) {}
+                if (cassetteFlow != null) {
+                    cassetteFlow.setClientNowPlaying(track, hash, isPlaying);
+                }
+            }
+
+            String jsonResponse = "{\"status\":\"ok\",\"track\":\"" + (track != null ? track.replace("\"", "\\\"") : "") + "\",\"playing\":" + isPlaying + "}\n";
+            exchange.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
+            byte[] bytes = jsonResponse.getBytes(StandardCharsets.UTF_8);
+            exchange.sendResponseHeaders(200, bytes.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(bytes);
             }
         }
     }

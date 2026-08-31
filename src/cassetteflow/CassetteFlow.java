@@ -63,7 +63,7 @@ import org.json.JSONObject;
  */
 public class CassetteFlow {
     // static variable that holds the application version
-    public static String VERSION = "CassetteFlow v2.2.0 (08/30/2026)";
+    public static String VERSION = "CassetteFlow v2.2.1 (08/31/2026)";
 
     // The default mp3 directory name
     public static String AUDIO_DIR_NAME = "c:\\mp3files";
@@ -384,7 +384,8 @@ public class CassetteFlow {
     }
 
     /**
-     * Get a lightweight version of the decode state (omitting the heavy tracks array)
+     * Get a lightweight version of the decode state (omitting the heavy tracks
+     * array)
      * specifically for microcontrollers (ESP32) and fast polling clients.
      * Includes speedOffset, baud, snr, and sig for fast telemetry monitoring.
      *
@@ -440,7 +441,34 @@ public class CassetteFlow {
     }
 
     /**
+     * Update the currently playing track from web/client notification
+     * 
+     * @param trackName Title/Artist text of track
+     * @param hash      Track 10-character hash (optional)
+     * @param isPlaying Whether playback is currently active
+     */
+    public synchronized void setClientNowPlaying(String trackName, String hash, boolean isPlaying) {
+        try {
+            if (trackName != null && !trackName.trim().isEmpty()) {
+                currentDeocdeState.put("currentlyPlaying", trackName.trim());
+            }
+            currentDeocdeState.put("isPlaying", isPlaying);
+            if (hash != null && !hash.trim().isEmpty()) {
+                currentDeocdeState.put("currentlyPlayingHash", hash.trim());
+            }
+            System.out.println(
+                    "[CFS] Web Client Now Playing: " + trackName + (isPlaying ? " (Playing)" : " (Paused/Idle)"));
+            if (cassetteFlowFrame != null) {
+                cassetteFlowFrame.printToConsole("[CFS] Web Player Playing: " + trackName, true);
+            }
+        } catch (JSONException ex) {
+            Logger.getLogger(CassetteFlow.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    /**
      * Get diagnostic telemetry string from active CassettePlayer
+     * 
      * @return
      */
     public String getDiagnosticStats() {
@@ -590,7 +618,8 @@ public class CassetteFlow {
                 relativePath = relativePath.replace("\\", "/");
             }
 
-            // If relativePath is missing or just the bare filename, resolve against rootPath
+            // If relativePath is missing or just the bare filename, resolve against
+            // rootPath
             if (relativePath == null || relativePath.isEmpty() || !relativePath.contains("/")) {
                 if (audioInfo.getFile() != null && rootPath != null) {
                     try {
@@ -2287,6 +2316,8 @@ public class CassetteFlow {
         System.out.println("Options:");
         System.out.println("  -h, --help            Show this help message");
         System.out.println("  -cli                  Run in Command Line Interface mode");
+        System.out.println("  -play, -audio         Enable local audio playback on host machine in CLI mode");
+        System.out.println("  -noaudio, -mute       Disable local audio playback on host machine in CLI mode");
         System.out.println("  -d, --device <index>  Select output device by index");
         System.out.println("  -dir <path> ...       Load audio files from specified directory(s).");
         System.out.println("                        Can accept multiple space-separated paths.");
@@ -2342,6 +2373,7 @@ public class CassetteFlow {
         boolean indexMode = false;
         boolean fsm = false;
         boolean loadSavedDct = false;
+        boolean enableLocalAudio = false; // Default: disabled in CLI mode (headless streamer)
         int defaultOutputDeviceIndex = -1; // -1 indicates not set
         String dctTapeId = null; // use to map dct to a particular tape
 
@@ -2358,6 +2390,19 @@ public class CassetteFlow {
                 case "-cli":
                 case "cli":
                     cliMode = true;
+                    break;
+                case "-play":
+                case "--play":
+                case "-audio":
+                case "--audio":
+                case "-enable-audio":
+                    enableLocalAudio = true;
+                    break;
+                case "-noaudio":
+                case "--noaudio":
+                case "-mute":
+                case "--mute":
+                    enableLocalAudio = false;
                     break;
                 case "-d":
                 case "--device":
@@ -2449,21 +2494,22 @@ public class CassetteFlow {
                     System.out.println("DCT Decoding: Disabled (Raw Pass-Through / Web Stream Mode)");
                 }
 
-                // Interactive Device Selection if not specified
-                if (defaultOutputDeviceIndex == -1) {
+                // Interactive Device Selection if local audio playback is enabled and device not specified
+                if (enableLocalAudio && defaultOutputDeviceIndex == -1) {
                     defaultOutputDeviceIndex = selectOutputDeviceInteractive();
+                } else if (defaultOutputDeviceIndex == -1) {
+                    defaultOutputDeviceIndex = 0; // Default silently when muted
                 }
 
                 // set the default output device
-                System.out.println("\nDefault Output Device Index: " + defaultOutputDeviceIndex);
                 String defaultOutputDevice = WavPlayer.getOutputDevice(defaultOutputDeviceIndex);
-                System.out.println("Default Output Device Name: " + defaultOutputDevice + "\n");
 
                 // print out version number
                 System.out.println(VERSION + " -- CLI Mode");
+                System.out.println("Host Audio Output: " + (enableLocalAudio ? "Enabled (" + defaultOutputDevice + ")" : "Disabled (Muted - Server/Stream Mode)"));
 
                 // start the mp3/flac player
-                CassettePlayer cassettePlayer = new CassettePlayer(cassetteFlow, LOG_FILE_NAME);
+                CassettePlayer cassettePlayer = new CassettePlayer(cassetteFlow, LOG_FILE_NAME, enableLocalAudio);
                 cassettePlayer.setMixerName(defaultOutputDevice);
                 cassettePlayer.startMinimodem(0);
 

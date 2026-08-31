@@ -2200,12 +2200,20 @@
       miniTrackTime.textContent = `${formatTime(current)} / ${formatTime(total)} | Tape Time: ${tapeTimeStr}`;
     }
 
-    function notifyDeviceNowPlaying(trackText) {
+    function notifyDeviceNowPlaying(trackText, isPlaying = true, hash = '') {
       if (!trackText) return;
-      const host = getFormattedHost();
       const clean = trackText.trim();
-      const url = host ? `${host}/playing?track=${encodeURIComponent(clean)}` : `/playing?track=${encodeURIComponent(clean)}`;
-      console.log(`[CassetteFlow] Notifying device of active track: ${clean} (${url})`);
+      const stateKey = `${clean}|${isPlaying}|${hash}`;
+      if (state.lastNotifiedPayload === stateKey) {
+        return; // Deduplicate: already sent this exact state
+      }
+      state.lastNotifiedPayload = stateKey;
+
+      const host = getFormattedHost();
+      let url = host ? `${host}/playing?track=${encodeURIComponent(clean)}` : `/playing?track=${encodeURIComponent(clean)}`;
+      if (isPlaying !== undefined) url += `&playing=${isPlaying}`;
+      if (hash) url += `&hash=${encodeURIComponent(hash)}`;
+      console.log(`[CassetteFlow] Notifying server of active track: ${clean} (${url})`);
       fetch(url, { method: 'GET', cache: 'no-store' }).catch(() => {});
     }
 
@@ -2229,7 +2237,9 @@
       updateMiniPlayerTime(0, track.duration);
 
       const displayTrackName = track.artist ? `${trackNumStr}. ${track.title} - ${track.artist}` : formattedTitle;
-      notifyDeviceNowPlaying(displayTrackName);
+      if (autoPlay) {
+        notifyDeviceNowPlaying(displayTrackName, true, track.hash);
+      }
 
       const url = resolveAudioUrl(track.sourcePath);
       audio.src = url;
@@ -2286,8 +2296,9 @@
       if (tapeStrip) tapeStrip.classList.add('active');
       const curTrack = state.activeTracklist[state.currentTrackIndex];
       if (curTrack) {
-        const displayTrackName = curTrack.artist ? `${curTrack.title} - ${curTrack.artist}` : curTrack.title;
-        notifyDeviceNowPlaying(displayTrackName);
+        const trackNumStr = String(state.currentTrackIndex + 1).padStart(2, '0');
+        const displayTrackName = curTrack.artist ? `${trackNumStr}. ${curTrack.title} - ${curTrack.artist}` : `${trackNumStr}. ${curTrack.title}`;
+        notifyDeviceNowPlaying(displayTrackName, true, curTrack.hash);
       }
     });
 
@@ -2298,7 +2309,7 @@
       rightReel.classList.remove('spinning');
       if (tapeStrip) tapeStrip.classList.remove('active');
       if (audio.ended || audio.currentTime === 0) {
-        notifyDeviceNowPlaying('Stopped');
+        notifyDeviceNowPlaying('Idle', false);
       }
     });
 
