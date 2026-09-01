@@ -63,7 +63,7 @@ import org.json.JSONObject;
  */
 public class CassetteFlow {
     // static variable that holds the application version
-    public static String VERSION = "CassetteFlow v2.2.1 (08/31/2026)";
+    public static String VERSION = "CassetteFlow v2.3.3 (09/01/2026)";
 
     // The default mp3 directory name
     public static String AUDIO_DIR_NAME = "c:\\mp3files";
@@ -432,12 +432,254 @@ public class CassetteFlow {
                 liteState.put("total_recs", 0);
             }
 
+            liteState.put("param_version", VERSION);
             liteState.remove("tracks");
         } catch (JSONException ex) {
             Logger.getLogger(CassetteFlow.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         return liteState;
+    }
+
+    /**
+     * Get process CPU percentage (0.0 to 100.0)
+     */
+    public double getProcessCpuPercentage() {
+        try {
+            java.lang.management.OperatingSystemMXBean osBean = java.lang.management.ManagementFactory
+                    .getOperatingSystemMXBean();
+            if (osBean instanceof com.sun.management.OperatingSystemMXBean) {
+                double load = ((com.sun.management.OperatingSystemMXBean) osBean).getProcessCpuLoad();
+                if (load >= 0.0) {
+                    return Math.round(load * 1000.0) / 10.0;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return 0.0;
+    }
+
+    /**
+     * Get process memory usage details
+     */
+    public JSONObject getProcessMemoryUsage() {
+        JSONObject mem = new JSONObject();
+        try {
+            Runtime rt = Runtime.getRuntime();
+            long total = rt.totalMemory();
+            long free = rt.freeMemory();
+            long max = rt.maxMemory();
+            long used = total - free;
+            double pct = max > 0 ? ((double) used / (double) max) * 100.0 : ((double) used / (double) total) * 100.0;
+            mem.put("usedMb", (int) (used / (1024 * 1024)));
+            mem.put("totalMb", (int) (total / (1024 * 1024)));
+            mem.put("maxMb", (int) (max / (1024 * 1024)));
+            mem.put("percent", Math.round(pct * 10.0) / 10.0);
+        } catch (Exception ignored) {
+        }
+        return mem;
+    }
+
+    /**
+     * Returns full telemetry snapshot for Web Telemetry UI (/telemetry)
+     */
+    public synchronized JSONObject getTelemetryState() {
+        JSONObject state = new JSONObject();
+        try {
+            // 1. Host & Resource metrics
+            String hostIp = "localhost:8192";
+            try {
+                java.net.InetAddress addr = java.net.InetAddress.getLocalHost();
+                hostIp = addr.getHostAddress() + ":8192";
+            } catch (Exception ignored) {
+            }
+            state.put("param_ip", hostIp);
+            state.put("param_version", VERSION);
+
+            double cpuPct = getProcessCpuPercentage();
+            state.put("cpu_percent", cpuPct);
+
+            JSONObject mem = getProcessMemoryUsage();
+            state.put("mem_percent", mem.optDouble("percent", 0.0));
+            state.put("mem_used_mb", mem.optInt("usedMb", 0));
+            state.put("mem_max_mb", mem.optInt("maxMb", 0));
+
+            // 2. Decoder & FSK metrics
+            int configuredBaud = 1200;
+            try {
+                configuredBaud = Integer.parseInt(BAUDE_RATE);
+            } catch (Exception ignored) {
+            }
+            state.put("param_baud", configuredBaud);
+
+            if (cassettePlayer != null) {
+                JMinimodem.DiagnosticData diag = cassettePlayer.getDiagnosticData();
+                double speedErr = cassettePlayer.getSpeedOffset();
+                double measBaud = cassettePlayer.getLastMeasuredBaud();
+                if (measBaud <= 0.0 && diag != null)
+                    measBaud = diag.measuredBaud;
+                if (diag != null && Math.abs(diag.speedOffsetPercent) > 0.0001)
+                    speedErr = diag.speedOffsetPercent;
+
+                state.put("param_measured_baud", Math.round(measBaud * 10.0) / 10.0);
+                state.put("param_speed_error", Math.round(speedErr * 100.0) / 100.0);
+                state.put("carrier", diag != null && diag.carrier);
+                state.put("snr", Math.round(cassettePlayer.getSNR() * 10.0) / 10.0);
+                state.put("sig", cassettePlayer.getSignalPercent());
+                state.put("data_errors", cassettePlayer.getDataErrors());
+                state.put("total_recs", cassettePlayer.getLogLineCount());
+
+                state.put("side", (diag != null && diag.currentSide != '?') ? String.valueOf(diag.currentSide) : "A");
+                state.put("stops", diag != null ? diag.totalStops : 0);
+                state.put("side_a_count", diag != null ? diag.sideALineCount : 0);
+                state.put("side_a_err",
+                        diag != null && diag.sideALineCount > 0
+                                ? (double) diag.sideAErrors / diag.sideALineCount * 100.0
+                                : 0.0);
+                state.put("side_b_count", diag != null ? diag.sideBLineCount : 0);
+                state.put("side_b_err",
+                        diag != null && diag.sideBLineCount > 0
+                                ? (double) diag.sideBErrors / diag.sideBLineCount * 100.0
+                                : 0.0);
+                state.put("len_errors", diag != null ? diag.dataLengthErrors : 0);
+                state.put("num_errors", diag != null ? diag.dataErrors : 0);
+
+                state.put("rx_text", cassettePlayer.getTerminalLogText());
+
+                // Audio monitor state & device list
+                state.put("audio_mon_enabled", cassettePlayer.isAudioMonitorEnabled());
+                state.put("audio_mon_volume", cassettePlayer.getAudioMonitorVolume());
+                state.put("current_audio_device", cassettePlayer.getAudioMonitorDevice());
+                state.put("audio_devices", new JSONArray(CassettePlayer.getAvailablePlaybackDevices()));
+            } else {
+                state.put("param_measured_baud", 0.0);
+                state.put("param_speed_error", 0.0);
+                state.put("carrier", false);
+                state.put("snr", 0.0);
+                state.put("sig", 0);
+                state.put("data_errors", 0);
+                state.put("total_recs", 0);
+                state.put("side", "A");
+                state.put("stops", 0);
+                state.put("side_a_count", 0);
+                state.put("side_a_err", 0.0);
+                state.put("side_b_count", 0);
+                state.put("side_b_err", 0.0);
+                state.put("len_errors", 0);
+                state.put("num_errors", 0);
+                state.put("rx_text", "No CassettePlayer active...");
+                state.put("audio_mon_enabled", false);
+                state.put("audio_mon_volume", 50);
+                state.put("current_audio_device", "Default Playback Device");
+                state.put("audio_devices", new JSONArray(CassettePlayer.getAvailablePlaybackDevices()));
+            }
+
+            // 3. Mode & Timecode
+            state.put("mode", "DECODE AUTO");
+            int playSec = 0;
+            if (cassettePlayer != null) {
+                playSec = cassettePlayer.getCurrentPlayTime();
+                if (playSec < 0)
+                    playSec = 0;
+            }
+            int min = playSec / 60;
+            int sec = playSec % 60;
+            int hr = min / 60;
+            min = min % 60;
+            state.put("time_seconds", playSec);
+            state.put("timecode", String.format("%02d:%02d:%02d", hr, min, sec));
+
+            // 4. Now Playing / Metadata
+            String nowPlaying = "";
+            String nowPlayingHash = "";
+            boolean isPlaying = false;
+            if (currentDeocdeState != null) {
+                if (currentDeocdeState.has("currentlyPlaying")) {
+                    nowPlaying = currentDeocdeState.optString("currentlyPlaying", "");
+                }
+                if (currentDeocdeState.has("currentlyPlayingHash")) {
+                    nowPlayingHash = currentDeocdeState.optString("currentlyPlayingHash", "");
+                }
+                if (currentDeocdeState.has("isPlaying")) {
+                    isPlaying = currentDeocdeState.optBoolean("isPlaying", false);
+                }
+            }
+            state.put("now_playing", nowPlaying);
+            state.put("is_playing", isPlaying);
+            state.put("meta_hash", nowPlayingHash);
+
+            if (audioInfoDB != null && nowPlayingHash != null && audioInfoDB.containsKey(nowPlayingHash)) {
+                AudioInfo ai = audioInfoDB.get(nowPlayingHash);
+                state.put("has_meta", true);
+                state.put("meta_file", (ai != null && ai.getFile() != null) ? ai.getFile().getName() : nowPlaying);
+                state.put("meta_dur", ai != null ? ai.getLengthAsTime() : "00:00");
+                state.put("meta_bitrate", ai != null ? ai.getBitRate() : 0);
+            } else {
+                state.put("has_meta", !nowPlaying.isEmpty() && !"None".equals(nowPlaying));
+                state.put("meta_file", nowPlaying.isEmpty() ? "No Database Track Metadata Available" : nowPlaying);
+                state.put("meta_dur", "00:00");
+                state.put("meta_bitrate", 0);
+            }
+
+        } catch (Exception ex) {
+            Logger.getLogger(CassetteFlow.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return state;
+    }
+
+    /**
+     * Handles control commands from Telemetry and API endpoints
+     */
+    public synchronized void runTelemetryCommand(String cmd, Object val) {
+        if (cmd == null)
+            return;
+        String c = cmd.trim().toLowerCase();
+
+        if ("spk_mon".equals(c) || "audio_mon".equals(c)) {
+            boolean enable = "1".equals(String.valueOf(val)) || "true".equalsIgnoreCase(String.valueOf(val));
+            if (cassettePlayer != null) {
+                cassettePlayer.setAudioMonitorEnabled(enable);
+            }
+            System.out.println("[CassetteFlow] Audio monitor set to: " + enable);
+        } else if ("audio_device".equals(c) || "device".equals(c)) {
+            if (val != null && cassettePlayer != null) {
+                cassettePlayer.setAudioMonitorDevice(String.valueOf(val));
+            }
+            System.out.println("[CassetteFlow] Audio device set to: " + val);
+        } else if ("audio_volume".equals(c) || "volume".equals(c) || "vol".equals(c)) {
+            int vol = 50;
+            if (val instanceof Number) {
+                vol = ((Number) val).intValue();
+            } else if (val != null) {
+                try {
+                    vol = Integer.parseInt(val.toString().trim());
+                } catch (Exception ignored) {}
+            }
+            if (cassettePlayer != null) {
+                cassettePlayer.setAudioMonitorVolume(vol);
+            }
+            System.out.println("[CassetteFlow] Audio monitor volume set to: " + vol + "%");
+        } else if ("reset".equals(c) || "reset_stats".equals(c)) {
+            if (cassettePlayer != null) {
+                cassettePlayer.resetDiagnostics();
+            }
+        } else if ("clear".equals(c) || "clear_log".equals(c)) {
+            if (cassettePlayer != null) {
+                cassettePlayer.clearTerminalLog();
+            }
+        } else if ("baud".equals(c)) {
+            try {
+                this.BAUDE_RATE = String.valueOf(val);
+                if (cassettePlayer != null) {
+                    cassettePlayer.startMinimodem(0);
+                }
+                System.out.println("[CassetteFlow] Baud rate changed to: " + this.BAUDE_RATE);
+            } catch (Exception ex) {
+                Logger.getLogger(CassetteFlow.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        } else {
+            runDecodeCommand(cmd);
+        }
     }
 
     /**
@@ -2494,7 +2736,8 @@ public class CassetteFlow {
                     System.out.println("DCT Decoding: Disabled (Raw Pass-Through / Web Stream Mode)");
                 }
 
-                // Interactive Device Selection if local audio playback is enabled and device not specified
+                // Interactive Device Selection if local audio playback is enabled and device
+                // not specified
                 if (enableLocalAudio && defaultOutputDeviceIndex == -1) {
                     defaultOutputDeviceIndex = selectOutputDeviceInteractive();
                 } else if (defaultOutputDeviceIndex == -1) {
@@ -2506,7 +2749,8 @@ public class CassetteFlow {
 
                 // print out version number
                 System.out.println(VERSION + " -- CLI Mode");
-                System.out.println("Host Audio Output: " + (enableLocalAudio ? "Enabled (" + defaultOutputDevice + ")" : "Disabled (Muted - Server/Stream Mode)"));
+                System.out.println("Host Audio Output: " + (enableLocalAudio ? "Enabled (" + defaultOutputDevice + ")"
+                        : "Disabled (Muted - Server/Stream Mode)"));
 
                 // start the mp3/flac player
                 CassettePlayer cassettePlayer = new CassettePlayer(cassetteFlow, LOG_FILE_NAME, enableLocalAudio);

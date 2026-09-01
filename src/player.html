@@ -960,6 +960,19 @@
         </div>
 
         <div class="form-row">
+          <label>DCT Padding (Block Size)</label>
+          <select id="dctPadDropdown" class="form-select">
+            <option value="0">0 (No Padding - Default)</option>
+            <option value="1320">22 min (Vinyl LP Side)</option>
+            <option value="900">C-30 (15 min / side)</option>
+            <option value="1350">C-45 (22.5 min / side)</option>
+            <option value="1800">C-60 (30 min / side)</option>
+            <option value="2700">C-90 (45 min / side)</option>
+            <option value="3600">C-120 (60 min / side)</option>
+          </select>
+        </div>
+
+        <div class="form-row">
           <label>Track Preview for Selected Tape</label>
           <div id="tapePreviewBox"
             style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 10px; font-size: 12px; max-height: 180px; overflow-y: auto; line-height: 1.5; color: var(--text-muted);">
@@ -993,6 +1006,19 @@
             <option value="custom">Custom...</option>
           </select>
           <input type="number" id="folderDctCustomInput" class="form-input" style="display: none; margin-top: 6px;" placeholder="Custom offset in minutes" min="0" step="1" value="0">
+        </div>
+
+        <div class="form-row">
+          <label>DCT Padding (Block Size)</label>
+          <select id="folderDctPadDropdown" class="form-select">
+            <option value="0">0 (No Padding - Default)</option>
+            <option value="1320">22 min (Vinyl LP Side)</option>
+            <option value="900">C-30 (15 min / side)</option>
+            <option value="1350">C-45 (22.5 min / side)</option>
+            <option value="1800">C-60 (30 min / side)</option>
+            <option value="2700">C-90 (45 min / side)</option>
+            <option value="3600">C-120 (60 min / side)</option>
+          </select>
         </div>
 
         <div class="form-row">
@@ -1075,17 +1101,17 @@
           <h2 style="font-size: 15px; font-weight: 600;">⚙️ Settings &amp; Server Configuration</h2>
           <!-- Easy to edit version number & release date badge -->
           <span id="appVersionBadge" class="status-badge"
-            style="font-family: var(--font-mono); font-size: 11px; color: var(--accent-blue); background: rgba(88, 166, 255, 0.12); border-color: rgba(88, 166, 255, 0.35); font-weight: 600;">v0.11.0 • 08/29/2026</span>
+            style="font-family: var(--font-mono); font-size: 11px; color: var(--accent-blue); background: rgba(88, 166, 255, 0.12); border-color: rgba(88, 166, 255, 0.35); font-weight: 600;">CassetteFlow v2.3.0 (09/01/2026)</span>
         </div>
 
         <div class="form-row">
-          <label>CassetteFlow Server (CFS) Music Base URL</label>
-          <input type="text" id="cfgServerUrl" class="form-input" value="/music/" placeholder="/music/ or http://localhost:8192/music/">
+          <label>Music Server Base URL (where MP3 audio files are hosted)</label>
+          <input type="text" id="cfgServerUrl" class="form-input" value="http://pi86.sytes.net:8080/music/" placeholder="e.g. http://pi86.sytes.net:8080/music/ or /music/">
         </div>
 
         <div class="form-row">
-          <label>CassetteFlow Server (CFS) Host / IP (leave blank for local server)</label>
-          <input type="text" id="cfgM5Host" class="form-input" value="" placeholder="e.g. http://localhost:8192 (or leave blank for auto)">
+          <label>Telemetry &amp; Modem Host (M5Core / R2RWatch / CFS - leave blank for auto)</label>
+          <input type="text" id="cfgM5Host" class="form-input" value="" placeholder="e.g. http://192.168.1.241 (or leave blank for auto)">
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
@@ -1151,20 +1177,42 @@
 
   <!-- Script Logic -->
   <script>
-    function getInitialHost() {
-      // If loaded directly from a server/device, auto-bind to this host!
-      if (window.location.origin && window.location.origin.startsWith('http')) {
-        const saved = localStorage.getItem('cfg_m5_host');
-        if (saved !== null) return saved;
-        return ''; // Default to same-origin for CFS
+    function getInitialServerUrl() {
+      const saved = localStorage.getItem('cfg_server_url');
+      if (saved && saved.trim() && saved.trim() !== '/music/') {
+        return saved.trim();
       }
-      return localStorage.getItem('cfg_m5_host') || '';
+      // If running inside CassetteFlow Java Server (port 8192), default to local CFS /music/
+      if (window.location.port === '8192') {
+        return window.location.origin + '/music/';
+      }
+      // On M5Core / R2RWatch hardware devices or standalone web player:
+      // The ESP32 serves telemetry, while music files reside on the dedicated music server.
+      return saved && saved.trim() ? saved.trim() : 'http://pi86.sytes.net:8080/music/';
+    }
+
+    function getInitialHost() {
+      const saved = localStorage.getItem('cfg_m5_host');
+      if (saved !== null && saved.trim()) return saved.trim();
+
+      // If running inside CassetteFlow Java Server (port 8192), default to local CFS
+      if (window.location.port === '8192') {
+        return '';
+      }
+
+      // If loaded directly from a hardware ESP32 device (e.g. http://192.168.1.50/player or http://192.168.4.1/player),
+      // auto-bind telemetry to the hardware device itself!
+      if (window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        return window.location.origin;
+      }
+
+      return 'http://192.168.1.241';
     }
 
     // --- State ---
     const state = {
       currentTab: 'player',
-      serverBaseUrl: localStorage.getItem('cfg_server_url') || (window.location.origin && window.location.origin.startsWith('http') ? window.location.origin + '/music/' : '/music/'),
+      serverBaseUrl: getInitialServerUrl(),
       m5Host: getInitialHost(),
       driftThreshold: parseFloat(localStorage.getItem('cfg_drift') || '2.5'),
       mutePadding: parseInt(localStorage.getItem('cfg_mute_padding') || '4'),
@@ -1234,10 +1282,12 @@
     const sideSelectDropdown = document.getElementById('sideSelectDropdown');
     const dctOffsetDropdown = document.getElementById('dctOffsetDropdown');
     const dctCustomInput = document.getElementById('dctCustomInput');
+    const dctPadDropdown = document.getElementById('dctPadDropdown');
     const tapePreviewBox = document.getElementById('tapePreviewBox');
     const folderSelectDropdown = document.getElementById('folderSelectDropdown');
     const folderDctOffsetDropdown = document.getElementById('folderDctOffsetDropdown');
     const folderDctCustomInput = document.getElementById('folderDctCustomInput');
+    const folderDctPadDropdown = document.getElementById('folderDctPadDropdown');
     const folderPreviewBox = document.getElementById('folderPreviewBox');
     const activateFolderBtn = document.getElementById('activateFolderBtn');
     const reloadAudiodbBtn = document.getElementById('reloadAudiodbBtn');
@@ -1729,30 +1779,68 @@
         hashes = state.tapeDB.get(key) || [];
       }
 
-      let html = `<strong>${tapeId} (${side === 'COMBINE' ? 'Side A+B' : 'Side ' + side})</strong><br>`;
+      const maxBlockSec = parseInt(dctPadDropdown ? dctPadDropdown.value : '0', 10) || 0;
+      let html = `<strong>${tapeId} (${side === 'COMBINE' ? 'Side A+B' : 'Side ' + side})</strong>`;
+      if (maxBlockSec > 0) {
+        html += ` <span style="color: var(--accent-primary); font-size: 11px;">[Padded: ${formatTime(maxBlockSec)}/pass]</span>`;
+      }
+      html += '<br>';
+
       let totalTime = 0;
+      let blockCount = 1;
 
       hashes.forEach((h, i) => {
         const info = state.audioDB.get(h);
         if (info) {
+          if (i >= 1 && maxBlockSec > 0 && (info.duration + totalTime > maxBlockSec * blockCount)) {
+            const padSec = (maxBlockSec * blockCount) - totalTime;
+            html += `<span style="color: var(--text-muted); font-style: italic;">↳ --- Pass ${blockCount} End (Padded +${formatTime(padSec)} Mute) ---</span><br>`;
+            totalTime += padSec;
+            blockCount++;
+          }
           html += `[${String(i + 1).padStart(2, '0')}] ${info.title} (${formatTime(info.duration)})<br>`;
-          totalTime += info.duration + state.mutePadding;
+          totalTime += info.duration + (i === 0 ? 0 : state.mutePadding);
         } else {
           html += `[${String(i + 1).padStart(2, '0')}] Hash: ${h}<br>`;
         }
       });
 
-      html += `<br><em>Total Playtime: ${formatTimeHours(totalTime)}</em>`;
+      html += `<br><em>Total Timeline: ${formatTimeHours(totalTime)}${maxBlockSec > 0 ? ` (${blockCount} Physical Pass${blockCount > 1 ? 'es' : ''})` : ''}</em>`;
       tapePreviewBox.innerHTML = html;
     }
 
     tapeSelectDropdown.addEventListener('change', () => updateTapePreview(tapeSelectDropdown.value));
     sideSelectDropdown.addEventListener('change', () => updateTapePreview(tapeSelectDropdown.value));
+    if (dctPadDropdown) dctPadDropdown.addEventListener('change', () => updateTapePreview(tapeSelectDropdown.value));
 
-    // --- DCT Engine & Tape Activation ---
-    function buildDCTList(tapeSideKey, trackList) {
+    // =========================================================================
+    // DCT ENGINE & FIRMWARE PORTING REFERENCE (M5Core / R2RWatch / ESP32 C++)
+    // =========================================================================
+    /**
+     * Builds Dynamic Content Track (DCT) timecode translation records.
+     * 
+     * FIRMWARE PORTING SPECIFICATION:
+     * --------------------------------
+     * @param {string} tapeSideKey  Prefix ID (e.g. "CS00A", "CS00B", "DIR0")
+     * @param {Array}  trackList    List of audio tracks [{hash, duration}]
+     * @param {number} maxTimeBlock Block size in seconds:
+     *                              0    = No padding (continuous linear playback)
+     *                              1320 = 22 min (Vinyl LP Side)
+     *                              900  = C-30 (15 min / side)
+     *                              1350 = C-45 (22.5 min / side)
+     *                              1800 = C-60 (30 min / side)
+     *                              2700 = C-90 (45 min / side)
+     *                              3600 = C-120 (60 min / side)
+     * 
+     * RECORD FORMAT:
+     *   Active Play:  `${tapeSideKey}_${trackNum}_${cleanHash}_${secInTrack}_${totalSec}`
+     *   Standard Mute: `${tapeSideKey}_${trackNum}_${cleanHash}_000M_${totalSec}`
+     *   Padded Mute:   `${tapeSideKey}_${trackNum}_${cleanHash}_00MM_${totalSec}`
+     */
+    function buildDCTList(tapeSideKey, trackList, maxTimeBlock = 0) {
       const dctList = [];
       let currentTotal = 0;
+      let blockCount = 1;
       let count = 0;
 
       for (const track of trackList) {
@@ -1761,9 +1849,23 @@
         const audioId = `${tapeSideKey}_${trackStr}_${cleanHash}`;
 
         if (count >= 1) {
-          for (let i = 0; i < state.mutePadding; i++) {
+          let maxMuteTime = state.mutePadding;
+          let muteString = '_000M_';
+
+          // Physical media block overflow check:
+          // If playing the next track would exceed the current physical pass/side duration,
+          // pad the remaining seconds up to (maxTimeBlock * blockCount) with mute records '_00MM_'.
+          if (maxTimeBlock > 0 && (track.duration + currentTotal > maxTimeBlock * blockCount)) {
+            maxMuteTime = (maxTimeBlock * blockCount) - currentTotal;
+            muteString = '_00MM_';
+            console.log(`[DCT Padding] Applied ${maxMuteTime}s mute padding after track ${count} (Pass ${blockCount} boundary at ${formatTime(maxTimeBlock * blockCount)}, Current Total: ${formatTime(currentTotal)})`);
+            logTerminal('map', `↳ [Padding] Padded ${maxMuteTime}s (${formatTime(maxMuteTime)}) mute after Track ${count} to align with Pass ${blockCount} end (${formatTime(maxTimeBlock * blockCount)})`);
+            blockCount++;
+          }
+
+          for (let i = 0; i < maxMuteTime; i++) {
             currentTotal += 1;
-            dctList.push(`${audioId}_000M_${String(currentTotal).padStart(4, '0')}`);
+            dctList.push(`${audioId}${muteString}${String(currentTotal).padStart(4, '0')}`);
           }
         }
 
@@ -1779,25 +1881,27 @@
 
     function activateTape(tapeId, side = 'A') {
       state.selectedTapeId = tapeId;
+      const maxBlockSec = parseInt(dctPadDropdown ? dctPadDropdown.value : '0', 10) || 0;
 
       // 1. Build Side A tracks & map
       const hashesA = state.tapeDB.get(`${tapeId}A`) || state.tapeDB.get(tapeId) || [];
       state.tracklistA = hashesA.map(h => state.audioDB.get(h)).filter(Boolean);
-      state.sideADCTMap = buildDCTList(`${tapeId}A`, state.tracklistA);
+      state.sideADCTMap = buildDCTList(`${tapeId}A`, state.tracklistA, maxBlockSec);
 
       // 2. Build Side B tracks & map
       const hashesB = state.tapeDB.get(`${tapeId}B`) || [];
       state.tracklistB = hashesB.map(h => state.audioDB.get(h)).filter(Boolean);
-      state.sideBDCTMap = buildDCTList(`${tapeId}B`, state.tracklistB);
+      state.sideBDCTMap = buildDCTList(`${tapeId}B`, state.tracklistB, maxBlockSec);
 
       // 3. Build Combined tracks & map
       state.tracklistCombine = [...state.tracklistA, ...state.tracklistB];
-      state.combineDCTMap = buildDCTList('CS00', state.tracklistCombine);
+      state.combineDCTMap = buildDCTList('CS00', state.tracklistCombine, maxBlockSec);
 
       // 4. Activate the requested side
       updateActiveSide(side, true);
 
-      logTerminal('map', `Tape ${tapeId} Loaded: Side A (${state.tracklistA.length} tracks, ${formatTimeHours(state.sideADCTMap.length)}), Side B (${state.tracklistB.length} tracks, ${formatTimeHours(state.sideBDCTMap.length)})`);
+      const padInfo = maxBlockSec > 0 ? ` [Padded: ${formatTime(maxBlockSec)}/block]` : '';
+      logTerminal('map', `Tape ${tapeId} Loaded: Side A (${state.tracklistA.length} tracks, ${formatTimeHours(state.sideADCTMap.length)}), Side B (${state.tracklistB.length} tracks, ${formatTimeHours(state.sideBDCTMap.length)})${padInfo}`);
     }
 
     function updateActiveSide(side, triggerInitialSelect = false) {
@@ -1996,16 +2100,29 @@
         return;
       }
 
+      const maxBlockSec = parseInt(folderDctPadDropdown ? folderDctPadDropdown.value : '0', 10) || 0;
       const folderLabel = folderKey === 'Root' ? 'Root Folder (Test Tracks)' : folderKey;
-      let html = `<strong>${folderLabel}</strong> (${tracks.length} Tracks)<br><br>`;
+      let html = `<strong>${folderLabel}</strong> (${tracks.length} Tracks)`;
+      if (maxBlockSec > 0) {
+        html += ` <span style="color: var(--accent-primary); font-size: 11px;">[Padded: ${formatTime(maxBlockSec)}/pass]</span>`;
+      }
+      html += '<br><br>';
+
       let totalTime = 0;
+      let blockCount = 1;
 
       tracks.forEach((t, i) => {
+        if (i >= 1 && maxBlockSec > 0 && ((t.duration || 0) + totalTime > maxBlockSec * blockCount)) {
+          const padSec = (maxBlockSec * blockCount) - totalTime;
+          html += `<span style="color: var(--text-muted); font-style: italic;">↳ --- Pass ${blockCount} End (Padded +${formatTime(padSec)} Mute) ---</span><br>`;
+          totalTime += padSec;
+          blockCount++;
+        }
         html += `[${String(i + 1).padStart(2, '0')}] ${t.title} (${formatTime(t.duration)})<br>`;
-        totalTime += (t.duration || 0) + state.mutePadding;
+        totalTime += (t.duration || 0) + (i === 0 ? 0 : state.mutePadding);
       });
 
-      html += `<br><em>Total Playtime: ${formatTimeHours(totalTime)}</em>`;
+      html += `<br><em>Total Timeline: ${formatTimeHours(totalTime)}${maxBlockSec > 0 ? ` (${blockCount} Physical Pass${blockCount > 1 ? 'es' : ''})` : ''}</em>`;
       folderPreviewBox.innerHTML = html;
     }
 
@@ -2028,6 +2145,14 @@
           if (folderDctCustomInput) {
             folderDctCustomInput.style.display = 'none';
           }
+        }
+      });
+    }
+
+    if (folderDctPadDropdown) {
+      folderDctPadDropdown.addEventListener('change', () => {
+        if (folderSelectDropdown && folderSelectDropdown.value) {
+          updateFolderPreview(folderSelectDropdown.value);
         }
       });
     }
@@ -2061,6 +2186,7 @@
         return;
       }
 
+      const maxBlockSec = parseInt(folderDctPadDropdown ? folderDctPadDropdown.value : '0', 10) || 0;
       const cleanFolderKey = folderKey === 'Root' ? 'ROOT' : folderKey.replace(/[^A-Za-z0-9]/g, '_').substring(0, 8).toUpperCase();
       state.selectedTapeId = cleanFolderKey;
       state.selectedSide = 'A';
@@ -2072,7 +2198,7 @@
       state.tracklistCombine = [...tracks];
 
       // 2. Build DCT Map for folder (used for both DIR0 and DCT0A modem translation)
-      state.dctMap = buildDCTList('DIR0', state.activeTracklist);
+      state.dctMap = buildDCTList('DIR0', state.activeTracklist, maxBlockSec);
       state.sideADCTMap = state.dctMap;
       state.sideBDCTMap = [];
       state.combineDCTMap = state.dctMap;
@@ -2094,7 +2220,8 @@
       renderTracklist();
       if (!audio.paused) audio.pause();
       selectTrack(0, false);
-      logTerminal('map', `Folder Loaded: ${folderKey} (${tracks.length} tracks, ${formatTimeHours(state.dctMap.length)})`);
+      const padInfo = maxBlockSec > 0 ? ` [Padded: ${formatTime(maxBlockSec)}/block]` : '';
+      logTerminal('map', `Folder Loaded: ${folderKey} (${tracks.length} tracks, ${formatTimeHours(state.dctMap.length)})${padInfo}`);
     }
 
     // --- Tracklist Rendering ---
@@ -2738,6 +2865,12 @@
         if (!res.ok) res = await fetch(statusUrl);
         if (res.ok) {
           const d = await res.json();
+          // Update version badge dynamically if version provided by server
+          if (d.param_version || d.version) {
+            const vBadge = document.getElementById('appVersionBadge');
+            if (vBadge) vBadge.textContent = d.param_version || d.version;
+          }
+
           // Check for CassetteFlow Server (CFS) telemetry
           if ('speedOffset' in d || 'baud' in d) {
             statusDot.className = 'status-dot active';

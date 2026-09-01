@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.text.DecimalFormat;
+import java.util.ArrayDeque;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -72,6 +73,57 @@ public class TapeDeckTester {
 
     // the default baud rate
     private static double baudRate = 1200.0;
+
+    // Rolling buffer for Wow & Flutter measurement
+    private final ArrayDeque<Double> baudHistory = new ArrayDeque<>();
+    private static final int MAX_BAUD_HISTORY = 50;
+
+    public synchronized void addBaudSample(double measuredBaud) {
+        if (measuredBaud > 0) {
+            baudHistory.addLast(measuredBaud);
+            if (baudHistory.size() > MAX_BAUD_HISTORY) {
+                baudHistory.removeFirst();
+            }
+        }
+    }
+
+    public synchronized void clearBaudHistory() {
+        baudHistory.clear();
+    }
+
+    public synchronized double getWowAndFlutterRms() {
+        if (baudHistory.size() < 5) return 0.0;
+        double sum = 0.0;
+        for (double b : baudHistory) sum += b;
+        double mean = sum / baudHistory.size();
+
+        double sqDiffSum = 0.0;
+        for (double b : baudHistory) {
+            double diff = b - mean;
+            sqDiffSum += diff * diff;
+        }
+        double stdDev = Math.sqrt(sqDiffSum / baudHistory.size());
+        double wfPct = (stdDev / baudRate) * 100.0;
+        if (wfPct < 0.02) wfPct = 0.0; // Filter digital quantization noise floor
+        return wfPct;
+    }
+
+    public synchronized double getWowAndFlutterP2P() {
+        if (baudHistory.size() < 5) return 0.0;
+        double minB = Double.MAX_VALUE;
+        double maxB = Double.MIN_VALUE;
+        for (double b : baudHistory) {
+            if (b < minB) minB = b;
+            if (b > maxB) maxB = b;
+        }
+        return ((maxB - minB) / baudRate) * 100.0;
+    }
+
+    public String getWowAndFlutterHealthTag(double rmsWf) {
+        if (rmsWf > 0.40) return "[HIGH]";
+        if (rmsWf > 0.20) return "[WARN]";
+        return "[OK]";
+    }
 
     // used to indicate if we are in DCT mode
     private boolean isDctMode = false;
@@ -150,6 +202,9 @@ public class TapeDeckTester {
             };
             config.diagDataListener = diagData -> {
                 lastDiagnosticData = diagData;
+                if (diagData != null && diagData.measuredBaud > 0) {
+                    addBaudSample(diagData.measuredBaud);
+                }
             };
 
             // Wrap the Mic Line in a Stream
@@ -255,9 +310,12 @@ public class TapeDeckTester {
                         printStats();
                     }
                 } else {
+                    double rmsWf = getWowAndFlutterRms();
+                    String wfTag = getWowAndFlutterHealthTag(rmsWf);
                     System.out.println(
                             line + "\t\tCount: " + logLineCount + "\t# Errors: " + dataErrors + " (" + getPercentError()
-                                    + "%)\tDLE: " + dataLengthErrors + " / NCE: " + numberConversionErrors
+                                    + "%)\tW&F: " + String.format("%.2f%% %s", rmsWf, wfTag)
+                                    + "\tDLE: " + dataLengthErrors + " / NCE: " + numberConversionErrors
                                     + " / ICE: " + invalidCharacterErrors);
                 }
             }
@@ -306,8 +364,13 @@ public class TapeDeckTester {
         String speedInfo = "";
         if (lastDiagnosticData != null && lastDiagnosticData.measuredBaud > 0) {
             char sign = (lastDiagnosticData.speedOffsetPercent >= 0) ? '+' : '-';
-            speedInfo = String.format("SPEED / QUALITY: Baud %d (%c%.1f%%) | SNR: %.2f | Sig: %d%%\n",
+            double rmsWf = getWowAndFlutterRms();
+            double p2pWf = getWowAndFlutterP2P();
+            String wfTag = getWowAndFlutterHealthTag(rmsWf);
+
+            speedInfo = String.format("SPEED / QUALITY: Baud %d (%c%.1f%%) | W&F: %.2f%% RMS %s (P-P: %.2f%%) | SNR: %.2f | Sig: %d%%\n",
                     (int) lastDiagnosticData.measuredBaud, sign, Math.abs(lastDiagnosticData.speedOffsetPercent),
+                    rmsWf, wfTag, p2pWf,
                     lastDiagnosticData.snr, lastDiagnosticData.signalPercent);
         }
 
@@ -531,6 +594,7 @@ public class TapeDeckTester {
                 if (input.equalsIgnoreCase("s")) {
                     tapeDeckDataTester.printStats();
                 } else if (input.equalsIgnoreCase("r")) {
+                    tapeDeckDataTester.clearBaudHistory();
                     if (tapeDeckDataTester.activeConfig != null) {
                         tapeDeckDataTester.activeConfig.resetDiagnostics = true;
                     }

@@ -99,10 +99,17 @@ public class CassetteFlowServer {
         server.createContext("/api/status", new DecodeLiteStateHandler()); // Status alias for web player
         server.createContext("/playing", new PlayingHandler()); // Client Now Playing synchronization
 
+        // Telemetry Web App & Control Endpoints
+        server.createContext("/telemetry", new TelemetryViewHandler());
+        server.createContext("/telemetry.html", new TelemetryViewHandler());
+        server.createContext("/api/telemetry", new TelemetryApiHandler());
+        server.createContext("/api/devices", new AudioDevicesHandler());
+        server.createContext("/api/cmd", new CommandHandler());
+
         server.setExecutor(executor);
         server.start();
 
-        System.out.println("Cassette Flow Server Started on port 8192 (Web Player: http://localhost:8192/player)...");
+        System.out.println("Cassette Flow Server Started on port 8192 (Web Player: http://localhost:8192/player | Telemetry: http://localhost:8192/telemetry)...");
     }
 
     /**
@@ -230,17 +237,34 @@ public class CassetteFlowServer {
                 public void run() {
                     try (OutputStream os = he.getResponseBody()) {
                         String lastSent = "";
+                        long lastLineTime = System.currentTimeMillis();
+                        long lastNoCarrierTime = 0;
                         while (true) {
+                            long now = System.currentTimeMillis();
                             String rawLine = (cassetteFlow != null) ? cassetteFlow.getRawLineRecord() : null;
                             if (rawLine != null && !rawLine.isEmpty() && !rawLine.equals("NO PLAYER ...")) {
                                 if (!rawLine.equals(lastSent)) {
                                     lastSent = rawLine;
+                                    lastLineTime = now;
                                     String response = rawLine + "\r\n";
                                     byte[] data = response.getBytes(StandardCharsets.UTF_8);
                                     os.write(data);
                                     os.flush();
                                 }
                             }
+
+                            // Inactivity watchdog: send NOCARRIER when no new line decoded for >= 1500ms
+                            // (FSK tape lines are transmitted at 1000ms intervals, so 1500ms detects missing records without false triggers)
+                            if (now - lastLineTime >= 1500) {
+                                if (now - lastNoCarrierTime >= 2000) {
+                                    lastNoCarrierTime = now;
+                                    String noCarrier = "### NOCARRIER ###\r\n";
+                                    byte[] data = noCarrier.getBytes(StandardCharsets.UTF_8);
+                                    os.write(data);
+                                    os.flush();
+                                }
+                            }
+
                             Thread.sleep(50);
                         }
                     } catch (Exception ex) {
@@ -268,11 +292,15 @@ public class CassetteFlowServer {
                 public void run() {
                     try (OutputStream os = he.getResponseBody()) {
                         String lastSent = "";
+                        long lastLineTime = System.currentTimeMillis();
+                        long lastNoCarrierTime = 0;
                         while (true) {
+                            long now = System.currentTimeMillis();
                             String rawLine = (cassetteFlow != null) ? cassetteFlow.getRawLineRecord() : null;
                             if (rawLine != null && !rawLine.isEmpty() && !rawLine.equals("NO PLAYER ...")) {
                                 if (!rawLine.equals(lastSent)) {
                                     lastSent = rawLine;
+                                    lastLineTime = now;
                                     String response;
                                     if (rawLine.startsWith("DCT")) {
                                         response = rawLine + "\n --> " + cassetteFlow.getCurrentLineRecord() + "\r\n";
@@ -284,6 +312,19 @@ public class CassetteFlowServer {
                                     os.flush();
                                 }
                             }
+
+                            // Inactivity watchdog: send NOCARRIER when no new line decoded for >= 1500ms
+                            // (FSK tape lines are transmitted at 1000ms intervals, so 1500ms detects missing records without false triggers)
+                            if (now - lastLineTime >= 1500) {
+                                if (now - lastNoCarrierTime >= 2000) {
+                                    lastNoCarrierTime = now;
+                                    String noCarrier = "### NOCARRIER ###\r\n";
+                                    byte[] data = noCarrier.getBytes(StandardCharsets.UTF_8);
+                                    os.write(data);
+                                    os.flush();
+                                }
+                            }
+
                             Thread.sleep(50);
                         }
                     } catch (Exception ex) {
@@ -993,6 +1034,177 @@ public class CassetteFlowServer {
      */
     public void testEncode() {
 
+    }
+
+    /**
+     * Serves the single-page Telemetry web application (/telemetry)
+     */
+    private class TelemetryViewHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            addCorsHeaders(exchange);
+
+            if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+                exchange.sendResponseHeaders(204, -1);
+                exchange.close();
+                return;
+            }
+
+            byte[] responseData = null;
+
+            // Try loading from classpath resource /telemetry.html
+            try (InputStream is = getClass().getResourceAsStream("/telemetry.html")) {
+                if (is != null) {
+                    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                    byte[] temp = new byte[8192];
+                    int r;
+                    while ((r = is.read(temp)) != -1) {
+                        buffer.write(temp, 0, r);
+                    }
+                    responseData = buffer.toByteArray();
+                }
+            } catch (Exception ignored) {
+            }
+
+            // Fallback: try loading from local disk src/telemetry.html
+            if (responseData == null) {
+                File localFile = new File("src" + File.separator + "telemetry.html");
+                if (!localFile.exists()) localFile = new File("telemetry.html");
+                if (localFile.exists() && localFile.isFile()) {
+                    try (FileInputStream fis = new FileInputStream(localFile);
+                         ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
+                        byte[] temp = new byte[8192];
+                        int r;
+                        while ((r = fis.read(temp)) != -1) {
+                            buffer.write(temp, 0, r);
+                        }
+                        responseData = buffer.toByteArray();
+                    }
+                }
+            }
+
+            if (responseData != null) {
+                exchange.getResponseHeaders().set("Content-Type", "text/html; charset=utf-8");
+                exchange.getResponseHeaders().set("Cache-Control", "no-cache, no-store, must-revalidate");
+                exchange.sendResponseHeaders(200, responseData.length);
+                try (OutputStream os = exchange.getResponseBody()) {
+                    os.write(responseData);
+                }
+            } else {
+                String errorMsg = "404 Telemetry HTML Resource Not Found";
+                exchange.sendResponseHeaders(404, errorMsg.length());
+                try (OutputStream os = exchange.getResponseBody()) {
+                    os.write(errorMsg.getBytes(StandardCharsets.UTF_8));
+                }
+            }
+        }
+    }
+
+    /**
+     * Handler to return complete JSON telemetry state for /api/telemetry
+     */
+    private class TelemetryApiHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            addCorsHeaders(exchange);
+            if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+                exchange.sendResponseHeaders(204, -1);
+                exchange.close();
+                return;
+            }
+
+            String jsonResponse = (cassetteFlow != null) ? cassetteFlow.getTelemetryState().toString() : "{}";
+            byte[] jsonBytes = jsonResponse.getBytes(StandardCharsets.UTF_8);
+
+            exchange.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
+            exchange.getResponseHeaders().set("Cache-Control", "no-cache, no-store, must-revalidate");
+            exchange.sendResponseHeaders(200, jsonBytes.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(jsonBytes);
+            }
+        }
+    }
+
+    /**
+     * Handler to list available audio playback devices
+     */
+    private class AudioDevicesHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            addCorsHeaders(exchange);
+            if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+                exchange.sendResponseHeaders(204, -1);
+                exchange.close();
+                return;
+            }
+
+            org.json.JSONArray devArray = new org.json.JSONArray(CassettePlayer.getAvailablePlaybackDevices());
+            byte[] jsonBytes = devArray.toString().getBytes(StandardCharsets.UTF_8);
+
+            exchange.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
+            exchange.sendResponseHeaders(200, jsonBytes.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(jsonBytes);
+            }
+        }
+    }
+
+    /**
+     * Handler to execute control commands (/api/cmd)
+     */
+    private class CommandHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            addCorsHeaders(exchange);
+            if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+                exchange.sendResponseHeaders(204, -1);
+                exchange.close();
+                return;
+            }
+
+            String cmd = null;
+            Object val = null;
+
+            // 1. Check Query params
+            String query = exchange.getRequestURI().getQuery();
+            if (query != null && !query.isEmpty()) {
+                Map<String, String> params = splitQuery(query);
+                if (params.containsKey("cmd")) cmd = params.get("cmd");
+                else if (params.containsKey("c")) cmd = params.get("c");
+                if (params.containsKey("val")) val = params.get("val");
+                else if (params.containsKey("v")) val = params.get("v");
+            }
+
+            // 2. Check JSON/POST body
+            if ("POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+                try (InputStream is = exchange.getRequestBody()) {
+                    String body = new String(is.readAllBytes(), StandardCharsets.UTF_8).trim();
+                    if (body.startsWith("{") && body.endsWith("}")) {
+                        try {
+                            JSONObject json = new JSONObject(body);
+                            if (json.has("cmd")) cmd = json.getString("cmd");
+                            if (json.has("val")) val = json.get("val");
+                        } catch (Exception ignored) {}
+                    } else if (body.contains("=")) {
+                        Map<String, String> formParams = splitQuery(body);
+                        if (formParams.containsKey("cmd")) cmd = formParams.get("cmd");
+                        if (formParams.containsKey("val")) val = formParams.get("val");
+                    }
+                }
+            }
+
+            if (cmd != null && cassetteFlow != null) {
+                cassetteFlow.runTelemetryCommand(cmd, val);
+            }
+
+            String response = "{\"status\":\"ok\",\"cmd\":\"" + (cmd != null ? cmd : "") + "\"}";
+            byte[] bytes = response.getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
+            exchange.sendResponseHeaders(200, bytes.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(bytes);
+            }
+        }
     }
 
     /**

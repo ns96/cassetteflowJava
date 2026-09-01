@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CassetteFlow Telemetry & Diagnostics</title>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --text-color: #c9d1d9;
+            --text-dim: #8b949e;
+            --accent-color: #58a6ff;
+            --border-color: #30363d;
+            --panel-bg: #161b22;
+            --success-color: #2ea043;
+            --danger-color: #da3633;
+            --warn-color: #d29922;
+            --term-green: #39ff14;
+        }
+        * { box-sizing: border-box; }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+        }
+        .header {
+            background-color: var(--panel-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 6px 12px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            font-size: 13px;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .status-group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        .status-pill {
+            background: #21262d;
+            padding: 3px 8px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .status-pill.online { border-color: var(--success-color); color: #7ee787; }
+        .status-pill.carrier { border-color: #58a6ff; color: #58a6ff; }
+        .status-pill.error { border-color: var(--danger-color); color: #ff7b72; }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 8px 12px;
+            gap: 8px;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        /* Terminal Window */
+        .terminal-panel {
+            flex: 1.2;
+            display: flex;
+            flex-direction: column;
+            background: #000000;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            min-height: 120px;
+            overflow: hidden;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.6);
+        }
+        .panel-header {
+            background: #161b22;
+            border-bottom: 1px solid var(--border-color);
+            padding: 4px 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--text-dim);
+            letter-spacing: 0.5px;
+        }
+        .panel-header-actions {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .btn-mini {
+            padding: 2px 6px;
+            font-size: 10px;
+            border-radius: 4px;
+            background: #21262d;
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+        }
+        .btn-mini.active { background: #1f6feb; border-color: #58a6ff; color: white; }
+        .terminal-body {
+            flex: 1;
+            padding: 6px 10px;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+            font-size: 12.5px;
+            overflow-y: scroll;
+            white-space: pre-wrap;
+            word-break: break-all;
+            color: var(--term-green);
+            line-height: 1.4;
+        }
+
+        /* Diagnostics & Stats Panel */
+        .stats-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            min-height: 140px;
+            overflow-y: auto;
+        }
+        .stats-summary-bar {
+            background: #21262d;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #ffd166;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px 12px;
+            padding: 8px 10px;
+            font-size: 12px;
+            font-family: "SFMono-Regular", Consolas, monospace;
+        }
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px dashed #21262d;
+            padding: 2px 0;
+        }
+        .stat-label { color: var(--text-dim); }
+        .stat-val { font-weight: bold; color: #ffffff; }
+        .stat-val.ok { color: #7ee787; }
+        .stat-val.warn { color: #d29922; }
+        .stat-val.err { color: #ff7b72; }
+        .stat-val.highlight { color: #58a6ff; }
+
+        .meta-box {
+            background: #0d1117;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            margin: 6px 10px 8px 10px;
+            padding: 6px 8px;
+            font-size: 11px;
+            font-family: "SFMono-Regular", Consolas, monospace;
+        }
+        .meta-title { color: #e3b341; font-weight: bold; margin-bottom: 2px; }
+        .meta-details { color: #7ee787; }
+
+        /* Controls Section */
+        .controls {
+            background-color: var(--panel-bg);
+            border-top: 1px solid var(--border-color);
+            padding: 8px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .control-row { display: flex; gap: 8px; align-items: center; }
+        .flex-grow { flex: 1; }
+        button {
+            background-color: var(--success-color);
+            color: white;
+            border: 1px solid rgba(27,31,35,0.15);
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            touch-action: manipulation;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+        button:active { transform: scale(0.97); opacity: 0.85; }
+        button.secondary { background-color: #30363d; }
+        button.danger { background-color: var(--danger-color); }
+        button.active { background-color: #1f6feb; border-color: #58a6ff; }
+
+        .device-selector-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+            min-width: 0;
+        }
+        .device-label {
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--text-dim);
+            white-space: nowrap;
+        }
+        select.device-select {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 6px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            outline: none;
+            width: 100%;
+            cursor: pointer;
+        }
+        select.device-select:focus {
+            border-color: var(--accent-color);
+        }
+
+        @media (max-width: 650px) {
+            .stats-grid { grid-template-columns: 1fr; gap: 2px; }
+            .header { font-size: 11px; }
+            .status-pill { font-size: 11px; }
+            .control-row { flex-wrap: wrap; }
+            .device-selector-wrapper { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="status-group">
+            <div class="status-pill online" id="status-ip">IP: Connecting...</div>
+            <div class="status-pill" id="status-cpu">CPU: --%</div>
+            <div class="status-pill" id="status-mem">MEM: --%</div>
+            <div class="status-pill carrier" id="status-carrier">[NO CARRIER]</div>
+        </div>
+        <div class="status-group">
+            <div class="status-pill" id="status-baud">Baud: 1200</div>
+            <div class="status-pill" id="status-err">Err: +0.00%</div>
+            <div class="status-pill" id="status-snr">SNR: -- dB</div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <!-- 1. Real-time Scrolling Terminal -->
+        <div class="terminal-panel">
+            <div class="panel-header">
+                <span>REAL-TIME FSK TERMINAL STREAM</span>
+                <div class="panel-header-actions">
+                    <button class="btn-mini active" id="btn-autoscroll" onclick="toggleAutoScroll()">AUTO-SCROLL: ON</button>
+                    <button class="btn-mini" onclick="clearTerminal()">CLEAR LOG</button>
+                </div>
+            </div>
+            <div class="terminal-body" id="rx-terminal">Waiting for incoming FSK audio carrier...</div>
+        </div>
+
+        <!-- 2. Tape Telemetry & Diagnostics -->
+        <div class="stats-panel">
+            <div class="stats-summary-bar">
+                <span id="stat-side-tc">SIDE A  |  TIMECODE: 00:00:00 (0s)</span>
+                <span id="stat-mode-badge" style="color: #58a6ff;">MODE: DECODE AUTO</span>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-row">
+                    <span class="stat-label">Total Records:</span>
+                    <span class="stat-val" id="stat-total-recs">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Speed Error:</span>
+                    <span class="stat-val ok" id="stat-speed-err">+0.00%</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Data Errors:</span>
+                    <span class="stat-val ok" id="stat-data-errs">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Measured Baud:</span>
+                    <span class="stat-val" id="stat-meas-baud">1200.0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Side A Recs:</span>
+                    <span class="stat-val" id="stat-side-a">0 (0.0%)</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Signal SNR:</span>
+                    <span class="stat-val highlight" id="stat-snr">-- dB</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Side B Recs:</span>
+                    <span class="stat-val" id="stat-side-b">0 (0.0%)</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Carrier State:</span>
+                    <span class="stat-val" id="stat-carrier-state">Unlocked</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Format Errs:</span>
+                    <span class="stat-val" id="stat-fmt-errs">L=0 N=0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Total Stops:</span>
+                    <span class="stat-val" id="stat-stops">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Wow &amp; Flutter:</span>
+                    <span class="stat-val ok" id="stat-wf">0.00% [OK]</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">W/F Peak (P-P):</span>
+                    <span class="stat-val" id="stat-wf-peak">0.00%</span>
+                </div>
+            </div>
+
+            <div class="meta-box" id="meta-container">
+                <div class="meta-title" id="meta-file">FILE: No Database Track Metadata Available</div>
+                <div class="meta-details" id="meta-details">HASH: ------ | DUR: 00:00 | --- kbps</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Remote Control Bar -->
+    <div class="controls">
+        <div class="control-row">
+            <button id="btn-spk" class="secondary" onclick="toggleAudioMon()">AUDIO MON: OFF</button>
+            <div class="device-selector-wrapper">
+                <span class="device-label">Output Device:</span>
+                <select id="audio-device-select" class="device-select" onchange="onAudioDeviceChange(this.value)">
+                    <option value="Default Playback Device">Default Playback Device</option>
+                </select>
+            </div>
+            <div class="device-selector-wrapper">
+                <span class="device-label">Vol:</span>
+                <select id="audio-volume-select" class="device-select" style="min-width: 80px;" onchange="onAudioVolumeChange(this.value)">
+                    <option value="100">100%</option>
+                    <option value="90">90%</option>
+                    <option value="80">80%</option>
+                    <option value="70">70%</option>
+                    <option value="60">60%</option>
+                    <option value="50" selected>50%</option>
+                    <option value="40">40%</option>
+                    <option value="30">30%</option>
+                    <option value="20">20%</option>
+                    <option value="10">10%</option>
+                    <option value="0">0% (Mute)</option>
+                </select>
+            </div>
+            <button class="danger" onclick="sendCommand('reset', 0)">RESET STATS</button>
+            <div style="font-size: 11px; color: var(--text-dim);" id="sys-version">CassetteFlow Telemetry</div>
+        </div>
+    </div>
+
+    <script>
+        let autoScroll = true;
+        let stateAudioMon = false;
+        let knownAudioDevices = [];
+        let selectedAudioDevice = "Default Playback Device";
+        let isDeviceDropdownFocused = false;
+        let isVolumeDropdownFocused = false;
+        let clientSide = 'A';
+        let clientTimeSec = 0;
+        let baudSamples = [];
+        const MAX_BAUD_SAMPLES = 40;
+
+        function updateWowAndFlutter(measuredBaud, carrierActive, targetBaud) {
+            const nominalBaud = targetBaud || 1200;
+            const wfEl = document.getElementById('stat-wf');
+            const wfPeakEl = document.getElementById('stat-wf-peak');
+
+            if (!carrierActive || !measuredBaud || measuredBaud <= 0) {
+                if (baudSamples.length > 0 && !carrierActive) {
+                    baudSamples = [];
+                }
+                if (wfEl) {
+                    wfEl.innerText = '0.00% [OK]';
+                    wfEl.className = 'stat-val ok';
+                }
+                if (wfPeakEl) wfPeakEl.innerText = '0.00%';
+                return;
+            }
+
+            baudSamples.push(measuredBaud);
+            if (baudSamples.length > MAX_BAUD_SAMPLES) {
+                baudSamples.shift();
+            }
+
+            if (baudSamples.length >= 3) {
+                let sum = 0;
+                let minBaud = baudSamples[0];
+                let maxBaud = baudSamples[0];
+                for (let b of baudSamples) {
+                    sum += b;
+                    if (b < minBaud) minBaud = b;
+                    if (b > maxBaud) maxBaud = b;
+                }
+                const mean = sum / baudSamples.length;
+                let sqDiffSum = 0;
+                for (let b of baudSamples) {
+                    const diff = b - mean;
+                    sqDiffSum += diff * diff;
+                }
+                const stdDev = Math.sqrt(sqDiffSum / baudSamples.length);
+                let rmsWf = (stdDev / nominalBaud) * 100.0;
+                if (rmsWf < 0.02) rmsWf = 0.0; // Filter digital quantization noise floor
+
+                const p2pWf = ((maxBaud - minBaud) / nominalBaud) * 100.0;
+
+                let statusTag = '[OK]';
+                let statusClass = 'stat-val ok';
+                if (rmsWf > 0.40) {
+                    statusTag = '[HIGH]';
+                    statusClass = 'stat-val err';
+                } else if (rmsWf > 0.20) {
+                    statusTag = '[WARN]';
+                    statusClass = 'stat-val warn';
+                }
+
+                if (wfEl) {
+                    wfEl.innerText = `${rmsWf.toFixed(2)}% ${statusTag}`;
+                    wfEl.className = statusClass;
+                }
+                if (wfPeakEl) {
+                    wfPeakEl.innerText = `${p2pWf.toFixed(2)}%`;
+                }
+            } else {
+                if (wfEl) {
+                    wfEl.innerText = 'CALC...';
+                    wfEl.className = 'stat-val';
+                }
+                if (wfPeakEl) wfPeakEl.innerText = '--%';
+            }
+        }
+
+        function formatTimecode(totalSec) {
+            const secNum = parseInt(totalSec, 10) || 0;
+            const h = Math.floor(secNum / 3600);
+            const m = Math.floor((secNum % 3600) / 60);
+            const s = secNum % 60;
+            const pad = (n) => String(n).padStart(2, '0');
+            return `${pad(h)}:${pad(m)}:${pad(s)}`;
+        }
+
+        function parseTimecodeFromLog(rxText) {
+            if (!rxText) return;
+            const lines = String(rxText).split(/\r?\n/);
+            for (let i = lines.length - 1; i >= 0; i--) {
+                const line = lines[i].trim();
+                if (!line || line.startsWith('###')) continue;
+
+                // Check for Side indicators in line
+                if (/\b(SIDE\s*A|DCT0A)\b/i.test(line)) {
+                    clientSide = 'A';
+                } else if (/\b(SIDE\s*B|DCT0B)\b/i.test(line)) {
+                    clientSide = 'B';
+                }
+
+                // Case 1: DCT compact format (e.g. "DCT A001270003001" or "DCT B000450001001")
+                if (line.startsWith('DCT ') && line.length >= 10) {
+                    const sideChar = line.charAt(4).toUpperCase();
+                    if (sideChar === 'A' || sideChar === 'B') clientSide = sideChar;
+                    const sec = parseInt(line.substring(5, 10).trim(), 10);
+                    if (!isNaN(sec)) {
+                        clientTimeSec = sec;
+                        return;
+                    }
+                }
+
+                // Case 2: Delimited line (e.g. "DCT0A_1_0000_127_127" or "TapeA_1_hash_127_127")
+                if (line.includes('_')) {
+                    const parts = line.split('_');
+                    if (parts.length >= 5) {
+                        const part0 = parts[0].toUpperCase();
+                        if (part0.includes('DCT0A') || part0.endsWith('A') || part0.includes('SIDEA')) {
+                            clientSide = 'A';
+                        } else if (part0.includes('DCT0B') || part0.endsWith('B') || part0.includes('SIDEB')) {
+                            clientSide = 'B';
+                        }
+
+                        let sec = parseInt(parts[4].replace(/[^0-9]/g, ''), 10);
+                        if (isNaN(sec)) {
+                            sec = parseInt(parts[3].replace(/[^0-9]/g, ''), 10);
+                        }
+                        if (!isNaN(sec)) {
+                            clientTimeSec = sec;
+                            return;
+                        }
+                    }
+                }
+
+                // Case 3: "Playtime From Tape: 0127" or "Tape Time: 127"
+                const tapePlayMatch = line.match(/(?:Playtime From Tape|Tape Time|Tape Counter):\s*(\d+)/i);
+                if (tapePlayMatch && tapePlayMatch[1]) {
+                    clientTimeSec = parseInt(tapePlayMatch[1], 10);
+                    return;
+                }
+
+                // Case 4: "TAPE TIME: 127" or "TAPE TIME: 00:02:07"
+                if (line.toUpperCase().includes('TAPE TIME:')) {
+                    const matchSec = line.match(/TAPE TIME:\s*(\d+)/i);
+                    if (matchSec && matchSec[1]) {
+                        clientTimeSec = parseInt(matchSec[1], 10);
+                        return;
+                    }
+                }
+
+                // Case 5: Timecode string (e.g. "TIMECODE: 00:02:07" or "TIMECODE 00:02:07")
+                const tcMatch = line.match(/TIMECODE[:\s]+(\d{1,2}):(\d{2}):(\d{2})/i);
+                if (tcMatch) {
+                    const h = parseInt(tcMatch[1], 10) || 0;
+                    const m = parseInt(tcMatch[2], 10) || 0;
+                    const s = parseInt(tcMatch[3], 10) || 0;
+                    clientTimeSec = (h * 3600) + (m * 60) + s;
+                    return;
+                }
+            }
+        }
+
+        const deviceSelectEl = document.getElementById('audio-device-select');
+        deviceSelectEl.addEventListener('focus', () => { isDeviceDropdownFocused = true; });
+        deviceSelectEl.addEventListener('blur', () => { isDeviceDropdownFocused = false; });
+
+        const volumeSelectEl = document.getElementById('audio-volume-select');
+        volumeSelectEl.addEventListener('focus', () => { isVolumeDropdownFocused = true; });
+        volumeSelectEl.addEventListener('blur', () => { isVolumeDropdownFocused = false; });
+
+        function toggleAutoScroll() {
+            autoScroll = !autoScroll;
+            const btn = document.getElementById('btn-autoscroll');
+            if (autoScroll) {
+                btn.innerText = "AUTO-SCROLL: ON";
+                btn.classList.add('active');
+                scrollTerminalToBottom();
+            } else {
+                btn.innerText = "AUTO-SCROLL: OFF";
+                btn.classList.remove('active');
+            }
+        }
+
+        function scrollTerminalToBottom() {
+            const terminal = document.getElementById('rx-terminal');
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function clearTerminal() {
+            document.getElementById('rx-terminal').innerText = "";
+            sendCommand('clear', 0);
+        }
+
+        async function updateStatus() {
+            try {
+                const response = await fetch('/api/telemetry');
+                if (!response.ok) return;
+                const data = await response.json();
+                
+                // 1. Header HUD
+                document.getElementById('status-ip').innerText = `IP: ${data.param_ip || window.location.host}`;
+                
+                const cpuVal = (data.cpu_percent !== undefined) ? data.cpu_percent.toFixed(1) : '0.0';
+                document.getElementById('status-cpu').innerText = `CPU: ${cpuVal}%`;
+                
+                const memVal = (data.mem_percent !== undefined) ? data.mem_percent.toFixed(1) : '0.0';
+                const memMb = data.mem_used_mb || 0;
+                document.getElementById('status-mem').innerText = `MEM: ${memVal}% (${memMb}MB)`;
+
+                document.getElementById('status-baud').innerText = `Baud: ${data.param_baud || 1200}`;
+                
+                const errVal = data.param_speed_error || 0;
+                const errPill = document.getElementById('status-err');
+                errPill.innerText = `Err: ${errVal >= 0 ? '+' : ''}${errVal.toFixed(2)}%`;
+                if (Math.abs(errVal) > 1.5) {
+                    errPill.classList.add('error');
+                    errPill.classList.remove('online');
+                } else {
+                    errPill.classList.remove('error');
+                    errPill.classList.add('online');
+                }
+
+                const carPill = document.getElementById('status-carrier');
+                if (data.carrier) {
+                    const baudDisplay = Math.round(data.param_measured_baud || data.param_baud || 1200);
+                    carPill.innerText = `[CARRIER LOCKED: ${baudDisplay} Bd]`;
+                    carPill.classList.add('online');
+                    carPill.classList.remove('error');
+                } else {
+                    carPill.innerText = "[NO CARRIER]";
+                    carPill.classList.remove('online');
+                }
+
+                document.getElementById('status-snr').innerText = `SNR: ${data.snr !== undefined ? data.snr.toFixed(1) : '--'} dB`;
+                if (data.param_version) document.getElementById('sys-version').innerText = data.param_version;
+
+                // 2. Real-Time Terminal
+                if (data.rx_text !== undefined) {
+                    const term = document.getElementById('rx-terminal');
+                    if (term.innerText !== data.rx_text) {
+                        term.innerText = data.rx_text || 'Waiting for incoming FSK audio carrier...';
+                        if (autoScroll) {
+                            setTimeout(scrollTerminalToBottom, 10);
+                        }
+                    }
+                }
+
+                // 3. Telemetry & Diagnostics Panel
+                const combinedSources = [
+                    data.rx_text,
+                    data.rawLineRecord,
+                    data.currentLineRecord,
+                    data.last_record,
+                    typeof data.now_playing === 'string' ? data.now_playing : JSON.stringify(data.now_playing || ''),
+                    typeof data.currentlyPlaying === 'string' ? data.currentlyPlaying : JSON.stringify(data.currentlyPlaying || '')
+                ].filter(Boolean).join('\n');
+                parseTimecodeFromLog(combinedSources);
+
+                const finalSide = (data.side && data.side !== '?') ? data.side : clientSide;
+                const finalSec = (data.time_seconds && data.time_seconds > 0) ? data.time_seconds : clientTimeSec;
+                const finalTimecode = (data.timecode && data.timecode !== '00:00:00') ? data.timecode : formatTimecode(finalSec);
+
+                document.getElementById('stat-side-tc').innerText = `SIDE ${finalSide}  |  TIMECODE: ${finalTimecode} (${finalSec}s)`;
+                document.getElementById('stat-mode-badge').innerText = `MODE: ${(data.mode || 'DECODE AUTO').toUpperCase()}`;
+                
+                document.getElementById('stat-total-recs').innerText = data.total_recs || 0;
+                
+                const speedErrEl = document.getElementById('stat-speed-err');
+                speedErrEl.innerText = `${errVal >= 0 ? '+' : ''}${errVal.toFixed(2)}%`;
+                speedErrEl.className = Math.abs(errVal) > 1.5 ? 'stat-val err' : 'stat-val ok';
+
+                const dataErrEl = document.getElementById('stat-data-errs');
+                dataErrEl.innerText = data.data_errors || 0;
+                dataErrEl.className = (data.data_errors > 0) ? 'stat-val err' : 'stat-val ok';
+
+                document.getElementById('stat-meas-baud').innerText = (data.param_measured_baud || 0).toFixed(1);
+                document.getElementById('stat-side-a').innerText = `${data.side_a_count || 0} (${(data.side_a_err || 0).toFixed(1)}%)`;
+                document.getElementById('stat-side-b').innerText = `${data.side_b_count || 0} (${(data.side_b_err || 0).toFixed(1)}%)`;
+                document.getElementById('stat-snr').innerText = `${(data.snr || 0).toFixed(1)} dB`;
+                document.getElementById('stat-carrier-state').innerText = data.carrier ? 'Locked' : 'Unlocked';
+                document.getElementById('stat-fmt-errs').innerText = `L=${data.len_errors || 0} N=${data.num_errors || 0}`;
+                document.getElementById('stat-stops').innerText = data.stops || 0;
+
+                // Update Wow & Flutter
+                updateWowAndFlutter(data.param_measured_baud, data.carrier, data.param_baud);
+
+                // 4. Metadata HUD
+                const nowPlayingText = (typeof data.now_playing === 'object' && data.now_playing !== null) 
+                    ? (data.now_playing.title || data.now_playing.message || '') 
+                    : String(data.now_playing || '');
+
+                if (nowPlayingText.length > 0 && nowPlayingText !== 'No Metadata Available' && nowPlayingText !== 'None') {
+                    document.getElementById('meta-file').innerText = `NOW PLAYING: ${nowPlayingText}`;
+                    document.getElementById('meta-details').innerText = `CLIENT SYNCED • SIDE ${finalSide} • TIMECODE ${finalTimecode}`;
+                } else if (data.has_meta && data.meta_file && data.meta_file.length > 0) {
+                    document.getElementById('meta-file').innerText = `FILE: ${data.meta_file}`;
+                    document.getElementById('meta-details').innerText = `HASH: ${data.meta_hash || '---'} | DUR: ${data.meta_dur || '00:00'} | ${data.meta_bitrate || 0} kbps`;
+                } else {
+                    document.getElementById('meta-file').innerText = "NOW PLAYING: Standby";
+                    document.getElementById('meta-details').innerText = "Waiting for tape or track info...";
+                }
+
+                // 5. Audio Monitor State
+                stateAudioMon = !!data.audio_mon_enabled;
+                const spkBtn = document.getElementById('btn-spk');
+                if (stateAudioMon) {
+                    spkBtn.innerText = "AUDIO MON: ON";
+                    spkBtn.classList.add('active');
+                    spkBtn.classList.remove('secondary');
+                } else {
+                    spkBtn.innerText = "AUDIO MON: OFF";
+                    spkBtn.classList.remove('active');
+                    spkBtn.classList.add('secondary');
+                }
+
+                // 6. Audio Devices & Volume Dropdown
+                if (data.current_audio_device) {
+                    selectedAudioDevice = data.current_audio_device;
+                }
+                if (Array.isArray(data.audio_devices) && !isDeviceDropdownFocused) {
+                    syncDeviceList(data.audio_devices, selectedAudioDevice);
+                }
+                if (data.audio_mon_volume !== undefined && !isVolumeDropdownFocused) {
+                    const volSelect = document.getElementById('audio-volume-select');
+                    if (volSelect && volSelect.value !== String(data.audio_mon_volume)) {
+                        volSelect.value = String(data.audio_mon_volume);
+                    }
+                }
+
+            } catch (e) {
+                // Ignore transient network errors
+            }
+        }
+
+        function syncDeviceList(devices, activeDevice) {
+            const select = document.getElementById('audio-device-select');
+            const devicesJson = JSON.stringify(devices);
+            if (devicesJson !== JSON.stringify(knownAudioDevices)) {
+                knownAudioDevices = devices;
+                select.innerHTML = '';
+                for (const dev of devices) {
+                    const opt = document.createElement('option');
+                    opt.value = dev;
+                    opt.textContent = dev;
+                    select.appendChild(opt);
+                }
+            }
+            if (activeDevice && select.value !== activeDevice) {
+                select.value = activeDevice;
+            }
+        }
+
+        async function sendCommand(cmd, val) {
+            try {
+                if (cmd === 'reset') {
+                    clientTimeSec = 0;
+                    clientSide = 'A';
+                    baudSamples = [];
+                }
+                await fetch('/api/cmd', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cmd: cmd, val: val })
+                });
+                setTimeout(updateStatus, 100);
+            } catch (e) {
+                console.error("Command Error:", e);
+            }
+        }
+
+        async function toggleAudioMon() {
+            const nextState = stateAudioMon ? 0 : 1;
+            await sendCommand('spk_mon', nextState);
+        }
+
+        async function onAudioDeviceChange(deviceName) {
+            selectedAudioDevice = deviceName;
+            await sendCommand('audio_device', deviceName);
+        }
+
+        async function onAudioVolumeChange(vol) {
+            await sendCommand('audio_volume', parseInt(vol, 10));
+        }
+
+        // Handle user manual scroll
+        const term = document.getElementById('rx-terminal');
+        term.addEventListener('scroll', function() {
+            const atBottom = term.scrollHeight - term.clientHeight <= term.scrollTop + 20;
+            if (!atBottom && autoScroll) {
+                // User scrolled up
+            }
+        });
+
+        setInterval(updateStatus, 400);
+        updateStatus();
+    </script>
+</body>
+</html>
