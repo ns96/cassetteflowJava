@@ -47,6 +47,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     private CassetteFlowFrame cassetteFlowFrame;
 
     private StreamPlayer player = null;
+    private FlacAudioPlayer flacPlayer = null;
 
     private DeckCastConnector deckCastConnector;
 
@@ -797,12 +798,15 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                                     + "} ...";
 
                             // make sure we stop any previous players
+                            if (flacPlayer != null) {
+                                flacPlayer.stop();
+                            }
                             if (player != null) {
                                 player.stop();
+                            }
 
-                                if (cassetteFlowFrame != null) {
-                                    cassetteFlowFrame.setPlaybackInfo(stopMessage, false);
-                                }
+                            if (cassetteFlowFrame != null) {
+                                cassetteFlowFrame.setPlaybackInfo(stopMessage, false);
                             }
 
                             // check to see if we have deckcast object and stop it's playback as well
@@ -834,12 +838,15 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                 String stopMessage = "Playback Stopped {# errors " + dataErrors + "/" + logLineCount + "} ...";
 
                 // make sure we stop any previous players after receiving a few stop records
+                if (flacPlayer != null && stopRecords > STOP_RECORD_LIMIT) {
+                    flacPlayer.stop();
+                }
                 if (player != null && stopRecords > STOP_RECORD_LIMIT) {
                     player.stop();
+                }
 
-                    if (cassetteFlowFrame != null) {
-                        cassetteFlowFrame.setPlaybackInfo(stopMessage, false);
-                    }
+                if (cassetteFlowFrame != null && stopRecords > STOP_RECORD_LIMIT) {
+                    cassetteFlowFrame.setPlaybackInfo(stopMessage, false);
                 }
 
                 // check to see if we have deckcast object and stop it's playback as well
@@ -860,7 +867,11 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                 // restart the process
                 // on stopRecords == 1 like the external process version did.
                 // However, if logic requires a "reset", we can just toggle paused.
-                if (stopRecords == 1 && player != null) {
+                if (stopRecords == 1 && (player != null || flacPlayer != null)) {
+                    if (flacPlayer != null) {
+                        flacPlayer.stop();
+                        flacPlayer = null;
+                    }
                     player = null;
                     System.out.println("Player Set to Null ...");
                 }
@@ -1075,7 +1086,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
         }
 
         // System.out.println("Line Data: " + playTime + " >> " + line);
-        if (currentPlayTime != playTime && player != null) {
+        if (currentPlayTime != playTime && (player != null || flacPlayer != null)) {
             currentPlayTime = playTime;
             currentTapeTime = totalTime;
 
@@ -1144,47 +1155,65 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
             return;
         }
 
-        // make sure we stop any previous threads
+        // make sure we stop any previous players
+        if (flacPlayer != null) {
+            flacPlayer.stop();
+        }
         if (player != null) {
             player.stop();
-        } else {
-            player = new StreamPlayer();
-            player.addStreamPlayerListener(this);
         }
 
-        try {
-            player.setMixerName(outputMixerName);
-            player.setSpeedFactor(speedFactor);
-            player.open(file);
-
-            if (startTime > 0) {
-                System.out.println("Seconds Skipped: " + startTime);
-
-                if (file.getName().toLowerCase().contains(".mp3")) {
-                    player.seekTo(startTime);
-                } else {
-                    /**
-                     * 12/20/2021 -- BUG WITH StreamPlayer Library
-                     * must be FLAC so calling seekTo causes everything to crash!
-                     * Unfortunately this workaround doesn't work either
-                     */
-                    long totalBytes = player.getTotalBytes();
-                    double percentage = (startTime * 100) / duration;
-                    long bytes = (long) (totalBytes * (percentage / 100));
-                    long bytesSkipped = player.seekBytes(bytes);
-                    System.out.println("Bytes Skipped: " + bytesSkipped + " / Requested: " + bytes);
-                }
+        if (file.getName().toLowerCase().endsWith(".flac")) {
+            if (flacPlayer == null) {
+                flacPlayer = new FlacAudioPlayer();
+                flacPlayer.setProgressListener(elapsedSeconds -> {
+                    audioProgress = elapsedSeconds;
+                });
             }
 
-            player.play();
-        } catch (StreamPlayerException ex) {
-            ex.printStackTrace();
+            try {
+                flacPlayer.setMixerName(outputMixerName);
+                flacPlayer.setSpeedFactor(speedFactor);
+                flacPlayer.open(file);
+
+                if (startTime > 0) {
+                    System.out.println("Seconds Skipped (FLAC): " + startTime);
+                    flacPlayer.seekTo(startTime);
+                }
+
+                flacPlayer.play();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        } else {
+            if (player == null) {
+                player = new StreamPlayer();
+                player.addStreamPlayerListener(this);
+            }
+
+            try {
+                player.setMixerName(outputMixerName);
+                player.setSpeedFactor(speedFactor);
+                player.open(file);
+
+                if (startTime > 0) {
+                    System.out.println("Seconds Skipped (MP3): " + startTime);
+                    player.seekTo(startTime);
+                }
+
+                player.play();
+            } catch (StreamPlayerException ex) {
+                ex.printStackTrace();
+            }
         }
     }
 
     // stop reading logfile and playing
     public void stop() {
-        // make sure we stop any previous threads
+        // make sure we stop any previous players
+        if (flacPlayer != null) {
+            flacPlayer.stop();
+        }
         if (player != null) {
             player.stop();
         }
