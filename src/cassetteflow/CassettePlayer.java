@@ -269,7 +269,8 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     }
 
     public int getDataErrors() {
-        return dataErrors;
+        int diagErrors = (lastDiagnosticData != null) ? lastDiagnosticData.dataErrors : 0;
+        return Math.max(dataErrors, diagErrors);
     }
 
     public int getLogLineCount() {
@@ -791,6 +792,7 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                                 currentLineRecord = dctLine;
                             }
                         } else {
+                            dataErrors++;
                             String stopMessage = "DCT Lookup Error {# errors " + dataErrors + "/" + logLineCount
                                     + "} ...";
 
@@ -879,6 +881,10 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
                 }
 
                 currentLineRecord = "PLAYBACK STOPPED # " + stopRecords;
+            } else {
+                if (line.length() > 0 && !line.startsWith("#")) {
+                    dataErrors++;
+                }
             }
         }
     }

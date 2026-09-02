@@ -40,6 +40,7 @@ public class JMinimodem {
         public int totalStops = 0;
         public int logLineCount = 0;
         public int dataErrors = 0;
+        public int dataNumericErrors = 0;
         public int sideAErrors = 0;
         public int sideALineCount = 0;
         public int sideBErrors = 0;
@@ -426,6 +427,7 @@ public class JMinimodem {
         int logLineCount = 0;
         int dataErrors = 0;
         int dataLengthErrors = 0;
+        int dataNumericErrors = 0;
         int sideALineCount = 0;
         int sideAErrors = 0;
         int sideBLineCount = 0;
@@ -442,6 +444,7 @@ public class JMinimodem {
                 logLineCount = 0;
                 dataErrors = 0;
                 dataLengthErrors = 0;
+                dataNumericErrors = 0;
                 sideALineCount = 0;
                 sideAErrors = 0;
                 sideBLineCount = 0;
@@ -519,7 +522,7 @@ public class JMinimodem {
                         sb.append(String.format("Side B: %d/%d (%.2f%%)\n", sideBErrors, sideBLineCount, sbPerc));
 
                         // 8. Format Errors
-                        sb.append(String.format("Format Err: L=%d N=%d", dataLengthErrors, dataErrors));
+                        sb.append(String.format("Format Err: L=%d N=%d", dataLengthErrors, dataNumericErrors));
 
                         String diagStr = sb.toString();
                         if (cfg.diagListener != null) {
@@ -535,6 +538,7 @@ public class JMinimodem {
                             data.totalStops = totalStops;
                             data.logLineCount = logLineCount;
                             data.dataErrors = dataErrors;
+                            data.dataNumericErrors = dataNumericErrors;
                             data.sideAErrors = sideAErrors;
                             data.sideALineCount = sideALineCount;
                             data.sideBErrors = sideBErrors;
@@ -691,10 +695,39 @@ public class JMinimodem {
                                                     }
                                                     if (lineStr.length() != 29) {
                                                         dataLengthErrors++;
+                                                        dataErrors++;
                                                         if (side == 'A')
                                                             sideAErrors++;
                                                         if (side == 'B')
                                                             sideBErrors++;
+                                                    } else {
+                                                        // Validate format & numeric parts of 29-character DCT records
+                                                        String[] parts = lineStr.split("_");
+                                                        boolean hasFormatError = false;
+                                                        if (parts.length != 5) {
+                                                            hasFormatError = true;
+                                                        } else {
+                                                            try {
+                                                                Integer.parseInt(parts[1]);
+                                                                Integer.parseInt(parts[3]);
+                                                                Integer.parseInt(parts[4]);
+                                                            } catch (Exception e) {
+                                                                hasFormatError = true;
+                                                            }
+                                                        }
+                                                        if (hasFormatError) {
+                                                            dataNumericErrors++;
+                                                            dataErrors++;
+                                                            if (side == 'A')
+                                                                sideAErrors++;
+                                                            if (side == 'B')
+                                                                sideBErrors++;
+                                                        }
+                                                    }
+                                                } else if (!lineStr.contains("### NOCARRIER") && !lineStr.startsWith("#")) {
+                                                    if (lineStr.length() != 29) {
+                                                        dataLengthErrors++;
+                                                        dataErrors++;
                                                     }
                                                 }
                                             }

@@ -63,7 +63,7 @@ import org.json.JSONObject;
  */
 public class CassetteFlow {
     // static variable that holds the application version
-    public static String VERSION = "CassetteFlow v2.3.3 (09/01/2026)";
+    public static String VERSION = "CassetteFlow v2.3.5 (09/02/2026)";
 
     // The default mp3 directory name
     public static String AUDIO_DIR_NAME = "c:\\mp3files";
@@ -542,7 +542,7 @@ public class CassetteFlow {
                                 ? (double) diag.sideBErrors / diag.sideBLineCount * 100.0
                                 : 0.0);
                 state.put("len_errors", diag != null ? diag.dataLengthErrors : 0);
-                state.put("num_errors", diag != null ? diag.dataErrors : 0);
+                state.put("num_errors", diag != null ? diag.dataNumericErrors : 0);
 
                 state.put("rx_text", cassettePlayer.getTerminalLogText());
 
@@ -1562,6 +1562,10 @@ public class CassetteFlow {
     public String getDCTLine(String line) {
         try {
             String[] sa = line.split("_");
+            if (sa.length != 5) {
+                System.out.println("Invalid DCT Record (unexpected part count " + sa.length + "): " + line);
+                return null;
+            }
             String tapeId = sa[0];
 
             // try reading the totalTime twice incase one is bad
@@ -1588,13 +1592,13 @@ public class CassetteFlow {
                 dctList = sideBDCTList;
             }
 
-            if (dctList != null && totalTime < dctList.size()) {
+            if (dctList != null && totalTime >= 0 && totalTime < dctList.size()) {
                 return dctList.get(totalTime);
             } else {
                 // System.out.println("Invalid Time Code Index: " + line);
                 return "TAPE TIME: " + totalTime;
             }
-        } catch (NumberFormatException ex) {
+        } catch (Exception ex) {
             System.out.println("Invalid DCT Record, or Missing DCT Loopkup Array: " + line);
             return null;
         }
