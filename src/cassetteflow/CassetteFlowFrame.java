@@ -902,6 +902,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         createButton = new javax.swing.JButton();
         createDownloadButton = new javax.swing.JButton();
         audioCountLabel = new javax.swing.JLabel();
+        exportComboBox = new javax.swing.JComboBox<>();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle(cassetteFlow.VERSION);
@@ -943,7 +944,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 315, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 310, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(trackALabel)
@@ -975,7 +976,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 321, Short.MAX_VALUE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 307, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(trackBLabel)
@@ -1059,7 +1060,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel6Layout.createSequentialGroup()
-                .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 298, Short.MAX_VALUE)
+                .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 284, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel14)
@@ -1354,7 +1355,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                                 .addComponent(shuffleButton)
                                 .addComponent(directEncodeCheckBox)))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(tapeJTabbedPane, javax.swing.GroupLayout.DEFAULT_SIZE, 382, Short.MAX_VALUE))
+                        .addComponent(tapeJTabbedPane))
                     .addComponent(jScrollPane1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -1509,7 +1510,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel6)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 173, Short.MAX_VALUE))
+                        .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 168, Short.MAX_VALUE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
                         .addComponent(jScrollPane4)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -1600,7 +1601,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                     .addComponent(streamPinTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(streamPlayClearButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane10, javax.swing.GroupLayout.DEFAULT_SIZE, 434, Short.MAX_VALUE))
+                .addComponent(jScrollPane10, javax.swing.GroupLayout.DEFAULT_SIZE, 429, Short.MAX_VALUE))
         );
 
         mainTabbedPane.addTab("STREAM PLAY", jPanel8);
@@ -2004,7 +2005,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                         .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(lyraTPlaySideAButton)
                             .addComponent(lyraTPlaySideBButton))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 174, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 169, Short.MAX_VALUE)
                         .addComponent(lyraTStopRawButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(lyraTStopButton))
@@ -2122,7 +2123,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         jPanel7Layout.setVerticalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel7Layout.createSequentialGroup()
-                .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 411, Short.MAX_VALUE)
+                .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 406, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -2180,6 +2181,14 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         audioCountLabel.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         audioCountLabel.setText("0 Audio Files");
 
+        exportComboBox.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        exportComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Select Export", "Export Sides As Wav", "Export Sides As Wav (LUFS)", "Export Sides As Playlist", "Export Scaled FSK Wav" }));
+        exportComboBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                exportComboBoxActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -2189,6 +2198,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(audioCountLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(exportComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(createDownloadButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(createButton)
@@ -2204,15 +2215,18 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
                 .addContainerGap()
                 .addComponent(mainTabbedPane)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(addAudioDirectoryButton)
-                    .addComponent(createDownloadButton)
-                    .addComponent(createButton)
-                    .addComponent(exitButton)
-                    .addComponent(audioCountLabel)))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(addAudioDirectoryButton)
+                        .addComponent(createDownloadButton)
+                        .addComponent(createButton)
+                        .addComponent(exitButton)
+                        .addComponent(audioCountLabel))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(exportComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap())))
         );
 
-        getAccessibleContext().setAccessibleName("");
         getAccessibleContext().setAccessibleDescription("");
 
         setBounds(0, 0, 1230, 553);
@@ -4551,6 +4565,146 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         consoleTextArea.setText("Output Console >\n");
     }//GEN-LAST:event_clearConsoleButtonActionPerformed
 
+    private void exportComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exportComboBoxActionPerformed
+        int selectedIndex = exportComboBox.getSelectedIndex();
+        if (selectedIndex <= 0) {
+            return;
+        }
+
+        String selectedItem = (String) exportComboBox.getSelectedItem();
+        // Reset combo box back to "Select Export" so user can select it again
+        exportComboBox.setSelectedIndex(0);
+
+        String tapeID = tapeIDTextField.getText().trim();
+        if (tapeID.isEmpty()) {
+            tapeID = "0000";
+        }
+
+        // Default to same directory where the fsk encoded wav files are placed
+        String saveDirectoryName = CassetteFlow.AUDIO_DIR_NAME + File.separator + CassetteFlow.TAPE_FILE_DIR_NAME;
+        File saveDir = new File(saveDirectoryName);
+        if (!saveDir.exists()) {
+            saveDir.mkdirs();
+        }
+
+        int muteTime = 4;
+        try {
+            muteTime = Integer.parseInt(muteJTextField.getText().trim());
+        } catch (NumberFormatException ignored) {
+        }
+
+        if ("Export Sides As Wav".equalsIgnoreCase(selectedItem)) {
+            exportSidesAsWav(saveDirectoryName, tapeID, muteTime, false);
+        } else if ("Export Sides As Wav (LUFS)".equalsIgnoreCase(selectedItem)) {
+            exportSidesAsWav(saveDirectoryName, tapeID, muteTime, true);
+        } else if ("Export Sides As Playlist".equalsIgnoreCase(selectedItem)) {
+            exportSidesAsPlaylist(saveDirectoryName, tapeID);
+        } else if ("Export Scaled FSK Wav".equalsIgnoreCase(selectedItem)) {
+            openScaledFSKDialog(tapeID, muteTime);
+        }
+    }//GEN-LAST:event_exportComboBoxActionPerformed
+
+    /**
+     * Opens the Scaled FSK VU-Modulation Studio dialog for in-memory FSK modulation.
+     */
+    private void openScaledFSKDialog(String tapeID, int muteTime) {
+        if (sideAList.isEmpty() && sideBList.isEmpty()) {
+            printToConsole("Export Warning: Side A and Side B have no tracks loaded for Scaled FSK.", true);
+            return;
+        }
+
+        ScaledFSKDialog dialog = new ScaledFSKDialog(this, cassetteFlow, tapeID, sideAList, sideBList, muteTime);
+        dialog.setVisible(true);
+    }
+
+    /**
+     * Export Side A and Side B to continuous single WAV files with blank spaces,
+     * updating encodeProgressBar track-by-track and logging to consoleTextArea.
+     */
+    private void exportSidesAsWav(String saveDirectoryName, String tapeID, int muteTime, boolean normalizeLUFS) {
+        ArrayList<AudioInfo> sideA = new ArrayList<>(sideAList);
+        ArrayList<AudioInfo> sideB = new ArrayList<>(sideBList);
+
+        int totalTracks = sideA.size() + sideB.size();
+        if (totalTracks == 0) {
+            printToConsole("Export Warning: No tracks found in Side A or Side B to export.", true);
+            return;
+        }
+
+        // Initialize progress bar
+        encodeProgressBar.setIndeterminate(false);
+        encodeProgressBar.setMinimum(0);
+        encodeProgressBar.setMaximum(totalTracks);
+        encodeProgressBar.setValue(0);
+
+        String modeLabel = normalizeLUFS ? "LUFS Normalized (-16.0 LUFS)" : "Standard Unscaled";
+        printToConsole("Starting WAV Export (" + modeLabel + ") for Tape: " + tapeID + " (AMS Gap: " + muteTime + "s)...", true);
+        printToConsole("Output Directory: " + saveDirectoryName, true);
+
+        new Thread(() -> {
+            try {
+                TapeExporter.exportSidesToWav(saveDirectoryName, tapeID, sideA, sideB, muteTime, normalizeLUFS, new TapeExporter.ExportProgressListener() {
+                    @Override
+                    public void onTrackProgress(int completedTracks, int total, String message) {
+                        SwingUtilities.invokeLater(() -> {
+                            encodeProgressBar.setValue(completedTracks);
+                            printToConsole(message, true);
+                        });
+                    }
+
+                    @Override
+                    public void onFinished(boolean success, String summary) {
+                        SwingUtilities.invokeLater(() -> {
+                            encodeProgressBar.setValue(0);
+                            encodeProgressBar.setIndeterminate(false);
+                            printToConsole(summary, true);
+                        });
+                    }
+                });
+            } catch (Exception ex) {
+                SwingUtilities.invokeLater(() -> {
+                    encodeProgressBar.setValue(0);
+                    encodeProgressBar.setIndeterminate(false);
+                    printToConsole("Export Error: " + ex.getMessage(), true);
+                });
+                ex.printStackTrace();
+            }
+        }, "WavExportThread").start();
+    }
+
+    /**
+     * Export Side A and Side B to standard M3U8 playlist files.
+     */
+    private void exportSidesAsPlaylist(String saveDirectoryName, String tapeID) {
+        ArrayList<AudioInfo> sideA = new ArrayList<>(sideAList);
+        ArrayList<AudioInfo> sideB = new ArrayList<>(sideBList);
+
+        if (sideA.isEmpty() && sideB.isEmpty()) {
+            printToConsole("Export Warning: No tracks in Side A or Side B to export as playlist.", true);
+            return;
+        }
+
+        printToConsole("Exporting Sides as M3U8 Playlist for Tape: " + tapeID + "...", true);
+        printToConsole("Output Directory: " + saveDirectoryName, true);
+
+        try {
+            TapeExporter.exportSidesToM3U8(saveDirectoryName, tapeID, sideA, sideB, new TapeExporter.ExportProgressListener() {
+                @Override
+                public void onTrackProgress(int completedTracks, int total, String message) {
+                    printToConsole(message, true);
+                }
+
+                @Override
+                public void onFinished(boolean success, String summary) {
+                    printToConsole(summary, true);
+                }
+            });
+        } catch (Exception ex) {
+            printToConsole("Playlist Export Error: " + ex.getMessage(), true);
+            ex.printStackTrace();
+        }
+    }
+
     /**
      * 
      * @param text 
@@ -4639,6 +4793,7 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     private javax.swing.JRadioButton eqRadioButton7;
     private javax.swing.JRadioButton eqRadioButton8;
     private javax.swing.JButton exitButton;
+    private javax.swing.JComboBox<String> exportComboBox;
     private javax.swing.JButton exportTemplateButton;
     private javax.swing.JButton filterAudioListButton;
     private javax.swing.JCheckBox filterShuffleCheckBox;
