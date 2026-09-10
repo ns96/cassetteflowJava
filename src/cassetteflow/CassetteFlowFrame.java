@@ -4608,12 +4608,13 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
      * Opens the Scaled FSK VU-Modulation Studio dialog for in-memory FSK modulation.
      */
     private void openScaledFSKDialog(String tapeID, int muteTime) {
-        if (sideAList.isEmpty() && sideBList.isEmpty()) {
-            printToConsole("Export Warning: Side A and Side B have no tracks loaded for Scaled FSK.", true);
-            return;
-        }
-
-        ScaledFSKDialog dialog = new ScaledFSKDialog(this, cassetteFlow, tapeID, sideAList, sideBList, muteTime);
+        String effectiveTapeId = (tapeID != null && !tapeID.trim().isEmpty()) ? tapeID.trim() : "0001";
+        int tapeDurationSeconds = getMaxTapeTime();
+        String tapeLengthLabel = (tapeLengthComboBox != null && tapeLengthComboBox.getSelectedItem() != null)
+                ? tapeLengthComboBox.getSelectedItem().toString()
+                : "60 Minutes";
+        ScaledFSKDialog dialog = new ScaledFSKDialog(this, cassetteFlow, effectiveTapeId, sideAList, sideBList, muteTime,
+                tapeDurationSeconds, tapeLengthLabel);
         dialog.setVisible(true);
     }
 

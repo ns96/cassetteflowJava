@@ -5,6 +5,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -210,7 +212,8 @@ public class FSKModulator {
                         scale = 1.0f;
                     }
 
-                    int scaledSample = Math.round(fskSamples[s] * scale);
+                    float carrierGain = 32767.0f / 32000.0f;
+                    int scaledSample = Math.round(fskSamples[s] * scale * carrierGain);
                     if (scaledSample > 32767) scaledSample = 32767;
                     else if (scaledSample < -32768) scaledSample = -32768;
 
@@ -413,5 +416,201 @@ public class FSKModulator {
         header[43] = (byte) ((totalAudioLen >> 24) & 0xff);
 
         return header;
+    }
+
+    /**
+     * Generates a continuous modulated DCT (Dynamic Content Track) FSK audio stream in memory
+     * using ProceduralEnvelopeGenerator and DurationInputStream, writing directly to the output WAV file.
+     *
+     * @param cassetteFlow main CassetteFlow instance for baud rate
+     * @param side 'A' or 'B'
+     * @param tapeId tape ID string
+     * @param durationSeconds total duration in seconds per side
+     * @param genre procedural genre envelope
+     * @param minScale minimum amplitude floor (0.05 - 0.50)
+     * @param outputFile output WAV file
+     * @param listener progress listener
+     * @throws Exception if processing fails
+     */
+    public static void processDCTSideInMemory(CassetteFlow cassetteFlow,
+                                             char side,
+                                             String tapeId,
+                                             int durationSeconds,
+                                             ProceduralEnvelopeGenerator.Genre genre,
+                                             float minScale,
+                                             File outputFile,
+                                             ModulatorProgressListener listener) throws Exception {
+        if (outputFile.exists()) {
+            outputFile.delete();
+        }
+
+        double baudRate = 1200.0;
+        try {
+            baudRate = Double.parseDouble(cassetteFlow.BAUDE_RATE);
+        } catch (Exception ignored) {}
+
+        JMinimodem.Config config = new JMinimodem.Config();
+        config.txMode = true;
+        config.sampleRate = FSK_SAMPLE_RATE;
+        config.quiet = true;
+        config.baudRate = baudRate;
+
+        if (listener != null) {
+            listener.onLog(String.format(">>> Starting Scaled DCT FSK for Side %c (%d sec / %s) <<<",
+                    side, durationSeconds, genre.getDisplayName()));
+            listener.onLog("Modulation Floor: " + String.format("%.0f%%", minScale * 100) +
+                           " | Baud: " + (int) baudRate + " | Rate: " + (int) FSK_SAMPLE_RATE + " Hz");
+        }
+
+        DurationInputStream dis = new DurationInputStream(durationSeconds, baudRate, side);
+        long totalAudioBytes = 0;
+
+        try (FileOutputStream fos = new FileOutputStream(outputFile);
+             BufferedOutputStream bos = new BufferedOutputStream(fos, 131072)) {
+
+            // 1. Write placeholder 44-byte WAV header
+            byte[] headerPlaceholder = new byte[44];
+            bos.write(headerPlaceholder);
+
+            // 2. Pre-generate hierarchical musical timeline for the entire side
+            ProceduralEnvelopeGenerator.Timeline timeline = ProceduralEnvelopeGenerator.createTimeline(
+                    genre, durationSeconds, System.currentTimeMillis() + (side == 'B' ? 99999L : 0L));
+
+            // 3. Modulate on the fly using ModulatingOutputStream
+            ModulatingOutputStream modOut = new ModulatingOutputStream(
+                    bos, timeline, genre, minScale, FSK_SAMPLE_RATE, side, durationSeconds, listener);
+
+            JMinimodem.transmit(config, dis, modOut);
+            modOut.flush();
+            bos.flush();
+
+            totalAudioBytes = modOut.getAudioBytesWritten();
+        }
+
+        // 3. Finalize RIFF WAV header after stream closure
+        try (RandomAccessFile raf = new RandomAccessFile(outputFile, "rw")) {
+            long riffChunkSize = totalAudioBytes + 36;
+            byte[] header = createMonoWavHeader(riffChunkSize, totalAudioBytes, FSK_SAMPLE_RATE);
+            raf.seek(0);
+            raf.write(header);
+        }
+
+        if (listener != null) {
+            listener.onLog(String.format("[Side %c] DCT Modulation Complete: %s (%.1f MB, %d seconds)",
+                    side, outputFile.getName(), totalAudioBytes / (1024.0 * 1024.0), durationSeconds));
+        }
+    }
+
+    /**
+     * Streaming OutputStream filter that intercepts 16-bit PCM little-endian samples from JMinimodem
+     * and scales each sample's amplitude on the fly according to the procedural genre envelope.
+     */
+    private static class ModulatingOutputStream extends OutputStream {
+        private final OutputStream out;
+        private final ProceduralEnvelopeGenerator.Timeline timeline;
+        private final ProceduralEnvelopeGenerator.Genre genre;
+        private final float minScale;
+        private final float sampleRate;
+        private final char side;
+        private final int totalSeconds;
+        private final ModulatorProgressListener listener;
+
+        private long sampleCount = 0;
+        private int leftoverByte = -1;
+        private final byte[] outBuffer = new byte[8192];
+        private int outBufPos = 0;
+        private int lastReportedSec = -1;
+
+        public ModulatingOutputStream(OutputStream out,
+                                      ProceduralEnvelopeGenerator.Timeline timeline,
+                                      ProceduralEnvelopeGenerator.Genre genre,
+                                      float minScale,
+                                      float sampleRate,
+                                      char side,
+                                      int totalSeconds,
+                                      ModulatorProgressListener listener) {
+            this.out = out;
+            this.timeline = timeline;
+            this.genre = genre;
+            this.minScale = minScale;
+            this.sampleRate = sampleRate;
+            this.side = side;
+            this.totalSeconds = totalSeconds;
+            this.listener = listener;
+        }
+
+        @Override
+        public void write(int b) throws IOException {
+            byte[] single = new byte[] { (byte) b };
+            write(single, 0, 1);
+        }
+
+        @Override
+        public void write(byte[] b, int off, int len) throws IOException {
+            int i = off;
+            int end = off + len;
+
+            if (leftoverByte != -1 && len > 0) {
+                int lo = leftoverByte;
+                int hi = b[i++] & 0xFF;
+                leftoverByte = -1;
+                processSample(lo, hi);
+            }
+
+            while (i + 1 < end) {
+                int lo = b[i++] & 0xFF;
+                int hi = b[i++] & 0xFF;
+                processSample(lo, hi);
+            }
+
+            if (i < end) {
+                leftoverByte = b[i++] & 0xFF;
+            }
+        }
+
+        private void processSample(int lo, int hi) throws IOException {
+            short rawSample = (short) ((hi << 8) | lo);
+            double timeSec = (double) sampleCount / sampleRate;
+            float scale = (timeline != null)
+                    ? timeline.getEnvelope(timeSec, minScale)
+                    : ProceduralEnvelopeGenerator.getEnvelope(genre, timeSec, minScale);
+
+            float carrierGain = 32767.0f / 32000.0f;
+            int scaledSample = Math.round(rawSample * scale * carrierGain);
+            if (scaledSample > 32767) scaledSample = 32767;
+            else if (scaledSample < -32768) scaledSample = -32768;
+
+            outBuffer[outBufPos++] = (byte) (scaledSample & 0xFF);
+            outBuffer[outBufPos++] = (byte) ((scaledSample >> 8) & 0xFF);
+
+            if (outBufPos >= outBuffer.length) {
+                out.write(outBuffer, 0, outBufPos);
+                outBufPos = 0;
+            }
+
+            sampleCount++;
+
+            int currentSec = (int) (sampleCount / sampleRate);
+            if (currentSec != lastReportedSec && currentSec > 0 && (currentSec % 15 == 0 || currentSec >= totalSeconds)) {
+                lastReportedSec = currentSec;
+                if (listener != null) {
+                    listener.onLog(String.format("   [Side %c] Modulating DCT audio: %02d:%02d / %02d:%02d (%s)...",
+                            side, currentSec / 60, currentSec % 60, totalSeconds / 60, totalSeconds % 60, genre.getDisplayName()));
+                }
+            }
+        }
+
+        @Override
+        public void flush() throws IOException {
+            if (outBufPos > 0) {
+                out.write(outBuffer, 0, outBufPos);
+                outBufPos = 0;
+            }
+            out.flush();
+        }
+
+        public long getAudioBytesWritten() {
+            return sampleCount * 2;
+        }
     }
 }
