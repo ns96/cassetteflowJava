@@ -100,10 +100,10 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     private boolean paused = false;
 
     // the current line record
-    private String currentLineRecord;
+    private volatile String currentLineRecord;
 
     // raw line record returned from minimodem
-    private String rawLineRecord;
+    private volatile String rawLineRecord;
 
     // indicate if we only interested in getting the raw line record minimodem and
     // not processing it
@@ -413,10 +413,20 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
         }
     }
 
+    private static volatile List<String> cachedPlaybackDevices = null;
+    private static volatile long lastDeviceScanTime = 0;
+    private static final long DEVICE_CACHE_TTL_MS = 10000; // 10 seconds
+
     /**
      * Enumerates host audio output devices capable of playing audio.
      */
     public static List<String> getAvailablePlaybackDevices() {
+        long now = System.currentTimeMillis();
+        List<String> cached = cachedPlaybackDevices;
+        if (cached != null && (now - lastDeviceScanTime) < DEVICE_CACHE_TTL_MS) {
+            return cached;
+        }
+
         List<String> devices = new ArrayList<>();
         devices.add("Default Playback Device");
         try {
@@ -436,7 +446,17 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
             }
         } catch (Exception ignored) {
         }
+        cachedPlaybackDevices = devices;
+        lastDeviceScanTime = now;
         return devices;
+    }
+
+    public static List<String> getCachedPlaybackDevices() {
+        List<String> cached = cachedPlaybackDevices;
+        if (cached == null || cached.isEmpty()) {
+            return getAvailablePlaybackDevices();
+        }
+        return cached;
     }
 
     public boolean isAudioMonitorEnabled() {
@@ -735,11 +755,13 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
      * @param line
      */
     @Override
-    public synchronized void newLineRecord(String line) {
+    public void newLineRecord(String line) {
         if (line != null) {
             line = line.trim();
-            rawLineRecord = line;
-            appendTerminalLine(line);
+            synchronized (this) {
+                rawLineRecord = line;
+                appendTerminalLine(line);
+            }
 
             // if we only reading raw line records just return here
             if (rawLineRecordOnly)

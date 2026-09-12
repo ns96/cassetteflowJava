@@ -63,7 +63,7 @@ import org.json.JSONObject;
  */
 public class CassetteFlow {
     // static variable that holds the application version
-    public static String VERSION = "CassetteFlow v2.5.1 (09/10/2026)";
+    public static String VERSION = "CassetteFlow v2.5.2 (09/12/2026)";
 
     // The default mp3 directory name
     public static String AUDIO_DIR_NAME = "c:\\mp3files";
@@ -483,7 +483,7 @@ public class CassetteFlow {
     /**
      * Returns full telemetry snapshot for Web Telemetry UI (/telemetry)
      */
-    public synchronized JSONObject getTelemetryState() {
+    public JSONObject getTelemetryState() {
         JSONObject state = new JSONObject();
         try {
             // 1. Host & Resource metrics
@@ -550,7 +550,7 @@ public class CassetteFlow {
                 state.put("audio_mon_enabled", cassettePlayer.isAudioMonitorEnabled());
                 state.put("audio_mon_volume", cassettePlayer.getAudioMonitorVolume());
                 state.put("current_audio_device", cassettePlayer.getAudioMonitorDevice());
-                state.put("audio_devices", new JSONArray(CassettePlayer.getAvailablePlaybackDevices()));
+                state.put("audio_devices", new JSONArray(CassettePlayer.getCachedPlaybackDevices()));
             } else {
                 state.put("param_measured_baud", 0.0);
                 state.put("param_speed_error", 0.0);
@@ -571,7 +571,7 @@ public class CassetteFlow {
                 state.put("audio_mon_enabled", false);
                 state.put("audio_mon_volume", 50);
                 state.put("current_audio_device", "Default Playback Device");
-                state.put("audio_devices", new JSONArray(CassettePlayer.getAvailablePlaybackDevices()));
+                state.put("audio_devices", new JSONArray(CassettePlayer.getCachedPlaybackDevices()));
             }
 
             // 3. Mode & Timecode
@@ -594,14 +594,16 @@ public class CassetteFlow {
             String nowPlayingHash = "";
             boolean isPlaying = false;
             if (currentDeocdeState != null) {
-                if (currentDeocdeState.has("currentlyPlaying")) {
-                    nowPlaying = currentDeocdeState.optString("currentlyPlaying", "");
-                }
-                if (currentDeocdeState.has("currentlyPlayingHash")) {
-                    nowPlayingHash = currentDeocdeState.optString("currentlyPlayingHash", "");
-                }
-                if (currentDeocdeState.has("isPlaying")) {
-                    isPlaying = currentDeocdeState.optBoolean("isPlaying", false);
+                synchronized (this) {
+                    if (currentDeocdeState.has("currentlyPlaying")) {
+                        nowPlaying = currentDeocdeState.optString("currentlyPlaying", "");
+                    }
+                    if (currentDeocdeState.has("currentlyPlayingHash")) {
+                        nowPlayingHash = currentDeocdeState.optString("currentlyPlayingHash", "");
+                    }
+                    if (currentDeocdeState.has("isPlaying")) {
+                        isPlaying = currentDeocdeState.optBoolean("isPlaying", false);
+                    }
                 }
             }
             state.put("now_playing", nowPlaying);
@@ -653,7 +655,8 @@ public class CassetteFlow {
             } else if (val != null) {
                 try {
                     vol = Integer.parseInt(val.toString().trim());
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
             if (cassettePlayer != null) {
                 cassettePlayer.setAudioMonitorVolume(vol);
@@ -736,9 +739,10 @@ public class CassetteFlow {
      * 
      * @return
      */
-    public synchronized String getRawLineRecord() {
-        if (cassettePlayer != null) {
-            return cassettePlayer.getRawLineRecord();
+    public String getRawLineRecord() {
+        CassettePlayer cp = cassettePlayer;
+        if (cp != null) {
+            return cp.getRawLineRecord();
         } else {
             return "NO PLAYER ...";
         }
@@ -752,9 +756,10 @@ public class CassetteFlow {
      * 
      * @return
      */
-    public synchronized String getCurrentLineRecord() {
-        if (cassettePlayer != null) {
-            return cassettePlayer.getCurrentLineRecord();
+    public String getCurrentLineRecord() {
+        CassettePlayer cp = cassettePlayer;
+        if (cp != null) {
+            return cp.getCurrentLineRecord();
         } else {
             return "NO PLAYER ...";
         }
