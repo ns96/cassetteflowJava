@@ -148,8 +148,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     // specify if to hide the lyraT tab
     private static final boolean HIDE_LYRAT_TAB = true;
     
-    // dialog to display the telemetry dialog which shows wow & flutter etc
-    private TelemetryDialog telemetryDialog = null;
+    // window to display telemetry which shows wow & flutter etc
+    private TelemetryFrame telemetryFrame = null;
     
     /**
      * Creates new form CassetteFlowFrame
@@ -4620,12 +4620,12 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     }//GEN-LAST:event_clearConsoleButtonActionPerformed
 
     private void telemetryButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_telemetryButtonActionPerformed
-        if (telemetryDialog != null && telemetryDialog.isDisplayable()) {
-            telemetryDialog.toFront();
-            telemetryDialog.requestFocus();
+        if (telemetryFrame != null && telemetryFrame.isDisplayable()) {
+            telemetryFrame.toFront();
+            telemetryFrame.requestFocus();
         } else {
-            telemetryDialog = new TelemetryDialog(this, cassetteFlow);
-            telemetryDialog.setVisible(true);
+            telemetryFrame = new TelemetryFrame(cassetteFlow, this);
+            telemetryFrame.setVisible(true);
         }
     }//GEN-LAST:event_telemetryButtonActionPerformed
 

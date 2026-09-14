@@ -3,7 +3,6 @@ package cassetteflow;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import javax.swing.*;
@@ -16,110 +15,149 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
- * Native Swing Telemetry & Diagnostics Dialog.
+ * Native Swing Telemetry & Diagnostics Window (JFrame).
+ *
  * Mirrors the real-time decoder and system telemetry from telemetry.html
- * (excluding
- * the real-time FSK terminal stream and Now Playing metadata container).
- * 
- * Features:
- * 1. Live 400ms polling via Swing Timer fetching state from
- * cassetteFlow.getTelemetryState().
- * 2. Host and System HUD (IP, CPU %, Memory, Baud, Carrier Lock badge, SNR,
- * Speed Error).
- * 3. Side & Timecode status banner.
- * 4. 2-Column Signal Diagnostics grid with 40-sample running window Wow &
- * Flutter calculation.
- * 5. Audio monitor toggle, playback device selector, volume selector, and
- * statistics reset.
- * 6. Non-modal window allowing simultaneous main player operation.
+ * (excluding the real-time FSK terminal stream and Now Playing metadata container).
+ *
+ * Key Architectural Highlights:
+ * 1. Independent Top-Level Window:
+ *    Extends {@link javax.swing.JFrame} rather than {@link javax.swing.JDialog} so
+ *    it can be freely stacked behind the main {@link CassetteFlowFrame}, minimized
+ *    to the Windows desktop taskbar, or snapped side-by-side on small laptop displays.
+ * 2. Non-Blocking Background Polling:
+ *    Uses a daemon {@link ScheduledExecutorService} running at a 400ms interval to
+ *    fetch telemetry snapshots, parse FSK records, and compute metrics off the Swing EDT.
+ *    UI updates are safely dispatched via {@link SwingUtilities#invokeLater}.
+ * 3. Lock-Free Audio Operations:
+ *    Avoids native JavaSound Windows mixer lock contention during active playback by
+ *    caching device lists and running manual reloads on a background worker thread.
+ * 4. Signal & Tape Diagnostics:
+ *    Computes real-time Wow & Flutter (RMS & Peak-to-Peak) over a 40-sample sliding
+ *    window, tracks total tape elapsed time from incoming FSK frames, and monitors
+ *    carrier lock, speed error, SNR, and parity/format errors.
  */
-public class TelemetryDialog extends JDialog {
+public class TelemetryFrame extends JFrame {
 
-    private static final Color COLOR_BG = new Color(13, 17, 23); // #0d1117
-    private static final Color COLOR_PANEL = new Color(22, 27, 34); // #161b22
-    private static final Color COLOR_CARD = new Color(33, 38, 45); // #21262d
-    private static final Color COLOR_BORDER = new Color(48, 54, 61); // #30363d
-    private static final Color COLOR_TEXT = new Color(201, 209, 217); // #c9d1d9
-    private static final Color COLOR_TEXT_DIM = new Color(139, 148, 158);// #8b949e
-    private static final Color COLOR_SUCCESS = new Color(126, 231, 135); // #7ee787
-    private static final Color COLOR_WARN = new Color(210, 153, 34); // #d29922
-    private static final Color COLOR_DANGER = new Color(255, 123, 114); // #ff7b72
-    private static final Color COLOR_ACCENT = new Color(88, 166, 255); // #58a6ff
-    private static final Color COLOR_GOLD = new Color(255, 209, 102); // #ffd166
+    // --- Modern Dark Theme Color Palette ---
+    private static final Color COLOR_BG = new Color(13, 17, 23);         // Main window background (#0d1117)
+    private static final Color COLOR_PANEL = new Color(22, 27, 34);      // Section container background (#161b22)
+    private static final Color COLOR_CARD = new Color(33, 38, 45);        // Metric cards and badge background (#21262d)
+    private static final Color COLOR_BORDER = new Color(48, 54, 61);      // Subtle border line color (#30363d)
+    private static final Color COLOR_TEXT = new Color(201, 209, 217);     // Primary light text (#c9d1d9)
+    private static final Color COLOR_TEXT_DIM = new Color(139, 148, 158); // Secondary/muted label text (#8b949e)
+    private static final Color COLOR_SUCCESS = new Color(126, 231, 135);  // Good / Nominal status (#7ee787)
+    private static final Color COLOR_WARN = new Color(210, 153, 34);      // Caution status (#d29922)
+    private static final Color COLOR_DANGER = new Color(255, 123, 114);   // Critical error / Out-of-spec status (#ff7b72)
+    private static final Color COLOR_ACCENT = new Color(88, 166, 255);    // Informational blue accent (#58a6ff)
+    private static final Color COLOR_GOLD = new Color(255, 209, 102);     // Timecode & side highlight (#ffd166)
 
+    /** Reference to the core CassetteFlow application coordinator. */
     private final CassetteFlow cassetteFlow;
 
-    // Running buffer for Wow & Flutter calculation (max 40 samples)
+    /**
+     * Sliding FIFO buffer storing recent measured baud rates for Wow & Flutter calculation.
+     * Capped at {@link #MAX_BAUD_SAMPLES} to mirror the 40-sample window in telemetry.html.
+     */
     private final LinkedList<Double> baudSamples = new LinkedList<>();
     private static final int MAX_BAUD_SAMPLES = 40;
 
-    // UI Components: Header HUD
-    private JLabel lblIp;
-    private JLabel lblCpu;
-    private JLabel lblMem;
-    private JLabel lblCarrier;
-    private JLabel lblBaud;
-    private JLabel lblErr;
-    private JLabel lblSnr;
+    // --- UI Components: Top Header HUD (System & Link Metrics) ---
+    private JLabel lblIp;          // Server bind IP and port
+    private JLabel lblCpu;         // System CPU utilization percentage
+    private JLabel lblMem;         // JVM Heap memory usage percentage and MB
+    private JLabel lblCarrier;     // Real-time FSK carrier lock status badge
+    private JLabel lblBaud;        // Configured nominal baud rate (e.g. 1200)
+    private JLabel lblErr;         // Instantaneous speed error percentage badge
+    private JLabel lblSnr;         // Signal-to-noise ratio in dB and signal percent
 
-    // UI Components: Side & Timecode Banner
-    private JLabel lblSideTimecode;
-    private JLabel lblModeBadge;
+    // --- UI Components: Center Status Banner ---
+    private JLabel lblSideTimecode; // Side (A/B) and total tape elapsed timecode
+    private JLabel lblModeBadge;    // Current decoder operational mode (e.g. DECODE AUTO)
 
-    // UI Components: Stats Grid
-    private JLabel lblTotalRecs;
-    private JLabel lblSpeedErr;
-    private JLabel lblDataErrs;
-    private JLabel lblMeasBaud;
-    private JLabel lblSideA;
-    private JLabel lblSideB;
-    private JLabel lblSnrGrid;
-    private JLabel lblCarrierState;
-    private JLabel lblFmtErrs;
-    private JLabel lblStops;
-    private JLabel lblWfRms;
-    private JLabel lblWfPeak;
+    // --- UI Components: 2-Column Signal & Tape Diagnostics Grid ---
+    private JLabel lblTotalRecs;    // Cumulative valid decoded records count
+    private JLabel lblSpeedErr;     // Measured tape transport speed error percentage
+    private JLabel lblDataErrs;     // Cumulative data / checksum errors count
+    private JLabel lblMeasBaud;     // Exact measured carrier baud rate
+    private JLabel lblSideA;        // Side A record count and error percentage
+    private JLabel lblSideB;        // Side B record count and error percentage
+    private JLabel lblSnrGrid;      // Audio signal-to-noise ratio in dB
+    private JLabel lblCarrierState; // Textual carrier state (Locked / Unlocked)
+    private JLabel lblFmtErrs;      // Framing errors: L (Length) and N (Numeric)
+    private JLabel lblStops;        // Tape transport stop events count
+    private JLabel lblWfRms;        // RMS Wow & Flutter percentage and compliance tag
+    private JLabel lblWfPeak;       // Peak-to-Peak Wow & Flutter percentage
 
-    // UI Components: Controls Bar
-    private JButton btnAudioMon;
-    private JComboBox<String> cbAudioDevice;
-    private JButton btnReloadDevices;
-    private JComboBox<String> cbVolume;
-    private JButton btnResetStats;
-    private JButton btnClose;
+    // --- UI Components: Bottom Controls Bar ---
+    private JButton btnAudioMon;        // Audio monitor pass-through toggle button
+    private JComboBox<String> cbAudioDevice; // Audio output device dropdown
+    private JButton btnReloadDevices;   // Manual audio device list refresh button
+    private JComboBox<String> cbVolume; // Audio monitor output volume dropdown
+    private JButton btnResetStats;      // Decoder statistics reset button
+    private JButton btnClose;           // Window close button (docked right)
 
-    // Background Polling Executor
+    // --- Background Polling Executor & State Flags ---
     private ScheduledExecutorService pollExecutor;
     private final AtomicBoolean isPollingActive = new AtomicBoolean(false);
-    private boolean updatingControls = false;
-    private boolean audioMonActive = false;
+    private boolean updatingControls = false; // Guard flag preventing event feedback during programmatic combo updates
+    private boolean audioMonActive = false;   // Local mirror of the audio monitor active state
 
-    // Log Parsing Regex Patterns & Client-side Timecode Tracking
+    // --- Regular Expressions for FSK Terminal Log & Diagnostic Record Parsing ---
     private static final Pattern PATTERN_SIDE_A = Pattern.compile("(?i)\\b(SIDE\\s*A|DCT0A)\\b");
     private static final Pattern PATTERN_SIDE_B = Pattern.compile("(?i)\\b(SIDE\\s*B|DCT0B)\\b");
     private static final Pattern PATTERN_TAPE_COUNTER = Pattern.compile("(?i)(?:Tape Counter|Tape Time):\\s*(\\d+)");
     private static final Pattern PATTERN_TAPE_TIME = Pattern.compile("(?i)TAPE TIME:\\s*(\\d+)");
     private static final Pattern PATTERN_TIMECODE = Pattern.compile("(?i)TIMECODE[:\\s]+(\\d{1,2}):(\\d{2}):(\\d{2})");
 
+    /** Current tape side ("A" or "B") tracked across incoming FSK records. */
     private String clientSide = "A";
+
+    /** Current total tape counter/time in seconds tracked from the last four numbers of FSK records. */
     private int clientTimeSec = 0;
 
-    public TelemetryDialog(Frame parent, CassetteFlow cassetteFlow) {
-        super(parent, "CassetteFlow Telemetry & Diagnostics", false); // Non-modal
+    /**
+     * Constructs a new TelemetryFrame without a parent reference.
+     *
+     * @param cassetteFlow active CassetteFlow coordinator instance
+     */
+    public TelemetryFrame(CassetteFlow cassetteFlow) {
+        this(cassetteFlow, null);
+    }
+
+    /**
+     * Constructs a new TelemetryFrame positioned relative to the parent frame.
+     *
+     * @param cassetteFlow active CassetteFlow coordinator instance
+     * @param parent       parent frame for centering and icon inheritance (may be null)
+     */
+    public TelemetryFrame(CassetteFlow cassetteFlow, Frame parent) {
+        super("CassetteFlow Telemetry & Diagnostics");
         this.cassetteFlow = cassetteFlow;
 
+        // Inherit window icon from parent if present
+        if (parent != null && parent.getIconImage() != null) {
+            setIconImage(parent.getIconImage());
+        }
+
         initComponents();
-        reloadAudioDevices(); // Load available audio playback devices once on open
+
+        // Perform one initial audio device enumeration on open
+        reloadAudioDevices();
 
         setSize(860, 520);
         setMinimumSize(new Dimension(820, 460));
-        setLocationRelativeTo(parent);
+        if (parent != null) {
+            setLocationRelativeTo(parent);
+        } else {
+            setLocationByPlatform(true);
+        }
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
+        // Ensure background polling terminates immediately when window closes
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosed(WindowEvent e) {
@@ -130,19 +168,25 @@ public class TelemetryDialog extends JDialog {
         startPolling();
     }
 
+    /**
+     * Builds and lays out all UI panels, cards, diagnostic grids, and control buttons.
+     */
     private void initComponents() {
         JPanel rootPane = new JPanel();
         rootPane.setLayout(new BorderLayout(8, 8));
         rootPane.setBackground(COLOR_BG);
         rootPane.setBorder(new EmptyBorder(10, 12, 10, 12));
 
-        // 1. Header HUD Panel
+        // =========================================================================
+        // 1. Header HUD Panel (Server IP, CPU, Memory, Carrier, Baud, Err, SNR)
+        // =========================================================================
         JPanel hudPanel = new JPanel(new BorderLayout(6, 6));
         hudPanel.setBackground(COLOR_PANEL);
         hudPanel.setBorder(new CompoundBorder(
                 new LineBorder(COLOR_BORDER, 1, true),
                 new EmptyBorder(8, 10, 8, 10)));
 
+        // Left HUD: System and Connection Metrics
         JPanel hudLeft = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 2));
         hudLeft.setOpaque(false);
         lblIp = createPillLabel("IP: Connecting...", COLOR_TEXT);
@@ -154,6 +198,7 @@ public class TelemetryDialog extends JDialog {
         hudLeft.add(lblMem);
         hudLeft.add(lblCarrier);
 
+        // Right HUD: Link and Speed Metrics
         JPanel hudRight = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 2));
         hudRight.setOpaque(false);
         lblBaud = createPillLabel("Baud: 1200", COLOR_TEXT);
@@ -167,12 +212,14 @@ public class TelemetryDialog extends JDialog {
         hudPanel.add(hudRight, BorderLayout.EAST);
         rootPane.add(hudPanel, BorderLayout.NORTH);
 
-        // 2. Center Content: Banner + Diagnostics Grid
+        // =========================================================================
+        // 2. Center Content: Status Banner + 2-Column Diagnostics Grid
+        // =========================================================================
         JPanel centerPanel = new JPanel();
         centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
         centerPanel.setOpaque(false);
 
-        // A. Summary Banner
+        // A. Summary Banner: Side, Timecode, and Decoder Mode
         JPanel bannerPanel = new JPanel(new BorderLayout());
         bannerPanel.setBackground(COLOR_CARD);
         bannerPanel.setBorder(new CompoundBorder(
@@ -208,37 +255,37 @@ public class TelemetryDialog extends JDialog {
         JPanel gridContent = new JPanel(new GridLayout(6, 2, 24, 6));
         gridContent.setOpaque(false);
 
-        // Row 1
+        // Row 1: Total Records | Speed Error
         lblTotalRecs = new JLabel("0");
         lblSpeedErr = new JLabel("+0.00%");
         gridContent.add(createStatRow("Total Records:", lblTotalRecs, COLOR_TEXT));
         gridContent.add(createStatRow("Speed Error:", lblSpeedErr, COLOR_SUCCESS));
 
-        // Row 2
+        // Row 2: Measured Baud | Carrier State
         lblMeasBaud = new JLabel("1200.0 Bd");
         lblCarrierState = new JLabel("Unlocked");
         gridContent.add(createStatRow("Measured Baud:", lblMeasBaud, COLOR_TEXT));
         gridContent.add(createStatRow("Carrier State:", lblCarrierState, COLOR_TEXT_DIM));
 
-        // Row 3
+        // Row 3: Data Errors | Signal SNR
         lblDataErrs = new JLabel("0");
         lblSnrGrid = new JLabel("-- dB");
         gridContent.add(createStatRow("Data Errors:", lblDataErrs, COLOR_SUCCESS));
         gridContent.add(createStatRow("Signal SNR:", lblSnrGrid, COLOR_ACCENT));
 
-        // Row 4
+        // Row 4: Side A Records | Side B Records
         lblSideA = new JLabel("0 (0.0%)");
         lblSideB = new JLabel("0 (0.0%)");
         gridContent.add(createStatRow("Side A Records:", lblSideA, COLOR_TEXT));
         gridContent.add(createStatRow("Side B Records:", lblSideB, COLOR_TEXT));
 
-        // Row 5
+        // Row 5: Format Errors (Length & Numeric) | Total Stops
         lblFmtErrs = new JLabel("L=0 N=0");
         lblStops = new JLabel("0");
         gridContent.add(createStatRow("Format Errors:", lblFmtErrs, COLOR_TEXT));
         gridContent.add(createStatRow("Total Stops:", lblStops, COLOR_TEXT));
 
-        // Row 6: Wow & Flutter
+        // Row 6: Wow & Flutter (RMS) | W/F Peak (Peak-to-Peak)
         lblWfRms = new JLabel("0.00% [OK]");
         lblWfPeak = new JLabel("0.00%");
         gridContent.add(createStatRow("Wow & Flutter (RMS):", lblWfRms, COLOR_SUCCESS));
@@ -248,12 +295,18 @@ public class TelemetryDialog extends JDialog {
         centerPanel.add(gridCard);
         rootPane.add(centerPanel, BorderLayout.CENTER);
 
-        // 3. Bottom Controls Panel
-        JPanel controlsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 8));
+        // =========================================================================
+        // 3. Bottom Controls Panel: Audio Monitor, Device, Vol, Reset, & Close
+        // =========================================================================
+        JPanel controlsPanel = new JPanel(new BorderLayout(8, 0));
         controlsPanel.setBackground(COLOR_PANEL);
         controlsPanel.setBorder(new CompoundBorder(
                 new LineBorder(COLOR_BORDER, 1, true),
                 new EmptyBorder(4, 6, 4, 6)));
+
+        // Left Controls Group (Audio monitor, device dropdown, reload, volume, reset)
+        JPanel leftControls = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
+        leftControls.setOpaque(false);
 
         // Audio Monitor Button
         btnAudioMon = new JButton("AUDIO MON: OFF");
@@ -263,21 +316,21 @@ public class TelemetryDialog extends JDialog {
         btnAudioMon.setFocusPainted(false);
         btnAudioMon.setPreferredSize(new Dimension(140, 28));
         btnAudioMon.addActionListener(e -> toggleAudioMonitor());
-        controlsPanel.add(btnAudioMon);
+        leftControls.add(btnAudioMon);
 
-        // Device Selector
+        // Device Selector Dropdown
         JLabel lblDev = new JLabel("Device:");
         lblDev.setFont(new Font("Tahoma", Font.PLAIN, 11));
         lblDev.setForeground(COLOR_TEXT_DIM);
-        controlsPanel.add(lblDev);
+        leftControls.add(lblDev);
 
         cbAudioDevice = new JComboBox<>(new String[] { "Default Playback Device" });
         cbAudioDevice.setFont(new Font("Tahoma", Font.PLAIN, 11));
         cbAudioDevice.setPreferredSize(new Dimension(200, 26));
         cbAudioDevice.addActionListener(e -> onAudioDeviceSelected());
-        controlsPanel.add(cbAudioDevice);
+        leftControls.add(cbAudioDevice);
 
-        // Reload Devices Button
+        // Reload Devices Button (Scans Windows audio hardware on demand)
         btnReloadDevices = new JButton("Reload");
         btnReloadDevices.setToolTipText("Reload audio playback devices");
         btnReloadDevices.setFont(new Font("Tahoma", Font.PLAIN, 11));
@@ -286,24 +339,24 @@ public class TelemetryDialog extends JDialog {
         btnReloadDevices.setFocusPainted(false);
         btnReloadDevices.setPreferredSize(new Dimension(68, 26));
         btnReloadDevices.addActionListener(e -> reloadAudioDevices());
-        controlsPanel.add(btnReloadDevices);
+        leftControls.add(btnReloadDevices);
 
-        // Volume Selector
+        // Volume Selector Dropdown
         JLabel lblVol = new JLabel("Vol:");
         lblVol.setFont(new Font("Tahoma", Font.PLAIN, 11));
         lblVol.setForeground(COLOR_TEXT_DIM);
-        controlsPanel.add(lblVol);
+        leftControls.add(lblVol);
 
         cbVolume = new JComboBox<>(new String[] {
                 "100%", "90%", "80%", "70%", "60%", "50%", "40%", "30%", "20%", "10%", "0% (Mute)"
         });
-        cbVolume.setSelectedIndex(5); // Default 50%
+        cbVolume.setSelectedIndex(5); // Default to 50%
         cbVolume.setFont(new Font("Tahoma", Font.PLAIN, 11));
         cbVolume.setPreferredSize(new Dimension(85, 26));
         cbVolume.addActionListener(e -> onVolumeSelected());
-        controlsPanel.add(cbVolume);
+        leftControls.add(cbVolume);
 
-        // Reset Stats Button
+        // Reset Statistics Button
         btnResetStats = new JButton("RESET STATS");
         btnResetStats.setFont(new Font("Tahoma", Font.BOLD, 11));
         btnResetStats.setBackground(new Color(130, 30, 30));
@@ -311,9 +364,14 @@ public class TelemetryDialog extends JDialog {
         btnResetStats.setFocusPainted(false);
         btnResetStats.setPreferredSize(new Dimension(110, 28));
         btnResetStats.addActionListener(e -> resetStats());
-        controlsPanel.add(btnResetStats);
+        leftControls.add(btnResetStats);
 
-        // Close Button
+        controlsPanel.add(leftControls, BorderLayout.CENTER);
+
+        // Right Controls Group: Close button glued flush to the right window edge
+        JPanel rightControls = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 4));
+        rightControls.setOpaque(false);
+
         btnClose = new JButton("Close");
         btnClose.setFont(new Font("Tahoma", Font.PLAIN, 11));
         btnClose.setBackground(COLOR_CARD);
@@ -321,13 +379,22 @@ public class TelemetryDialog extends JDialog {
         btnClose.setFocusPainted(false);
         btnClose.setPreferredSize(new Dimension(75, 28));
         btnClose.addActionListener(e -> dispose());
-        controlsPanel.add(btnClose);
+        rightControls.add(btnClose);
+
+        controlsPanel.add(rightControls, BorderLayout.EAST);
 
         rootPane.add(controlsPanel, BorderLayout.SOUTH);
 
         setContentPane(rootPane);
     }
 
+    /**
+     * Helper to construct a stylized pill/badge label used in the HUD.
+     *
+     * @param text    label text
+     * @param fgColor foreground text color
+     * @return configured JLabel
+     */
     private JLabel createPillLabel(String text, Color fgColor) {
         JLabel lbl = new JLabel(text);
         lbl.setFont(new Font("Consolas", Font.BOLD, 11));
@@ -340,6 +407,14 @@ public class TelemetryDialog extends JDialog {
         return lbl;
     }
 
+    /**
+     * Helper to construct a diagnostic row with a label on the left and value on the right.
+     *
+     * @param labelText    metric description
+     * @param valueLabel   target JLabel displaying the metric value
+     * @param defaultColor initial foreground color for the value
+     * @return configured JPanel row
+     */
     private JPanel createStatRow(String labelText, JLabel valueLabel, Color defaultColor) {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setOpaque(false);
@@ -360,10 +435,13 @@ public class TelemetryDialog extends JDialog {
         return panel;
     }
 
+    /**
+     * Starts the background telemetry polling thread at 400ms intervals.
+     */
     private void startPolling() {
         if (isPollingActive.compareAndSet(false, true)) {
             pollExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
-                Thread t = new Thread(r, "TelemetryDialog-Poller");
+                Thread t = new Thread(r, "TelemetryFrame-Poller");
                 t.setDaemon(true);
                 return t;
             });
@@ -371,6 +449,9 @@ public class TelemetryDialog extends JDialog {
         }
     }
 
+    /**
+     * Stops the background telemetry polling thread and shuts down the executor service.
+     */
     private void stopPolling() {
         isPollingActive.set(false);
         if (pollExecutor != null && !pollExecutor.isShutdown()) {
@@ -380,8 +461,10 @@ public class TelemetryDialog extends JDialog {
     }
 
     /**
-     * Polls the live telemetry snapshot from CassetteFlow on a background thread
+     * Polls the live telemetry snapshot from CassetteFlow on a background daemon thread
      * and dispatches UI updates safely to the Swing EDT.
+     *
+     * Offloading this work from the EDT eliminates deadlocks with active audio decoding.
      */
     private void pollInBackground() {
         if (!isPollingActive.get() || cassetteFlow == null)
@@ -391,7 +474,7 @@ public class TelemetryDialog extends JDialog {
             if (state == null)
                 return;
 
-            // Retrieve current FSK records and telemetry diagnostic sources
+            // Retrieve current FSK records and terminal streams for timecode parsing
             String currentRec = cassetteFlow.getCurrentLineRecord();
             String rawRec = cassetteFlow.getRawLineRecord();
             String rxText = state.optString("rx_text", "");
@@ -424,18 +507,27 @@ public class TelemetryDialog extends JDialog {
             final int finalTimeSec = timeSec;
             final String finalTimecode = timecode;
 
+            // Dispatch UI modifications to the Swing Event Dispatch Thread (EDT)
             SwingUtilities.invokeLater(() -> applyTelemetryToUI(state, finalSide, finalTimecode, finalTimeSec));
         } catch (Exception ex) {
             // Transient background poll error protection
         }
     }
 
+    /**
+     * Updates all UI labels and status badges on the Swing EDT with the polled snapshot.
+     *
+     * @param state       telemetry snapshot JSON object
+     * @param side        current tape side ("A" or "B")
+     * @param timecode    formatted timecode string ("HH:MM:SS")
+     * @param timeSec     elapsed total tape time in seconds
+     */
     private void applyTelemetryToUI(JSONObject state, String side, String timecode, int timeSec) {
         if (!isShowing())
             return;
         try {
 
-            // 1. Header HUD
+            // 1. Header HUD Updates
             lblIp.setText("IP: " + state.optString("param_ip", "localhost:8192"));
 
             double cpu = state.optDouble("cpu_percent", 0.0);
@@ -474,13 +566,13 @@ public class TelemetryDialog extends JDialog {
             int sig = state.optInt("sig", 0);
             lblSnr.setText(String.format("SNR: %.1f dB (%d%%)", snr, sig));
 
-            // 2. Banner: Side & Timecode (Total Tape Time from last four numbers of FSK record)
+            // 2. Banner: Side & Timecode
             lblSideTimecode.setText(String.format("SIDE %s  |  TIMECODE: %s (%ds)", side, timecode, timeSec));
 
             String mode = state.optString("mode", "DECODE AUTO");
             lblModeBadge.setText("MODE: " + mode.toUpperCase());
 
-            // 3. Diagnostics Grid
+            // 3. Diagnostics Grid Updates
             lblTotalRecs.setText(String.format("%,d", state.optInt("total_recs", 0)));
 
             lblSpeedErr.setText(String.format("%+5.2f%%", speedErr));
@@ -510,10 +602,10 @@ public class TelemetryDialog extends JDialog {
 
             lblStops.setText(String.valueOf(state.optInt("stops", 0)));
 
-            // 4. Update Wow & Flutter
+            // 4. Update Wow & Flutter calculation from measured baud samples
             updateWowAndFlutter(measBaud, carrier, baud);
 
-            // 5. Sync Audio Monitor Controls
+            // 5. Sync Audio Monitor Controls with active state
             updatingControls = true;
             try {
                 audioMonActive = state.optBoolean("audio_mon_enabled", false);
@@ -527,14 +619,14 @@ public class TelemetryDialog extends JDialog {
                     btnAudioMon.setForeground(COLOR_TEXT);
                 }
 
-                // Sync active device selection if changed externally
+                // Synchronize active playback device selection if changed externally
                 String activeDevice = state.optString("current_audio_device", "");
                 if (!activeDevice.isEmpty() && !cbAudioDevice.isPopupVisible()
                         && !activeDevice.equals(cbAudioDevice.getSelectedItem())) {
                     cbAudioDevice.setSelectedItem(activeDevice);
                 }
 
-                // Sync volume dropdown
+                // Synchronize volume dropdown selection
                 int activeVol = state.optInt("audio_mon_volume", 50);
                 if (!cbVolume.isPopupVisible()) {
                     String targetPrefix = activeVol + "%";
@@ -558,7 +650,11 @@ public class TelemetryDialog extends JDialog {
 
     /**
      * Calculates RMS and Peak-to-Peak Wow & Flutter from running baud rate samples,
-     * mirroring updateWowAndFlutter in telemetry.html.
+     * mirroring the calculation in telemetry.html.
+     *
+     * @param measuredBaud  instantaneous measured baud rate
+     * @param carrierActive whether FSK carrier lock is acquired
+     * @param targetBaud    nominal configured baud rate (e.g. 1200)
      */
     private void updateWowAndFlutter(double measuredBaud, boolean carrierActive, double targetBaud) {
         double nominalBaud = targetBaud > 0 ? targetBaud : 1200.0;
@@ -622,6 +718,9 @@ public class TelemetryDialog extends JDialog {
         }
     }
 
+    /**
+     * Toggles the audio pass-through monitor on or off.
+     */
     private void toggleAudioMonitor() {
         if (cassetteFlow == null)
             return;
@@ -632,6 +731,10 @@ public class TelemetryDialog extends JDialog {
         btnAudioMon.setForeground(nextState ? Color.WHITE : COLOR_TEXT);
     }
 
+    /**
+     * Enumerates available audio playback devices on a background worker thread
+     * and updates the combo box on the EDT without blocking audio playback.
+     */
     public void reloadAudioDevices() {
         if (btnReloadDevices != null) {
             btnReloadDevices.setEnabled(false);
@@ -658,9 +761,12 @@ public class TelemetryDialog extends JDialog {
                     }
                 }
             });
-        }, "TelemetryDialog-ReloadDevices").start();
+        }, "TelemetryFrame-ReloadDevices").start();
     }
 
+    /**
+     * Handles selection changes in the audio output device dropdown.
+     */
     private void onAudioDeviceSelected() {
         if (updatingControls || cassetteFlow == null)
             return;
@@ -670,6 +776,9 @@ public class TelemetryDialog extends JDialog {
         }
     }
 
+    /**
+     * Handles volume changes in the audio monitor volume dropdown.
+     */
     private void onVolumeSelected() {
         if (updatingControls || cassetteFlow == null)
             return;
@@ -683,6 +792,12 @@ public class TelemetryDialog extends JDialog {
         }
     }
 
+    /**
+     * Formats elapsed seconds into an HH:MM:SS timecode string.
+     *
+     * @param totalSeconds total elapsed seconds
+     * @return formatted timecode
+     */
     private static String formatTimecode(int totalSeconds) {
         if (totalSeconds < 0) totalSeconds = 0;
         int h = totalSeconds / 3600;
@@ -691,6 +806,12 @@ public class TelemetryDialog extends JDialog {
         return String.format("%02d:%02d:%02d", h, m, s);
     }
 
+    /**
+     * Parses recent terminal output lines in reverse chronological order to extract
+     * tape side (A/B) and the total tape time (last four numbers of FSK record).
+     *
+     * @param rxText terminal log / raw FSK records string
+     */
     private void parseTimecodeFromLog(String rxText) {
         if (rxText == null || rxText.isEmpty()) return;
         String[] lines = rxText.split("\\r?\\n");
@@ -769,7 +890,7 @@ public class TelemetryDialog extends JDialog {
                 } catch (Exception ignored) {}
             }
 
-            // Case 5: Timecode string (e.g. "TIMECODE: 00:02:07")
+            // Case 6: Timecode string (e.g. "TIMECODE: 00:02:07")
             Matcher m5 = PATTERN_TIMECODE.matcher(line);
             if (m5.find()) {
                 try {
@@ -783,6 +904,9 @@ public class TelemetryDialog extends JDialog {
         }
     }
 
+    /**
+     * Resets decoder telemetry and speed error statistics via a background worker thread.
+     */
     private void resetStats() {
         if (cassetteFlow == null)
             return;
@@ -790,13 +914,15 @@ public class TelemetryDialog extends JDialog {
         new Thread(() -> {
             cassetteFlow.runTelemetryCommand("reset", 0);
             pollInBackground();
-        }, "TelemetryDialog-Reset").start();
+        }, "TelemetryFrame-Reset").start();
     }
 
+    /**
+     * Disposes the frame after terminating all background polling tasks.
+     */
     @Override
     public void dispose() {
         stopPolling();
         super.dispose();
     }
 }
-
