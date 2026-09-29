@@ -15,6 +15,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -22,6 +24,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.GZIPOutputStream;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -64,6 +68,13 @@ public class CassetteFlowServer {
      * @throws IOException
      */
     public CassetteFlowServer() throws IOException {
+        // The bundled J-Card app takes a card as a base64url query parameter, which can
+        // be a few KB, so give the JDK's server more room than its small default before
+        // any request header limit is read.
+        if (System.getProperty("sun.net.httpserver.maxReqHeaderSize") == null) {
+            System.setProperty("sun.net.httpserver.maxReqHeaderSize", "262144");
+        }
+
         ExecutorService executor = Executors.newCachedThreadPool();
 
         server = HttpServer.create(new InetSocketAddress("0.0.0.0", 8192), 0);
@@ -106,10 +117,22 @@ public class CassetteFlowServer {
         server.createContext("/api/devices", new AudioDevicesHandler());
         server.createContext("/api/cmd", new CommandHandler());
 
+        // Library & Tape Builder Web App (audio playback only, no FSK encoding)
+        server.createContext("/library", new LibraryViewHandler()); // send the UI
+        server.createContext("/library.html", new LibraryViewHandler()); // alias
+        server.createContext("/encode", new LibraryViewHandler()); // alias for the desktop ENCODE style app
+        server.createContext("/api/library", new LibraryJsonHandler()); // full audio library metadata as gzip json
+        server.createContext("/api/tapedb", new StoreTapeHandler()); // store a tape record into tapedb.txt
+        server.createContext("/jcard/template", new JCardTemplateHandler()); // default j-card template
+
+        // Vendored J-Card Template web app (upstream ed7n/jcard-template, BSD 2-Clause)
+        server.createContext("/jcard", new JCardViewHandler()); // page + res/** assets
+        server.createContext("/api/jcard", new JCardDataHandler()); // card json for a tape
+
         server.setExecutor(executor);
         server.start();
 
-        System.out.println("Cassette Flow Server Started on port 8192 (Web Player: http://localhost:8192/player | Telemetry: http://localhost:8192/telemetry)...");
+        System.out.println("Cassette Flow Server Started on port 8192 (Web Player: http://localhost:8192/player | Library: http://localhost:8192/library | Telemetry: http://localhost:8192/telemetry)...");
     }
 
     /**
@@ -715,52 +738,575 @@ public class CassetteFlowServer {
                 return;
             }
 
-            byte[] responseData = null;
+            sendPage(exchange, "/player.html", "404 Player HTML Resource Not Found",
+                    "src" + File.separator + "player.html", "player.html");
+        }
+    }
 
-            // Try loading from classpath resource /player.html
-            try (InputStream is = getClass().getResourceAsStream("/player.html")) {
-                if (is != null) {
-                    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-                    byte[] temp = new byte[8192];
-                    int r;
-                    while ((r = is.read(temp)) != -1) {
-                        buffer.write(temp, 0, r);
-                    }
-                    responseData = buffer.toByteArray();
-                }
-            } catch (Exception ignored) {
+    /**
+     * Handler to serve the embedded library.html single page web app. This is the
+     * web version of the desktop ENCODE tab but for audio playback only, so no
+     * FSK encoding is done.
+     */
+    private class LibraryViewHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            addCorsHeaders(exchange);
+
+            if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+                exchange.sendResponseHeaders(204, -1);
+                exchange.close();
+                return;
             }
 
-            // Fallback: try loading from local disk src/player.html
-            if (responseData == null) {
-                File localPlayer = new File("src" + File.separator + "player.html");
-                if (!localPlayer.exists()) localPlayer = new File("player.html");
-                if (localPlayer.exists() && localPlayer.isFile()) {
-                    try (FileInputStream fis = new FileInputStream(localPlayer);
-                         ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
-                        byte[] temp = new byte[8192];
-                        int r;
-                        while ((r = fis.read(temp)) != -1) {
-                            buffer.write(temp, 0, r);
-                        }
-                        responseData = buffer.toByteArray();
-                    }
-                }
+            sendPage(exchange, "/library.html", "404 Library HTML Resource Not Found",
+                    "src" + File.separator + "library.html", "library.html");
+        }
+    }
+
+    /**
+     * Serves the vendored J-Card Template web app and its assets.
+     *
+     * /jcard, /jcard/, /jcard/index.html -> the page with the CassetteFlow bridge
+     *                                       injected before &lt;/body&gt;
+     * /jcard/res/**                      -> the vendored static assets
+     *
+     * The vendored files are never edited: the bridge script tag (and, when a tape
+     * id was supplied, the card data) is inserted while the page is being served.
+     */
+    private class JCardViewHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            addCorsHeaders(exchange);
+
+            if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+                exchange.sendResponseHeaders(204, -1);
+                exchange.close();
+                return;
             }
 
-            if (responseData != null) {
-                exchange.getResponseHeaders().set("Content-Type", "text/html; charset=utf-8");
+            String path = exchange.getRequestURI().getPath();
+
+            // ---- assets under /jcard/res/...
+            if (path.startsWith("/jcard/res/")) {
+                String relativePath = path.substring("/jcard/".length());
+                if (relativePath.contains("..")) {
+                    sendJsonError(exchange, 400, "Invalid asset path");
+                    return;
+                }
+
+                byte[] data = loadPageBytes("/jcard/" + relativePath, "src" + File.separator + "jcard"
+                        + File.separator + relativePath.replace("/", File.separator));
+                if (data == null) {
+                    sendJsonError(exchange, 404, "Asset not found: " + relativePath);
+                    return;
+                }
+
+                exchange.getResponseHeaders().set("Content-Type", getMimeType(relativePath));
                 exchange.getResponseHeaders().set("Cache-Control", "no-cache, no-store, must-revalidate");
-                exchange.sendResponseHeaders(200, responseData.length);
+                exchange.sendResponseHeaders(200, data.length);
                 try (OutputStream os = exchange.getResponseBody()) {
-                    os.write(responseData);
+                    os.write(data);
                 }
+                return;
+            }
+
+            // ---- the bridge script (ours, lives next to the vendored page)
+            if (path.endsWith("/cf-bridge.js")) {
+                byte[] bridge = loadPageBytes("/jcard/cf-bridge.js", "src" + File.separator + "jcard"
+                        + File.separator + "cf-bridge.js");
+                if (bridge == null) {
+                    sendJsonError(exchange, 404, "cf-bridge.js not found");
+                    return;
+                }
+                exchange.getResponseHeaders().set("Content-Type", getMimeType("cf-bridge.js"));
+                exchange.getResponseHeaders().set("Cache-Control", "no-cache, no-store, must-revalidate");
+                exchange.sendResponseHeaders(200, bridge.length);
+                try (OutputStream os = exchange.getResponseBody()) {
+                    os.write(bridge);
+                }
+                return;
+            }
+
+            // ---- the page itself
+            byte[] page = loadPageBytes("/jcard/index.html",
+                    "src" + File.separator + "jcard" + File.separator + "index.html");
+            if (page == null) {
+                sendJsonError(exchange, 404, "The bundled J-Card Template was not found");
+                return;
+            }
+
+            String html = new String(page, StandardCharsets.UTF_8);
+            html = injectJCardBridge(html, exchange.getRequestURI().getRawQuery());
+            byte[] body = html.getBytes(StandardCharsets.UTF_8);
+
+            exchange.getResponseHeaders().set("Content-Type", "text/html; charset=utf-8");
+            exchange.getResponseHeaders().set("Cache-Control", "no-cache, no-store, must-revalidate");
+            exchange.sendResponseHeaders(200, body.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(body);
+            }
+        }
+    }
+
+    /**
+     * Handler returning the J-Card data for a tape as JSON, e.g.
+     * /api/jcard?tape=0042 or /api/jcard?tape=0042&amp;combine=1
+     */
+    private class JCardDataHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            addCorsHeaders(exchange);
+
+            if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+                exchange.sendResponseHeaders(204, -1);
+                exchange.close();
+                return;
+            }
+
+            if (cassetteFlow == null) {
+                sendJsonError(exchange, 503, "CassetteFlow is not attached to the server");
+                return;
+            }
+
+            String query = exchange.getRequestURI().getQuery();
+            Map<String, String> params = (query != null && query.contains("="))
+                    ? splitQuery(query) : new LinkedHashMap<String, String>();
+
+            String tapeId = params.containsKey("tape") ? params.get("tape").trim() : "";
+            if (tapeId.isEmpty()) {
+                sendJsonError(exchange, 400, "A tape id is required, e.g. /api/jcard?tape=0042");
+                return;
+            }
+
+            boolean combine = "1".equals(params.get("combine"))
+                    || "true".equalsIgnoreCase(params.get("combine"));
+
+            JSONObject card = cassetteFlow.buildJCardData(tapeId.toUpperCase(), combine,
+                    params.get("title"), params.get("artist"), null);
+
+            sendJson(exchange, 200, card);
+        }
+    }
+
+    /**
+     * Insert the CassetteFlow bridge into the vendored page. When a tape id was
+     * requested the card data is embedded as well so the page renders it straight
+     * away; otherwise the bridge falls back to its own ?data= parameter.
+     *
+     * @param html the vendored page
+     * @param rawQuery the request query string, may be null
+     * @return the page with the bridge injected
+     */
+    private String injectJCardBridge(String html, String rawQuery) {
+        StringBuilder scripts = new StringBuilder();
+
+        // The vendored page references its assets relatively (res/styles/..., res/scripts/...),
+        // so the base URL has to be pinned: it is served from /jcard and would otherwise
+        // resolve them against the server root.
+        String base = "<base href=\"/jcard/\">\n";
+        int headAt = html.toLowerCase().indexOf("<head>");
+        if (headAt >= 0) {
+            int afterHead = headAt + "<head>".length();
+            html = html.substring(0, afterHead) + base + html.substring(afterHead);
+        } else {
+            html = base + html;
+        }
+
+        if (rawQuery != null && rawQuery.contains("tape=")) {
+            try {
+                Map<String, String> params = splitQuery(rawQuery);
+                String tapeId = params.containsKey("tape") ? params.get("tape").trim().toUpperCase() : "";
+
+                if (!tapeId.isEmpty() && cassetteFlow != null) {
+                    boolean combine = "1".equals(params.get("combine"))
+                            || "true".equalsIgnoreCase(params.get("combine"));
+
+                    JSONObject card = cassetteFlow.buildJCardData(tapeId, combine,
+                            params.get("title"), params.get("artist"), null);
+
+                    scripts.append("<script>window.CF_JCARD_DATA = ")
+                            .append(card.toString())
+                            .append(";</script>\n");
+                }
+            } catch (Exception ex) {
+                Logger.getLogger(CassetteFlowServer.class.getName()).log(Level.WARNING,
+                        "Unable to build the J-Card data for " + rawQuery, ex);
+            }
+        }
+
+        scripts.append("<script src=\"/jcard/cf-bridge.js\"></script>\n");
+
+        int insertAt = html.lastIndexOf("</body>");
+        if (insertAt < 0) {
+            // fall back to appending so the bridge is never silently lost
+            return html + "\n" + scripts;
+        }
+
+        return html.substring(0, insertAt) + scripts + html.substring(insertAt);
+    }
+
+    /**
+     * Handler that returns the default J-Card template. This reads the same
+     * template.jcard.json that the desktop application loads at startup so the web
+     * J-Card dialog writes its output in exactly the same format.
+     */
+    private class JCardTemplateHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            addCorsHeaders(exchange);
+
+            if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+                exchange.sendResponseHeaders(204, -1);
+                exchange.close();
+                return;
+            }
+
+            String template = null;
+            try {
+                template = CassetteFlowUtil.getResourceFileAsString("template.jcard.json");
+            } catch (IOException ignored) {
+            }
+
+            if (template == null || template.trim().isEmpty()) {
+                sendJsonError(exchange, 404, "template.jcard.json was not found on the classpath");
+                return;
+            }
+
+            byte[] body = template.getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
+            exchange.getResponseHeaders().set("Cache-Control", "no-cache, no-store, must-revalidate");
+            exchange.sendResponseHeaders(200, body.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(body);
+            }
+        }
+    }
+
+    /**
+     * Handler that returns the complete audio library as JSON. Unlike the audio db
+     * text file this includes the tag based meta data (title, artist, album, genre,
+     * year) that the web track finder needs. The response is gzipped when the
+     * client supports it since the payload is a few MB for a large library.
+     */
+    private class LibraryJsonHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            addCorsHeaders(exchange);
+
+            if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+                exchange.sendResponseHeaders(204, -1);
+                exchange.close();
+                return;
+            }
+
+            String jsonResponse = (cassetteFlow != null)
+                    ? cassetteFlow.getAudioInfoDBAsJSON()
+                    : "{\"version\":2,\"count\":0,\"tracks\":[]}";
+
+            byte[] jsonBytes = jsonResponse.getBytes(StandardCharsets.UTF_8);
+            byte[] body = jsonBytes;
+
+            String acceptEncoding = exchange.getRequestHeaders().getFirst("Accept-Encoding");
+            boolean useGzip = acceptEncoding != null && acceptEncoding.toLowerCase().contains("gzip");
+
+            if (useGzip) {
+                ByteArrayOutputStream buffer = new ByteArrayOutputStream(Math.max(1024, jsonBytes.length / 4));
+                try (GZIPOutputStream gzip = new GZIPOutputStream(buffer)) {
+                    gzip.write(jsonBytes);
+                }
+                body = buffer.toByteArray();
+            }
+
+            exchange.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
+            exchange.getResponseHeaders().set("Cache-Control", "no-cache, no-store, must-revalidate");
+            if (useGzip) {
+                exchange.getResponseHeaders().set("Content-Encoding", "gzip");
+            }
+
+            exchange.sendResponseHeaders(200, body.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(body);
+            }
+        }
+    }
+
+    /**
+     * Handler to store a tape record (side A and/or side B) into the tape database
+     * file. This is what backs the Store button in the library web app and keeps
+     * the in memory tape database and tapedb.txt in sync with the browser.
+     *
+     * POST /api/tapedb
+     * {"tapeId":"0042","sideA":["hash",...],"sideB":["hash",...],
+     *  "overwrite":false,"backup":true}
+     */
+    private class StoreTapeHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            addCorsHeaders(exchange);
+
+            if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+                exchange.sendResponseHeaders(204, -1);
+                exchange.close();
+                return;
+            }
+
+            // the parameters can either be sent as a json body or as url encoded
+            // parameters which makes it easy to test from a browser or curl
+            String body = "";
+            if (exchange.getRequestMethod().equalsIgnoreCase("GET")) {
+                String query = exchange.getRequestURI().getQuery();
+                body = (query != null) ? query : "";
             } else {
-                String errorMsg = "404 Player HTML Resource Not Found";
-                exchange.sendResponseHeaders(404, errorMsg.length());
-                try (OutputStream os = exchange.getResponseBody()) {
-                    os.write(errorMsg.getBytes(StandardCharsets.UTF_8));
+                body = readRequestBody(exchange, 4 * 1024 * 1024);
+            }
+
+            String tapeId = "";
+            ArrayList<String> sideAIds = new ArrayList<>();
+            ArrayList<String> sideBIds = new ArrayList<>();
+            boolean overwrite = false;
+            boolean backup = true;
+
+            try {
+                if (body.startsWith("{")) {
+                    JSONObject json = new JSONObject(body);
+                    tapeId = json.has("tapeId") ? json.optString("tapeId", "") : json.optString("tapeID", "");
+                    sideAIds = readHashList(json, "sideA");
+                    sideBIds = readHashList(json, "sideB");
+                    overwrite = json.optBoolean("overwrite", false);
+                    backup = json.optBoolean("backup", true);
+                } else if (body.contains("=")) {
+                    Map<String, String> params = splitQuery(body);
+                    tapeId = params.containsKey("tapeId") ? params.get("tapeId") : "";
+                    if (params.containsKey("sideA")) {
+                        sideAIds = splitHashList(params.get("sideA"));
+                    }
+                    if (params.containsKey("sideB")) {
+                        sideBIds = splitHashList(params.get("sideB"));
+                    }
+                    overwrite = "1".equals(params.get("overwrite")) || "true".equalsIgnoreCase(params.get("overwrite"));
+                    if (params.containsKey("backup")) {
+                        backup = !("0".equals(params.get("backup")) || "false".equalsIgnoreCase(params.get("backup")));
+                    }
                 }
+            } catch (Exception ex) {
+                sendJsonError(exchange, 400, "Unable to read the store request: " + ex.getMessage());
+                return;
+            }
+
+            if (cassetteFlow == null) {
+                sendJsonError(exchange, 503, "CassetteFlow is not attached to the server");
+                return;
+            }
+
+            tapeId = tapeId.trim().toUpperCase();
+
+            if (!tapeId.matches("[A-Z0-9_]{1,10}")) {
+                sendJsonError(exchange, 400,
+                        "Invalid tape ID '" + tapeId + "'. Use up to 10 letters, digits or underscores.");
+                return;
+            }
+
+            if (sideAIds.isEmpty() && sideBIds.isEmpty()) {
+                sendJsonError(exchange, 400, "No tracks were supplied for side A or side B");
+                return;
+            }
+
+            // resolve the hashes against the audio database
+            ArrayList<String> unknownIds = new ArrayList<>();
+            ArrayList<AudioInfo> sideAList = resolveAudioInfoList(sideAIds, unknownIds);
+            ArrayList<AudioInfo> sideBList = resolveAudioInfoList(sideBIds, unknownIds);
+
+            if (!unknownIds.isEmpty()) {
+                int max = Math.min(10, unknownIds.size());
+                String ids = String.join(", ", unknownIds.subList(0, max));
+                if (unknownIds.size() > max) {
+                    ids += " (+ " + (unknownIds.size() - max) + " more)";
+                }
+                sendJsonError(exchange, 400, "Unknown audio id(s): " + ids);
+                return;
+            }
+
+            final String tapeKeyA = tapeId + "A";
+            final String tapeKeyB = tapeId + "B";
+
+            boolean exists = cassetteFlow.tapeDB.containsKey(tapeKeyA)
+                    || cassetteFlow.tapeDB.containsKey(tapeKeyB);
+
+            if (exists && !overwrite) {
+                String found = cassetteFlow.tapeDB.containsKey(tapeKeyA) ? tapeKeyA : tapeKeyB;
+                sendJsonError(exchange, 409, "Tape " + tapeId + " already exists as record " + found
+                        + ". Send overwrite:true to replace it.");
+                return;
+            }
+
+            // keep the previous records so the in memory database can be rolled back
+            // if the tape db file could not be written
+            final ArrayList<String> previousA = cassetteFlow.tapeDB.get(tapeKeyA);
+            final ArrayList<String> previousB = cassetteFlow.tapeDB.get(tapeKeyB);
+
+            File tapeDBFile = new File(CassetteFlow.TAPE_DB_FILENAME);
+            File backupFile = null;
+
+            try {
+                // 1. write a backup of the current tape database first
+                if (backup && tapeDBFile.exists()) {
+                    backupFile = new File(tapeDBFile.getParentFile(), tapeDBFile.getName() + ".bak");
+                    Files.copy(tapeDBFile.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                }
+
+                // 2. update the in memory database then write the whole file out
+                cassetteFlow.addToTapeDB(tapeId, sideAList, sideBList, false);
+                Files.write(tapeDBFile.toPath(), cassetteFlow.getTapeDBAsString().getBytes(StandardCharsets.UTF_8));
+            } catch (Exception ex) {
+                restoreTapeRecord(tapeKeyA, previousA);
+                restoreTapeRecord(tapeKeyB, previousB);
+
+                Logger.getLogger(CassetteFlowServer.class.getName()).log(Level.SEVERE,
+                        "Unable to store tape " + tapeId, ex);
+                sendJsonError(exchange, 500, "Unable to write " + tapeDBFile.getAbsolutePath()
+                        + " : " + ex.getMessage());
+                return;
+            }
+
+            JSONObject written = new JSONObject();
+            JSONObject response = new JSONObject();
+
+            try {
+                if (!sideAIds.isEmpty()) {
+                    written.put(tapeKeyA, sideAIds.size());
+                }
+                if (!sideBIds.isEmpty()) {
+                    written.put(tapeKeyB, sideBIds.size());
+                }
+
+                response.put("ok", true);
+                response.put("tapeId", tapeId);
+                response.put("file", tapeDBFile.getAbsolutePath());
+                response.put("written", written);
+                response.put("tapes", cassetteFlow.tapeDB.size());
+                if (backupFile != null) {
+                    response.put("backup", backupFile.getName());
+                }
+            } catch (JSONException ignored) {
+            }
+
+            System.out.println("Stored tape " + tapeId + " in " + tapeDBFile.getAbsolutePath()
+                    + " (Side A: " + sideAIds.size() + ", Side B: " + sideBIds.size() + ")");
+
+            sendJson(exchange, 200, response);
+        }
+
+        /**
+         * Read the request body as UTF-8 text, capped at maxBytes so a client can't
+         * make the server allocate an unbounded string. Written without
+         * InputStream.readAllBytes() so it also runs on Java 8.
+         *
+         * @param exchange
+         * @param maxBytes
+         * @return the trimmed request body
+         * @throws IOException
+         */
+        private String readRequestBody(HttpExchange exchange, int maxBytes) throws IOException {
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            byte[] chunk = new byte[8192];
+            int total = 0;
+
+            try (InputStream is = exchange.getRequestBody()) {
+                int read;
+                while ((read = is.read(chunk)) != -1) {
+                    total += read;
+                    if (total > maxBytes) {
+                        break;
+                    }
+                    buffer.write(chunk, 0, read);
+                }
+            }
+
+            return new String(buffer.toByteArray(), StandardCharsets.UTF_8).trim();
+        }
+
+        /**
+         * Read a list of audio ids from a json object. The value can either be a
+         * json array or a comma separated string.
+         *
+         * @param json
+         * @param key
+         * @return
+         */
+        private ArrayList<String> readHashList(JSONObject json, String key) {
+            ArrayList<String> ids = new ArrayList<>();
+
+            if (!json.has(key)) {
+                return ids;
+            }
+
+            Object value = json.opt(key);
+
+            if (value instanceof JSONArray) {
+                JSONArray array = (JSONArray) value;
+                for (int i = 0; i < array.length(); i++) {
+                    String id = array.optString(i);
+                    if (id != null && !id.trim().isEmpty()) {
+                        ids.add(id.trim());
+                    }
+                }
+            } else if (value != null) {
+                ids = splitHashList(value.toString());
+            }
+
+            return ids;
+        }
+
+        /**
+         * Split a comma, tab or space separated list of audio ids
+         */
+        private ArrayList<String> splitHashList(String value) {
+            ArrayList<String> ids = new ArrayList<>();
+
+            if (value == null) {
+                return ids;
+            }
+
+            // audio ids are made up of letters, digits, underscores and dashes so
+            // split on anything else. Avoids escapes that older source levels reject.
+            for (String id : value.split("[^A-Za-z0-9_-]+")) {
+                id = id.trim();
+                if (!id.isEmpty()) {
+                    ids.add(id);
+                }
+            }
+
+            return ids;
+        }
+
+        /**
+         * Convert a list of audio ids to audio info objects collecting any ids that
+         * could not be found
+         */
+        private ArrayList<AudioInfo> resolveAudioInfoList(ArrayList<String> audioIds, ArrayList<String> unknownIds) {
+            ArrayList<AudioInfo> audioInfoList = new ArrayList<>();
+
+            for (String audioId : audioIds) {
+                AudioInfo audioInfo = cassetteFlow.audioInfoDB.get(audioId);
+                if (audioInfo == null) {
+                    unknownIds.add(audioId);
+                } else {
+                    audioInfoList.add(audioInfo);
+                }
+            }
+
+            return audioInfoList;
+        }
+
+        /**
+         * Put an in memory tape record back the way it was after a failed store
+         */
+        private void restoreTapeRecord(String tapeKey, ArrayList<String> previousRecords) {
+            if (previousRecords == null) {
+                cassetteFlow.tapeDB.remove(tapeKey);
+            } else {
+                cassetteFlow.tapeDB.put(tapeKey, previousRecords);
             }
         }
     }
@@ -916,9 +1462,117 @@ public class CassetteFlowServer {
      */
     private static void addCorsHeaders(HttpExchange exchange) {
         exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
-        exchange.getResponseHeaders().set("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Methods", "GET, HEAD, POST, OPTIONS");
         exchange.getResponseHeaders().set("Access-Control-Allow-Headers", "Range, Content-Type, Accept, Authorization");
         exchange.getResponseHeaders().set("Access-Control-Expose-Headers", "Content-Range, Content-Length, Accept-Ranges");
+    }
+
+    /**
+     * Read an embedded html page from the classpath, falling back to the source
+     * directory so that the page can be edited without rebuilding the project
+     *
+     * @param resourcePath the classpath resource name, e.g. /library.html
+     * @param diskPaths the fallback file locations to try
+     * @return the page bytes or null if the page could not be found
+     */
+    private static byte[] loadPageBytes(String resourcePath, String... diskPaths) {
+        byte[] responseData = null;
+
+        // 1. Try loading from the classpath resource
+        try (InputStream is = CassetteFlowServer.class.getResourceAsStream(resourcePath)) {
+            if (is != null) {
+                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                byte[] temp = new byte[8192];
+                int r;
+                while ((r = is.read(temp)) != -1) {
+                    buffer.write(temp, 0, r);
+                }
+                responseData = buffer.toByteArray();
+            }
+        } catch (Exception ignored) {
+        }
+
+        // 2. Fallback to the file system which is handy when running from the IDE
+        if (responseData == null && diskPaths != null) {
+            for (String diskPath : diskPaths) {
+                if (diskPath == null) {
+                    continue;
+                }
+
+                File localPage = new File(diskPath);
+                if (localPage.exists() && localPage.isFile()) {
+                    try (FileInputStream fis = new FileInputStream(localPage);
+                            ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
+                        byte[] temp = new byte[8192];
+                        int r;
+                        while ((r = fis.read(temp)) != -1) {
+                            buffer.write(temp, 0, r);
+                        }
+                        responseData = buffer.toByteArray();
+                        break;
+                    } catch (Exception ignored) {
+                    }
+                }
+            }
+        }
+
+        return responseData;
+    }
+
+    /**
+     * Send an embedded html page back to the client
+     *
+     * @param exchange
+     * @param resourcePath the classpath resource name, e.g. /library.html
+     * @param notFoundMessage the message to send if the page cannot be found
+     * @param diskPaths the fallback file locations to try
+     * @throws IOException
+     */
+    private static void sendPage(HttpExchange exchange, String resourcePath, String notFoundMessage,
+            String... diskPaths) throws IOException {
+        byte[] responseData = loadPageBytes(resourcePath, diskPaths);
+
+        if (responseData != null) {
+            exchange.getResponseHeaders().set("Content-Type", "text/html; charset=utf-8");
+            exchange.getResponseHeaders().set("Cache-Control", "no-cache, no-store, must-revalidate");
+            exchange.sendResponseHeaders(200, responseData.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(responseData);
+            }
+        } else {
+            byte[] errorBytes = notFoundMessage.getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().set("Content-Type", "text/plain; charset=utf-8");
+            exchange.sendResponseHeaders(404, errorBytes.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(errorBytes);
+            }
+        }
+    }
+
+    /**
+     * Send a JSON object back to the client with the given status code
+     */
+    private static void sendJson(HttpExchange exchange, int status, JSONObject json) throws IOException {
+        byte[] bytes = json.toString().getBytes(StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
+        exchange.getResponseHeaders().set("Connection", "close");
+        exchange.sendResponseHeaders(status, bytes.length);
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(bytes);
+        }
+    }
+
+    /**
+     * Send a JSON error response back to the client
+     */
+    private static void sendJsonError(HttpExchange exchange, int status, String message) throws IOException {
+        JSONObject json = new JSONObject();
+        try {
+            json.put("ok", false);
+            json.put("error", message);
+        } catch (JSONException ignored) {
+        }
+        sendJson(exchange, status, json);
     }
 
     /**
@@ -1022,10 +1676,16 @@ public class CassetteFlowServer {
         if (lower.endsWith(".txt")) return "text/plain; charset=utf-8";
         if (lower.endsWith(".html") || lower.endsWith(".htm")) return "text/html; charset=utf-8";
         if (lower.endsWith(".json")) return "application/json; charset=utf-8";
-        if (lower.endsWith(".js")) return "application/javascript; charset=utf-8";
+        if (lower.endsWith(".js") || lower.endsWith(".mjs")) return "application/javascript; charset=utf-8";
         if (lower.endsWith(".css")) return "text/css; charset=utf-8";
+        if (lower.endsWith(".webmanifest")) return "application/manifest+json; charset=utf-8";
         if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
         if (lower.endsWith(".png")) return "image/png";
+        if (lower.endsWith(".svg")) return "image/svg+xml";
+        if (lower.endsWith(".ico")) return "image/x-icon";
+        if (lower.endsWith(".ttf")) return "font/ttf";
+        if (lower.endsWith(".woff")) return "font/woff";
+        if (lower.endsWith(".woff2")) return "font/woff2";
         return "application/octet-stream";
     }
 

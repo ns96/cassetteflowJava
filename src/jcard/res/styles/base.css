@@ -1,0 +1,613 @@
+body {
+  --color: #efefef;
+  --colorAccentHigh: #afafaf;
+  --colorAccentHighBump: #b7b7b7;
+  --colorAccentHighDent: #a7a7a7;
+  --colorAccentLow: #4f4f4f;
+  --colorAccentLowBump: #575757;
+  --colorAccentLowDent: #474747;
+  --colorAccentMax: #dfdfdf;
+  --colorAccentMaxBump: #e7e7e7;
+  --colorAccentMaxDent: #d7d7d7;
+  --colorAccentMid: #7f7f7f;
+  --colorAccentMidBump: #878787;
+  --colorAccentMidDent: #777777;
+  --colorAccentMin: #1f1f1f;
+  --colorAccentMinBump: #272727;
+  --colorAccentMinDent: #171717;
+  --colorAccentOver: #fff;
+  --colorAccentUnder: #000;
+  --colorAnchor: #7f7fef;
+  --colorAnchorFocus: #bfefbf;
+  --colorAnchorFocusBackground: #0fef0f7f;
+  --colorAnchorFocusBackgroundSolid: #178717;
+  --colorAnchorHover: #bfbfef;
+  --colorAnchorHoverBackground: #0f0fef7f;
+  --colorAnchorHoverBackgroundSolid: #171787;
+  --colorBackground: #0f0f0f;
+  --colorBad: #ef7f7f;
+  --colorBadBackground: #ef0f0f7f;
+  --colorBadBackgroundSolid: #871717;
+  --colorButtonActiveBackground: #0fef0f3f;
+  --colorButtonActiveBackgroundSolid: #1a521a;
+  --colorButtonBadActiveBackground: #ef0f0f;
+  --colorButtonBadHoverBackground: #7f0f0f7f;
+  --colorButtonBadHoverBackgroundSolid: #4f1717;
+  --colorButtonHoverBackground: #0f0fef3f;
+  --colorButtonHoverBackgroundSolid: #1a1a52;
+  --colorHighlightBackground: #ef7f0f7f;
+  --colorHighlightBackgroundSolid: #874f17;
+  --colorHoverBackground: #7f7f7f24;
+  --colorHoverBackgroundSolid: #1f1f1f;
+  --colorInputActiveBorder: #0fefbf;
+  --colorInputFocusBorder: #0fbfef;
+  --colorInputHoverBorder: #0f0fef;
+  --colorInputInvalidBorder: #ef0fbf;
+  --colorOutlineFocus: #efbf0f;
+  --colorSamp: #7fef0f;
+  --colorSelectedBackground: #0fbfbf4f;
+  --colorSelectedBackgroundSolid: #1a5151;
+  --colorTechnical: #efbf7f;
+  --colorTooltipBackground: #3f3f0f;
+  --colorUnaMenuActiveBackground: var(--colorButtonActiveBackground);
+  --colorUnaMenuFocusBackground: var(--colorButtonActiveBackground);
+  --colorUnaMenuHoverBackground: var(--colorButtonHoverBackground);
+  --factorGolden: 1.618;
+  --fontFamily: "Cantarell", ui-sans-serif, sans-serif;
+  --fontFamilyMonospace: "Hack", ui-monospace, monospace;
+  --fontSize: 1rem;
+  --fontSizeBump: calc(var(--fontSize) * var(--fontSizeFactorBump));
+  --fontSizeDent: calc(var(--fontSize) * var(--fontSizeFactorDent));
+  --fontSizeFactorBump: 1.0833;
+  --fontSizeFactorDent: 0.9167;
+  --fontSizeFactorH0: 2;
+  --fontSizeFactorH1: 1.6667;
+  --fontSizeFactorH2: 1.3333;
+  --fontSizeFactorH3: 1.0625;
+  --fontSizeFactorH4: 0.95;
+  --fontSizeFactorH5: 0.875;
+  --fontSizeFactorH6: 0.775;
+  --fontSizeFactorSmaller: var(--fontSizeFactorH5);
+  --fontSizeH0: calc(var(--fontSize) * var(--fontSizeFactorH0));
+  --fontSizeH1: calc(var(--fontSize) * var(--fontSizeFactorH1));
+  --fontSizeH2: calc(var(--fontSize) * var(--fontSizeFactorH2));
+  --fontSizeH3: calc(var(--fontSize) * var(--fontSizeFactorH3));
+  --fontSizeH4: calc(var(--fontSize) * var(--fontSizeFactorH4));
+  --fontSizeH5: calc(var(--fontSize) * var(--fontSizeFactorH5));
+  --fontSizeH6: calc(var(--fontSize) * var(--fontSizeFactorH6));
+  --fontSizeSmaller: calc(var(--fontSize) * var(--fontSizeFactorSmaller));
+  --fontStyleSlant: 13deg;
+  /* Firefox, Chromium. */
+  --lineHeightDefault: calc((1.25 + 1.1885) / 2);
+  --spacer: 0.25em;
+  --spacer05: calc(var(--spacer) / 2);
+  --spacer2: calc(var(--spacer) * 2);
+  --spacer3: calc(var(--spacer) * 3);
+  --spacer4: calc(var(--spacer) * 4);
+  --spacer5: calc(var(--spacer) * 5);
+  --spacer6: calc(var(--spacer) * 6);
+  --spacer7: calc(var(--spacer) * 7);
+  --spacer8: calc(var(--spacer) * 8);
+  --spacer10: calc(var(--spacer) * 10);
+  --spacer12: calc(var(--spacer) * 12);
+  --spacer16: calc(var(--spacer) * 16);
+  --spacerPx: calc(var(--fontSize) / 16);
+  --spacerPx2: calc(var(--spacerPx) * 2);
+  --spacerPx3: calc(var(--spacerPx) * 3);
+  --spacerPx4: calc(var(--spacerPx) * 4);
+  --splitHead: "—";
+  --splitLineItem: " — ";
+  --splitListItem: " – ";
+  --splitMenuItem: "—";
+  --splitTreeItem: " ⌎› ";
+  --timeFade: 0.05s;
+  --timeSlide: 0.04s;
+  --widthBorder: var(--spacerPx);
+  --widthBorder2: var(--spacerPx2);
+  --widthBorderBumpEnd: var(--widthBorderBumpStart);
+  --widthBorderBumpStart: var(--widthBorder2);
+  --widthBorderDentEnd: var(--widthBorder);
+  --widthBorderDentStart: var(--widthBorderBumpStart);
+  --widthBorderThick: var(--widthBorder2);
+  --widthOutlineFocus: var(--spacerPx);
+}
+
+*,
+.no-padding {
+  padding: 0;
+}
+
+* {
+  /* Epiphany. */
+  border-radius: 0;
+  box-sizing: border-box;
+  color-adjust: exact;
+  margin: 0;
+  min-height: 0;
+  min-width: 0;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+:disabled,
+del {
+  color: var(--colorAccentMid);
+}
+
+:focus {
+  /* Chromium. */
+  outline: none;
+}
+
+::selection {
+  background-color: var(--colorSelectedBackground);
+}
+
+.banner {
+  display: flex;
+  flex-flow: column nowrap;
+}
+
+.banner > :not(:last-child),
+.banner > :only-child {
+  margin-block-end: var(--spacer);
+}
+
+.banner > .subtitle,
+.banner > .title {
+  text-align: start;
+}
+
+.banner > .subtitle::before {
+  content: var(--splitHead);
+}
+
+.banner > .title,
+.bolder,
+details > summary,
+dl:not(.technical) > dt,
+li.anchor > :not(dl):not(ol):not(ul):first-child > a,
+li.headered > :not(dl):not(ol):not(ul):first-child,
+ul.anchor > li > :not(dl):not(ol):not(ul):first-child > a,
+ul.headered > li > :not(dl):not(ol):not(ul):first-child,
+var {
+  font-weight: bolder;
+}
+
+.banner > .title {
+  font-size: var(--fontSizeH0);
+}
+
+.banner > .title::after,
+details,
+figure,
+kbd {
+  border-style: solid;
+  border-width: var(--widthBorder);
+}
+
+.banner > .title::after,
+.oblique,
+cite,
+dfn,
+em,
+i,
+var {
+  font-style: oblique;
+}
+
+.banner > .title::after {
+  border-block-end-color: var(--colorAccentLow);
+  border-block-start-color: var(--colorAccentMin);
+  border-inline-end-color: var(--colorAccentMin);
+  border-inline-start-color: var(--colorAccentMin);
+  font-size: calc(var(--fontSize) * 0.5833);
+  font-weight: normal;
+  line-height: var(--lineHeightDefault);
+  margin-inline-end: var(--spacer4);
+  margin-inline-start: var(--spacer4);
+  padding-inline-end: var(--spacer);
+}
+
+.eden {
+  font-family: "Liberation Sans", "Arimo", "Arial", sans-serif;
+}
+
+.highlight,
+.underline,
+a:link,
+b > strong,
+em > i,
+i > em,
+mark,
+strong > b {
+  text-decoration: underline;
+}
+
+.highlight,
+mark {
+  background-color: var(--colorHighlightBackground);
+}
+
+.no-border {
+  border-style: none;
+}
+
+.no-margin * {
+  margin-block-end: 0;
+  margin-block-start: 0;
+}
+
+.no-select {
+  user-select: none;
+}
+
+.overline {
+  text-decoration: overline;
+}
+
+.smaller,
+code,
+dl.technical > dt,
+dt.technical,
+figcaption,
+kbd,
+li.technical > :not(dl):not(ol):not(ul):first-child,
+pre,
+samp,
+ul.technical > li > :not(dl):not(ol):not(ul):first-child {
+  font-size: var(--fontSizeSmaller);
+}
+
+a,
+a:visited {
+  color: var(--colorAnchor);
+}
+
+a:hover {
+  background-color: var(--colorAnchorHoverBackground);
+  color: var(--colorAnchorHover);
+}
+
+a:hover *,
+a:focus *,
+details > summary:hover *,
+details > summary:active *,
+pre kbd {
+  background-color: unset;
+}
+
+a:hover *,
+a:focus * {
+  color: unset;
+}
+
+a:focus {
+  background-color: var(--colorAnchorFocusBackground);
+  color: var(--colorAnchorFocus);
+}
+
+a::before,
+body {
+  color: var(--color);
+  font-family: var(--fontFamily);
+  font-size: var(--fontSize);
+}
+
+a.icon:link {
+  text-decoration: unset;
+}
+
+a.out::before {
+  content: "*";
+}
+
+a.up::before {
+  content: "^";
+}
+
+blockquote,
+kbd,
+q {
+  color: var(--colorAccentMax);
+}
+
+blockquote {
+  border-inline-start-color: var(--colorAccentMin);
+  border-inline-start-style: solid;
+  border-inline-start-width: var(--widthBorderThick);
+}
+
+body,
+details > summary {
+  background-color: var(--colorBackground);
+}
+
+code,
+details[open] > summary,
+dl.technical > dt,
+dt.technical,
+kbd,
+li.technical > :not(dl):not(ol):not(ul):first-child,
+pre,
+samp,
+ul.technical > li > :not(dl):not(ol):not(ul):first-child {
+  background-color: var(--colorAccentMin);
+}
+
+code,
+dl.technical > dt,
+dt.technical,
+kbd,
+li.technical > :not(dl):not(ol):not(ul):first-child,
+pre,
+samp,
+ul.technical > li > :not(dl):not(ol):not(ul):first-child {
+  font-family: var(--fontFamilyMonospace);
+}
+
+code,
+dl.technical > dt,
+dt.technical,
+li.technical > :not(dl):not(ol):not(ul):first-child,
+samp,
+ul.technical > li > :not(dl):not(ol):not(ul):first-child {
+  color: var(--colorTechnical);
+}
+
+dd::before,
+ul.line > li:not(:first-child)::before {
+  content: var(--splitListItem);
+}
+
+details,
+figure,
+kbd {
+  border-color: var(--colorAccentLow);
+}
+
+details > summary:hover {
+  background-color: var(--colorButtonHoverBackgroundSolid);
+}
+
+details > summary:focus {
+  outline-color: var(--colorOutlineFocus);
+  outline-style: solid;
+  outline-width: var(--widthOutlineFocus);
+}
+
+details > summary:active {
+  background-color: var(--colorButtonActiveBackgroundSolid);
+}
+
+details > summary > h3,
+details > summary > h4,
+details > summary > h5,
+details > summary > h6,
+fieldset > legend > h3,
+fieldset > legend > h4,
+fieldset > legend > h5,
+fieldset > legend > h6 {
+  display: inline;
+}
+
+details > summary > h3,
+fieldset > legend > h3 {
+  font-weight: lighter;
+}
+
+details[open] > :not(summary) {
+  animation: linear var(--timeFade) backwards detailsOpen;
+}
+
+h1 {
+  font-size: var(--fontSizeH1);
+}
+
+h2,
+h3 {
+  font-weight: unset;
+}
+
+h2 {
+  font-size: var(--fontSizeH2);
+}
+
+h3 {
+  font-size: var(--fontSizeH3);
+  letter-spacing: calc(var(--spacerPx) / 4);
+  text-shadow: var(--spacerPx) 0 var(--color);
+}
+
+h4 {
+  font-size: var(--fontSizeH4);
+}
+
+h5 {
+  font-size: var(--fontSizeH5);
+}
+
+h6 {
+  font-size: var(--fontSizeH6);
+}
+
+kbd {
+  border-radius: var(--spacerPx4);
+}
+
+kbd kbd,
+pre kbd,
+samp kbd {
+  border-color: unset;
+  border-style: unset;
+  border-width: unset;
+}
+
+kbd > kbd:not(:only-of-type),
+kbd > samp:not(:only-of-type) {
+  background-color: var(--colorAccentMinDent);
+}
+
+li
+  > :not(dl):not(ol):not(ul:not(.line)):first-child
+  + :not(dl):not(ol):not(ul:not(.line))::before {
+  content: var(--splitLineItem);
+}
+
+li.anchor,
+li.headered,
+li.line,
+li.technical,
+menu,
+ul.anchor,
+ul.headered,
+ul.line,
+ul.technical {
+  list-style-type: none;
+}
+
+mark {
+  /* Firefox. */
+  color: inherit;
+}
+
+ol:not(.line) > li:hover,
+ul:not(.line) > li:hover {
+  background-color: var(--colorHoverBackground);
+}
+
+pre {
+  overflow-x: auto;
+}
+
+pre kbd {
+  border-radius: unset;
+}
+
+samp {
+  color: var(--colorSamp);
+}
+
+sub,
+sup {
+  line-height: 1;
+}
+
+ul {
+  list-style: var(--splitListItem) outside;
+}
+
+ul ul.anchor,
+ul ul.headered,
+ul ul.technical {
+  list-style-type: var(--splitTreeItem);
+}
+
+@media (max-width: 720px) {
+  .banner > .title::after {
+    content: "MOBILE-READY";
+  }
+}
+
+@media (max-width: 319px) {
+  .banner > .subtitle {
+    display: none;
+  }
+
+  .banner > .title {
+    font-size: var(--fontSizeH1);
+  }
+
+  .banner > .title::after {
+    border-block-end-style: dotted;
+    border-block-end-width: var(--widthBorder2);
+    content: "mini!";
+    font-family: var(--fontFamilyMonospace);
+    font-size: calc(var(--fontSize) * 0.6667);
+    font-style: unset;
+    margin-inline-end: var(--spacer2);
+    margin-inline-start: var(--spacer2);
+    padding-inline-end: unset;
+  }
+
+  body {
+    --spacer: 0.19em;
+  }
+}
+
+@media (prefers-color-scheme: light), print {
+  body:not(.dark) {
+    --color: #0f0f0f;
+    --colorAccentHigh: #4f4f4f;
+    --colorAccentHighBump: #474747;
+    --colorAccentHighDent: #575757;
+    --colorAccentLow: #afafaf;
+    --colorAccentLowBump: #a7a7a7;
+    --colorAccentLowDent: #b7b7b7;
+    --colorAccentMax: #1f1f1f;
+    --colorAccentMaxBump: #171717;
+    --colorAccentMaxDent: #272727;
+    --colorAccentMidBump: #777777;
+    --colorAccentMidDent: #878787;
+    --colorAccentMin: #dfdfdf;
+    --colorAccentMinBump: #d7d7d7;
+    --colorAccentMinDent: #e7e7e7;
+    --colorAccentOver: #000;
+    --colorAccentUnder: #fff;
+    --colorAnchor: #0f0fef;
+    --colorAnchorFocus: #0f7f0f;
+    --colorAnchorFocusBackgroundSolid: #77e777;
+    --colorAnchorHover: #0f0f7f;
+    --colorAnchorHoverBackgroundSolid: #7777e7;
+    --colorBackground: #efefef;
+    --colorBad: #ef0f0f;
+    --colorBadBackgroundSolid: #e77777;
+    --colorButtonActiveBackgroundSolid: #abe3ab;
+    --colorButtonBadHoverBackgroundSolid: #af7777;
+    --colorButtonHoverBackgroundSolid: #ababe3;
+    --colorHighlightBackgroundSolid: #efb77f;
+    --colorHoverBackgroundSolid: #dfdfdf;
+    --colorSamp: #2f5f0f;
+    --colorSelectedBackgroundSolid: #9fd5d5;
+    --colorTechnical: #7f3f0f;
+    --colorTooltipBackground: #efefbf;
+  }
+
+  body:not(.dark) img.mono {
+    filter: invert(100%);
+  }
+}
+
+@media print {
+  .banner > .title::after {
+    content: "PRINT-READY";
+  }
+
+  .highlight,
+  body,
+  code,
+  dl.technical > dt,
+  dt.technical,
+  kbd,
+  kbd > kbd,
+  li.technical > :not(dl):not(ol):not(ul):first-child,
+  pre,
+  samp,
+  ul.technical > li > :not(dl):not(ol):not(ul):first-child {
+    background-color: unset;
+  }
+
+  pre {
+    overflow-x: visible;
+  }
+}
+
+@keyframes detailsOpen {
+  from {
+    opacity: 0;
+  }
+}
+
+body > .curtain {
+  display: none !important;
+}

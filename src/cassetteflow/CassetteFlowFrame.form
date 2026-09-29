@@ -501,12 +501,12 @@
                     </Component>
                     <Component class="javax.swing.JLabel" name="jLabel14">
                       <Properties>
-                        <Property name="text" type="java.lang.String" value="J-Card Template Site =&gt;"/>
+                        <Property name="text" type="java.lang.String" value="J-Card Template =&gt;"/>
                       </Properties>
                     </Component>
                     <Component class="javax.swing.JTextField" name="jcardSiteTextField">
                       <Properties>
-                        <Property name="text" type="java.lang.String" value="https://ed7n.github.io/jcard-template/"/>
+                        <Property name="text" type="java.lang.String" value="http://localhost:8192/jcard"/>
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jcardSiteTextFieldActionPerformed"/>
@@ -514,7 +514,7 @@
                     </Component>
                     <Component class="javax.swing.JButton" name="jcardSiteButton">
                       <Properties>
-                        <Property name="text" type="java.lang.String" value="View Site"/>
+                        <Property name="text" type="java.lang.String" value="Open J-Card"/>
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jcardSiteButtonActionPerformed"/>
@@ -1855,7 +1855,6 @@
                               <Component id="audioDownloadServerTextField" min="-2" pref="201" max="-2" attributes="0"/>
                               <EmptySpace max="32767" attributes="0"/>
                               <Component id="buildAudioIndexButton" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
                           </Group>
                           <Group type="102" alignment="0" attributes="0">
                               <Component id="jLabel11" min="-2" max="-2" attributes="0"/>
@@ -1867,9 +1866,9 @@
                               <Component id="audioOutputComboBox" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="reloadAudioOutputsButton" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
                           </Group>
                       </Group>
+                      <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="1" max="-2" attributes="0">
                           <Component id="telemetryButton" max="32767" attributes="0"/>
                           <Component id="clearConsoleButton" max="32767" attributes="0"/>

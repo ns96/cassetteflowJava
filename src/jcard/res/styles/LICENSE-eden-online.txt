@@ -1,0 +1,11 @@
+These stylesheets belong to the EDEN Online portal, not to the J-Card Template
+repository, so they carry the portal's licence rather than its BSD 2-Clause one.
+
+Source    : https://ed7n.github.io/res/styles/{base,layout,application,input,form,nav}.css
+Licence   : EDEN Online License (02/17/2023) - contents are CC BY-SA 4.0
+            https://creativecommons.org/licenses/by-sa/4.0/
+Copyright : Brendon Irwan (ED7 ENTERTAINMENT)
+
+The files are redistributed here verbatim (no modifications) so that the J-Card
+Template page works offline inside CassetteFlow. Run tools\fetch-jcard.ps1 with
+-SkipSiteStyles to drop them; the page then loads them from the portal instead.

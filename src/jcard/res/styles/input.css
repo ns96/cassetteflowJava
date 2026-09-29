@@ -1,0 +1,244 @@
+body {
+  --lengthInputBumpMin: calc(
+    var(--lineHeight) * 1em + var(--paddingEntry) * 2 +
+      var(--widthBorderBumpStart) + var(--widthBorderBumpEnd)
+  );
+  --lengthInputDentMin: calc(
+    var(--lineHeight) * 1em + var(--paddingEntry) * 2 +
+      var(--widthBorderDentStart) + var(--widthBorderDentEnd)
+  );
+  --lengthInputSwitch: var(--spacer4);
+  --paddingEntry: var(--spacer);
+  --paddingEntryGolden: calc(var(--paddingEntry) * var(--factorGolden));
+  /* Corrected for Firefox and Chromium. */
+  --paddingSelect: calc(
+    var(--paddingEntry) + (var(--lineHeight) - var(--lineHeightDefault)) * 0.5em -
+      var(--spacerPx) * 0.4998
+  );
+}
+
+button,
+input,
+meter,
+progress,
+output,
+select,
+textarea {
+  border-block-end-style: solid;
+  border-block-start-style: solid;
+  border-inline-end-style: solid;
+  border-inline-start-style: solid;
+}
+
+button,
+input,
+output,
+select,
+textarea {
+  color: inherit;
+  font: inherit;
+}
+
+button,
+input,
+output,
+textarea {
+  padding: var(--paddingEntry);
+}
+
+button,
+input:disabled,
+input[type="color"],
+select:disabled,
+textarea:disabled {
+  border-block-end-color: var(--colorAccentLow);
+  border-inline-end-color: var(--colorAccentLow);
+}
+
+button,
+input[type="color"],
+meter,
+progress {
+  min-height: var(--lengthInputBumpMin);
+}
+
+button,
+input[type="color"] {
+  background-color: var(--colorAccentMin);
+  border-block-end-width: var(--widthBorderBumpEnd);
+  border-block-start-color: var(--colorAccentHigh);
+  border-block-start-width: var(--widthBorderBumpStart);
+  border-inline-end-width: var(--widthBorderBumpEnd);
+  border-inline-start-color: var(--colorAccentHigh);
+  border-inline-start-width: var(--widthBorderBumpStart);
+  min-width: var(--lengthInputBumpMin);
+}
+
+button:hover:enabled,
+input[type="color"]:hover:enabled {
+  background-color: var(--colorButtonHoverBackgroundSolid);
+}
+
+button:focus:enabled,
+input[type="color"]:focus:enabled {
+  outline-color: var(--colorOutlineFocus);
+  outline-style: solid;
+  outline-width: var(--widthOutlineFocus);
+}
+
+button:active,
+button:disabled,
+input[type="color"]:active,
+input[type="color"]:disabled,
+input,
+meter,
+progress,
+output,
+select,
+textarea {
+  border-block-start-color: var(--colorAccentLow);
+  border-inline-start-color: var(--colorAccentLow);
+}
+
+button:active:enabled,
+input[type="color"]:active:enabled,
+input,
+meter,
+progress,
+output,
+select,
+textarea {
+  border-block-end-color: var(--colorAccentHigh);
+  border-inline-end-color: var(--colorAccentHigh);
+}
+
+button:active:enabled,
+input[type="color"]:active:enabled {
+  background-color: var(--colorButtonActiveBackgroundSolid);
+}
+
+button:hover:enabled *,
+button:focus:enabled *,
+button:active:enabled * {
+  background-color: unset;
+}
+
+button > a {
+  display: inherit;
+}
+
+input,
+meter,
+output,
+progress,
+select,
+textarea {
+  border-block-end-width: var(--widthBorderDentEnd);
+  border-block-start-width: var(--widthBorderDentStart);
+  border-inline-end-width: var(--widthBorderDentEnd);
+  border-inline-start-width: var(--widthBorderDentStart);
+  color: var(--colorAccentMax);
+  min-height: var(--lengthInputDentMin);
+  min-width: var(--lengthInputDentMin);
+}
+
+input,
+select,
+textarea {
+  background-color: var(--colorAccentUnder);
+}
+
+input:hover:enabled,
+select:hover:enabled,
+textarea:hover:enabled {
+  border-block-start-color: var(--colorInputHoverBorder);
+  border-inline-start-color: var(--colorInputHoverBorder);
+}
+
+input:focus:enabled,
+select:focus:enabled,
+textarea:focus:enabled {
+  border-block-start-color: var(--colorInputFocusBorder);
+  border-inline-start-color: var(--colorInputFocusBorder);
+}
+
+input:active:enabled,
+select:active:enabled,
+textarea:active:enabled {
+  border-block-start-color: var(--colorInputActiveBorder);
+  border-inline-start-color: var(--colorInputActiveBorder);
+}
+
+input:invalid:enabled {
+  border-block-start-color: var(--colorInputInvalidBorder);
+  border-inline-start-color: var(--colorInputInvalidBorder);
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  border-block-end-width: unset;
+  border-block-start-width: unset;
+  border-inline-end-width: unset;
+  border-inline-start-width: unset;
+  border: unset;
+  height: var(--lengthInputSwitch);
+  min-height: unset;
+  min-width: unset;
+  width: var(--lengthInputSwitch);
+}
+
+legend {
+  font-weight: bolder;
+}
+
+output {
+  background-color: var(--colorBackground);
+}
+
+select {
+  padding-block-end: var(--paddingSelect);
+  padding-block-start: var(--paddingSelect);
+}
+
+@media (prefers-color-scheme: light), print {
+  body:not(.dark) button,
+  body:not(.dark) input:disabled,
+  body:not(.dark) input[type="color"],
+  body:not(.dark) select:disabled,
+  body:not(.dark) textarea:disabled {
+    border-block-start-color: var(--colorAccentLow);
+    border-inline-start-color: var(--colorAccentLow);
+  }
+
+  body:not(.dark) button,
+  body:not(.dark) input[type="color"] {
+    border-block-end-color: var(--colorAccentHigh);
+    border-inline-end-color: var(--colorAccentHigh);
+  }
+
+  body:not(.dark) button:active,
+  body:not(.dark) button:disabled,
+  body:not(.dark) input[type="color"]:active,
+  body:not(.dark) input[type="color"]:disabled,
+  body:not(.dark) input,
+  body:not(.dark) meter,
+  body:not(.dark) progress,
+  body:not(.dark) output,
+  body:not(.dark) select,
+  body:not(.dark) textarea {
+    border-block-end-color: var(--colorAccentLow);
+    border-inline-end-color: var(--colorAccentLow);
+  }
+
+  body:not(.dark) button:active:enabled,
+  body:not(.dark) input,
+  body:not(.dark) input[type="color"]:active:enabled,
+  body:not(.dark) meter,
+  body:not(.dark) output,
+  body:not(.dark) progress,
+  body:not(.dark) select,
+  body:not(.dark) textarea {
+    border-block-start-color: var(--colorAccentHigh);
+    border-inline-start-color: var(--colorAccentHigh);
+  }
+}

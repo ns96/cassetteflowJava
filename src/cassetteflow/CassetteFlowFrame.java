@@ -1008,16 +1008,16 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             }
         });
 
-        jLabel14.setText("J-Card Template Site =>");
+        jLabel14.setText("J-Card Template =>");
 
-        jcardSiteTextField.setText("https://ed7n.github.io/jcard-template/");
+        jcardSiteTextField.setText("http://localhost:8192/jcard");
         jcardSiteTextField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jcardSiteTextFieldActionPerformed(evt);
             }
         });
 
-        jcardSiteButton.setText("View Site");
+        jcardSiteButton.setText("Open J-Card");
         jcardSiteButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jcardSiteButtonActionPerformed(evt);
@@ -3174,7 +3174,18 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         if (player != null) {
             player.stop();
         } else {
-            player = new StreamPlayer();
+            String outputMixerName = audioOutputComboBox.getSelectedItem().toString();
+            System.out.println("Mixer: " + outputMixerName);
+            
+            // get the speed factor
+            double speedFactor = 1.0; 
+            try {
+                speedFactor = Double.parseDouble(playbackSpeedTextField.getText());
+            } catch(NumberFormatException nfe) {}
+            
+            player = new StreamPlayer();    
+            player.setMixerName(outputMixerName);
+            player.setSpeedFactor(speedFactor);
         }
         
         playerThread = new Thread(new Runnable() {
@@ -4290,31 +4301,29 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     }//GEN-LAST:event_mainTabbedPaneKeyPressed
     
     /**
-     * Load the trackNum list information for side A and B here to make easier
- to create J-cards using an online template such as
- https://ed7n.github.io/jcard-template/
-     * 
+     * Load the trackNum list information for side A and B here to make easier to
+     * create J-cards using the J-Card template bundled with CassetteFlow
+     * (see the "Open J-Card" button, served from /jcard).
+     *
      * @param evt 
      */
     private void refreshTrackListButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_refreshTrackListButtonActionPerformed
+        // the side contents come from CassetteFlow so the desktop, the /jcard web
+        // app and the /api/jcard endpoint all build the same track list
         StringBuilder sb = new StringBuilder();
-        
-        if(sideAList != null) {
+
+        if (sideAList != null) {
             sb.append("SIDE A\n");
-            for (AudioInfo audioInfo : sideAList) {
-                sb.append(audioInfo.getBasicName()).append("\n");
-            }
+            sb.append(CassetteFlow.getJCardContents(sideAList)).append("\n");
             sb.append("\n\n");
         }
-        
-        if(sideBList != null) {
+
+        if (sideBList != null) {
             sb.append("SIDE B\n");
-            for (AudioInfo audioInfo : sideBList) {
-                sb.append(audioInfo.getBasicName()).append("\n");
-            }
+            sb.append(CassetteFlow.getJCardContents(sideBList));
         }
-        
-        String info = sb.toString().trim();        
+
+        String info = sb.toString().trim();
         trackListInfoTextArea.setText(info);
     }//GEN-LAST:event_refreshTrackListButtonActionPerformed
     
@@ -4325,9 +4334,16 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
      */
     private void jcardSiteTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcardSiteTextFieldActionPerformed
         try {
-            String url = jcardSiteTextField.getText();
-            
-            URI uri = new URI(url);
+            String base = jcardSiteTextField.getText().trim();
+            String tapeID = tapeIDTextField.getText().trim();
+
+            // the bundled J-Card app loads the tape's card straight away. The site
+            // field can still be pointed at another host if required.
+            if (!tapeID.isEmpty() && !base.contains("?")) {
+                base = base + "?tape=" + tapeID;
+            }
+
+            URI uri = new URI(base);
             Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
             if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
                 desktop.browse(uri);
@@ -4396,12 +4412,8 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
         try {
             jcardJSON.put("titleUpper", jcardTitleTextField.getText());
             jcardJSON.put("titleLower", jcardGroupTextField.getText());
-            
-            LocalDate currentDate = LocalDate.now();
-            int currentDay = currentDate.getDayOfMonth();
-            String currentMonth = currentDate.getMonth().toString();
-            int currentYear = currentDate.getYear();
-            String date = currentMonth + " " + currentDay + " " + currentYear;
+
+            String date = CassetteFlow.getJCardTodayNote();
             jcardJSON.put("noteLower", date);
             
             String[] sa = trackListInfoTextArea.getText().split("\n\n");

@@ -1,0 +1,230 @@
+body {
+  --lineHeight: 1.6667;
+  --lineHeight05: calc(var(--lineHeight) * 0.5);
+  --lineHeight067: calc(var(--lineHeight) * 0.6667);
+  --lineHeight075: calc(var(--lineHeight) * 0.75);
+}
+
+.banner > .title,
+h1,
+article > section p::before {
+  line-height: 1;
+}
+
+body {
+  line-height: var(--lineHeight);
+}
+
+h2 {
+  line-height: calc(var(--lineHeight) / var(--fontSizeFactorH2));
+}
+
+h3 {
+  line-height: calc(var(--lineHeight) / var(--fontSizeFactorH3));
+}
+
+pre {
+  line-height: var(--lineHeightDefault);
+}
+
+main a {
+  margin-inline-end: var(--spacerPx);
+  margin-inline-start: var(--spacerPx);
+}
+
+main blockquote {
+  padding-inline-start: var(--spacer4);
+}
+
+main details,
+main details > summary,
+main figure,
+main pre {
+  padding: var(--spacer);
+}
+
+main code,
+main kbd,
+main li.technical > :not(dl):not(ol):not(ul):first-child,
+main samp,
+main ul.technical > li > :not(dl):not(ol):not(ul):first-child {
+  padding: var(--spacer05);
+}
+
+main details,
+main figure,
+main img {
+  max-width: 100%;
+}
+
+main details,
+main figure {
+  display: flex;
+  flex-flow: column nowrap;
+  width: max-content;
+}
+
+main details img,
+main figure img {
+  align-self: start;
+}
+
+main details > summary {
+  margin: calc(-1 * var(--spacer));
+}
+
+main div.hr {
+  border: unset;
+  border-block-end-color: var(--colorAccentLow);
+  border-block-end-style: solid;
+  border-block-end-width: var(--widthBorder);
+  border-block-start-color: var(--colorAccentMin);
+  border-block-start-style: solid;
+  border-block-start-width: var(--widthBorder);
+  margin-block-end: var(--spacer);
+  margin-block-start: var(--spacer);
+}
+
+main form details {
+  width: unset;
+}
+
+main kbd > kbd,
+main kbd > samp,
+main pre kbd,
+main pre samp {
+  padding: unset;
+}
+
+main li {
+  margin-inline-start: var(--spacer4);
+}
+
+main li.anchor::before,
+main ul.anchor > li::before {
+  display: none;
+}
+
+main li.anchor > :not(dl):not(ol):not(ul):first-child > a::before,
+main ul.anchor > li > :not(dl):not(ol):not(ul):first-child > a::before {
+  font-weight: unset;
+}
+
+main li.line,
+main menu > li,
+main ul.line,
+main ul.line > li,
+main sub > a,
+main sup > a {
+  margin-inline-start: unset;
+}
+
+main li.line,
+main ul.line,
+main ul.line > li {
+  display: inline;
+}
+
+main menu {
+  display: inline-flex;
+}
+
+main sub > a,
+main sup > a {
+  margin-inline-end: unset;
+}
+
+article :target {
+  animation-fill-mode: backwards;
+  animation-name: targetHighlightFadeOut;
+  animation-timing-function: linear;
+}
+
+article > nav {
+  margin-block-start: calc(-1 * var(--spacer));
+  padding-block-start: var(--spacer);
+}
+
+article > section blockquote,
+article > section details,
+article > section dl,
+article > section figure,
+article > section form,
+article > section li,
+article > section nav,
+article > section ol,
+article > section p,
+article > section pre,
+article > section ul {
+  margin-block-end: var(--spacer3);
+}
+
+article > section blockquote > :last-child,
+article > section details > :not(summary):last-child,
+article > section details > section > :last-child,
+article > section figure > :last-child,
+article > section figure > section > :last-child,
+article > section footer p,
+article > section header p,
+article > section li.line,
+article > section menu > li,
+article > section ul.line,
+article > section ul.line > li {
+  margin-block-end: unset;
+}
+
+article > section details[open] > summary,
+article > section footer,
+article > section h3,
+article > section h4,
+article > section h5,
+article > section h6,
+article > section header {
+  margin-block-end: var(--spacer2);
+}
+
+article > section dl > dd + dt {
+  margin-block-start: var(--spacer3);
+}
+
+article > section footer p::before,
+article > section header p::before {
+  content: unset;
+  font-size: unset;
+  opacity: unset;
+}
+
+article > section header > .subtitle {
+  font-size: var(--fontSizeDent);
+  font-style: oblique;
+}
+
+article > section ol ol,
+article > section ol ul,
+article > section ul ol,
+article > section ul ul {
+  margin-block-start: var(--spacer2);
+  margin-inline-start: var(--spacer2);
+}
+
+article > section p::before {
+  content: "¶ ";
+  font-size: var(--fontSizeSmaller);
+  opacity: 0.07225;
+}
+
+article > section ul.line {
+  margin-block-start: unset;
+}
+
+@media (max-width: 319px) {
+  body {
+    --lineHeight: 1.5;
+  }
+}
+
+@keyframes targetHighlightFadeOut {
+  from {
+    background-color: var(--colorHoverBackground);
+  }
+}

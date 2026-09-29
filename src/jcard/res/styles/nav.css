@@ -1,0 +1,227 @@
+body > nav,
+nav .menu.root,
+nav .menu.root.doppelganger,
+nav .menu.foot,
+nav .menu.stem {
+  display: none;
+}
+
+nav .menu.root,
+nav .menu.root:focus-within > .menu.foot,
+nav .menu.root:focus-within > .menu.stem,
+nav .menu.leaf {
+  display: flex;
+}
+
+nav .menu.root,
+nav .menu.foot,
+nav .menu.foot > .menu.leaf:not(:last-child),
+nav .menu.stem {
+  border-inline-end-color: var(--colorAccentLow);
+  border-inline-end-style: solid;
+}
+
+nav .menu.root,
+nav .menu.foot,
+nav .menu.stem,
+nav .menu.stem > .menu.leaf:not(:last-child) {
+  border-block-end-color: var(--colorAccentLow);
+  border-block-end-style: solid;
+}
+
+nav .menu.root,
+nav .menu.foot,
+nav .menu.stem,
+nav .menu.leaf {
+  flex-wrap: nowrap;
+  min-width: max-content;
+}
+
+nav .menu.root,
+nav .menu.foot,
+nav .menu.stem {
+  background: var(--colorAccentMin);
+  border-block-end-width: var(--widthBorderBumpEnd);
+  border-block-start-color: var(--colorAccentHigh);
+  border-block-start-style: solid;
+  border-block-start-width: var(--widthBorderBumpStart);
+  border-inline-end-width: var(--widthBorderBumpEnd);
+  border-inline-start-color: var(--colorAccentHigh);
+  border-inline-start-style: solid;
+  border-inline-start-width: var(--widthBorderBumpStart);
+}
+
+nav .menu.root,
+nav .menu.stem {
+  flex-direction: column;
+}
+
+nav .menu.root,
+nav > span:first-child {
+  font-weight: bolder;
+}
+
+nav .menu.root {
+  padding: var(--spacer2);
+  user-select: none;
+  position: fixed;
+  left: 0;
+  bottom: 0;
+}
+
+nav .menu.root > .menu.foot {
+  bottom: calc(-1 * var(--widthBorderBumpEnd));
+}
+
+nav .menu.root > .menu.stem {
+  left: calc(-1 * var(--widthBorderBumpStart));
+}
+
+nav .menu.root:hover {
+  background-color: var(--colorButtonHoverBackgroundSolid);
+}
+
+nav .menu.root:focus-within > .menu.foot,
+nav .menu.root:focus-within > .menu.stem {
+  animation-duration: var(--timeSlide);
+  animation-fill-mode: forwards;
+  animation-timing-function: ease-out;
+}
+
+nav .menu.root:focus-within > .menu.foot {
+  animation-name: footSlideIn;
+}
+
+nav .menu.root:focus-within > .menu.stem {
+  animation-name: stemSlideIn;
+}
+
+nav .menu.root:focus-within + .menu.root.doppelganger {
+  display: unset;
+}
+
+nav .menu.root.doppelganger {
+  background-color: var(--colorButtonActiveBackgroundSolid);
+  border-block-end-color: var(--colorAccentHigh);
+  border-block-start-color: var(--colorAccentLow);
+  border-inline-end-color: var(--colorAccentHigh);
+  border-inline-start-color: var(--colorAccentLow);
+}
+
+nav .menu.foot,
+nav .menu.stem {
+  position: absolute;
+}
+
+nav .menu.foot,
+nav .menu.leaf {
+  flex-direction: row;
+}
+
+nav .menu.foot > .menu.leaf {
+  border-inline-end-width: var(--widthBorder);
+}
+
+nav .menu.stem {
+  z-index: 1;
+}
+
+nav .menu.stem > .menu.leaf {
+  border-block-end-width: var(--widthBorder);
+}
+
+nav .menu.leaf > a {
+  flex-grow: 1;
+  margin: unset;
+  padding-block-end: var(--spacer2);
+  padding-block-start: var(--spacer2);
+  padding-inline-end: var(--spacer4);
+  padding-inline-start: var(--spacer4);
+}
+
+nav ul.line,
+nav ul.line > li {
+  display: inline;
+}
+
+nav ul.line {
+  color: var(--colorAccentMax);
+}
+
+nav ul.line > li > a {
+  margin-inline-end: var(--spacerPx4);
+  margin-inline-start: var(--spacerPx4);
+}
+
+nav ul.line > li:not(:first-of-type)::before {
+  content: var(--splitMenuItem);
+}
+
+nav > span:first-child {
+  font-size: var(--fontSizeSmaller);
+  margin-inline-end: var(--spacer2);
+}
+
+@media (max-width: 720px) and (min-width: 320px) {
+  article > nav,
+  article > nav + div.hr {
+    display: none;
+  }
+
+  body > nav {
+    display: unset;
+  }
+}
+
+@media (prefers-color-scheme: light), print {
+  body:not(.dark) nav .menu.root,
+  body:not(.dark) nav .menu.foot,
+  body:not(.dark) nav .menu.stem {
+    border-block-end-color: var(--colorAccentHigh);
+    border-block-start-color: var(--colorAccentLow);
+    border-inline-end-color: var(--colorAccentHigh);
+    border-inline-start-color: var(--colorAccentLow);
+  }
+
+  body:not(.dark) nav .menu.root:focus-within + .menu.root.doppelganger {
+    border-block-end-color: var(--colorAccentLow);
+    border-block-start-color: var(--colorAccentHigh);
+    border-inline-end-color: var(--colorAccentLow);
+    border-inline-start-color: var(--colorAccentHigh);
+  }
+}
+
+@media print {
+  article > nav {
+    display: unset;
+  }
+
+  article > nav + div.hr {
+    /* Workaround. */
+    display: block;
+  }
+
+  body > nav {
+    display: none;
+  }
+}
+
+@keyframes footSlideIn {
+  from {
+    left: 0;
+  }
+
+  to {
+    left: 100%;
+  }
+}
+
+@keyframes stemSlideIn {
+  from {
+    bottom: 0;
+  }
+
+  to {
+    bottom: 100%;
+  }
+}

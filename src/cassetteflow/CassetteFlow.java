@@ -18,11 +18,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -63,7 +68,7 @@ import org.json.JSONObject;
  */
 public class CassetteFlow {
     // static variable that holds the application version
-    public static String VERSION = "CassetteFlow v2.5.3 (09/14/2026)";
+    public static String VERSION = "CassetteFlow v2.6.0 (09/29/2026)";
 
     // The default mp3 directory name
     public static String AUDIO_DIR_NAME = "c:\\mp3files";
@@ -116,7 +121,7 @@ public class CassetteFlow {
     public static String BAUDE_RATE = "1200";
 
     // the url for the jcard site
-    public static String JCARD_SITE = "https://ed7n.github.io/jcard-template/";
+    public static String JCARD_SITE = "http://localhost:8192/jcard";
 
     // used when running in desktop mode
     private static CassetteFlowFrame cassetteFlowFrame;
@@ -243,7 +248,7 @@ public class CassetteFlow {
             LYRA_T_HOST = properties.getProperty("lyraT.host");
             BAUDE_RATE = properties.getProperty("baude.rate", "1200");
             LOG_FILE_NAME = properties.getProperty("minimodem.log.file", "");
-            JCARD_SITE = properties.getProperty("jcard.site", "https://ed7n.github.io/jcard-template/");
+            JCARD_SITE = properties.getProperty("jcard.site", "http://localhost:8192/jcard");
 
             setDefaultAudioDirectory(properties.getProperty("audio.directory"));
         } catch (IOException e) {
@@ -890,6 +895,429 @@ public class CassetteFlow {
         }
 
         return sb.toString();
+    }
+
+    // =========================================================================
+    // J-Card data (shared by the desktop dialog and the /jcard web app)
+    // =========================================================================
+
+    /**
+     * Load the default J-Card template. This is the same template.jcard.json the
+     * desktop application loads at startup.
+     *
+     * @return a fresh copy of the template, or an empty object if it is missing
+     */
+    public JSONObject loadJCardTemplate() {
+        try {
+            String jsonText = CassetteFlowUtil.getResourceFileAsString("template.jcard.json");
+            if (jsonText != null && !jsonText.trim().isEmpty()) {
+                return new JSONObject(jsonText);
+            }
+        } catch (IOException | JSONException ex) {
+            Logger.getLogger(CassetteFlow.class.getName()).log(Level.WARNING,
+                    "Unable to read template.jcard.json", ex);
+        }
+
+        return new JSONObject();
+    }
+
+    /**
+     * The note line the desktop stamps onto a J-card, e.g. "SEPTEMBER 29 2026"
+     *
+     * @return today's date in the J-Card note format
+     */
+    public static String getJCardTodayNote() {
+        LocalDate today = LocalDate.now();
+        return today.getMonth().toString() + " " + today.getDayOfMonth() + " " + today.getYear();
+    }
+
+    /**
+     * The SIDE contents block for a list of tracks, one basic name per line. This is
+     * what the desktop "Load/Refresh" button puts in its text area.
+     *
+     * @param audioList
+     * @return the track names separated by new lines
+     */
+    public static String getJCardContents(List<AudioInfo> audioList) {
+        if (audioList == null || audioList.isEmpty()) {
+            return "";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (AudioInfo audioInfo : audioList) {
+            if (sb.length() > 0) {
+                sb.append("\n");
+            }
+            sb.append(audioInfo.getBasicName());
+        }
+
+        return sb.toString();
+    }
+
+    /**
+     * Resolve the audio records stored in the tape database for one tape side
+     *
+     * @param tapeSideKey e.g. "0042A"
+     * @return the records that exist in the audio index
+     */
+    public ArrayList<AudioInfo> getTapeSideAudioList(String tapeSideKey) {
+        ArrayList<AudioInfo> audioList = new ArrayList<>();
+
+        List<String> audioIds = tapeDB.get(tapeSideKey);
+        if (audioIds == null) {
+            return audioList;
+        }
+
+        for (String audioId : audioIds) {
+            AudioInfo audioInfo = audioInfoDB.get(audioId);
+            if (audioInfo != null) {
+                audioList.add(audioInfo);
+            }
+        }
+
+        return audioList;
+    }
+
+    /**
+     * Build the J-Card data for a tape. The desktop dialog, the /api/jcard endpoint
+     * and the bundled J-Card web app all go through this so they can never drift.
+     *
+     * @param tapeID the tape id, e.g. "0042"
+     * @param combine true to join side A and B into side A contents (CS00 style tapes)
+     * @param albumTitle optional "titleUpper" override, null keeps the tape id
+     * @param albumArtist optional "titleLower" override, null keeps the template value
+     * @param note optional "noteLower" override, null uses today's date
+     * @return the card data ready to be filled into the template
+     */
+    public JSONObject buildJCardData(String tapeID, boolean combine, String albumTitle,
+            String albumArtist, String note) {
+        JSONObject card = loadJCardTemplate();
+
+        ArrayList<AudioInfo> sideA = getTapeSideAudioList(tapeID + "A");
+        ArrayList<AudioInfo> sideB = getTapeSideAudioList(tapeID + "B");
+
+        try {
+            card.put("titleUpper", (albumTitle != null && !albumTitle.trim().isEmpty())
+                    ? albumTitle.trim() : tapeID);
+
+            if (albumArtist != null && !albumArtist.trim().isEmpty()) {
+                card.put("titleLower", albumArtist.trim());
+            }
+
+            card.put("noteLower", (note != null && !note.trim().isEmpty()) ? note.trim() : getJCardTodayNote());
+            card.put("sideALabel", "Side A");
+            card.put("sideBLabel", "Side B");
+
+            if (combine) {
+                ArrayList<AudioInfo> bothSides = new ArrayList<>(sideA);
+                bothSides.addAll(sideB);
+                card.put("sideAContents", getJCardContents(bothSides));
+                card.put("sideBContents", "");
+            } else {
+                card.put("sideAContents", getJCardContents(sideA));
+                card.put("sideBContents", getJCardContents(sideB));
+            }
+        } catch (JSONException ex) {
+            Logger.getLogger(CassetteFlow.class.getName()).log(Level.WARNING,
+                    "Unable to build the J-Card data for " + tapeID, ex);
+        }
+
+        return card;
+    }
+
+    /**
+     * Put a string value into a JSON object unless it's null or empty. Keeps the
+     * web library payload as small as possible.
+     *
+     * @param json
+     * @param key
+     * @param value
+     */
+    private static void putUnlessEmpty(JSONObject json, String key, String value) {
+        if (value == null) {
+            return;
+        }
+
+        value = value.trim();
+        if (value.isEmpty()) {
+            return;
+        }
+
+        try {
+            json.put(key, value);
+        } catch (JSONException jex) {
+            // just skip the value if it can't be added
+        }
+    }
+
+    /**
+     * Get the set of 10 character hashes for the audio files that sit directly in
+     * the default audio directory. This is the same set of files the desktop
+     * ENCODE tab lists on startup because getAudioFiles() does not recurse into
+     * sub directories. The library web app uses this to decide which tracks to
+     * show before the user starts searching, instead of trying to work it out
+     * from the file paths of each record.
+     *
+     * @return the hashes of the files in the default audio directory
+     */
+    public Set<String> getDefaultDirectoryHashes() {
+        Set<String> hashes = new HashSet<>();
+
+        if (AUDIO_DIR_NAME == null) {
+            return hashes;
+        }
+
+        try {
+            File[] files = getAudioFiles(AUDIO_DIR_NAME);
+            if (files == null) {
+                System.out.println("Default audio directory not found: " + AUDIO_DIR_NAME);
+                return hashes;
+            }
+
+            for (File file : files) {
+                hashes.add(CassetteFlowUtil.get10CharacterHash(file.getName()));
+            }
+
+            System.out.println("Default audio directory contains " + hashes.size() + " audio file(s): "
+                    + AUDIO_DIR_NAME);
+        } catch (Exception ex) {
+            Logger.getLogger(CassetteFlow.class.getName()).log(Level.WARNING,
+                    "Unable to list the default audio directory: " + AUDIO_DIR_NAME, ex);
+        }
+
+        return hashes;
+    }
+
+    /**
+     * Work out the path of an audio file relative to the audio directory so that
+     * a web client can request it from the /music endpoint
+     *
+     * @param audioInfo
+     * @return the relative path or the file name if the path can't be worked out
+     */
+    private static String getLibraryRelativePath(AudioInfo audioInfo) {
+        String relativePath = audioInfo.getRelativePath();
+
+        if (relativePath != null && !relativePath.isEmpty()) {
+            relativePath = relativePath.replace("\\", "/");
+        }
+
+        // if the relative path is missing or just the bare filename then resolve
+        // it against the root audio directory
+        if (relativePath == null || relativePath.isEmpty() || !relativePath.contains("/")) {
+            File audioFile = audioInfo.getFile();
+            if (audioFile != null && AUDIO_DIR_NAME != null) {
+                try {
+                    Path rootPath = Paths.get(AUDIO_DIR_NAME).toAbsolutePath().normalize();
+                    Path filePath = audioFile.toPath().toAbsolutePath().normalize();
+                    if (filePath.startsWith(rootPath) && !filePath.equals(rootPath)) {
+                        relativePath = rootPath.relativize(filePath).toString().replace("\\", "/");
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+        }
+
+        if (relativePath == null || relativePath.isEmpty()) {
+            relativePath = audioInfo.getSdCardFilename();
+        }
+
+        if (relativePath == null || relativePath.isEmpty()) {
+            File audioFile = audioInfo.getFile();
+            relativePath = (audioFile != null) ? audioFile.getName() : "";
+        }
+
+        return relativePath;
+    }
+
+    /**
+     * Get the audio database as a JSON string. Unlike the tab delimited audio db
+     * text file this includes the tag based meta data (title, artist, album,
+     * genre, year) that the web based track finder needs to replicate the
+     * desktop Track Finder dialog.
+     *
+     * The result is a few MB for a large library so it should be built on demand
+     * and compressed by the caller.
+     *
+     * @return the audio database as a JSON string
+     */
+    public String getAudioInfoDBAsJSON() {
+        JSONObject root = new JSONObject();
+        JSONArray tracks = new JSONArray();
+
+        // the files sitting in the default audio directory, which is what the web
+        // app lists before the user searches for anything
+        Set<String> defaultDirHashes = getDefaultDirectoryHashes();
+
+        // audioInfoDB holds two keys for most files: the current relative path based
+        // hash plus an alias of the older filename based hash that is kept so that
+        // tapes recorded with the old hashes still resolve. Both keys point at the
+        // same AudioInfo instance (see buildAudioFileIndex) and AudioInfo does not
+        // override equals so keying on the object groups the hashes of one file.
+        Map<AudioInfo, List<String>> hashesByFile = new LinkedHashMap<>();
+
+        for (String key : audioInfoDB.keySet()) {
+            AudioInfo audioInfo = audioInfoDB.get(key);
+            if (audioInfo == null) {
+                continue;
+            }
+
+            List<String> hashes = hashesByFile.get(audioInfo);
+            if (hashes == null) {
+                hashes = new ArrayList<>();
+                hashesByFile.put(audioInfo, hashes);
+            }
+            hashes.add(key);
+        }
+
+        // Then collapse the files that describe the same track, which is what the
+        // desktop Track Finder does (it keys its search list on AudioInfo.getName()).
+        // Files that share a name in different folders collapse here as well, exactly
+        // like the desktop, but all of their hashes are kept as aliases so no tape
+        // record becomes unresolvable.
+        Map<String, AudioInfo> representativeByName = new LinkedHashMap<>();
+        Map<String, List<String>> hashesByName = new LinkedHashMap<>();
+
+        for (Map.Entry<AudioInfo, List<String>> entry : hashesByFile.entrySet()) {
+            AudioInfo audioInfo = entry.getKey();
+            String name = audioInfo.getName();
+
+            List<String> hashes = hashesByName.get(name);
+            if (hashes == null) {
+                hashes = new ArrayList<>();
+                hashesByName.put(name, hashes);
+                representativeByName.put(name, audioInfo);
+            } else {
+                // prefer whichever record still has a playable file
+                AudioInfo kept = representativeByName.get(name);
+                if (kept.getFile() == null && audioInfo.getFile() != null) {
+                    representativeByName.put(name, audioInfo);
+                }
+            }
+
+            for (String hash : entry.getValue()) {
+                if (!hashes.contains(hash)) {
+                    hashes.add(hash);
+                }
+            }
+        }
+
+        // report one entry per displayed track, in a stable order
+        Map<AudioInfo, List<String>> filesToReport = new LinkedHashMap<>();
+        List<String> names = new ArrayList<>(hashesByName.keySet());
+        names.sort(String::compareToIgnoreCase);
+        for (String name : names) {
+            filesToReport.put(representativeByName.get(name), hashesByName.get(name));
+        }
+
+        int count = 0;
+        int streamCount = 0;
+
+        for (Map.Entry<AudioInfo, List<String>> entry : filesToReport.entrySet()) {
+            AudioInfo audioInfo = entry.getKey();
+            List<String> hashes = entry.getValue();
+            String primaryHash = choosePrimaryHash(audioInfo, hashes);
+
+            try {
+                JSONObject track = new JSONObject();
+
+                File audioFile = audioInfo.getFile();
+                String fileName = (audioFile != null) ? audioFile.getName() : audioInfo.getTitle();
+
+                putUnlessEmpty(track, "id", primaryHash);
+                putUnlessEmpty(track, "name", fileName);
+                putUnlessEmpty(track, "title", audioInfo.getTitle());
+                putUnlessEmpty(track, "artist", audioInfo.getArtist());
+                putUnlessEmpty(track, "album", audioInfo.getAlbum());
+                putUnlessEmpty(track, "genre", audioInfo.getGenre());
+                putUnlessEmpty(track, "year", audioInfo.getYear());
+                putUnlessEmpty(track, "lengthAsTime", audioInfo.getLengthAsTime());
+                putUnlessEmpty(track, "file", getLibraryRelativePath(audioInfo));
+                putUnlessEmpty(track, "sd", audioInfo.getSdCardFilename());
+                putUnlessEmpty(track, "url", audioInfo.getUrl());
+
+                track.put("length", audioInfo.getLength());
+                track.put("bitrate", audioInfo.getBitRate());
+
+                // records with no file are stream/title only entries, they cannot be
+                // played from the /music endpoint so the web app marks them
+                track.put("noFile", audioInfo.getFile() == null);
+
+                // a file is in the default directory when one of its hashes is the
+                // filename hash of a file listed in the default directory, which is
+                // how the desktop builds its startup list
+                boolean inDefaultDir = false;
+                for (String hash : hashes) {
+                    if (defaultDirHashes.contains(hash)) {
+                        inDefaultDir = true;
+                        break;
+                    }
+                }
+                track.put("root", inDefaultDir);
+
+                // keep the older hashes so tape records written with them still resolve
+                if (hashes.size() > 1) {
+                    JSONArray aliases = new JSONArray();
+                    for (String hash : hashes) {
+                        if (!hash.equals(primaryHash)) {
+                            aliases.put(hash);
+                        }
+                    }
+                    track.put("ids", aliases);
+                }
+
+                tracks.put(track);
+                count++;
+                if (audioInfo.getFile() == null) {
+                    streamCount++;
+                }
+            } catch (JSONException jex) {
+                System.out.println("Error Creating Library Record For: " + primaryHash);
+            }
+        }
+
+        try {
+            root.put("version", 3);
+            root.put("generated", System.currentTimeMillis() / 1000L);
+            root.put("sourceDir", (AUDIO_DIR_NAME != null) ? AUDIO_DIR_NAME : "");
+            root.put("defaultDirCount", defaultDirHashes.size());
+            root.put("count", count);
+            root.put("noFileCount", streamCount);
+            root.put("indexKeys", audioInfoDB.size());
+            root.put("tracks", tracks);
+        } catch (JSONException jex) {
+            Logger.getLogger(CassetteFlow.class.getName()).log(Level.SEVERE, null, jex);
+        }
+
+        System.out.println("Library JSON: " + count + " rows (" + streamCount
+                + " without a file) from " + audioInfoDB.size() + " index keys");
+
+        return root.toString();
+    }
+
+    /**
+     * Pick the hash to report a file under. The relative path based hash is the
+     * current scheme so it wins, the other hashes are the older filename based
+     * aliases that remain in the database so old tape records still resolve.
+     *
+     * @param audioInfo
+     * @param hashes every hash that maps to this audio info object
+     * @return the hash to use as the primary id
+     */
+    private static String choosePrimaryHash(AudioInfo audioInfo, List<String> hashes) {
+        if (hashes.size() == 1) {
+            return hashes.get(0);
+        }
+
+        String relativePath = getLibraryRelativePath(audioInfo);
+        if (relativePath != null && !relativePath.isEmpty()) {
+            String currentHash = CassetteFlowUtil.get10CharacterHash(relativePath);
+            if (hashes.contains(currentHash)) {
+                return currentHash;
+            }
+        }
+
+        return hashes.get(0);
     }
 
     /**

@@ -73,6 +73,7 @@ The CassetteFlow desktop interface is organized into distinct workflow tabs:
   * Generates formatted J-Card cassette inserts matching the exact tracklist, timings, and tape side distributions.
   * Integrates with J-Card templates for clean printing and cassette jewel case inserts.
   * Exports tracklist and tape configurations to JSON and text formats (`template.jcard.json`, `tracklist.txt`).
+  * `Open J-Card` opens the J-Card template app bundled with CassetteFlow (`/jcard?tape=<id>`) with that tape's sides already filled in, and `Save Template` downloads the same `.jcard.json` for offline use. See [6.2 Bundled J-Card Template](#62-bundled-j-card-template-jcard).
 
 ---
 
@@ -196,6 +197,14 @@ CassetteFlow includes a high-performance, multithreaded embedded HTTP server (`C
 |---|---|---|---|
 | `/player` | `GET` | `text/html` | Serves the single-page CassetteFlow Web Player |
 | `/player.html` | `GET` | `text/html` | Web player alias |
+| `/library` | `GET` | `text/html` | Serves the **Library & Tape Builder** web app (web version of the ENCODE tab, playback only) |
+| `/library.html`, `/encode` | `GET` | `text/html` | Library app aliases |
+| `/api/library` | `GET` | `application/json` (gzip) | Audio library with tag metadata (`id`, `ids`, `name`, `title`, `artist`, `album`, `genre`, `year`, `length`, `lengthAsTime`, `bitrate`, `file`, `sd`, `root`, `noFile`). `audioInfoDB` stores most files under **two** hashes — the current relative-path hash plus an alias of the older filename hash kept for backward compatibility — so the endpoint **collapses each file into one row** (same rule as the desktop Track Finder) and returns the extra hashes in `ids` so old tape records still resolve. `root` marks files in the default audio directory, `noFile` marks stream/title-only records with no playable file, and `indexKeys` reports the raw hash count. Gzipped when the client sends `Accept-Encoding: gzip` |
+| `/api/tapedb` | `POST` | `application/json` | Stores a tape record into `tapedb.txt`. Body: `{"tapeId":"0042","sideA":["hash",…],"sideB":[…],"overwrite":false,"backup":true}`. Returns `400` (bad tape id / unknown hash), `409` (record exists and `overwrite` is false) or `200` with the written record keys |
+| `/jcard/template` | `GET` | `application/json` | The default J-Card template — the same `template.jcard.json` the desktop application loads |
+| `/jcard`, `/jcard/` | `GET` | `text/html` | Serves the **bundled J-Card Template** web app (vendored from [ed7n/jcard-template](https://github.com/ed7n/jcard-template), BSD 2-Clause). Add `?tape=0042` (optionally `&combine=1`, `&title=…`, `&artist=…`) to open it with that tape's card already filled in, or `?data=<base64url json>` to pass a card built by another page |
+| `/jcard/res/**`, `/jcard/cf-bridge.js` | `GET` | CSS/JS/fonts/images | The vendored J-Card assets and the CassetteFlow bridge that fills the card in |
+| `/api/jcard?tape=0042[&combine=1][&title=…][&artist=…]` | `GET` | `application/json` | The J-Card data for a tape: template fields plus `titleUpper`, `titleLower`, `noteLower`, `sideALabel`, `sideBLabel`, `sideAContents`, `sideBContents`. Returns `400` when no tape id is supplied |
 | `/music/*` | `GET`, `HEAD` | Audio (`audio/mpeg`, `audio/flac`, etc.) | **HTTP 206 Partial Content** audio stream supporting byte-range scrubbing and seek (`Range: bytes=start-end`) |
 | `/music?id=<hash>` | `GET` | Audio | Streams audio track resolved directly by 10-character hash |
 | `/raw` | `GET` | `text/plain` (Chunked) | Real-time persistent stream of raw decoded FSK line records |
@@ -229,6 +238,39 @@ Access the player by navigating to `http://localhost:8192/player` (or `http://<s
    * **Modem SNR**: Live carrier SNR in dB.
    * **Decode Errors**: Displays `errors / total_records` (e.g. `0 / 142`).
 6. **Built-in Terminal**: Live scrollable terminal logging every incoming raw FSK line record, side auto-flips, and drift adjustments.
+
+---
+
+## 6.1 Library & Tape Builder (`library.html`)
+
+Access it at `http://localhost:8192/library`. This is the web equivalent of the desktop **ENCODE** tab, but for **audio playback only** — it does not perform any FSK encoding, DCT creation or waveform generation.
+
+### Library & Tape Builder Features
+1. **Track List**: On load it lists only the audio files sitting in the **default audio directory** (same as the desktop ENCODE tab) instead of the whole index, so the list stays short and fast. `Default` reloads that directory list, `Filter` narrows it by substring and `Clear` empties the working list.
+2. **Find Dialog**: Searches the complete audio index by Title, Artist, Genre, Album, Year or Folder with an `ALL`/`MP3`/`FLAC` format filter, a metadata preview pane and `View All` grouping (artist/genre/album/year/folder). `Add To Track List` **appends** the results to the working list (duplicates are skipped) and leaves the dialog open so several searches can be added in a row.
+3. **Side A / Side B Builder**: `Add`, `Remove`, `Remove All`, `Shuffle` (fills the side up to the selected tape length, skipping tracks already on the other side), `Move Up` / `Move Down` and `Check` for duplicate detection. The `Play Time` label turns red with `*** Max Time Exceeded ***` when a side is too long.
+4. **Playback**: `Play` plays the selected library track, `Play Side` plays a whole side in order and honours the `Mute (s)` setting as a countdown gap between tracks. **Clicking another file in the track list while audio is already playing switches to it immediately** (same behaviour as the desktop `audioJListValueChanged`); Ctrl/Shift-click only builds a selection and does not interrupt playback. Playback uses `/music` byte-range streaming and reports Now Playing to `/playing`.
+5. **View Tape DB Dialog**: Browse and filter `tapedb.txt` records, preview both sides (including tracklist sub-tracks for long mixes) with total play time, optionally `Combine A&B`, then `Load Tape` into the builder.
+6. **Store Dialog**: Writes the current Side A/B into `tapedb.txt` via `POST /api/tapedb`, with overwrite confirmation, `tapedb.txt.bak` backup and automatic refresh of the tape list.
+7. **J-Card Dialog**: The web version of the desktop "Copy/Export Track List" tab. `Load/Refresh` builds the `SIDE A` / `SIDE B` list from the current sides using each track's basic name (`AudioInfo.getBasicName()`), `Open Template` loads an existing `.jcard.json` as the base, `Save Template` fills in `titleUpper` / `titleLower` / `noteLower` (today's date) plus `sideAContents` / `sideBContents` and downloads the pretty printed JSON, and **`Open J-Card` launches the J-Card template app that ships with CassetteFlow** with the card already loaded.
+   * `Open J-Card` passes the card to `/jcard?data=<base64url json>`; the bundled app reads no card data from its query string, so a small bridge injects it and the card renders ready to print — no file dialog, no internet connection. See [6.2 Bundled J-Card Template](#62-bundled-j-card-template-jcard).
+
+> The browser caches `audiodb.txt`/`tapedb.txt` and the library JSON in IndexedDB, so reloads are instant; press `⟳`-style reload (`Default` or a forced refresh) after re-indexing the music library.
+
+---
+
+## 6.2 Bundled J-Card Template (`/jcard`)
+
+Open `http://localhost:8192/jcard` for the J-Card template app, or `http://localhost:8192/jcard?tape=0042` to have tape `0042` already filled in. Both the library app (`Open J-Card`) and the desktop J-Card tab (`Open J-Card`) point here, so neither needs the public site or a manual file round trip any more.
+
+* **Offline**: every asset the page needs — stylesheets, module scripts and fonts — is served by CassetteFlow from `src/jcard/`, so the page renders and prints with no internet connection and sends nothing to a third party.
+* **How the card gets in**: upstream accepts no card data via URL. CassetteFlow serves the page with `window.CF_JCARD_DATA` (built by `CassetteFlow.buildJCardData(…)`) and a `<base href="/jcard/">`, then `/jcard/cf-bridge.js` fills the app's own form entries and refreshes the card. `?data=<base64url json>` is the equivalent for a card built elsewhere (the library dialog).
+* **`/api/jcard?tape=…`** returns the same JSON for scripts, e.g. `curl "http://localhost:8192/api/jcard?tape=0010"`.
+* **`combine=1`** joins side A and B into a single side, matching the desktop `Combine A&B` option.
+
+### Credits and licence
+
+The bundled app (`src/jcard/`, everything under `res/`) is a **verbatim copy** of [ed7n/jcard-template](https://github.com/ed7n/jcard-template) at commit `ffa66b7`, with only three changes (relative stylesheet paths, and the *Switch Interface* and *Offline Access/PWA* sections removed). See `src/jcard/VENDOR.md` for the full provenance, the licence breakdown (**BSD 2-Clause** for the app and the freeware font, **CC BY-SA 4.0** for the six EDEN Online portal stylesheets copied in for offline use) and the re-sync procedure (`tools/fetch-jcard.ps1`).
 
 ---
 
@@ -292,6 +334,11 @@ DCT0A_01_aaaaaaaaaa_0945_0945
 audio.directory=C\:\\mp3files
 baud.rate=1200
 download.server=http\://192.168.1.45/~pi/mp3/
-jcard.site=https\://ed7n.github.io/jcard-template/
+jcard.site=http\://localhost\:8192/jcard
 minimodem.log.file=C\:\\mp3files\\TapeFiles\\tape.log
 ```
+
+| Key | Purpose |
+|---|---|
+| `audio.directory` | Where the audio files and the `audiodb`/`tapedb`/`tracklist` databases live |
+| `jcard.site` | Base URL the desktop `Open J-Card` button opens (the tape id is appended as `?tape=<id>`). Defaults to the bundled app at `http\://localhost\:8192/jcard`; set it to another host to use a different J-Card template |

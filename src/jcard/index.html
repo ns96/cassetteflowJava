@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="author" content="Brendon" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="description" content="Printable in-browser template for cassette tape J-cards." />
+    <meta name="viewport" content="initial-scale=1.0, width=device-width" />
+    <link rel="icon" href="res/media/favicon.png" />
+    <link rel="stylesheet" href="res/styles/base.css" />
+    <link rel="stylesheet" href="res/styles/layout.css" />
+    <title>J-Card Template</title>
+    <link rel="stylesheet" href="res/styles/application.css" />
+    <meta name="application-name" content="J-Card Template" />
+  </head>
+  <body>
+    <div class="curtain" style="
+background-color: #0f0f0f;
+color: #efefef;
+display: flex;
+flex-flow: column wrap;
+font-weight: bold;
+letter-spacing: 0.125em;
+justify-content: center;
+text-align: center;
+z-index: 9;
+position: fixed;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;">
+      <span>"J-CARD TEMPLATE"</span>
+    </div>
+    <main>
+      <article>
+<link rel="stylesheet" href="res/styles/input.css" />
+<link rel="stylesheet" href="res/styles/form.css" />
+<link rel="stylesheet" href="res/styles/view.css" />
+<link rel="stylesheet" href="res/styles/jcard.css" />
+<script type="module" src="res/scripts/main.js"></script>
+<section></section>
+<section>
+  <section></section>
+  <section id="template">
+<div id="output">
+  <div id="jcard">
+    <div class="template printable">
+      <div class="template-boundaries">
+        <div class="template-bleed printable-bleed"></div>
+        <div class="template-crop printable-crop"></div>
+      </div>
+      <div class="template-fold-1 printable-fold"></div>
+      <div class="template-fold-2 printable-fold"></div>
+      <div class="template-back">
+        <div class="template-side-a-label template-foreground"></div>
+        <div class="template-side-a-contents template-foreground"></div>
+        <div class="template-side-b-label template-foreground"></div>
+        <div class="template-side-b-contents template-foreground"></div>
+      </div>
+      <div class="template-spine">
+        <div class="template-spine-title-group">
+          <div class="template-spine-title-upper template-foreground"></div>
+          <div class="template-spine-title-lower template-foreground"></div>
+        </div>
+        <div class="template-note-group">
+          <div class="template-note-upper template-foreground"></div>
+          <div class="template-note-lower template-foreground"></div>
+        </div>
+      </div>
+      <div class="template-front">
+        <img class="template-cover template-foreground" src="" alt="Cover Image" />
+        <div class="template-front-group">
+          <div class="template-front-title-group">
+            <div class="template-front-title-upper template-foreground"></div>
+            <div class="template-front-title-lower template-foreground"></div>
+          </div>
+          <div class="template-contents template-foreground"></div>
+          <div class="template-footer template-foreground"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+  <section>
+<link rel="stylesheet" href="res/styles/nav.css" />
+<nav>
+  <span>Menu:</span><ul class="line"><li
+>[<a href="#form"
+>Form</a>]</li><li
+>[<a href="#print"
+>Print</a>]</li><li
+>[<a href="#load"
+>Load</a>]</li><li
+>[<a href="#save"
+>Save</a>]</li><li
+>[<a href="#more"
+>More</a>]</li></ul>
+</nav>
+<div class="hr"></div>
+    <section>
+<section id="form">
+<header>
+  <h2>Form</h2>
+  <div class="hr"></div>
+</header>
+<form>
+<section>
+<div class="group">
+  <div class="field switch" id="field-short-back">
+    <div class="input">
+      <input id="input-short-back" type="checkbox" />
+    </div>
+    <label for="input-short-back">Short back</label>
+  </div>
+  <div class="field switch" id="field-force-caps">
+    <div class="input">
+      <input id="input-force-caps" type="checkbox" />
+    </div>
+    <label for="input-force-caps">Force CAPS</label>
+  </div>
+  <div class="field switch" id="field-short-spine">
+    <div class="input">
+      <input id="input-short-spine" type="checkbox" />
+    </div>
+    <label for="input-short-spine">Short spine</label>
+  </div>
+</div>
+<div class="group">
+  <div class="field switch" id="field-reverse">
+    <div class="input">
+      <input id="input-reverse" type="checkbox" />
+    </div>
+    <label for="input-reverse">Reverse</label>
+  </div>
+  <div class="field switch" id="field-bold">
+    <div class="input">
+      <input id="input-bold" type="checkbox" />
+    </div>
+    <label class="bolder" for="input-bold">Bold</label>
+  </div>
+  <div class="field switch" id="field-italicize">
+    <div class="input">
+      <input id="input-italicize" type="checkbox" />
+    </div>
+    <label class="oblique" for="input-italicize">Italicize</label>
+  </div>
+</div>
+<div class="field row" id="field-font-family">
+  <label for="input-font-family">Font family:</label>
+  <div class="input fluid">
+    <input id="input-font-family" type="text" list="list-font-family" maxlength="1023" />
+    <datalist id="list-font-family">
+      <option>Alte Haas Grotesk</option>
+      <option>cursive</option>
+      <option>emoji</option>
+      <option>fangsong</option>
+      <option>fantasy</option>
+      <option>math</option>
+      <option>monospace</option>
+      <option>sans-serif</option>
+      <option>serif</option>
+    </datalist>
+  </div>
+</div>
+<div class="field row" id="field-card-color">
+  <label for="input-card-color">Card color:</label>
+  <div class="input shorter">
+    <input id="input-card-color" type="color" />
+  </div>
+</div>
+<div class="field row" id="field-text-color">
+  <label for="input-text-color">Text color:</label>
+  <div class="input shorter">
+    <input id="input-text-color" type="color" />
+  </div>
+</div>
+</section>
+<details>
+<summary><h3>Cover</h3></summary>
+<section>
+<div class="field row" id="field-cover-image">
+  <label for="input-cover-image">Image:</label>
+  <div class="input fluid">
+    <input id="input-cover-image" type="file" accept="image/*" />
+    <button id="button-cover-reset" type="button">Reset</button>
+  </div>
+</div>
+<div class="field row small" id="field-fill-cover">
+  <label for="input-fill-cover">Fill cover:</label>
+  <div class="input">
+    <input id="input-fill-cover" type="checkbox" />
+  </div>
+</div>
+<div class="field row small" id="field-cover-height-factor">
+  <label for="input-cover-height-factor">Height (×):</label>
+  <div class="input shorter">
+    <input id="input-cover-height-factor" type="number" min="0" max="1" step="0.01" />
+  </div>
+</div>
+</section>
+<section>
+  <p><sup>+</sup>Cover images must be saved separately.</p>
+</section>
+</details>
+<details open>
+<summary><h3>Titles</h3></summary>
+<section>
+<div class="field row" id="field-title-upper">
+  <label for="input-title-upper">Upper text:</label>
+  <div class="input fluid">
+    <input class="follow-font-family" id="input-title-upper" type="text" maxlength="1023" />
+  </div>
+</div>
+<div class="field row" id="field-title-lower">
+  <label for="input-title-lower">Lower text:</label>
+  <div class="input fluid">
+    <input class="follow-font-family" id="input-title-lower" type="text" maxlength="1023" />
+  </div>
+</div>
+<div class="field row" id="field-title-upper-size">
+  <label for="input-title-upper-size">Upper size:</label>
+  <div class="input shorter">
+    <input id="input-title-upper-size" type="number" min="0" max="1023" step="0.1" />
+  </div>
+</div>
+<div class="field row" id="field-title-lower-size">
+  <label for="input-title-lower-size">Lower size:</label>
+  <div class="input shorter">
+    <input id="input-title-lower-size" type="number" min="0" max="1023" step="0.1" />
+  </div>
+</div>
+</section>
+<section>
+<h4>Front Output</h4>
+<div class="field row small" id="field-front-title-visible">
+  <label for="input-front-title-visible">Enable:</label>
+  <div class="input">
+    <input id="input-front-title-visible" type="checkbox" />
+  </div>
+</div>
+<div class="field row small" id="field-front-title-alignment">
+  <label for="input-front-title-alignment">Alignment:</label>
+  <div class="input shorter">
+    <select id="input-front-title-alignment">
+      <option value="left">Left</option>
+      <option value="center">Center</option>
+      <option value="right">Right</option>
+    </select>
+  </div>
+</div>
+</section>
+<section>
+<h4>Spine Output</h4>
+<div class="field row small" id="field-spine-title-visible">
+  <label for="input-spine-title-visible">Enable:</label>
+  <div class="input">
+    <input id="input-spine-title-visible" type="checkbox" />
+  </div>
+</div>
+<div class="field row small" id="field-spine-title-alignment">
+  <label for="input-spine-title-alignment">Alignment:</label>
+  <div class="input shorter">
+    <select id="input-spine-title-alignment">
+      <option value="left">Left</option>
+      <option value="center">Center</option>
+      <option value="right">Right</option>
+    </select>
+  </div>
+</div>
+</section>
+</details>
+<details>
+<summary><h3>Footer</h3></summary>
+<div class="field row" id="field-footer">
+  <label for="input-footer">Text:</label>
+  <div class="input fluid">
+    <textarea class="follow-font-family" id="input-footer" maxlength="8191"></textarea>
+  </div>
+</div>
+<div class="field row" id="field-footer-size">
+  <label for="input-footer-size">Size:</label>
+  <div class="input shorter">
+    <input id="input-footer-size" type="number" min="0" max="1023" step="0.1" />
+  </div>
+</div>
+<div class="field row" id="field-footer-alignment">
+  <label for="input-footer-alignment">Alignment:</label>
+  <div class="input shorter">
+    <select id="input-footer-alignment">
+      <option value="left">Left</option>
+      <option value="center">Center</option>
+      <option value="right">Right</option>
+      <option value="justify">Justify</option>
+    </select>
+  </div>
+</div>
+</details>
+<details>
+<summary><h3>Notes</h3></summary>
+<div class="field row" id="field-note-upper">
+  <label for="input-note-upper">Upper text:</label>
+  <div class="input fluid">
+    <input class="follow-font-family" id="input-note-upper" type="text" maxlength="1023" />
+  </div>
+</div>
+<div class="field row" id="field-note-lower">
+  <label for="input-note-lower">Lower text:</label>
+  <div class="input fluid">
+    <input class="follow-font-family" id="input-note-lower" type="text" maxlength="1023" />
+  </div>
+</div>
+<div class="field row" id="field-note-size">
+  <label for="input-note-size">Size:</label>
+  <div class="input shorter">
+    <input id="input-note-size" type="number" min="0" max="1023" step="0.1" />
+  </div>
+</div>
+<div class="field row" id="field-note-alignment">
+  <label for="input-note-alignment">Alignment:</label>
+  <div class="input shorter">
+    <select id="input-note-alignment">
+      <option value="left">Left</option>
+      <option value="center">Center</option>
+      <option value="right">Right</option>
+    </select>
+  </div>
+</div>
+</details>
+<details>
+<summary><h3>Contents</h3></summary>
+<section>
+<div class="field row" id="field-side-a-label">
+  <label for="input-side-a-label">Side A label:</label>
+  <div class="input fluid">
+    <input class="follow-font-family" id="input-side-a-label" type="text" maxlength="1023" />
+  </div>
+</div>
+<div class="field row" id="field-side-a-contents">
+  <label for="input-side-a-contents">Side A items:</label>
+  <div class="input fluid">
+    <textarea class="follow-font-family" id="input-side-a-contents" rows="5" maxlength="8191"></textarea>
+  </div>
+</div>
+<div class="field row" id="field-side-b-label">
+  <label for="input-side-b-label">Side B label:</label>
+  <div class="input fluid">
+    <input class="follow-font-family" id="input-side-b-label" type="text" maxlength="1023" />
+  </div>
+</div>
+<div class="field row" id="field-side-b-contents">
+  <label for="input-side-b-contents">Side B items:</label>
+  <div class="input fluid">
+    <textarea class="follow-font-family" id="input-side-b-contents" rows="5" maxlength="8191"></textarea>
+  </div>
+</div>
+<div class="field row" id="field-contents-separator">
+  <label for="input-contents-separator">Item split:</label>
+  <div class="input shorter">
+    <input class="follow-font-family" id="input-contents-separator" type="text" maxlength="1023" />
+  </div>
+</div>
+</section>
+<section>
+<h4>Front Output</h4>
+<div class="field row small" id="field-front-contents-visible">
+  <label for="input-front-contents-visible">Enable:</label>
+  <div class="input">
+    <input id="input-front-contents-visible" type="checkbox" />
+  </div>
+</div>
+<div class="field row small" id="field-front-size">
+  <label>Size:</label>
+  <div class="input shorter">
+    <input id="input-front-size" type="number" min="0" max="1023" step="0.1" />
+  </div>
+</div>
+<div class="field row small" id="field-front-contents">
+  <label for="input-front-contents-alignment">Alignment:</label>
+  <div class="input shorter">
+    <select id="input-front-contents-alignment">
+      <option value="left">Left</option>
+      <option value="center">Center</option>
+      <option value="right">Right</option>
+      <option value="justify">Justify</option>
+    </select>
+  </div>
+</div>
+</section>
+<section>
+<h4>Back Output</h4>
+<div class="field row small" id="field-back-contents-visible">
+  <label for="input-back-contents-visible">Enable:</label>
+  <div class="input">
+    <input id="input-back-contents-visible" type="checkbox" />
+  </div>
+</div>
+<div class="field row small" id="field-back-size">
+  <label>Size:</label>
+  <div class="input shorter">
+    <input id="input-back-size" type="number" min="0" max="1023" step="0.1" />
+  </div>
+</div>
+<div class="field row small" id="field-back-contents">
+  <label for="input-back-contents-alignment">Alignment:</label>
+  <div class="input shorter">
+    <select id="input-back-contents-alignment">
+      <option value="left">Left</option>
+      <option value="center">Center</option>
+      <option value="right">Right</option>
+      <option value="justify">Justify</option>
+    </select>
+  </div>
+</div>
+</section>
+</details>
+</form>
+</section>
+<section id="print">
+<header>
+  <h2>Print</h2>
+  <div class="hr"></div>
+</header>
+<form>
+  <p>Adjust the setup to your preference, then tap <samp>Print…</samp>. We
+recommended double-checking the print preview, if any.</p>
+  <div class="group">
+    <div class="field column small" id="field-print-start">
+      <label for="input-print-start">Start:</label>
+      <div class="input short">
+        <input id="input-print-start" type="number" min="1" max="128" />
+      </div>
+    </div>
+    <div class="field column small" id="field-print-count">
+      <label for="input-print-count">Count:</label>
+      <div class="input short">
+        <input id="input-print-count" type="number" min="1" max="128" />
+      </div>
+    </div>
+    <div class="field column small" id="field-print-margin">
+      <label for="input-print-margin">Margin:</label>
+      <div class="input short">
+        <select id="input-print-margin">
+          <option value="whole">Whole</option>
+          <option value="half">Half</option>
+          <option value="variable">Variable</option>
+        </select>
+      </div>
+    </div>
+    <div class="field column small" id="field-print-opacity">
+      <label for="input-print-opacity">Opacity:</label>
+      <div class="input short">
+        <input id="input-print-opacity" type="number" min="0" max="1" step="0.01" />
+      </div>
+    </div>
+    <div class="field switch" id="field-print-outline">
+      <div class="input">
+        <input id="input-print-outline" type="checkbox" />
+      </div>
+      <label for="input-print-outline">Outline</label>
+    </div>
+  </div>
+  <p><i>Printouts are limited to one (1) page.</i></p>
+  <div class="field row" id="field-print">
+    <div class="input shorter">
+      <button id="button-print" type="button">Print…</button>
+    </div>
+  </div>
+</form>
+</section>
+<section id="load">
+<header>
+  <h2>Load</h2>
+  <div class="hr"></div>
+</header>
+<form>
+  <section>
+    <p>Provide the JSON file containing J-card data. It was provided with the
+<code>.jcard.json</code> file name extension.</p>
+    <div class="field column" id="field-load-file">
+      <label for="input-load-file">JSON file:</label>
+      <div class="input fluid">
+        <input id="input-load-file" type="file" />
+      </div>
+    </div>
+    <p><i>You will be prompted for unsaved changes.</i></p>
+    <div class="field row" id="field-load">
+      <div class="input shorter">
+        <button id="button-load" type="button">Load</button>
+      </div>
+    </div>
+  </section>
+  <section>
+    <details>
+      <summary><h3>Cover Image</h3></summary>
+      <p>You can also load it here. It will appear on the template
+automatically.</p>
+      <div class="field row" id="field-load-cover">
+        <label for="input-load-cover">Upload cover:</label>
+        <div class="input fluid">
+          <input id="input-load-cover" type="file" accept="image/*" />
+        </div>
+      </div>
+    </details>
+  </section>
+</form>
+</section>
+<section id="save">
+<header>
+  <h2>Save</h2>
+  <div class="hr"></div>
+</header>
+<form>
+  <section>
+    <p>This saves the J-card data into JSON text as a file download. Form fields
+whose label is marked with a plus (+) are excluded from the process.</p>
+    <div class="field column" id="field-save-name">
+      <label for="input-save-name">File name:</label>
+      <div class="input fluid">
+        <input id="input-save-name" type="text" maxlength="244" />
+        <div class="field switch" id="field-save-follow">
+          <div class="input">
+            <input id="input-save-follow" type="checkbox" />
+          </div>
+          <label for="input-save-follow">Follow titles</label>
+        </div>
+      </div>
+    </div>
+    <p><i>No data will be sent to any server.</i></p>
+    <div class="field row" id="field-save">
+      <div class="input shorter">
+        <button id="button-save" type="button">Save</button>
+      </div>
+    </div>
+  </section>
+  <section>
+    <details>
+      <summary><h3>Cover Image</h3></summary>
+      <p>You can also save it here.</p>
+      <div class="field row" id="field-save-cover">
+        <div class="input shorter">
+          <button id="button-save-cover" type="button">Download Cover</button>
+        </div>
+      </div>
+    </details>
+  </section>
+</form>
+</section>
+<section id="more">
+<header>
+  <h2>More</h2>
+  <div class="hr"></div>
+</header>
+<form>
+<section>
+  <div class="field row" id="field-view-accordions">
+    <label>Accordions:</label>
+    <div class="input shorter">
+      <button id="button-view-collapse" type="button">Collapse</button>
+      <button id="button-view-expand" type="button">Expand</button>
+    </div>
+  </div>
+  <p>Controls all collapsible fieldsets.</p>
+</section>
+<details>
+<summary><h3>View</h3></summary>
+<section>
+  <div class="field switch" id="field-view-force-dark">
+    <div class="input">
+      <input id="input-view-force-dark" type="checkbox" />
+    </div>
+    <label for="input-view-force-dark">Force dark</label>
+  </div>
+  <p>Forces the dark color scheme.</p>
+</section>
+<section>
+  <div class="field switch" id="field-view-reverse">
+    <div class="input">
+      <input id="input-view-reverse" type="checkbox" />
+    </div>
+    <label for="input-view-reverse">Reverse panels</label>
+  </div>
+  <p>Swaps the horizontal position of the output and control panels.</p>
+</section>
+</details>
+<details>
+<summary><h3>Application</h3></summary>
+<section>
+  <div class="field row" id="field-application-font-size-factor-invert">
+    <label for="input-application-font-size-factor-invert">Font size factor:</label>
+    <div class="input short">
+      <span>1 /&nbsp;</span>
+      <input id="input-application-font-size-factor-invert" type="number" min="0.5" max="2" step="0.01" />
+      <span>× 100%</span>
+    </div>
+  </div>
+  <p>Adjust the font size factor to match the below two figures.</p>
+  <img class="mono" loading="lazy" src="res/media/font-size-test.png" alt="12 pt Alte Haas Grotesk" />
+  <figure id="font-size-test">
+    <span>12 pt Alte Haas Grotesk</span>
+  </figure>
+</section>
+<section>
+  <div class="field switch" id="field-application-ecc">
+    <div class="input">
+      <input id="input-application-ecc" type="checkbox" />
+    </div>
+    <label for="input-application-ecc">Enable ECC</label>
+  </div>
+  <p>Disabled by default, Event Condensing Coalescer (ECC) is a resource-saving
+technology that condenses duplicate bursts of some input events into one at the
+cost of output latency.</p>
+</section>
+</details>
+<details>
+<summary><h3>Help</h3></summary>
+<p>Edit the [<a href="#form">form</a>] to update the template, then [<a href=
+"#print">print</a>] this page when finished, or [<a href="#save">save</a>] it
+for later.</p>
+<p>Font sizes are measured in points (pt). <samp>Short back</samp> is 0.6 in,
+<samp>Short spine</samp> is 0.4 in.</p>
+<p>For more usage information, see [<a class="out" rel="noreferrer" target="_blank" href="https://ed7n.github.io/net/jcard-template/usage"
+>Using J-Card Template</a>].</p>
+<p>Need help with the print shop? You can read [<a class="out" rel="noreferrer" target="_blank" href="https://ed7n.github.io/net/jcard-template/print-shop"
+>our guide</a>].</p>
+<p><i>Print 2</i> has been removed. However, loading an older J-card data file
+with it enabled sets the print <samp>Count</samp> to 2.</p>
+</details>
+<details>
+<summary><h3>About</h3></summary>
+<pre>J-Card Template u2r4 by Brendon, 04/04/2023.
+—Printable in-browser template for cassette tape J-cards.</pre>
+<p>Changes made to it are logged to [<a class="out" rel="noreferrer" target="_blank" href="https://github.com/ed7n/jcard-template/raw/master/CHANGES"
+>CHANGES</a>].</p>
+<p>This work was based on the [<a class="out" rel="noreferrer" target="_blank" href="https://unixispower.gitlab.io/jcard-template"
+>original version</a>] by Blaine Murphy.</p>
+<p>Finally, <i>thanks to all who wrote to me--you know who you are.</i></p>
+</details>
+</form>
+</section>
+<section>
+        <div class="hr"></div>
+        <p><i>Built on <span class="bolder">NET</span> technology.</i></p>
+<nav>
+  <span>Jump:</span><ul class="line"><li
+>[<a class="out" rel="noreferrer" target="_blank" href="https://ed7n.github.io/net/jcard-template"
+>Home</a>]</li><li
+>[<a class="out" rel="noreferrer" target="_blank" href="https://ed7n.github.io/pages/privacy"
+>Privacy</a>]</li><li
+>[<a class="out" rel="noreferrer" target="_blank" href="https://brendonirwan.github.io/pages/contact"
+>Contact</a>]</li></ul>
+</nav>
+      </section>
+    </section>
+<nav>
+  <div class="menu root" tabindex="0">
+    <label>≡ Menu</label>
+    <div class="menu stem" role="menu">
+      <div class="menu leaf" role="menuitem">
+        <a href="#form">Form</a>
+      </div>
+      <div class="menu leaf" role="menuitem">
+        <a href="#print">Print</a>
+      </div>
+      <div class="menu leaf" role="menuitem">
+        <a href="#load">Load</a>
+      </div>
+      <div class="menu leaf" role="menuitem">
+        <a href="#save">Save</a>
+      </div>
+      <div class="menu leaf" role="menuitem">
+        <a href="#more">More</a>
+      </div>
+    </div>
+    <div class="menu foot" role="menu">
+      <div class="menu leaf" role="menuitem">
+        <a tabindex="0" title="Back" onclick="history.back()">&lt;</a>
+      </div>
+      <div class="menu leaf" role="menuitem">
+        <a class="icon" title="Top" href="#top">⇱</a>
+      </div>
+      <div class="menu leaf" role="menuitem">
+        <a tabindex="0" title="Forward" onclick="history.forward()">&gt;</a>
+      </div>
+    </div>
+  </div>
+  <div class="menu root doppelganger" tabindex="0">
+    <label>≡ Menu</label>
+  </div>
+</nav>
+  </section>
+</section>
+<section></section>
+      </article>
+    </main>
+  </body>
+</html>

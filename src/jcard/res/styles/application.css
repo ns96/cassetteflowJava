@@ -1,0 +1,63 @@
+body {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+body,
+main,
+article {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: column;
+}
+
+body > :not(main),
+article > :not(section),
+article > section:first-of-type,
+article > section:last-of-type {
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+body > header,
+body > footer,
+article > header {
+  padding-inline-end: var(--spacer2);
+  padding-inline-start: var(--spacer2);
+}
+
+body > header,
+article > header {
+  padding-block-end: var(--spacer2);
+  padding-block-start: 1%;
+}
+
+body > footer {
+  padding-block-end: 1%;
+  padding-block-start: var(--spacer2);
+}
+
+main,
+article,
+article > section:not(:first-of-type):not(:last-of-type) {
+  flex-grow: 1;
+  flex-shrink: 1;
+}
+
+article :target {
+  animation-delay: 1.5s;
+  animation-duration: 1s;
+}
+
+article > section:empty {
+  display: none;
+}
+
+@media print {
+  body {
+    position: unset;
+  }
+}

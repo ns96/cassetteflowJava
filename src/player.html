@@ -820,7 +820,7 @@
       </div>
       <div class="status-badge">
         <div id="statusDot" class="status-dot"></div>
-        <span id="statusText">M5: Offline</span>
+        <span id="statusText">Offline</span>
       </div>
     </div>
   </header>
@@ -2894,7 +2894,7 @@
             statusDot.className = 'status-dot active';
             const bat = d.bat ?? d.param_bat;
             const batText = (bat !== undefined && bat >= 0) ? ` (🔋 ${bat}%)` : '';
-            statusText.textContent = `CFS / M5Core: Online${batText}`;
+            statusText.textContent = `Online${batText}`;
 
             if (statLabel1) statLabel1.textContent = 'Baud Rate';
             if (statLabel2) statLabel2.textContent = 'Speed Error';

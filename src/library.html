@@ -1,0 +1,3344 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>CassetteFlow Library &amp; Tape Builder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #090d13;
+      --bg-surface: #131922;
+      --bg-card: rgba(22, 29, 41, 0.75);
+      --bg-card-active: rgba(30, 41, 59, 0.9);
+      --border-subtle: rgba(240, 246, 252, 0.08);
+      --border-focus: rgba(88, 166, 255, 0.45);
+      --text-main: #f0f6fc;
+      --text-muted: #8b949e;
+      --accent-blue: #58a6ff;
+      --accent-cyan: #39c5bb;
+      --accent-green: #3fb950;
+      --accent-amber: #d29922;
+      --accent-red: #f85149;
+      --accent-purple: #bc8cff;
+      --tape-gold: #e3b341;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --mini-bar-h: 62px;
+      --bottom-bar-h: 60px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: radial-gradient(circle at 50% -20%, #1a2538 0%, var(--bg-dark) 80%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: calc(var(--mini-bar-h) + var(--bottom-bar-h));
+    }
+
+    /* ---------- Top App Header ---------- */
+    header {
+      background: rgba(9, 13, 19, 0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      font-size: 22px;
+      filter: drop-shadow(0 0 8px var(--tape-gold));
+    }
+
+    .brand h1 {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      background: linear-gradient(90deg, #fff, var(--accent-blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .status-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent-red);
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+
+    .status-dot.connected {
+      background: var(--accent-green);
+      box-shadow: 0 0 8px var(--accent-green);
+    }
+
+    .desktop-nav {
+      display: flex;
+      gap: 6px;
+    }
+
+    @media (max-width: 768px) {
+      .desktop-nav {
+        display: none;
+      }
+    }
+
+    .nav-btn {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+
+    .nav-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .nav-btn.active {
+      color: var(--accent-blue);
+      background: rgba(88, 166, 255, 0.12);
+      border-color: rgba(88, 166, 255, 0.25);
+    }
+
+    /* ---------- Main & Cards ---------- */
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 1500px;
+      margin: 0 auto;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .card-title .count {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--accent-cyan);
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .toolbar-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-row .grow {
+      flex: 1;
+      min-width: 180px;
+    }
+
+    .toolbar-sep {
+      width: 1px;
+      align-self: stretch;
+      background: var(--border-subtle);
+      margin: 0 4px;
+    }
+
+    .field-inline {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    /* ---------- Form Controls ---------- */
+    .form-input,
+    .form-select {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 9px 11px;
+      color: #fff;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      width: 100%;
+    }
+
+    .form-input:focus,
+    .form-select:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.12);
+    }
+
+    .form-select.compact,
+    .form-input.compact {
+      padding: 6px 8px;
+      font-size: 12px;
+    }
+
+    .form-input.mono {
+      font-family: var(--font-mono);
+    }
+
+    .input-tiny {
+      width: 76px;
+    }
+
+    .input-mini {
+      width: 58px;
+    }
+
+    .input-small {
+      width: 120px;
+    }
+
+    .btn-action {
+      background: linear-gradient(135deg, #1f6feb 0%, #1158c7 100%);
+      border: 1px solid #388bfd;
+      color: #fff;
+      padding: 9px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn-action:active {
+      transform: scale(0.98);
+    }
+
+    .btn-action:disabled,
+    .btn-secondary:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.11);
+    }
+
+    .btn-secondary.accent {
+      color: var(--accent-blue);
+      border-color: rgba(88, 166, 255, 0.35);
+      background: rgba(88, 166, 255, 0.1);
+    }
+
+    .btn-secondary.danger {
+      color: var(--accent-red);
+      border-color: rgba(248, 81, 73, 0.35);
+      background: rgba(248, 81, 73, 0.08);
+    }
+
+    .btn-secondary.gold {
+      color: var(--tape-gold);
+      border-color: rgba(227, 179, 65, 0.35);
+      background: rgba(227, 179, 65, 0.08);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    /* ---------- Split layout ---------- */
+    .split {
+      display: grid;
+      grid-template-columns: minmax(340px, 1fr) minmax(340px, 1fr);
+      gap: 14px;
+      align-items: start;
+    }
+
+    @media (max-width: 1000px) {
+      .split {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ---------- Virtual list ---------- */
+    .vlist {
+      position: relative;
+      overflow-y: auto;
+      overflow-x: hidden;
+      height: 460px;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      background: rgba(0, 0, 0, 0.22);
+      contain: strict;
+    }
+
+    .vlist-spacer {
+      width: 1px;
+    }
+
+    .vlist-win {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      will-change: transform;
+    }
+
+    .track-item {
+      display: grid;
+      grid-template-columns: 34px 1fr 62px;
+      align-items: center;
+      padding: 0 10px;
+      border-radius: 6px;
+      background: transparent;
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-size: 12.5px;
+      transition: background 0.12s;
+      user-select: none;
+    }
+
+    .track-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .track-item.selected {
+      background: rgba(88, 166, 255, 0.16);
+      border-color: var(--border-focus);
+    }
+
+    .track-item.playing {
+      background: rgba(57, 197, 187, 0.14);
+      border-color: rgba(57, 197, 187, 0.45);
+    }
+
+    .track-item.played {
+      opacity: 0.55;
+    }
+
+    .track-item .idx {
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      font-size: 10.5px;
+    }
+
+    .track-item.selected .idx {
+      color: var(--accent-blue);
+      font-weight: 700;
+    }
+
+    .track-item.playing .idx {
+      color: var(--accent-cyan);
+      font-weight: 700;
+    }
+
+    .track-item .name {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding-right: 8px;
+    }
+
+    .track-item .dur {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: var(--text-muted);
+      text-align: right;
+    }
+
+    .side-list {
+      height: 340px;
+      overflow-y: auto;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      background: rgba(0, 0, 0, 0.22);
+      padding: 4px;
+    }
+
+    .side-list .track-item {
+      grid-template-columns: 34px 1fr 62px;
+      height: 30px;
+    }
+
+    .empty-note {
+      color: var(--text-muted);
+      font-size: 12px;
+      text-align: center;
+      padding: 24px 12px;
+      font-style: italic;
+    }
+
+    /* ---------- Tabs (Side A / Side B) ---------- */
+    .tabs {
+      display: flex;
+      gap: 6px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      font-family: var(--font-sans);
+      font-size: 12.5px;
+      font-weight: 700;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s;
+    }
+
+    .tab-btn.active {
+      color: var(--accent-blue);
+      background: rgba(88, 166, 255, 0.14);
+      border-color: rgba(88, 166, 255, 0.35);
+    }
+
+    .tab-btn .badge {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 10px;
+      padding: 1px 7px;
+    }
+
+    .play-time {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--accent-cyan);
+    }
+
+    .play-time.over {
+      color: var(--accent-red);
+      font-weight: 700;
+    }
+
+    .gap-note {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: var(--accent-amber);
+      min-height: 16px;
+    }
+
+    /* ---------- Now playing ---------- */
+    .now-block {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .now-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .now-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+      width: 0%;
+      border-radius: 4px;
+      transition: width 0.12s ease-out;
+    }
+
+    .ctrl-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: #fff;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .ctrl-btn:active {
+      transform: scale(0.92);
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .ctrl-btn.play-main {
+      width: 44px;
+      height: 44px;
+      font-size: 17px;
+      background: linear-gradient(135deg, #1f6feb 0%, #1158c7 100%);
+      border-color: #388bfd;
+      box-shadow: 0 4px 16px rgba(31, 111, 235, 0.4);
+    }
+
+    /* ---------- Persistent Mini Player Bar ---------- */
+    .mini-player-bar {
+      position: fixed;
+      bottom: var(--bottom-bar-h);
+      left: 0;
+      right: 0;
+      background: rgba(19, 25, 34, 0.96);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border-subtle);
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      z-index: 90;
+    }
+
+    .mini-player-bar .times {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    /* ---------- Bottom Mobile Navigation ---------- */
+    .bottom-tab-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: var(--bottom-bar-h);
+      background: rgba(9, 13, 19, 0.96);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 100;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      flex: 1;
+      height: 100%;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: color 0.15s;
+      font-size: 10px;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+    }
+
+    .tab-item .tab-icon {
+      font-size: 18px;
+    }
+
+    .tab-item.active {
+      color: var(--accent-blue);
+    }
+
+    /* Mobile view switching: only one pane visible at a time */
+    @media (max-width: 768px) {
+      main {
+        padding: 10px;
+      }
+
+      .vlist {
+        height: 52vh;
+      }
+
+      .pane {
+        display: none;
+      }
+
+      .pane.mobile-active {
+        display: flex;
+      }
+    }
+
+    @media (min-width: 769px) {
+      .pane {
+        display: flex;
+      }
+    }
+
+    /* ---------- J-Card ---------- */
+    .jcard-contents {
+      height: 300px;
+      white-space: pre;
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      line-height: 1.45;
+      resize: vertical;
+    }
+
+    /* ---------- Modals ---------- */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 7, 11, 0.75);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+
+    .modal.visible {
+      display: flex;
+    }
+
+    .modal-card {
+      background: linear-gradient(180deg, rgba(24, 32, 45, 0.99) 0%, rgba(17, 23, 32, 0.99) 100%);
+      border: 1px solid rgba(240, 246, 252, 0.14);
+      border-radius: var(--radius-md);
+      width: 100%;
+      max-width: 940px;
+      max-height: 92vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+      overflow: hidden;
+    }
+
+    .modal-card.small {
+      max-width: 560px;
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .modal-head .sub {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .modal-body {
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow: auto;
+    }
+
+    .modal-foot {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.25);
+    }
+
+    .modal-split {
+      display: grid;
+      grid-template-columns: minmax(240px, 340px) 1fr;
+      gap: 12px;
+      min-height: 320px;
+    }
+
+    @media (max-width: 800px) {
+      .modal-split {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .list-box {
+      position: relative;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      background: rgba(0, 0, 0, 0.25);
+      overflow-y: auto;
+      height: 340px;
+      padding: 4px;
+    }
+
+    .list-box.tall {
+      height: 400px;
+    }
+
+    .list-col {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .info-box {
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      background: rgba(0, 0, 0, 0.25);
+      padding: 10px 12px;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      line-height: 1.55;
+      color: var(--text-main);
+      overflow: auto;
+      height: 340px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .info-box.tall {
+      height: 400px;
+    }
+
+    .grp-row {
+      display: grid;
+      grid-template-columns: 1fr 62px;
+      align-items: center;
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12.5px;
+    }
+
+    .grp-row:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .grp-row.selected {
+      background: rgba(88, 166, 255, 0.16);
+      border: 1px solid var(--border-focus);
+    }
+
+    .grp-row .cnt {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: var(--text-muted);
+      text-align: right;
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12.5px;
+      color: var(--text-main);
+    }
+
+    .checkbox-row input {
+      accent-color: var(--accent-blue);
+      width: 15px;
+      height: 15px;
+    }
+
+    /* ---------- Log + Toast ---------- */
+    .log-box {
+      background: #06090e;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      max-height: 120px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .term-t {
+      color: #555;
+    }
+
+    .term-raw {
+      color: #7ee787;
+    }
+
+    .term-map {
+      color: #79c0ff;
+      font-weight: 600;
+    }
+
+    .term-err {
+      color: #ff7b72;
+      font-weight: 600;
+    }
+
+    .term-warn {
+      color: #d29922;
+    }
+
+    #toastBox {
+      position: fixed;
+      right: 16px;
+      bottom: calc(var(--mini-bar-h) + var(--bottom-bar-h) + 14px);
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-width: 420px;
+    }
+
+    .toast {
+      background: rgba(22, 29, 41, 0.98);
+      border: 1px solid var(--border-subtle);
+      border-left: 3px solid var(--accent-blue);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      font-size: 12.5px;
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.5);
+      animation: fadeIn 0.18s ease-out;
+      word-break: break-word;
+    }
+
+    .toast.ok {
+      border-left-color: var(--accent-green);
+    }
+
+    .toast.warn {
+      border-left-color: var(--accent-amber);
+    }
+
+    .toast.err {
+      border-left-color: var(--accent-red);
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Audio Element -->
+  <audio id="audioPlayer" preload="auto"></audio>
+
+  <!-- Top App Header -->
+  <header>
+    <div class="brand">
+      <span class="brand-icon">📼</span>
+      <h1>CassetteFlow Library</h1>
+    </div>
+
+    <div class="header-status">
+      <div id="dbStatusBadge" class="status-badge" style="color: var(--accent-cyan);"><span>📁 Loading DBs…</span></div>
+      <div class="status-badge">
+        <div id="statusDot" class="status-dot"></div>
+        <span id="statusText">Offline</span>
+      </div>
+      <nav class="desktop-nav">
+        <a class="nav-btn active" href="/library"><span>📚</span> Library</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ---------- Toolbar ---------- -->
+    <div class="card" id="toolbarCard">
+      <div class="toolbar-row">
+        <input type="text" id="filterInput" class="form-input grow mono" placeholder="Filter library…  (Enter to filter, Esc to clear)">
+        <button id="defaultBtn" class="btn-secondary">Default</button>
+        <button id="filterBtn" class="btn-secondary">Filter</button>
+        <button id="findBtn" class="btn-secondary accent">🔎 Find</button>
+        <div class="toolbar-sep"></div>
+        <span class="field-inline">ID <input type="text" id="tapeIdInput" class="form-input compact mono input-tiny" value="0010" maxlength="10"></span>
+        <span class="field-inline">Tape
+          <select id="tapeLengthSelect" class="form-select compact"></select>
+        </span>
+        <span class="field-inline">Mute <input type="number" id="muteInput" class="form-input compact mono input-mini" value="4" min="0" max="60"> s</span>
+        <div class="toolbar-sep"></div>
+        <button id="openTapeDbBtn" class="btn-secondary">🗃 View Tape DB</button>
+        <button id="openJCardBtn" class="btn-secondary">🏷 J-Card</button>
+        <button id="openStoreBtn" class="btn-secondary gold">💾 Store</button>
+      </div>
+    </div>
+
+    <!-- ---------- Library / Sides ---------- -->
+    <div class="split">
+
+      <!-- Library pane -->
+      <div class="card pane mobile-active" id="libraryPane" data-view="library">
+        <div class="card-title">
+          <span>📚 Library</span>
+          <span id="libraryCount" class="count">0 audio files loaded</span>
+        </div>
+        <div id="libraryList" class="vlist"></div>
+        <div id="libraryEmptyNote" class="empty-note" style="display:none;"></div>
+        <div class="btn-row">
+          <button id="playBtn" class="btn-action">▶ Play</button>
+          <button id="stopBtn" class="btn-secondary">⏹ Stop</button>
+          <button id="unselectBtn" class="btn-secondary">Unselect</button>
+          <button id="clearBtn" class="btn-secondary">Clear</button>
+          <button id="addBtn" class="btn-secondary accent" style="margin-left:auto;">＋ Add</button>
+        </div>
+      </div>
+
+      <!-- Sides pane -->
+      <div class="card pane" id="sidesPane" data-view="sides">
+        <div class="tabs">
+          <button class="tab-btn active" id="tabA" data-side="A">SIDE A <span class="badge" id="badgeA">0</span></button>
+          <button class="tab-btn" id="tabB" data-side="B">SIDE B <span class="badge" id="badgeB">0</span></button>
+        </div>
+
+        <div class="btn-row">
+          <button id="removeBtn" class="btn-secondary">✖ Remove</button>
+          <button id="removeAllBtn" class="btn-secondary danger">🗑 Remove All</button>
+          <button id="shuffleBtn" class="btn-secondary">🔀 Shuffle</button>
+          <button id="moveUpBtn" class="btn-secondary">⬆ Move Up</button>
+          <button id="moveDownBtn" class="btn-secondary">⬇ Move Down</button>
+          <button id="checkBtn" class="btn-secondary">☑ Check</button>
+        </div>
+
+        <div id="sideAList" class="side-list"></div>
+        <div id="sideBList" class="side-list" style="display:none;"></div>
+
+        <div class="toolbar-row">
+          <span id="playTimeLabel" class="play-time">Play Time: 00:00:00</span>
+          <span id="gapLabel" class="gap-note" style="margin-left:auto;"></span>
+        </div>
+
+        <div class="btn-row">
+          <button id="playSideBtn" class="btn-action">▶ Play Side A</button>
+        </div>
+      </div>
+
+      <!-- Player pane removed with the Player tab; the mini player bar is the only transport -->
+    </div>
+
+    <!-- ---------- Activity log ---------- -->
+    <div class="card">
+      <div class="card-title">
+        <span>Activity</span>
+        <button id="clearLogBtn" class="btn-secondary">Clear</button>
+      </div>
+      <div id="logBox" class="log-box"></div>
+    </div>
+
+  </main>
+
+  <!-- ---------- Mini Player Bar ---------- -->
+  <div class="mini-player-bar">
+    <button id="miniPlayBtn" class="ctrl-btn play-main">▶</button>
+    <div class="now-block">
+      <div id="nowTitle" class="now-title">No Track Playing</div>
+      <div class="progress-bar" id="progressBar">
+        <div id="progressFill" class="progress-fill"></div>
+      </div>
+    </div>
+    <span id="nowTimes" class="times">00:00 / 00:00</span>
+    <button id="miniPrevBtn" class="ctrl-btn">⏮</button>
+    <button id="miniNextBtn" class="ctrl-btn">⏭</button>
+  </div>
+
+  <!-- ---------- Bottom Mobile Tabs ---------- -->
+  <nav class="bottom-tab-bar">
+    <button class="tab-item active" data-view="library"><span class="tab-icon">📚</span><span>Library</span></button>
+    <button class="tab-item" data-view="sides"><span class="tab-icon">📼</span><span>Sides</span></button>
+    <button class="tab-item" data-view="tapedb"><span class="tab-icon">🗃</span><span>Tape DB</span></button>
+    <button class="tab-item" data-view="jcard"><span class="tab-icon">🏷</span><span>J-Card</span></button>
+    <button class="tab-item" data-view="find"><span class="tab-icon">🔎</span><span>Find</span></button>
+  </nav>
+
+  <!-- ---------- Tape DB Modal ---------- -->
+  <div class="modal" id="tapeDbModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <span>🗃 Tape Database <span class="sub" id="tapeDbFileLabel">tapedb.txt</span></span>
+        <span class="sub" id="tapeDbCount">0 tapes</span>
+      </div>
+      <div class="modal-body">
+        <div class="toolbar-row">
+          <input type="text" id="tapeDbFilter" class="form-input grow mono" placeholder="Filter tapes… (e.g. 0042 or CS)">
+        </div>
+        <div class="modal-split">
+          <div id="tapeDbListBox" class="list-box"></div>
+          <div class="list-box" id="tapeDbPreviewBox">
+            <div class="empty-note">Select a tape record to preview its tracks</div>
+          </div>
+        </div>
+        <div class="toolbar-row">
+          <span id="tapeDbTotal" class="play-time">Play Time: 00:00:00</span>
+          <label class="checkbox-row" style="margin-left:auto;">
+            <input type="checkbox" id="combineSidesCheck"> Combine A&amp;B
+          </label>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button id="loadTapeBtn" class="btn-action">📥 Load Tape</button>
+        <button id="tapeDbStoreBtn" class="btn-secondary gold">💾 Store current tape</button>
+        <button id="tapeDbCloseBtn" class="btn-secondary" style="margin-left:auto;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ---------- Find Modal ---------- -->
+  <div class="modal" id="findModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <span>🔎 Find Tracks</span>
+        <span class="sub" id="findFoundLabel">Found: 0</span>
+      </div>
+      <div class="modal-body">
+        <div class="toolbar-row">
+          <span class="field-inline">Search By
+            <select id="findSearchBy" class="form-select compact input-small">
+              <option>Title</option>
+              <option>Artist</option>
+              <option>Genre</option>
+              <option>Album</option>
+              <option>Year</option>
+              <option>Folder</option>
+            </select>
+          </span>
+          <input type="text" id="findTerm" class="form-input grow mono" placeholder="Search term…">
+          <span class="field-inline">Format
+            <select id="findFormat" class="form-select compact input-tiny">
+              <option>ALL</option>
+              <option>MP3</option>
+              <option>FLAC</option>
+            </select>
+          </span>
+          <button id="findSearchBtn" class="btn-action">🔎 Search</button>
+          <button id="findViewAllBtn" class="btn-secondary">View All</button>
+        </div>
+        <div class="modal-split">
+          <div class="list-col">
+            <div id="findResultsBox" class="list-box"></div>
+            <div id="findGroupsBox" class="list-box" style="display:none;"></div>
+          </div>
+          <div id="findInfoBox" class="info-box"></div>
+        </div>
+        <div class="toolbar-row">
+          <span id="findStatusLabel" class="play-time"></span>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button id="findAddBtn" class="btn-action">＋ Add To Track List</button>
+        <button id="findUnselectBtn" class="btn-secondary">Unselect</button>
+        <button id="findCloseBtn" class="btn-secondary" style="margin-left:auto;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ---------- Store Modal ---------- -->
+  <div class="modal" id="storeModal">
+    <div class="modal-card small">
+      <div class="modal-head">
+        <span>💾 Store Tape Record</span>
+      </div>
+      <div class="modal-body">
+        <div class="info-box" id="storeSummary" style="height:auto; max-height:none;"></div>
+        <div id="storeExistsRow" style="display:none;">
+          <div class="checkbox-row">Existing record found:
+            <label class="checkbox-row"><input type="radio" name="overwrite" id="overwriteYes" checked> Overwrite</label>
+            <label class="checkbox-row"><input type="radio" name="overwrite" id="overwriteNo"> Keep existing</label>
+          </div>
+        </div>
+        <label class="checkbox-row"><input type="checkbox" id="backupCheck" checked> Write backup tapedb.txt.bak before saving</label>
+        <label class="checkbox-row"><input type="checkbox" id="refreshCheck" checked> Update the tape list after storing</label>
+      </div>
+      <div class="modal-foot">
+        <button id="storeConfirmBtn" class="btn-action">💾 Store</button>
+        <button id="storeCancelBtn" class="btn-secondary" style="margin-left:auto;">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ---------- J-Card Modal ---------- -->
+  <div class="modal" id="jcardModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <span>🏷 J-Card <span class="sub" id="jcardTemplateLabel">template.jcard.json</span></span>
+        <span class="sub">Side A / Side B track list for the bundled J-Card template</span>
+      </div>
+      <div class="modal-body">
+        <div class="toolbar-row">
+          <span class="field-inline">Album Title
+            <input type="text" id="jcardTitle" class="form-input compact" style="width: 220px" value="Album Title">
+          </span>
+          <span class="field-inline">Album Artist
+            <input type="text" id="jcardGroup" class="form-input compact" style="width: 220px" value="Album Artist">
+          </span>
+          <span class="field-inline">Note
+            <input type="text" id="jcardNote" class="form-input compact mono" style="width: 170px">
+          </span>
+        </div>
+        <div class="toolbar-row">
+          <button id="jcardRefreshBtn" class="btn-secondary accent">🔄 Load/Refresh</button>
+          <button id="jcardOpenBtn" class="btn-secondary">📂 Open Template</button>
+          <button id="jcardSaveBtn" class="btn-action">💾 Save Template</button>
+          <button id="jcardWebBtn" class="btn-secondary accent">🌐 Open J-Card</button>
+          <span id="jcardStatus" class="play-time" style="margin-left:auto;"></span>
+        </div>
+        <textarea id="jcardContents" class="form-input jcard-contents" spellcheck="false"
+          placeholder="SIDE A&#10;track one&#10;track two&#10;&#10;SIDE B&#10;track three"></textarea>
+        <input type="file" id="jcardFileInput" accept=".json,application/json" style="display:none;">
+      </div>
+      <div class="modal-foot">
+        <span style="font-size: 11px; color: var(--text-muted);">
+          <strong>Open J-Card</strong> launches the J-Card template app bundled with CassetteFlow
+          (<code>/jcard</code>) with this card already loaded; <em>Save Template</em> downloads the
+          <code>.jcard.json</code> for the desktop app.
+        </span>
+        <button id="jcardCloseBtn" class="btn-secondary" style="margin-left:auto;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastBox"></div>
+
+  <script>
+    // =========================================================================
+    // CassetteFlow Library & Tape Builder
+    // Web equivalent of the desktop ENCODE tab (audio playback only, no FSK).
+    // =========================================================================
+
+    // --- Default tape lengths, same values as the desktop combo box ---
+    const TAPE_LENGTHS = [
+      { label: '60 Minutes', minutes: 60 },
+      { label: '90 Minutes', minutes: 90 },
+      { label: '110 Minutes', minutes: 110 },
+      { label: '120 Minutes', minutes: 120 },
+      { label: '150 Minutes (R2R)', minutes: 150 },
+      { label: '160 Minutes (R2R)', minutes: 160 },
+      { label: '180 Minutes (R2R)', minutes: 180 },
+      { label: '240 Minutes (R2R)', minutes: 240 },
+      { label: '360 Minutes (R2R)', minutes: 360 },
+      { label: '44 Minutes (Vinyl)', minutes: 44 }
+    ];
+
+    const RECORD_LIMIT = 5000; // desktop TrackFinderFrame record limit
+    const PREVIEW_LIMIT = 100; // desktop devault preview size for view all
+
+    // Bump when the shape of /api/library changes so browsers holding an older
+    // payload in IndexedDB always refetch instead of showing stale counts.
+    const LIBRARY_CACHE_VERSION = 3;
+    const LIBRARY_CACHE_KEY = 'library_json_v' + LIBRARY_CACHE_VERSION;
+
+    // --- State ---
+    const state = {
+      serverBaseUrl: getInitialServerUrl(),
+      library: [],            // the complete audio index, used by Find and the tape db
+      libById: new Map(),
+      defaultTracks: [],      // the files sitting in the default audio directory
+      trackList: [],          // the working list displayed in the library panel
+      libraryView: [],        // the working list after the filter has been applied
+      libraryFiltered: false,
+      librarySource: '',      // where the library JSON came from (/api/library or audiodb.txt)
+      indexKeys: 0,           // raw audioInfoDB key count (files + legacy hash aliases)
+      noFileCount: 0,         // records in the index that have no playable file
+      sideA: [],
+      sideB: [],
+      activeSide: 'A',
+      sideSelection: { A: new Set(), B: new Set() },
+      librarySelection: new Set(),
+      libraryAnchor: null,
+      tapeDB: new Map(),
+      tracklistDB: new Map(),
+      tapeId: localStorage.getItem('lib_tape_id') || '0010',
+      tapeLengthMinutes: parseInt(localStorage.getItem('lib_tape_length') || '60', 10),
+      mutePadding: parseInt(localStorage.getItem('lib_mute') || localStorage.getItem('cfg_mute_padding') || '4', 10),
+      mode: null,              // null | 'library' | 'side'
+      playingSide: null,       // 'A' | 'B'
+      playQueue: [],
+      playIndex: -1,
+      gapTimer: null,
+      gapRemaining: 0,
+      selectedTapeKey: null,
+      findResults: [],
+      findSelection: new Set(),
+      findAnchor: null,
+      findViewAll: false,
+      findViewAllGroups: null,
+      selectedGroups: new Set(),
+      dbFromCache: false
+    };
+
+    // --- DOM refs ---
+    const $ = (id) => document.getElementById(id);
+    const audio = $('audioPlayer');
+    audio.crossOrigin = 'anonymous';
+
+    const logBox = $('logBox');
+    const toastBox = $('toastBox');
+    const progressBar = $('progressBar');
+    const progressFill = $('progressFill');
+
+    // =========================================================================
+    // Helpers
+    // =========================================================================
+    function getInitialServerUrl() {
+      const saved = localStorage.getItem('cfg_server_url');
+      if (window.location.port === '8192') {
+        return window.location.origin + '/music/';
+      }
+      if (saved && saved.trim() && saved.trim() !== '/music/') {
+        return saved.trim();
+      }
+      return saved && saved.trim() ? saved.trim() : 'http://pi86.sytes.net:8080/music/';
+    }
+
+    function getInitialHost() {
+      const saved = localStorage.getItem('cfg_m5_host');
+      if (saved !== null && saved.trim()) return saved.trim();
+      if (window.location.port === '8192') return '';
+      if (window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        return window.location.origin;
+      }
+      return 'http://192.168.1.241';
+    }
+
+    function formatTime(s) {
+      s = Math.max(0, Math.floor(s || 0));
+      const h = Math.floor(s / 3600);
+      const m = Math.floor((s % 3600) / 60);
+      const sec = s % 60;
+      if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+      return `${m}:${String(sec).padStart(2, '0')}`;
+    }
+
+    function formatTimeHours(s) {
+      s = Math.max(0, Math.floor(s || 0));
+      const h = Math.floor(s / 3600);
+      const m = Math.floor((s % 3600) / 60);
+      const sec = s % 60;
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+    }
+
+    function logTerminal(type, text) {
+      const line = document.createElement('div');
+      line.className = `term-${type}`;
+      const stamp = document.createElement('span');
+      stamp.className = 'term-t';
+      stamp.textContent = new Date().toLocaleTimeString();
+      const msg = document.createElement('span');
+      msg.textContent = text;
+      line.appendChild(stamp);
+      line.appendChild(msg);
+      logBox.appendChild(line);
+      logBox.scrollTop = logBox.scrollHeight;
+      while (logBox.childElementCount > 300) logBox.removeChild(logBox.firstChild);
+    }
+
+    function toast(message, type = 'info', timeout = 4200) {
+      const el = document.createElement('div');
+      el.className = `toast ${type === 'info' ? '' : type}`;
+      el.textContent = message;
+      toastBox.appendChild(el);
+      setTimeout(() => el.remove(), timeout);
+    }
+
+    function stripExt(name) {
+      return (name || '').replace(/\.[^/.]+$/, '');
+    }
+
+    function stripRootPath(path) {
+      let rel = String(path || '').replace(/\\/g, '/');
+      const srcIdx = rel.toUpperCase().indexOf('SOURCE/');
+      if (srcIdx >= 0) rel = rel.substring(srcIdx + 7);
+      const sdIdx = rel.toUpperCase().indexOf('SDCARD/');
+      if (sdIdx >= 0 && sdIdx <= 1) rel = rel.substring(sdIdx + 7);
+      return rel.replace(/^\/+/, '');
+    }
+
+    function resolveAudioUrl(track) {
+      if (!track) return '';
+      // When served by the CassetteFlow Java server the hash lookup is the most
+      // reliable way to get at the audio file
+      const servedByCfs = window.location.port === '8192' || !state.serverBaseUrl;
+      if (servedByCfs && track.id) {
+        return `/music?id=${encodeURIComponent(track.id)}`;
+      }
+      const rel = stripRootPath(track.file || track.sd || '');
+      if (!rel) return '';
+      const base = (state.serverBaseUrl || '/music/').replace(/\/+$/, '');
+      return base + '/' + rel.split('/').map(encodeURIComponent).join('/');
+    }
+
+    function nowPlayingNotify(text, playing = true, hash = '') {
+      const host = getInitialHost();
+      const url = host ? `${host.replace(/\/+$/, '')}/playing` : '/playing';
+      const body = JSON.stringify({ track: text, hash, playing });
+      fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }).catch(() => { });
+    }
+
+    function refreshStatus() {
+      const host = getInitialHost();
+      const url = host ? `${host.replace(/\/+$/, '')}/api/status` : '/api/status';
+      fetch(url, { cache: 'no-store' })
+        .then(r => r.ok ? r.json() : null)
+        .then(d => {
+          const dot = $('statusDot');
+          const text = $('statusText');
+          if (d) {
+            dot.classList.add('connected');
+            text.textContent = 'Online';
+          } else {
+            dot.classList.remove('connected');
+            text.textContent = 'Offline';
+          }
+        })
+        .catch(() => {
+          $('statusDot').classList.remove('connected');
+          $('statusText').textContent = 'Offline';
+        });
+    }
+
+    function setBusy(on) {
+      document.body.style.cursor = on ? 'progress' : '';
+    }
+
+    // =========================================================================
+    // IndexedDB cache (same approach as the web player)
+    // =========================================================================
+    function openIndexedDB() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open('cassetteflow-db', 1);
+        req.onupgradeneeded = () => {
+          if (!req.result.objectStoreNames.contains('files')) req.result.createObjectStore('files');
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function idbGet(key) {
+      try {
+        const db = await openIndexedDB();
+        return await new Promise((resolve, reject) => {
+          const tx = db.transaction('files', 'readonly');
+          const req = tx.objectStore('files').get(key);
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+      } catch (e) {
+        return null;
+      }
+    }
+
+    async function idbSet(key, value) {
+      try {
+        const db = await openIndexedDB();
+        await new Promise((resolve, reject) => {
+          const tx = db.transaction('files', 'readwrite');
+          tx.objectStore('files').put(value, key);
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+        });
+      } catch (e) {
+        /* cache is best effort only */
+      }
+    }
+
+    // =========================================================================
+    // Database loading
+    // =========================================================================
+    async function fetchWithFallback(candidates, timeoutMs = 8000) {
+      for (const url of candidates) {
+        try {
+          const full = url.includes('?') ? `${url}&_cb=${Date.now()}` : `${url}?_cb=${Date.now()}`;
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), timeoutMs);
+          const res = await fetch(full, { signal: controller.signal, cache: 'no-store' });
+          clearTimeout(timer);
+          if (res.ok) {
+            const text = await res.text();
+            if (text && text.trim().length > 2 && !text.includes('<!DOCTYPE html>')) {
+              return { text, source: url };
+            }
+          }
+        } catch (e) {
+          /* try the next candidate */
+        }
+      }
+      return null;
+    }
+
+    function tapeCandidates() {
+      const list = ['/tapedb.txt', '/tapedb'];
+      if (state.serverBaseUrl) {
+        const base = state.serverBaseUrl.replace(/\/+$/, '');
+        list.push(`${base}/tapedb.txt`, `${base}/../tapedb.txt`);
+      }
+      return list;
+    }
+
+    function tracklistCandidates() {
+      const list = ['/tracklist.txt'];
+      if (state.serverBaseUrl) {
+        const base = state.serverBaseUrl.replace(/\/+$/, '');
+        list.push(`${base}/tracklist.txt`, `${base}/../tracklist.txt`);
+      }
+      return list;
+    }
+
+    function audioDbCandidates() {
+      const list = ['/audiodb.txt', '/mp3db', '/audiodb'];
+      if (state.serverBaseUrl) {
+        const base = state.serverBaseUrl.replace(/\/+$/, '');
+        list.push(`${base}/audiodb.txt`, `${base}/../audiodb.txt`);
+      }
+      return list;
+    }
+
+    async function loadLibrary(forceRefresh) {
+      // 1. Cached copy first. The key is versioned so a payload cached by an older
+      // build (or one built from audiodb.txt without the default directory flags)
+      // is never reused.
+      if (!forceRefresh) {
+        const cached = await idbGet(LIBRARY_CACHE_KEY);
+        if (cached) {
+          try {
+            const json = typeof cached === 'string' ? JSON.parse(cached) : cached;
+            if (libraryPayloadIsCurrent(json)) {
+              applyLibraryJson(json, true, '/api/library');
+              return;
+            }
+            logTerminal('warn', 'Cached library was built by an older version — refetching');
+          } catch (e) {
+            logTerminal('warn', 'Cached library was unreadable, refetching…');
+          }
+        }
+      }
+
+      setBusy(true);
+      logTerminal('raw', 'Fetching /api/library …');
+
+      // 2. Full metadata endpoint
+      try {
+        const res = await fetch(`/api/library?_cb=${Date.now()}`, { cache: 'no-store' });
+        if (res.ok) {
+          const text = await res.text();
+          const json = JSON.parse(text);
+          await idbSet(LIBRARY_CACHE_KEY, text);
+          applyLibraryJson(json, false, '/api/library');
+          return;
+        }
+        logTerminal('warn', `/api/library returned HTTP ${res.status}, falling back to audiodb.txt`);
+      } catch (e) {
+        logTerminal('warn', `No /api/library endpoint (${e.message}), falling back to audiodb.txt`);
+      }
+
+      // 3. Fallback: the tab delimited audio db (no tag metadata, no default
+      // directory flags) so it is never written to the browser cache
+      const result = await fetchWithFallback(audioDbCandidates());
+      if (result) {
+        const json = libraryFromAudioDb(result.text);
+        applyLibraryJson(json, false, result.source);
+      } else {
+        logTerminal('err', 'Unable to load the audio library');
+        toast('Unable to load the audio library. Start the CassetteFlow server or check the music server URL.', 'err', 9000);
+      }
+      setBusy(false);
+    }
+
+    /**
+     * A cached payload is only usable when it has the fields this build expects.
+     * Guards against a stale IndexedDB entry after the server side changes.
+     */
+    function libraryPayloadIsCurrent(json) {
+      if (!json || !Array.isArray(json.tracks) || !json.tracks.length) return false;
+      if (typeof json.indexKeys !== 'number') return false;
+      if (typeof json.noFileCount !== 'number') return false;
+      const sample = json.tracks[0];
+      return typeof sample.root === 'boolean' && typeof sample.noFile === 'boolean';
+    }
+
+    function libraryFromAudioDb(text) {
+      const tracks = [];
+      for (const line of text.split(/\r?\n/)) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+        let parts = trimmed.split('\t');
+        if (parts.length < 2) parts = trimmed.split(',');
+        if (parts.length < 2) continue;
+        const id = parts[0].trim();
+        tracks.push({
+          id,
+          length: parseInt(parts[1], 10) || 0,
+          bitrate: parseInt(parts[2], 10) || 0,
+          sd: parts[3] ? parts[3].trim() : '',
+          file: parts[4] ? parts[4].trim() : ''
+        });
+      }
+      return { version: 1, count: tracks.length, tracks };
+    }
+
+    function applyLibraryJson(json, fromCache, source) {
+      const tracks = (json.tracks || []).map(normalizeTrack);
+      state.library = tracks;
+
+      // A file is usually stored under two hashes: the current relative path based
+      // hash and an alias of the older filename based hash (kept so tapes recorded
+      // with the old hashes still resolve). The server sends the extra hashes as
+      // `ids`, so register them all in the lookup map while the list itself only
+      // holds one row per file.
+      state.libById = new Map();
+      for (const track of tracks) {
+        state.libById.set(track.id, track);
+        (track.ids || []).forEach(alias => state.libById.set(alias, track));
+      }
+
+      state.librarySource = source || 'library';
+      state.indexKeys = json.indexKeys || tracks.length;
+      state.noFileCount = json.noFileCount || 0;
+
+      // Like the desktop ENCODE tab the panel only lists the files that sit
+      // directly in the default audio directory. Everything else is pulled into
+      // the list with the Find dialog.
+      state.defaultTracks = sortTracks(tracks.filter(t => t.inDefaultDir));
+      state.trackList = state.defaultTracks.slice();
+      state.libraryFiltered = false;
+      state.libraryView = state.trackList;
+      state.librarySelection.clear();
+      state.dbFromCache = fromCache;
+      renderLibrary();
+
+      const playable = tracks.length - state.noFileCount;
+      logTerminal(fromCache ? 'map' : 'raw',
+        `${tracks.length.toLocaleString()} rows from ${state.librarySource}${fromCache ? ' (cache ⚡)' : ''} — ${playable.toLocaleString()} playable files, ${state.noFileCount.toLocaleString()} without a file, from ${state.indexKeys.toLocaleString()} index keys. Default directory: ${state.trackList.length}`);
+
+      if (tracks.length && !state.trackList.length) {
+        logTerminal('warn',
+          `The audio index has no entries for the default directory (${json.sourceDir || 'audio.directory'}) — check the property, or use 🔎 Find to add tracks`);
+      }
+
+      if (state.librarySource !== '/api/library') {
+        logTerminal('warn',
+          `${state.librarySource} carries no default-directory information — restart the CassetteFlow server so /api/library is available for accurate filtering`);
+      }
+    }
+
+    /** Sort tracks the way the desktop list is sorted */
+    function sortTracks(tracks) {
+      return tracks.slice().sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }));
+    }
+
+    /** Replace the working track list and re-apply the filter */
+    function setTrackList(tracks) {
+      state.trackList = sortTracks(tracks);
+      applyLibraryFilter($('filterInput').value);
+    }
+
+    /** Reload the list with only the files in the default audio directory */
+    function resetTrackListToDefault() {
+      $('filterInput').value = '';
+      state.trackList = state.defaultTracks.slice();
+      state.libraryView = state.trackList;
+      state.libraryFiltered = false;
+      state.librarySelection.clear();
+      state.libraryAnchor = null;
+      renderLibrary();
+      logTerminal('map', `Loaded ${state.trackList.length} file(s) from the default audio directory`);
+      if (!state.trackList.length) {
+        toast('No audio files found in the default directory — use 🔎 Find to add tracks', 'warn', 8000);
+      }
+    }
+
+    /** Append tracks found with the Find dialog to the working list */
+    function addTracksToTrackList(tracks) {
+      const known = new Set(state.trackList.map(t => t.id));
+      const fresh = [];
+
+      for (const track of tracks) {
+        if (known.has(track.id)) continue;
+        known.add(track.id);
+        fresh.push(track);
+      }
+
+      const before = state.trackList.length;
+      state.trackList = sortTracks(state.trackList.concat(fresh));
+
+      // show the whole merged list so the added tracks are visible
+      $('filterInput').value = '';
+      state.libraryFiltered = false;
+      state.libraryView = state.trackList;
+      state.librarySelection.clear();
+      state.libraryAnchor = null;
+      renderLibrary();
+
+      logTerminal('map', `Track list: ${before} → ${state.trackList.length} (+${fresh.length} added${tracks.length - fresh.length ? `, ${tracks.length - fresh.length} already in the list` : ''})`);
+      toast(`Added ${fresh.length.toLocaleString()} track(s) to the list — ${state.trackList.length.toLocaleString()} in total`, 'ok');
+    }
+
+    /** Convert a raw library record into the shape used by the UI */
+    function normalizeTrack(raw) {
+      const file = (raw.file || raw.sd || raw.name || '').replace(/\\/g, '/');
+      const segs = file.split('/').filter(Boolean);
+      const name = raw.name || (segs.length ? segs[segs.length - 1] : raw.id);
+      const parent = segs.length >= 2 ? segs[segs.length - 2] : 'Root';
+      const length = raw.length || 0;
+      const lengthAsTime = raw.lengthAsTime || formatTime(length);
+      const rawBitrate = raw.bitrate || 0;
+      // the server marks the files that sit in the default audio directory using the
+      // same non-recursive scan as the desktop, so trust it when present. Only guess
+      // from the path when the flag is missing (plain audiodb.txt fallback).
+      const inDefaultDir = (typeof raw.root === 'boolean')
+        ? raw.root
+        : (!!file && file.indexOf('/') === -1);
+      const aliases = Array.isArray(raw.ids) ? raw.ids.slice() : [];
+      return {
+        id: raw.id,
+        ids: aliases,
+        name,
+        parent,
+        file,
+        inDefaultDir,
+        sd: raw.sd || '',
+        url: raw.url || '',
+        title: raw.title || stripExt(name),
+        artist: raw.artist || '',
+        album: raw.album || '',
+        genre: raw.genre || '',
+        year: raw.year || '',
+        length,
+        lengthAsTime,
+        bitrate: rawBitrate >= 1000 ? Math.round(rawBitrate / 1000) : rawBitrate,
+        noFile: raw.noFile === true,
+        label: `[${parent}] ${name}${raw.noFile === true ? ' [no file]' : ''} (${lengthAsTime})`,
+        searchName: `${name} (${lengthAsTime})`
+      };
+    }
+
+    async function loadTapeDb(forceRefresh) {
+      if (!forceRefresh) {
+        const cached = await idbGet('tapedb_text');
+        if (cached && cached.trim()) {
+          parseTapeDB(cached);
+          return true;
+        }
+      }
+
+      const result = await fetchWithFallback(tapeCandidates());
+      if (result) {
+        await idbSet('tapedb_text', result.text);
+        parseTapeDB(result.text);
+        return true;
+      }
+      logTerminal('warn', 'Could not locate tapedb.txt');
+      return false;
+    }
+
+    async function loadTrackListDb(forceRefresh) {
+      if (!forceRefresh) {
+        const cached = await idbGet('tracklist_text');
+        if (cached && cached.trim()) {
+          parseTrackListDB(cached);
+          return;
+        }
+      }
+      const result = await fetchWithFallback(tracklistCandidates());
+      if (result) {
+        await idbSet('tracklist_text', result.text);
+        parseTrackListDB(result.text);
+      }
+    }
+
+    function parseTapeDB(text) {
+      state.tapeDB.clear();
+      for (const line of String(text).split(/\r?\n/)) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+        let parts = trimmed.split('\t');
+        if (parts.length < 2) parts = trimmed.split(',');
+        if (parts.length >= 2) {
+          const key = parts[0].trim();
+          const ids = parts.slice(1).map(p => p.trim()).filter(Boolean);
+          if (key) state.tapeDB.set(key, ids);
+        }
+      }
+      updateDbBadge();
+      logTerminal('map', `Tape database: ${state.tapeDB.size} records`);
+    }
+
+    /**
+     * tracklist.txt holds one line per sub track of a long mix:
+     * hash <TAB> filename <TAB> trackNumber <TAB> trackTime <TAB> trackTitle
+     */
+    function parseTrackListDB(text) {
+      state.tracklistDB.clear();
+      for (const line of String(text).split(/\r?\n/)) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('File')) continue;
+        const parts = trimmed.split('\t');
+        if (parts.length < 5) continue;
+        const id = parts[0].trim();
+        if (!id) continue;
+        const number = parts[2].trim();
+        const time = parseInt(parts[3].trim(), 10) || 0;
+        const title = parts[4].trim();
+        let entry = state.tracklistDB.get(id);
+        if (!entry) {
+          entry = { count: 0, subs: [] };
+          state.tracklistDB.set(id, entry);
+        }
+        entry.subs.push(`  ${number}. ${title} (${formatTime(time)})`);
+        entry.count = entry.subs.length;
+      }
+      logTerminal('map', `Tracklist database: ${state.tracklistDB.size} records`);
+    }
+
+    function updateDbBadge() {
+      const badge = $('dbStatusBadge');
+      const tracks = state.library.length;
+      const tapes = state.tapeDB.size;
+      if (!tracks && !tapes) {
+        badge.innerHTML = '<span>📁 DB Error</span>';
+        badge.style.color = 'var(--accent-red)';
+        return;
+      }
+      badge.innerHTML = `<span>📁 ${tapes.toLocaleString()} Tapes • ${tracks.toLocaleString()} Tracks${state.dbFromCache ? ' ⚡' : ''}</span>`;
+      badge.style.color = 'var(--accent-green)';
+    }
+
+    async function loadEverything(forceRefresh = false) {
+      $('dbStatusBadge').innerHTML = '<span>📁 Loading DBs…</span>';
+      $('dbStatusBadge').style.color = 'var(--accent-amber)';
+      await loadLibrary(forceRefresh);
+      await loadTapeDb(forceRefresh);
+      await loadTrackListDb(forceRefresh);
+      updateDbBadge();
+    }
+
+    // =========================================================================
+    // Virtual list (handles the 40k+ library rows without killing the DOM)
+    // =========================================================================
+    class VirtualList {
+      constructor(container, rowHeight) {
+        this.el = container;
+        this.rowHeight = rowHeight;
+        this.items = [];
+        this.renderRow = null;
+        this.onClick = null;
+        this._start = -1;
+        this._end = -1;
+
+        this.el.innerHTML = '';
+        this.spacer = document.createElement('div');
+        this.spacer.className = 'vlist-spacer';
+        this.win = document.createElement('div');
+        this.win.className = 'vlist-win';
+        this.el.appendChild(this.spacer);
+        this.el.appendChild(this.win);
+
+        this.el.addEventListener('scroll', () => this.render(false), { passive: true });
+        window.addEventListener('resize', () => this.render(true));
+
+        this.el.addEventListener('click', (ev) => {
+          const row = ev.target.closest('.track-item, .grp-row');
+          if (!row || !this.onClick) return;
+          this.onClick(parseInt(row.dataset.index, 10), ev);
+        });
+      }
+
+      setItems(items, renderRow, onClick) {
+        this.items = items || [];
+        this.renderRow = renderRow;
+        if (onClick !== undefined) this.onClick = onClick;
+        this.el.scrollTop = 0;
+        this._start = this._end = -1;
+        this.render(true);
+      }
+
+      render(force) {
+        const total = this.items.length * this.rowHeight;
+        this.spacer.style.height = `${total}px`;
+
+        const scrollTop = this.el.scrollTop;
+        const height = this.el.clientHeight || 300;
+        const overscan = 6;
+        const start = Math.max(0, Math.floor(scrollTop / this.rowHeight) - overscan);
+        const end = Math.min(this.items.length, Math.ceil((scrollTop + height) / this.rowHeight) + overscan);
+
+        if (!force && this._start === start && this._end === end) return;
+        this._start = start;
+        this._end = end;
+
+        this.win.style.transform = `translateY(${start * this.rowHeight}px)`;
+
+        const frag = document.createDocumentFragment();
+        for (let i = start; i < end; i++) {
+          const row = this.renderRow(this.items[i], i);
+          row.style.height = `${this.rowHeight}px`;
+          frag.appendChild(row);
+        }
+
+        this.win.innerHTML = '';
+        this.win.appendChild(frag);
+      }
+
+      refresh() {
+        this._start = this._end = -1;
+        this.render(true);
+      }
+    }
+
+    function makeRow(index, indexText, label, duration) {
+      const row = document.createElement('div');
+      row.className = 'track-item';
+      row.dataset.index = index;
+
+      const idx = document.createElement('span');
+      idx.className = 'idx';
+      idx.textContent = indexText;
+
+      const name = document.createElement('span');
+      name.className = 'name';
+      name.textContent = label;
+
+      const dur = document.createElement('span');
+      dur.className = 'dur';
+      dur.textContent = duration;
+
+      row.appendChild(idx);
+      row.appendChild(name);
+      row.appendChild(dur);
+      return row;
+    }
+
+    // =========================================================================
+    // Library panel
+    // =========================================================================
+    const libraryList = new VirtualList($('libraryList'), 30);
+
+    function renderLibrary() {
+      const view = state.libraryView;
+      const previousScroll = libraryList.el.scrollTop;
+      const sameLength = libraryList.items.length === view.length;
+
+      libraryList.setItems(view, (track, index) => {
+        const row = makeRow(index, String(index + 1).padStart(5, '0'), track.label, track.lengthAsTime);
+        if (state.librarySelection.has(index)) row.classList.add('selected');
+        const playingTrack = currentTrack();
+        if (playingTrack && track.id === playingTrack.id && state.mode === 'library') row.classList.add('playing');
+        return row;
+      }, onLibraryRowClick);
+
+      // keep the scroll position when the list contents didn't change (select/add)
+      if (sameLength && previousScroll > 0) {
+        libraryList.el.scrollTop = previousScroll;
+      }
+
+      const total = state.trackList.length;
+      const shown = view.length;
+      const fromDefault = state.defaultTracks.length;
+      const suffix = (total === fromDefault) ? ' (default directory)' : ` (${fromDefault.toLocaleString()} from default directory)`;
+      $('libraryCount').textContent = state.libraryFiltered
+        ? `${shown.toLocaleString()} of ${total.toLocaleString()} matched (filtered)`
+        : `${total.toLocaleString()} audio files loaded${suffix}`;
+      $('libraryCount').title =
+        `source: ${state.librarySource || 'unknown'}\nindex keys: ${(state.indexKeys || 0).toLocaleString()}\nrows: ${state.library.length.toLocaleString()}\nplayable files: ${(state.library.length - (state.noFileCount || 0)).toLocaleString()}\nwithout a file: ${(state.noFileCount || 0).toLocaleString()}\ndefault directory: ${fromDefault.toLocaleString()}\nlist: ${total.toLocaleString()}`;
+
+      const emptyNote = $('libraryEmptyNote');
+      if (view.length) {
+        emptyNote.style.display = 'none';
+      } else {
+        emptyNote.style.display = '';
+        emptyNote.textContent = total
+          ? 'No tracks matched the filter — press Default to show the whole list'
+          : 'The track list is empty — press Default to load the default directory, or use 🔎 Find to add tracks';
+      }
+    }
+
+    function currentTrack() {
+      if (state.playIndex < 0 || state.playIndex >= state.playQueue.length) return null;
+      return state.playQueue[state.playIndex];
+    }
+
+    function onLibraryRowClick(index, ev) {
+      const plainClick = !ev.shiftKey && !ev.ctrlKey && !ev.metaKey && !ev.altKey;
+
+      if (ev.shiftKey && state.libraryAnchor !== null) {
+        const [a, b] = [state.libraryAnchor, index].sort((x, y) => x - y);
+        state.librarySelection.clear();
+        for (let i = a; i <= b; i++) state.librarySelection.add(i);
+      } else if (ev.ctrlKey || ev.metaKey) {
+        if (state.librarySelection.has(index)) state.librarySelection.delete(index);
+        else state.librarySelection.add(index);
+        state.libraryAnchor = index;
+      } else {
+        state.librarySelection.clear();
+        state.librarySelection.add(index);
+        state.libraryAnchor = index;
+      }
+      libraryList.refresh();
+
+      // Desktop parity (CassetteFlowFrame.audioJListValueChanged): if something is
+      // already playing then selecting another file in the library switches to it
+      // straight away. Modifier clicks only build a selection so playback is not
+      // interrupted while picking several tracks.
+      const alreadyPlaying = !!audio.src && !audio.paused && !!audio.currentTime;
+      if (plainClick && alreadyPlaying && state.mode !== 'side') {
+        playSelectedLibraryTrack();
+      }
+
+      // the desktop also echoes the selection to its console
+      const track = state.libraryView[index];
+      if (track) {
+        logTerminal('raw', `${track.id}: ${track.name} (${track.lengthAsTime})`);
+      }
+    }
+
+    function selectedLibraryTracks() {
+      return [...state.librarySelection].sort((a, b) => a - b)
+        .map(i => state.libraryView[i])
+        .filter(Boolean);
+    }
+
+    function applyLibraryFilter(term) {
+      const text = (term || '').trim().toLowerCase();
+      if (!text) {
+        state.libraryView = state.trackList;
+        state.libraryFiltered = false;
+        logTerminal('map', `Showing the whole track list (${state.trackList.length.toLocaleString()} tracks)`);
+      } else {
+        state.libraryView = state.trackList.filter(t => t.label.toLowerCase().includes(text));
+        state.libraryFiltered = true;
+        logTerminal('map', `Filter "${text}" matched ${state.libraryView.length.toLocaleString()} tracks`);
+      }
+      state.librarySelection.clear();
+      state.libraryAnchor = null;
+      renderLibrary();
+    }
+
+    // =========================================================================
+    // Tape sides
+    // =========================================================================
+    function sideList(side) { return side === 'A' ? state.sideA : state.sideB; }
+    function sideContainer(side) { return side === 'A' ? $('sideAList') : $('sideBList'); }
+
+    function maxTapeTime() {
+      return Math.floor(state.tapeLengthMinutes / 2) * 60;
+    }
+
+    function sideTotalTime(list) {
+      if (!list.length) return 0;
+      let total = list.reduce((sum, t) => sum + t.length, 0);
+      total += (list.length - 1) * state.mutePadding;
+      return total;
+    }
+
+    function renderSide(side) {
+      const list = side === 'A' ? state.sideA : state.sideB;
+      const box = sideContainer(side);
+      const selection = state.sideSelection[side];
+      const playingTrack = currentTrack();
+
+      box.innerHTML = '';
+
+      if (!list.length) {
+        const note = document.createElement('div');
+        note.className = 'empty-note';
+        note.textContent = 'Empty — add tracks from the library, or press Shuffle';
+        box.appendChild(note);
+      } else {
+        list.forEach((track, index) => {
+          const row = makeRow(index, String(index + 1).padStart(2, '0'), track.label, track.lengthAsTime);
+          if (selection.has(index)) row.classList.add('selected');
+          if (state.playingSide === side && playingTrack && track.id === playingTrack.id) row.classList.add('playing');
+          if (state.playingSide === side && state.playIndex > index) row.classList.add('played');
+          row.addEventListener('click', (ev) => onSideRowClick(side, index, ev));
+          row.addEventListener('dblclick', () => playSideFrom(side, index));
+          box.appendChild(row);
+        });
+      }
+
+      $('badgeA').textContent = state.sideA.length;
+      $('badgeB').textContent = state.sideB.length;
+
+      updatePlayTimeLabels();
+    }
+
+    function updatePlayTimeLabels() {
+      const list = sideList(state.activeSide);
+      const total = sideTotalTime(list);
+      const max = maxTapeTime();
+      const label = $('playTimeLabel');
+      label.textContent = `Play Time: ${formatTimeHours(total)}`;
+      label.title = `Side ${state.activeSide} • ${list.length} tracks • limit ${formatTimeHours(max)}`;
+      label.classList.toggle('over', total > max);
+      if (total > max) {
+        label.textContent += `  *** Max Time Exceeded (${formatTimeHours(max)}) ***`;
+      }
+      $('playSideBtn').textContent = `▶ Play Side ${state.activeSide}`;
+      $('shuffleBtn').title = `Fill Side ${state.activeSide} with a random selection that fits in ${state.tapeLengthMinutes} minutes`;
+    }
+
+    function onSideRowClick(side, index, ev) {
+      const selection = state.sideSelection[side];
+      if (ev.shiftKey && selection.size) {
+        const first = Math.min(...selection);
+        selection.clear();
+        const [a, b] = [first, index].sort((x, y) => x - y);
+        for (let i = a; i <= b; i++) selection.add(i);
+      } else if (ev.ctrlKey || ev.metaKey) {
+        if (selection.has(index)) selection.delete(index);
+        else selection.add(index);
+      } else {
+        selection.clear();
+        selection.add(index);
+      }
+      renderSide(side);
+    }
+
+    function selectSide(side) {
+      state.activeSide = side;
+      $('tabA').classList.toggle('active', side === 'A');
+      $('tabB').classList.toggle('active', side === 'B');
+      $('sideAList').style.display = side === 'A' ? '' : 'none';
+      $('sideBList').style.display = side === 'B' ? '' : 'none';
+      updatePlayTimeLabels();
+    }
+
+    function addSelectionToSide() {
+      const side = state.activeSide;
+      let tracks = selectedLibraryTracks();
+      if (!tracks.length) {
+        tracks = state.libraryView.slice();
+        logTerminal('raw', `Nothing selected, adding the whole list (${tracks.length.toLocaleString()} tracks) to Side ${side}`);
+      }
+      if (!tracks.length) {
+        toast('Nothing to add — the library list is empty', 'warn');
+        return;
+      }
+      sideList(side).push(...tracks);
+      logTerminal('map', `Added ${tracks.length} track(s) to Side ${side} (now ${sideList(side).length})`);
+      state.librarySelection.clear();
+      renderLibrary();
+      renderSide(side);
+    }
+
+    function removeSelectionFromSide(side) {
+      const selection = [...state.sideSelection[side]].sort((a, b) => b - a);
+      if (!selection.length) {
+        toast(`Select the tracks to remove from Side ${side} first`, 'warn');
+        return;
+      }
+      const list = sideList(side);
+      selection.forEach(i => list.splice(i, 1));
+      state.sideSelection[side].clear();
+      logTerminal('map', `Removed ${selection.length} track(s) from Side ${side}`);
+      renderSide(side);
+    }
+
+    function moveSelection(side, direction) {
+      const selection = [...state.sideSelection[side]].sort((a, b) => direction > 0 ? a - b : b - a);
+      if (selection.length !== 1) {
+        toast('Select a single track to move', 'warn');
+        return;
+      }
+      const list = sideList(side);
+      const index = selection[0];
+      const target = index + direction;
+      if (target < 0 || target >= list.length) return;
+      [list[index], list[target]] = [list[target], list[index]];
+      state.sideSelection[side].clear();
+      state.sideSelection[side].add(target);
+      renderSide(side);
+    }
+
+    function shuffleInto(side) {
+      const list = sideList(side);
+      const other = sideList(side === 'A' ? 'B' : 'A');
+      const otherIds = new Set(other.map(t => t.id));
+      const pool = state.libraryView.slice();
+
+      if (!pool.length) {
+        toast('The track list is empty — press Default or use 🔎 Find to load some tracks', 'warn');
+        return;
+      }
+
+      // shuffle in place (Fisher-Yates)
+      for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+      }
+
+      list.length = 0;
+      const max = maxTapeTime();
+      let total = 0;
+
+      for (const track of pool) {
+        if (otherIds.has(track.id)) continue;
+        const projected = total + track.length + (list.length ? state.mutePadding : 0);
+        if (projected > max) break;
+        list.push(track);
+        total = projected;
+      }
+
+      state.sideSelection[side].clear();
+      logTerminal('map', `Shuffled ${list.length} track(s) into Side ${side} (${formatTimeHours(total)} of ${formatTimeHours(max)})`);
+      if (!list.length) toast('No tracks fitted the tape length — increase the tape size', 'warn');
+      renderSide(side);
+    }
+
+    function checkTrackList() {
+      const seen = new Set();
+      const duplicates = [];
+      const all = [...state.sideA, ...state.sideB];
+      for (const track of all) {
+        if (seen.has(track.id)) duplicates.push(track.label);
+        else seen.add(track.id);
+      }
+      if (!duplicates.length) {
+        logTerminal('map', `Check: no duplicates across both sides (${all.length} tracks)`);
+        toast(`No duplicates found across Side A and Side B (${all.length} tracks)`, 'ok');
+      } else {
+        logTerminal('err', `Check: ${duplicates.length} duplicate track(s): ${duplicates.join(' | ')}`);
+        toast(`${duplicates.length} duplicate track(s) across the two sides — see the activity log`, 'err', 8000);
+      }
+    }
+
+    // =========================================================================
+    // Playback
+    // =========================================================================
+    function setNowPlaying(track, indexText, queueLength) {
+      const title = track ? `${indexText ? indexText + '. ' : ''}${track.artist ? track.title + ' — ' + track.artist : track.title}` : 'No Track Playing';
+      $('nowTitle').textContent = title;
+      $('nowTimes').textContent = `00:00 / ${formatTime(track ? track.length : 0)}`;
+    }
+
+    function startTrack(index) {
+      state.playIndex = index;
+      const track = state.playQueue[index];
+      if (!track) return;
+      const url = resolveAudioUrl(track);
+      audio.src = url;
+      $('gapLabel').textContent = '';
+      setNowPlaying(track, String(index + 1).padStart(2, '0'), state.playQueue.length);
+      logTerminal('raw', `▶ ${track.label} → ${url}`);
+      audio.play().catch(err => {
+        logTerminal('err', `Playback blocked: ${err.message}`);
+        toast('The browser blocked playback — press Play again', 'warn');
+      });
+      nowPlayingNotify(`${String(index + 1).padStart(2, '0')}. ${track.title}${track.artist ? ' - ' + track.artist : ''}`, true, track.id);
+      renderSide(state.activeSide);
+      renderLibrary();
+    }
+
+    function startGap(nextIndex) {
+      clearInterval(state.gapTimer);
+      state.gapRemaining = state.mutePadding;
+      const next = state.playQueue[nextIndex];
+
+      const tick = () => {
+        if (state.gapRemaining <= 0) {
+          clearInterval(state.gapTimer);
+          state.gapTimer = null;
+          startTrack(nextIndex);
+          return;
+        }
+        const nextLabel = next ? `[${String(nextIndex + 1).padStart(2, '0')}] ${next.label}` : '';
+        $('gapLabel').textContent = `MUTE GAP ⏳ ${state.gapRemaining}s → ${nextLabel}`;
+        state.gapRemaining--;
+      };
+
+      tick();
+      state.gapTimer = setInterval(tick, 1000);
+    }
+
+    function playQueueFrom(index, mode, side) {
+      state.mode = mode;
+      state.playingSide = side || null;
+
+      // the mute gap only applies between tracks of a tape side. Picking tracks
+      // from the library plays them immediately like the desktop does.
+      if (mode === 'side' && index > 0 && state.mutePadding > 0) {
+        startGap(index);
+      } else {
+        $('gapLabel').textContent = '';
+        startTrack(index);
+      }
+    }
+
+    function playSelectedLibraryTrack() {
+      const tracks = selectedLibraryTracks();
+      if (!tracks.length) {
+        toast('Select a track in the library list to play (or press Play Side to play a whole side)', 'warn');
+        return;
+      }
+      const first = state.libraryView.indexOf(tracks[0]);
+      state.playQueue = state.libraryView;
+      playQueueFrom(first, 'library', null);
+    }
+
+    function playSideFrom(side, index) {
+      const list = sideList(side);
+      if (!list.length) {
+        toast(`Side ${side} is empty`, 'warn');
+        return;
+      }
+      if (index >= list.length) {
+        stopPlayback();
+        logTerminal('map', `Finished playing Side ${side} ✓`);
+        toast(`Finished playing Side ${side}`, 'ok');
+        return;
+      }
+      selectSide(side);
+      state.playQueue = list;
+      playQueueFrom(index, 'side', side);
+    }
+
+    function stopPlayback() {
+      clearInterval(state.gapTimer);
+      state.gapTimer = null;
+      state.gapRemaining = 0;
+      state.mode = null;
+      state.playingSide = null;
+      state.playQueue = [];
+      state.playIndex = -1;
+      audio.pause();
+      audio.removeAttribute('src');
+      audio.load();
+      $('gapLabel').textContent = '';
+      $('miniPlayBtn').textContent = '▶';
+      progressFill.style.width = '0%';
+      setNowPlaying(null);
+      nowPlayingNotify('Stopped', false);
+      renderSide(state.activeSide);
+    }
+
+    function togglePlay() {
+      if (!audio.src) {
+        playSelectedLibraryTrack();
+        return;
+      }
+      if (audio.paused) audio.play().catch(() => { });
+      else audio.pause();
+    }
+
+    function seekBy(delta) {
+      if (!audio.src) return;
+      if (!state.playQueue.length) return;
+      if (delta < 0) {
+        // restart the track if we are past the first few seconds, otherwise go back
+        if (audio.currentTime > 3 || state.playIndex === 0) {
+          audio.currentTime = 0;
+        } else {
+          playQueueFrom(state.playIndex - 1, state.mode, state.playingSide);
+        }
+      } else {
+        if (state.playIndex + 1 < state.playQueue.length) {
+          playQueueFrom(state.playIndex + 1, state.mode, state.playingSide);
+        }
+      }
+    }
+
+    audio.addEventListener('timeupdate', () => {
+      const cur = audio.currentTime || 0;
+      const dur = audio.duration || (currentTrack() ? currentTrack().length : 0) || 1;
+      progressFill.style.width = `${Math.min(100, (cur / dur) * 100)}%`;
+      $('nowTimes').textContent = `${formatTime(cur)} / ${formatTime(dur)}`;
+    });
+
+    audio.addEventListener('play', () => {
+      $('miniPlayBtn').textContent = '⏸';
+    });
+
+    audio.addEventListener('pause', () => {
+      $('miniPlayBtn').textContent = '▶';
+    });
+
+    audio.addEventListener('ended', () => {
+      if (state.playIndex + 1 < state.playQueue.length) {
+        if (state.mode === 'side' && state.mutePadding > 0) startGap(state.playIndex + 1);
+        else startTrack(state.playIndex + 1);
+      } else if (state.mode === 'side') {
+        stopPlayback();
+        logTerminal('map', `Finished playing Side ${state.playingSide} ✓`);
+        toast(`Finished playing Side ${state.playingSide}`, 'ok');
+      } else {
+        stopPlayback();
+      }
+    });
+
+    audio.addEventListener('error', () => {
+      const err = audio.error;
+      let detail = 'Audio source could not be loaded';
+      if (err) {
+        if (err.code === 2) detail = 'Network error downloading the audio file';
+        else if (err.code === 3) detail = 'Audio decoding failed';
+        else if (err.code === 4) detail = 'Audio file not found (404) or unsupported format';
+      }
+      logTerminal('err', `${detail}: ${audio.src}`);
+      toast(`${detail} — check that the music server is serving /music`, 'err', 8000);
+    });
+
+    progressBar.addEventListener('click', (ev) => {
+      if (!audio.duration) return;
+      const rect = progressBar.getBoundingClientRect();
+      audio.currentTime = ((ev.clientX - rect.left) / rect.width) * audio.duration;
+    });
+
+    // =========================================================================
+    // Tape DB dialog
+    // =========================================================================
+    function openTapeDb() {
+      $('tapeDbModal').classList.add('visible');
+      $('tapeDbCount').textContent = `${state.tapeDB.size.toLocaleString()} tapes`;
+      renderTapeDbList($('tapeDbFilter').value);
+      if (state.selectedTapeKey) showTapeRecord(state.selectedTapeKey);
+    }
+
+    function closeTapeDb() {
+      $('tapeDbModal').classList.remove('visible');
+    }
+
+    function renderTapeDbList(filter) {
+      const text = (filter || '').trim().toLowerCase();
+      const keys = [...state.tapeDB.keys()].sort().filter(k => !text || k.toLowerCase().includes(text));
+      const box = $('tapeDbListBox');
+      box.innerHTML = '';
+
+      if (!keys.length) {
+        box.innerHTML = '<div class="empty-note">No tape records matched</div>';
+        return;
+      }
+
+      const frag = document.createDocumentFragment();
+      keys.forEach(key => {
+        const row = document.createElement('div');
+        row.className = 'track-item';
+        row.dataset.key = key;
+        row.style.gridTemplateColumns = '1fr 62px';
+
+        const name = document.createElement('span');
+        name.className = 'name';
+        name.textContent = key;
+
+        const count = document.createElement('span');
+        count.className = 'dur';
+        count.textContent = `${(state.tapeDB.get(key) || []).length}`;
+
+        row.appendChild(name);
+        row.appendChild(count);
+        row.addEventListener('click', () => showTapeRecord(key));
+        if (key === state.selectedTapeKey) row.classList.add('selected');
+        frag.appendChild(row);
+      });
+      box.appendChild(frag);
+    }
+
+    function showTapeRecord(key) {
+      state.selectedTapeKey = key;
+      renderTapeDbList($('tapeDbFilter').value);
+
+      const preview = $('tapeDbPreviewBox');
+      preview.innerHTML = '';
+
+      const base = key.endsWith('A') || key.endsWith('B') ? key.slice(0, -1) : key;
+      const sideKeys = [`${base}A`, `${base}B`];
+      const combine = $('combineSidesCheck').checked;
+
+      const addHeading = (text) => {
+        const h = document.createElement('div');
+        h.className = 'card-title';
+        h.style.padding = '6px 6px 2px 6px';
+        h.textContent = text;
+        preview.appendChild(h);
+      };
+
+      const addTrackRow = (index, track, rawId) => {
+        if (track) {
+          const row = makeRow(index, String(index + 1).padStart(2, '0'), track.label, track.lengthAsTime);
+          preview.appendChild(row);
+        } else {
+          const row = makeRow(index, String(index + 1).padStart(2, '0'), `Unknown audio id: ${rawId}`, '--:--');
+          row.style.color = 'var(--accent-red)';
+          preview.appendChild(row);
+        }
+      };
+
+      let totalTime = 0;
+      let trackCount = 0;
+
+      sideKeys.forEach(sideKey => {
+        if (!state.tapeDB.has(sideKey)) return;
+        if (combine && sideKey.endsWith('B')) return;
+
+        addHeading(`Tape ${sideKey} (${state.tapeDB.get(sideKey).length} tracks)`);
+
+        (state.tapeDB.get(sideKey) || []).forEach((id, i) => {
+          const track = state.libById.get(id);
+          if (!combine) addTrackRow(i, track, id);
+          if (track) {
+            totalTime += track.length + (i === 0 ? 0 : 4);
+            trackCount++;
+            // add any sub tracks for long mixes
+            const sub = state.tracklistDB.get(id);
+            if (sub && sub.subs.length) {
+              sub.subs.forEach((title) => {
+                const row = makeRow('', '   ', title, '');
+                row.style.opacity = '0.75';
+                preview.appendChild(row);
+              });
+            }
+          }
+        });
+      });
+
+      if (combine) {
+        const ids = [...(state.tapeDB.get(`${base}A`) || []), ...(state.tapeDB.get(`${base}B`) || [])];
+        addHeading(`Combined A+B (${ids.length} tracks)`);
+        ids.forEach((id, i) => {
+          const track = state.libById.get(id);
+          addTrackRow(i, track, id);
+          if (track) totalTime += track.length + (i === 0 ? 0 : 4);
+        });
+      }
+
+      $('tapeDbTotal').textContent = `Play Time: ${formatTimeHours(totalTime)}   (${trackCount || '—'} tracks)`;
+      $('tapeDbFileLabel').textContent = 'tapedb.txt';
+    }
+
+    function loadTapeFromDb() {
+      if (!state.selectedTapeKey) {
+        toast('Select a tape record first', 'warn');
+        return;
+      }
+
+      const key = state.selectedTapeKey;
+      const base = key.endsWith('A') || key.endsWith('B') ? key.slice(0, -1) : key;
+      const idsA = state.tapeDB.get(`${base}A`) || (key.endsWith('A') ? state.tapeDB.get(key) : []) || [];
+      const idsB = state.tapeDB.get(`${base}B`) || (key.endsWith('B') ? state.tapeDB.get(key) : []) || [];
+
+      const toTracks = (ids) => ids.map(id => state.libById.get(id)).filter(Boolean);
+
+      const combine = $('combineSidesCheck').checked;
+
+      if (combine) {
+        const combined = [...idsA, ...idsB].map(id => state.libById.get(id)).filter(Boolean);
+        state.tapeId = 'CS00';
+        state.sideA = combined;
+        state.sideB = [];
+        logTerminal('map', `Loaded tape ${base} combined (${combined.length} tracks) as CS00`);
+      } else {
+        state.tapeId = base;
+        state.sideA = toTracks(idsA);
+        state.sideB = toTracks(idsB);
+        logTerminal('map', `Loaded tape ${base}: Side A ${state.sideA.length} / Side B ${state.sideB.length}`);
+      }
+
+      const minutes = Math.max(state.sideA.length ? sideTotalTime(state.sideA) : 0,
+        state.sideB.length ? sideTotalTime(state.sideB) : 0) / 60 * 2;
+      if (minutes > 0) {
+        // pick the smallest tape that fits, like the desktop does
+        const sorted = [...TAPE_LENGTHS].sort((a, b) => a.minutes - b.minutes);
+        const fit = sorted.find(t => t.minutes >= minutes) || sorted[sorted.length - 1];
+        state.tapeLengthMinutes = fit.minutes;
+        $('tapeLengthSelect').value = String(fit.minutes);
+      }
+
+      $('tapeIdInput').value = state.tapeId;
+      persistSettings();
+      state.sideSelection.A.clear();
+      state.sideSelection.B.clear();
+      renderSide('A');
+      renderSide('B');
+      closeTapeDb();
+      switchView('sides');
+      toast(`Loaded tape ${base} into the builder`, 'ok');
+    }
+
+    // =========================================================================
+    // Find dialog
+    // =========================================================================
+    function openFind() {
+      $('findModal').classList.add('visible');
+      $('findGroupsBox').style.display = 'none';
+      $('findResultsBox').style.display = '';
+      $('findTerm').focus();
+    }
+
+    function closeFind() {
+      $('findModal').classList.remove('visible');
+    }
+
+    const findList = new VirtualList($('findResultsBox'), 28);
+
+    function findFieldValue(track, field) {
+      switch (field) {
+        case 'Title': return track.searchName;
+        case 'Artist': return track.artist;
+        case 'Genre': return track.genre;
+        case 'Album': return track.album;
+        case 'Year': return track.year;
+        default: return track.parent;
+      }
+    }
+
+    function runFind() {
+      const field = $('findSearchBy').value;
+      const term = $('findTerm').value.trim().toLowerCase();
+      const format = $('findFormat').value.toLowerCase();
+
+      state.findViewAll = false;
+      state.findSelection.clear();
+      state.findAnchor = null;
+
+      $('findGroupsBox').style.display = 'none';
+      $('findResultsBox').style.display = '';
+
+      if (!term) {
+        toast('Enter a search term', 'warn');
+        return;
+      }
+
+      state.findResults = state.library.filter(track => {
+        const value = (findFieldValue(track, field) || '').toLowerCase();
+        if (!value.includes(term)) return false;
+        if (format !== 'all' && !track.searchName.toLowerCase().includes(format)) return false;
+        return true;
+      });
+
+      $('findFoundLabel').textContent = `Found: ${state.findResults.length.toLocaleString()}`;
+      $('findStatusLabel').textContent = state.findResults.length > RECORD_LIMIT
+        ? `Showing the first ${RECORD_LIMIT.toLocaleString()} of ${state.findResults.length.toLocaleString()} matches (Add uses the first ${RECORD_LIMIT.toLocaleString()})`
+        : `${state.findResults.length.toLocaleString()} tracks matched "${term}" in ${field}`;
+
+      logTerminal('map', `Find ${field} "${term}" (${format.toUpperCase()}) → ${state.findResults.length.toLocaleString()} tracks`);
+
+      findList.setItems(state.findResults.slice(0, RECORD_LIMIT), (track, index) => {
+        const row = makeRow(index, String(index + 1).padStart(4, '0'), track.label, track.lengthAsTime);
+        if (state.findSelection.has(index)) row.classList.add('selected');
+        return row;
+      }, onFindRowClick);
+
+      if (state.findResults.length && state.findResults.length <= PREVIEW_LIMIT) showFindInfo(state.findResults[0]);
+      else $('findInfoBox').textContent = '';
+    }
+
+    function onFindRowClick(index, ev) {
+      if (ev.shiftKey && state.findAnchor !== null) {
+        const [a, b] = [state.findAnchor, index].sort((x, y) => x - y);
+        state.findSelection.clear();
+        for (let i = a; i <= b; i++) state.findSelection.add(i);
+      } else if (ev.ctrlKey || ev.metaKey) {
+        if (state.findSelection.has(index)) state.findSelection.delete(index);
+        else state.findSelection.add(index);
+        state.findAnchor = index;
+      } else {
+        state.findSelection.clear();
+        state.findSelection.add(index);
+        state.findAnchor = index;
+      }
+      findList.refresh();
+      const track = state.findResults[index];
+      if (track) showFindInfo(track);
+    }
+
+    function showFindInfo(track) {
+      $('findInfoBox').textContent =
+        `File:   ${track.name}\n` +
+        `Title:  ${track.title}\n` +
+        `Artist: ${track.artist || '—'}\n` +
+        `Album:  ${track.album || '—'}\n` +
+        `Year:   ${track.year || '—'}\n` +
+        `Genre:  ${track.genre || '—'}\n` +
+        `Length: ${track.lengthAsTime}\n` +
+        `Rate:   ${track.bitrate ? track.bitrate + ' kbps' : '—'}\n` +
+        `Folder: ${track.parent}\n` +
+        `ID:     ${track.id}`;
+    }
+
+    function runFindViewAll() {
+      const field = $('findSearchBy').value;
+      state.findViewAll = true;
+      state.selectedGroups.clear();
+      state.findSelection.clear();
+
+      const groups = new Map();
+      for (const track of state.library) {
+        let key = findFieldValue(track, field);
+        if (!key) continue;
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(track);
+      }
+
+      state.findViewAllGroups = groups;
+      const keys = [...groups.keys()].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+
+      $('findFoundLabel').textContent = `Groups: ${keys.length.toLocaleString()}`;
+      $('findStatusLabel').textContent = `Grouped by ${field} — ${keys.length.toLocaleString()} groups`;
+      logTerminal('map', `View All by ${field} → ${keys.length.toLocaleString()} groups`);
+
+      $('findResultsBox').style.display = 'none';
+      const box = $('findGroupsBox');
+      box.style.display = '';
+      box.innerHTML = '';
+      const frag = document.createDocumentFragment();
+      keys.forEach(key => {
+        const row = document.createElement('div');
+        row.className = 'grp-row';
+        row.dataset.index = key;
+
+        const label = document.createElement('span');
+        label.className = 'name';
+        label.textContent = key;
+
+        const count = document.createElement('span');
+        count.className = 'cnt';
+        count.textContent = String(groups.get(key).length);
+
+        row.appendChild(label);
+        row.appendChild(count);
+        row.addEventListener('click', () => {
+          state.selectedGroups.clear();
+          state.selectedGroups.add(key);
+          [...box.children].forEach(c => c.classList.remove('selected'));
+          row.classList.add('selected');
+          showGroupInfo(field, key, groups.get(key));
+        });
+        frag.appendChild(row);
+      });
+      box.appendChild(frag);
+
+      $('findInfoBox').textContent = '';
+    }
+
+    function showGroupInfo(field, key, tracks) {
+      const sorted = tracks.slice().sort((a, b) => a.label.localeCompare(b.label));
+      const max = Math.min(PREVIEW_LIMIT, sorted.length);
+      let text = `${key} — showing ${max} of ${sorted.length} tracks\n\n`;
+      for (let i = 0; i < max; i++) {
+        text += `${String(i + 1).padStart(3, ' ')}  ${sorted[i].label}\n`;
+      }
+      if (sorted.length > max) text += `\n(only the first ${PREVIEW_LIMIT} tracks are shown)`;
+      $('findInfoBox').textContent = text;
+      $('findStatusLabel').textContent = `Selected: "${key} (${sorted.length})"`;
+    }
+
+    function addFindResultsToMainList() {
+      let tracks = [];
+
+      if (state.findViewAll) {
+        if (!state.selectedGroups.size) {
+          toast('Select one or more groups to add', 'warn');
+          return;
+        }
+        state.selectedGroups.forEach(key => {
+          const group = (state.findViewAllGroups || new Map()).get(key) || [];
+          tracks.push(...group);
+        });
+      } else {
+        tracks = state.findResults.slice(0, RECORD_LIMIT);
+      }
+
+      if (!tracks.length) {
+        toast('Nothing to add — run a search first', 'warn');
+        return;
+      }
+
+      // Append to the working list like the desktop Track Finder does and leave
+      // the dialog open so more searches can be added
+      addTracksToTrackList(tracks);
+    }
+
+    // =========================================================================
+    // Store dialog
+    // =========================================================================
+    function openStore() {
+      const tapeId = $('tapeIdInput').value.trim().toUpperCase();
+      const tapeIdOk = /^[A-Z0-9_]{1,10}$/.test(tapeId);
+
+      const exists = state.tapeDB.has(`${tapeId}A`) || state.tapeDB.has(`${tapeId}B`);
+      $('storeExistsRow').style.display = exists ? '' : 'none';
+      if (exists) {
+        const found = state.tapeDB.has(`${tapeId}A`) ? `${tapeId}A` : `${tapeId}B`;
+        $('overwriteYes').checked = true;
+        $('overwriteNo').checked = false;
+        $('storeSummary').textContent =
+          `Tape ID:  ${tapeId}${tapeIdOk ? '' : '   ⚠ invalid'}\n` +
+          `Target:   ${state.tapeDB.size ? 'tapedb.txt' : 'tapedb.txt'}\n` +
+          `\nExisting record found: ${found}\n`;
+      } else {
+        $('storeSummary').textContent =
+          `Tape ID:  ${tapeId}${tapeIdOk ? '' : '   ⚠ invalid'}\n` +
+          `Target:   tapedb.txt\n`;
+      }
+
+      $('storeSummary').textContent +=
+        `\n  Side A: ${state.sideA.length} tracks   ${formatTimeHours(sideTotalTime(state.sideA))}\n` +
+        `  Side B: ${state.sideB.length} tracks   ${formatTimeHours(sideTotalTime(state.sideB))}\n` +
+        `  Mute:   ${state.mutePadding}s between tracks`;
+
+      $('storeModal').classList.add('visible');
+    }
+
+    function closeStore() {
+      $('storeModal').classList.remove('visible');
+    }
+
+    async function storeTape() {
+      const tapeId = $('tapeIdInput').value.trim().toUpperCase();
+
+      if (!/^[A-Z0-9_]{1,10}$/.test(tapeId)) {
+        toast('Invalid tape ID — use up to 10 letters, digits or underscores', 'err');
+        return;
+      }
+      if (!state.sideA.length && !state.sideB.length) {
+        toast('Both sides are empty — add tracks before storing', 'warn');
+        return;
+      }
+
+      const exists = state.tapeDB.has(`${tapeId}A`) || state.tapeDB.has(`${tapeId}B`);
+      const overwrite = exists ? $('overwriteYes').checked : true;
+
+      if (exists && !overwrite) {
+        // keep the existing record, so don't send the sides that already exist
+        logTerminal('warn', `Keeping the existing record for tape ${tapeId}`);
+        closeStore();
+        return;
+      }
+
+      const payload = {
+        tapeId,
+        sideA: state.sideA.map(t => t.id),
+        sideB: state.sideB.map(t => t.id),
+        overwrite,
+        backup: $('backupCheck').checked
+      };
+
+      setBusy(true);
+      try {
+        const res = await fetch('/api/tapedb', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        let json = {};
+        try { json = await res.json(); } catch (e) { /* non json error */ }
+
+        if (!res.ok || json.ok === false) {
+          const msg = json.error || `HTTP ${res.status}`;
+          logTerminal('err', `Store failed: ${msg}`);
+          toast(`Store failed: ${msg}`, 'err', 9000);
+          return;
+        }
+
+        const written = Object.entries(json.written || {}).map(([k, v]) => `${k} (${v})`).join(' + ');
+        logTerminal('map', `Stored ${written} → ${json.file}${json.backup ? '  (backup: ' + json.backup + ')' : ''}`);
+        toast(`Stored ${written} → tapedb.txt • ${json.tapes} tapes`, 'ok', 6000);
+
+        // keep the browser copy of tapedb in sync
+        state.tapeId = tapeId;
+        persistSettings();
+        closeStore();
+
+        if ($('refreshCheck').checked) {
+          await loadTapeDb(true);
+        }
+      } catch (e) {
+        logTerminal('err', `Store failed: ${e.message}`);
+        toast(`Store failed: ${e.message}`, 'err', 9000);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    // =========================================================================
+    // J-Card — same flow as the desktop "Copy/Export Track List" tab
+    // =========================================================================
+    // The bundled J-Card app (/jcard, vendored from ed7n/jcard-template) reads no card
+    // data from its query string, so "Open J-Card" passes the card as a base64url
+    // ?data= payload that the injected bridge (src/jcard/cf-bridge.js) feeds into the
+    // app's own Load field. "Save Template" still downloads the same .jcard.json the
+    // desktop app expects.
+    const JCARD_DEFAULT_FILE = 'template.jcard.json';
+    const JCARD_MONTHS = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST',
+      'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
+
+    let jcardTemplate = null;
+
+    function todayNote() {
+      const now = new Date();
+      return `${JCARD_MONTHS[now.getMonth()]} ${now.getDate()} ${now.getFullYear()}`;
+    }
+
+    function openJCard() {
+      $('jcardModal').classList.add('visible');
+      if (!$('jcardNote').value) $('jcardNote').value = todayNote();
+      if (!$('jcardContents').value.trim()) refreshJCardContents();
+      loadJCardTemplate();
+    }
+
+    function closeJCard() {
+      $('jcardModal').classList.remove('visible');
+    }
+
+    /**
+     * Load the default template once. This is the same template.jcard.json the
+     * desktop application reads so the saved file keeps every field it expects.
+     */
+    async function loadJCardTemplate() {
+      if (jcardTemplate) return jcardTemplate;
+
+      try {
+        const res = await fetch(`/jcard/template?_cb=${Date.now()}`, { cache: 'no-store' });
+        if (res.ok) {
+          const json = await res.json();
+          if (json && json.sideAContents !== undefined) {
+            jcardTemplate = json;
+            $('jcardTemplateLabel').textContent = JCARD_DEFAULT_FILE;
+            logTerminal('map', 'J-Card template loaded from the server');
+            return jcardTemplate;
+          }
+        }
+        logTerminal('warn', `/jcard/template returned HTTP ${res.status} — using the built in template`);
+      } catch (e) {
+        logTerminal('warn', `Could not read /jcard/template (${e.message}) — using the built in template`);
+      }
+
+      // fallback so the dialog still works if the endpoint is unavailable
+      jcardTemplate = {
+        version: '0', bold: false, cardColor: '#ffffff', textColor: '#000000',
+        contentsSeparator: '&nbsp;• ', fontFamily: 'Alte Haas Grotesk', footer: 'Stereo Tape',
+        footerAlignment: 'center', footerSize: '10', forceCaps: true, italicize: false,
+        frontContentsAlignment: 'left', frontContentsVisible: true, frontSize: '9',
+        frontTitleAlignment: 'center', frontTitleVisible: true, backContentsAlignment: 'left',
+        backSize: '8', noteAlignment: 'right', noteSize: '10', noteUpper: 'Recorded',
+        print2: false, shortBack: false, sideALabel: 'Side A', sideBLabel: 'Side B',
+        spineTitleAlignment: 'left', spineTitleVisible: true, titleLowerSize: '12', titleUpperSize: '12'
+      };
+      $('jcardTemplateLabel').textContent = 'built in template';
+      return jcardTemplate;
+    }
+
+    /** Track name for the J-Card, matching AudioInfo.getBasicName() */
+    function jcardTrackName(track) {
+      if (track.noFile) {
+        return String(track.title || track.name).split(' -- ')[0];
+      }
+      return stripExt(track.name);
+    }
+
+    /** Build the SIDE A / SIDE B text from the current sides */
+    function refreshJCardContents() {
+      const parts = [];
+
+      if (state.sideA.length) {
+        parts.push('SIDE A\n' + state.sideA.map(jcardTrackName).join('\n'));
+      }
+      if (state.sideB.length) {
+        parts.push('SIDE B\n' + state.sideB.map(jcardTrackName).join('\n'));
+      }
+
+      $('jcardContents').value = parts.join('\n\n');
+      $('jcardStatus').textContent = `Side A: ${state.sideA.length} tracks   Side B: ${state.sideB.length} tracks`;
+      logTerminal('map', `J-Card track list built from the sides (A: ${state.sideA.length}, B: ${state.sideB.length})`);
+
+      if (!parts.length) {
+        toast('Both sides are empty — add tracks before building the J-Card', 'warn');
+      }
+    }
+
+    /** Split the text area into the two side contents */
+    function splitJCardSides(text) {
+      const parts = String(text || '').split(/\n[ \t]*\n/);
+      const sideA = (parts[0] || '').replace(/SIDE A/i, '').trim();
+      const sideB = (parts.slice(1).join('\n\n') || '').replace(/SIDE B/i, '').trim();
+      return { sideA, sideB };
+    }
+
+    /** Save the template as a .jcard.json download */
+    async function saveJCard() {
+      const json = await buildJCardJson(false);
+
+      if (!json) {
+        toast('Nothing to save — press Load/Refresh to build the track list', 'warn');
+        return;
+      }
+
+      const sideA = json.sideAContents;
+      const sideB = json.sideBContents;
+      const safeName = `${json.titleUpper}_${state.tapeId || 'tape'}`.replace(/[^\w\-. ]+/g, '').trim().replace(/\s+/g, '_');
+      const fileName = `${safeName || 'jcard'}.jcard.json`;
+
+      const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+
+      const countA = sideA ? sideA.split('\n').filter(l => l.trim()).length : 0;
+      const countB = sideB ? sideB.split('\n').filter(l => l.trim()).length : 0;
+
+      logTerminal('map', `J-Card saved as ${fileName} (Side A ${countA} / Side B ${countB} tracks)`);
+      $('jcardStatus').textContent = `Saved ${fileName}`;
+      toast(`J-Card saved as ${fileName}`, 'ok', 8000);
+    }
+
+    /**
+     * Build the J-Card JSON from the dialog fields.
+     *
+     * @param {boolean} withTapeId adds cfTapeId, used to name the card when it is
+     *                             handed to the bundled J-Card app. Kept out of the
+     *                             saved file so downloads stay byte-compatible with
+     *                             the desktop template.
+     * @returns {Promise<object|null>} null when there is nothing on either side
+     */
+    async function buildJCardJson(withTapeId) {
+      const template = jcardTemplate || await loadJCardTemplate();
+      const { sideA, sideB } = splitJCardSides($('jcardContents').value);
+
+      if (!sideA && !sideB) return null;
+
+      const json = Object.assign({}, template);
+      json.titleUpper = $('jcardTitle').value.trim() || 'Album Title';
+      json.titleLower = $('jcardGroup').value.trim() || 'Album Artist';
+      json.noteLower = $('jcardNote').value.trim() || todayNote();
+      json.sideAContents = sideA;
+      json.sideBContents = sideB;
+
+      if (withTapeId && state.tapeId) json.cfTapeId = state.tapeId;
+
+      return json;
+    }
+
+    /** Open the bundled J-Card app with this card already filled in */
+    async function openJCardInApp() {
+      const json = await buildJCardJson(true);
+
+      if (!json) {
+        toast('Nothing to open — press Load/Refresh to build the track list', 'warn');
+        return;
+      }
+
+      // base64url keeps the payload URL-safe and out of the request line's way
+      const bytes = new TextEncoder().encode(JSON.stringify(json));
+      let binary = '';
+      bytes.forEach(byte => { binary += String.fromCharCode(byte); });
+      const encoded = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+      window.open(`/jcard?data=${encoded}`, '_blank', 'noopener');
+      logTerminal('map', `J-Card opened in the bundled J-Card app (tape ${state.tapeId || 'n/a'})`);
+      $('jcardStatus').textContent = 'J-Card opened';
+    }
+
+    function openJCardFile() {
+      $('jcardFileInput').value = '';
+      $('jcardFileInput').click();
+    }
+
+    /** Use an existing .jcard.json as the base template, like "Open Template" */
+    function onJCardFileChosen(ev) {
+      const file = ev.target.files && ev.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const json = JSON.parse(reader.result);
+
+          if (json.sideAContents === undefined || json.sideBContents === undefined) {
+            logTerminal('err', `Invalid J-Card template: ${file.name}`);
+            toast('Invalid J-Card template — it must contain sideAContents and sideBContents', 'err', 8000);
+            return;
+          }
+
+          jcardTemplate = json;
+          $('jcardTemplateLabel').textContent = file.name;
+          if (json.titleUpper) $('jcardTitle').value = json.titleUpper;
+          if (json.titleLower) $('jcardGroup').value = json.titleLower;
+          if (json.noteLower) $('jcardNote').value = json.noteLower;
+          $('jcardContents').value = `SIDE A\n${json.sideAContents || ''}\n\nSIDE B\n${json.sideBContents || ''}`;
+          $('jcardStatus').textContent = `Template: ${file.name}`;
+
+          logTerminal('map', `J-Card template loaded: ${file.name}`);
+          toast(`J-Card template ${file.name} loaded`, 'ok');
+        } catch (e) {
+          logTerminal('err', `Invalid J-Card template: ${file.name} (${e.message})`);
+          toast('Invalid J-Card template file', 'err');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // =========================================================================
+    // Views / settings / wiring
+    // =========================================================================
+    function switchView(view) {
+      if (view === 'tapedb') {
+        openTapeDb();
+        return;
+      }
+      if (view === 'jcard') {
+        openJCard();
+        return;
+      }
+      if (view === 'find') {
+        openFind();
+        return;
+      }
+
+      document.querySelectorAll('.bottom-tab-bar .tab-item').forEach(b => {
+        b.classList.toggle('active', b.dataset.view === view);
+      });
+
+      const panes = document.querySelectorAll('.pane');
+      panes.forEach(p => p.classList.remove('mobile-active'));
+
+      if (view === 'library') $('libraryPane').classList.add('mobile-active');
+      else if (view === 'sides') $('sidesPane').classList.add('mobile-active');
+
+      // keep the library visible next to the sides on desktop
+      if (window.innerWidth > 768) {
+        $('libraryPane').classList.add('mobile-active');
+      }
+    }
+
+    function persistSettings() {
+      localStorage.setItem('lib_tape_id', state.tapeId);
+      localStorage.setItem('lib_tape_length', String(state.tapeLengthMinutes));
+      localStorage.setItem('lib_mute', String(state.mutePadding));
+    }
+
+    function initTapeLengthSelect() {
+      const select = $('tapeLengthSelect');
+      select.innerHTML = '';
+      TAPE_LENGTHS.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = String(t.minutes);
+        opt.textContent = t.label;
+        select.appendChild(opt);
+      });
+      select.value = String(state.tapeLengthMinutes);
+      if (!select.value) {
+        state.tapeLengthMinutes = 60;
+        select.value = '60';
+      }
+    }
+
+    function wireEvents() {
+      // toolbar
+      $('filterInput').addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter') applyLibraryFilter($('filterInput').value);
+        if (ev.key === 'Escape') {
+          $('filterInput').value = '';
+          applyLibraryFilter('');
+        }
+      });
+      $('filterBtn').addEventListener('click', () => applyLibraryFilter($('filterInput').value));
+      $('defaultBtn').addEventListener('click', () => {
+        resetTrackListToDefault();
+      });
+      $('findBtn').addEventListener('click', openFind);
+
+      $('tapeIdInput').value = state.tapeId;
+      $('tapeIdInput').addEventListener('change', () => {
+        state.tapeId = $('tapeIdInput').value.trim().toUpperCase();
+        $('tapeIdInput').value = state.tapeId;
+        persistSettings();
+      });
+
+      $('tapeLengthSelect').addEventListener('change', () => {
+        state.tapeLengthMinutes = parseInt($('tapeLengthSelect').value, 10) || 60;
+        persistSettings();
+        updatePlayTimeLabels();
+      });
+
+      $('muteInput').addEventListener('change', () => {
+        state.mutePadding = Math.max(0, parseInt($('muteInput').value, 10) || 0);
+        $('muteInput').value = state.mutePadding;
+        persistSettings();
+        updatePlayTimeLabels();
+      });
+
+      $('openTapeDbBtn').addEventListener('click', openTapeDb);
+      $('openStoreBtn').addEventListener('click', openStore);
+
+      // library controls
+      $('playBtn').addEventListener('click', playSelectedLibraryTrack);
+      $('stopBtn').addEventListener('click', stopPlayback);
+      $('unselectBtn').addEventListener('click', () => {
+        state.librarySelection.clear();
+        state.libraryAnchor = null;
+        renderLibrary();
+      });
+      $('clearBtn').addEventListener('click', () => {
+        state.trackList = [];
+        state.libraryView = [];
+        state.librarySelection.clear();
+        state.libraryAnchor = null;
+        renderLibrary();
+        logTerminal('map', 'Track list cleared (press Default to reload the default directory)');
+      });
+      $('addBtn').addEventListener('click', addSelectionToSide);
+
+      // side controls
+      $('tabA').addEventListener('click', () => selectSide('A'));
+      $('tabB').addEventListener('click', () => selectSide('B'));
+      $('removeBtn').addEventListener('click', () => removeSelectionFromSide(state.activeSide));
+      $('removeAllBtn').addEventListener('click', () => {
+        sideList(state.activeSide).length = 0;
+        state.sideSelection[state.activeSide].clear();
+        logTerminal('map', `Cleared Side ${state.activeSide}`);
+        renderSide(state.activeSide);
+      });
+      $('shuffleBtn').addEventListener('click', () => shuffleInto(state.activeSide));
+      $('moveUpBtn').addEventListener('click', () => moveSelection(state.activeSide, -1));
+      $('moveDownBtn').addEventListener('click', () => moveSelection(state.activeSide, 1));
+      $('checkBtn').addEventListener('click', checkTrackList);
+      $('playSideBtn').addEventListener('click', () => playSideFrom(state.activeSide, 0));
+
+      // player bar
+      $('miniPlayBtn').addEventListener('click', togglePlay);
+      $('miniPrevBtn').addEventListener('click', () => seekBy(-1));
+      $('miniNextBtn').addEventListener('click', () => seekBy(1));
+
+      // log
+      $('clearLogBtn').addEventListener('click', () => { logBox.innerHTML = ''; });
+
+      // tape db modal
+      $('tapeDbFilter').addEventListener('input', () => renderTapeDbList($('tapeDbFilter').value));
+      $('tapeDbFilter').addEventListener('keydown', ev => { if (ev.key === 'Escape') $('tapeDbFilter').value = ''; });
+      $('combineSidesCheck').addEventListener('change', () => { if (state.selectedTapeKey) showTapeRecord(state.selectedTapeKey); });
+      $('loadTapeBtn').addEventListener('click', loadTapeFromDb);
+      $('tapeDbStoreBtn').addEventListener('click', () => { closeTapeDb(); openStore(); });
+      $('tapeDbCloseBtn').addEventListener('click', closeTapeDb);
+
+      // find modal
+      $('findSearchBtn').addEventListener('click', runFind);
+      $('findTerm').addEventListener('keydown', ev => { if (ev.key === 'Enter') runFind(); });
+      $('findViewAllBtn').addEventListener('click', runFindViewAll);
+      $('findAddBtn').addEventListener('click', addFindResultsToMainList);
+      $('findUnselectBtn').addEventListener('click', () => {
+        state.findSelection.clear();
+        state.selectedGroups.clear();
+        document.querySelectorAll('#findGroupsBox .grp-row').forEach(r => r.classList.remove('selected'));
+        findList.refresh();
+      });
+      $('findCloseBtn').addEventListener('click', closeFind);
+
+      // store modal
+      $('storeConfirmBtn').addEventListener('click', storeTape);
+      $('storeCancelBtn').addEventListener('click', closeStore);
+
+      // j-card modal
+      $('openJCardBtn').addEventListener('click', openJCard);
+      $('jcardCloseBtn').addEventListener('click', closeJCard);
+      $('jcardRefreshBtn').addEventListener('click', refreshJCardContents);
+      $('jcardOpenBtn').addEventListener('click', openJCardFile);
+      $('jcardFileInput').addEventListener('change', onJCardFileChosen);
+      $('jcardSaveBtn').addEventListener('click', saveJCard);
+      $('jcardWebBtn').addEventListener('click', openJCardInApp);
+
+      // bottom tabs
+      document.querySelectorAll('.bottom-tab-bar .tab-item').forEach(btn => {
+        btn.addEventListener('click', () => switchView(btn.dataset.view));
+      });
+
+      // close modals on backdrop click
+      document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', (ev) => {
+          if (ev.target === modal) modal.classList.remove('visible');
+        });
+      });
+
+      // keyboard shortcuts
+      document.addEventListener('keydown', (ev) => {
+        const typing = ['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName);
+
+        if (ev.key === 'Escape') {
+          document.querySelectorAll('.modal.visible').forEach(m => m.classList.remove('visible'));
+          return;
+        }
+        if (typing) return;
+
+        if (ev.key === '/') {
+          ev.preventDefault();
+          $('filterInput').focus();
+        } else if (ev.key === '+') {
+          ev.preventDefault();
+          addSelectionToSide();
+        } else if (ev.key === ' ') {
+          ev.preventDefault();
+          togglePlay();
+        } else if (ev.key === 's' || ev.key === 'S') {
+          stopPlayback();
+        } else if (ev.altKey && (ev.key === 'a' || ev.key === 'A')) {
+          selectSide('A');
+        } else if (ev.altKey && (ev.key === 'b' || ev.key === 'B')) {
+          selectSide('B');
+        }
+      });
+    }
+
+    // =========================================================================
+    // Boot
+    // =========================================================================
+    (async function init() {
+      initTapeLengthSelect();
+      $('muteInput').value = state.mutePadding;
+      wireEvents();
+      selectSide('A');
+      renderSide('A');
+      renderSide('B');
+      renderLibrary();
+      setNowPlaying(null);
+      switchView('library');
+
+      logTerminal('raw', 'CassetteFlow Library & Tape Builder started (playback only, no FSK encoding)');
+
+      await loadEverything(false);
+      switchView('library');
+
+      refreshStatus();
+      setInterval(refreshStatus, 15000);
+    })();
+  </script>
+</body>
+
+</html>

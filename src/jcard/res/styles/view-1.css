@@ -1,0 +1,53 @@
+article > section#template:target {
+  animation: none;
+}
+
+form .columns,
+form .columns:last-child,
+form .columns:not(:last-child) > .column:last-child {
+  margin-block-end: calc(-1 * var(--marginField));
+}
+
+form .columns {
+  display: flex;
+  flex-flow: row wrap;
+}
+
+form .columns > :not(:first-child) {
+  margin-inline-start: var(--marginField);
+}
+
+form .columns > .column {
+  flex-shrink: 1;
+}
+
+form .columns > .column.fluid,
+form .columns > .column.rigid {
+  flex-basis: 66.6666%;
+  min-width: var(--lengthFieldRowMin);
+}
+
+form .columns > .column.fluid,
+form .columns > .column.shorter {
+  flex-grow: 1;
+}
+
+form .columns > .column.short,
+form .columns > .column.rigid {
+  flex-grow: 0;
+}
+
+form .columns > .column.short,
+form .columns > .column.shorter {
+  flex-basis: calc(33.3333% - var(--marginField));
+  min-width: var(--lengthFieldRowSmallMin);
+}
+
+@media print {
+  article > :not(section#template),
+  article > section#template > :not(#output),
+  body > :not(main),
+  main > :not(article) {
+    display: none;
+  }
+}

@@ -1,0 +1,303 @@
+article {
+  --lengthPanelEnd: calc(
+    var(--lengthFieldRowSmallMin) * 2 + var(--marginField) +
+      var(--paddingFieldset) * 2 + var(--widthBorder2) + var(--paddingPanel) * 2 +
+      var(--widthScrollbar)
+  );
+  --paddingPanel: calc(var(--paddingFieldset) * var(--factorGolden));
+}
+
+article > section:not(:last-of-type),
+article
+  > section:not(:first-of-type):not(:last-of-type)
+  > section:not(:not(:first-of-type):not(:last-of-type))
+  > section:not(:last-of-type),
+article
+  > section:not(:first-of-type):not(:last-of-type)
+  > section:last-of-type
+  > nav:first-of-type {
+  border-block-end-style: solid;
+}
+
+article > section:not(:last-of-type),
+article
+  > section:not(:first-of-type):not(:last-of-type)
+  > section:not(:not(:first-of-type):not(:last-of-type))
+  > section:not(:last-of-type) {
+  border-block-end-color: var(--colorAccentMid);
+}
+
+article > section:not(:last-of-type) {
+  border-block-end-width: var(--widthBorder);
+}
+
+article > section:not(:first-of-type):not(:last-of-type),
+article
+  > section:not(:first-of-type):not(:last-of-type)
+  > section:not(:not(:first-of-type):not(:last-of-type)) {
+  display: flex;
+  flex-wrap: nowrap;
+}
+
+article > section:not(:first-of-type):not(:last-of-type) {
+  flex-direction: row;
+}
+
+article
+  > section:not(:first-of-type):not(:last-of-type)
+  > section:not(:first-of-type):not(:last-of-type),
+article
+  > section:not(:first-of-type):not(:last-of-type)
+  > section:not(:not(:first-of-type):not(:last-of-type))
+  > section {
+  flex-grow: 1;
+}
+
+article
+  > section:not(:first-of-type):not(:last-of-type)
+  > section:not(:first-of-type):not(:last-of-type) {
+  flex-shrink: 1;
+}
+
+article
+  > section:not(:first-of-type):not(:last-of-type)
+  > section:not(:not(:first-of-type):not(:last-of-type)),
+article
+  > section:not(:first-of-type):not(:last-of-type)
+  > section:last-of-type
+  > nav:first-of-type {
+  flex-shrink: 0;
+}
+
+article
+  > section:not(:first-of-type):not(:last-of-type)
+  > section:not(:not(:first-of-type):not(:last-of-type)) {
+  flex-direction: column;
+}
+
+article
+  > section:not(:first-of-type):not(:last-of-type)
+  > section:not(:not(:first-of-type):not(:last-of-type))
+  > section {
+  overflow-y: scroll;
+}
+
+article
+  > section:not(:first-of-type):not(:last-of-type)
+  > section:not(:not(:first-of-type):not(:last-of-type))
+  > section:not(:last-of-type) {
+  border-block-end-width: var(--widthBorder2);
+}
+
+article
+  > section:not(:first-of-type):not(:last-of-type)
+  > section:last-of-type {
+  flex-basis: var(--lengthPanelEnd);
+  max-width: var(--lengthPanelEnd);
+}
+
+article
+  > section:not(:first-of-type):not(:last-of-type)
+  > section:last-of-type
+  > :not(section) {
+  flex-grow: 0;
+}
+
+article
+  > section:not(:first-of-type):not(:last-of-type)
+  > section:last-of-type
+  > nav {
+  margin-block-end: unset;
+}
+
+article
+  > section:not(:first-of-type):not(:last-of-type)
+  > section:last-of-type
+  > nav:first-of-type {
+  background-color: var(--colorAccentMin);
+  border-block-end-color: var(--colorAccentLow);
+  border-block-end-width: var(--widthBorderBumpEnd);
+  border-inline-end-color: var(--colorAccentLow);
+  border-inline-end-width: var(--widthBorderBumpStart);
+  border-inline-start-color: var(--colorAccentHigh);
+  border-inline-start-style: solid;
+  border-inline-start-width: var(--widthBorderBumpStart);
+  padding: var(--spacer);
+}
+
+article
+  > section:not(:first-of-type):not(:last-of-type)
+  > section:last-of-type
+  > nav:first-of-type
+  + div.hr,
+article > section:not(:first-of-type):not(:last-of-type) > section:empty,
+article
+  > section:not(:first-of-type):not(:last-of-type)
+  > section:not(:not(:first-of-type):not(:last-of-type)):empty {
+  display: none;
+}
+
+article
+  > section:not(:first-of-type):not(:last-of-type)
+  > section:last-of-type
+  > section
+  > section {
+  margin-inline-end: var(--paddingPanel);
+  margin-inline-start: var(--paddingPanel);
+  padding-block-start: var(--spacer2);
+}
+
+article
+  > section:not(:first-of-type):not(:last-of-type)
+  > section:last-of-type
+  > section
+  > section:last-of-type
+  > nav {
+  font-size: var(--fontSizeSmaller);
+}
+
+article
+  > section:not(:first-of-type):not(:last-of-type)
+  > section:last-of-type
+  > section
+  > section:not(:first-child) {
+  margin-block-start: var(--spacer6);
+}
+
+article.no-panels
+  > section:not(:first-of-type):not(:last-of-type)
+  > section:not(:not(:first-of-type):not(:last-of-type)) {
+  display: none;
+}
+
+article.reverse > section:not(:first-of-type):not(:last-of-type) {
+  flex-direction: row-reverse;
+}
+
+article.reverse
+  > section:not(:first-of-type):not(:last-of-type)
+  > section:last-of-type
+  > nav:first-of-type {
+  border-inline-end-style: solid;
+  border-inline-start-style: unset;
+}
+
+@media (max-width: 45rem), (max-aspect-ratio: 1.9999/3) {
+  article > section:not(:first-of-type):not(:last-of-type),
+  article.reverse > section:not(:first-of-type):not(:last-of-type) {
+    flex-direction: column;
+  }
+
+  article > section:not(:first-of-type):not(:last-of-type) > section,
+  article
+    > section:not(:first-of-type):not(:last-of-type)
+    > section:not(:not(:first-of-type):not(:last-of-type)) {
+    flex-basis: 50%;
+  }
+
+  article
+    > section:not(:first-of-type):not(:last-of-type)
+    > section:not(:not(:first-of-type):not(:last-of-type)) {
+    flex-shrink: var(--factorGolden);
+    max-width: unset;
+  }
+
+  article
+    > section:not(:first-of-type):not(:last-of-type)
+    > section:last-of-type
+    > nav:first-of-type {
+    border-inline-start-style: unset;
+    display: none;
+  }
+
+  article
+    > section:not(:first-of-type):not(:last-of-type)
+    > section:last-of-type
+    > nav:last-of-type {
+    display: unset;
+  }
+
+  article
+    > section:not(:first-of-type):not(:last-of-type)
+    > section:last-of-type
+    > section
+    > section {
+    margin-inline-end: auto;
+    margin-inline-start: auto;
+    max-width: calc(
+      var(--lengthPanelEnd) - var(--paddingPanel) * 2 - var(--widthScrollbar) +
+        8%
+    );
+    padding-inline-end: 4%;
+    padding-inline-start: 4%;
+  }
+
+  article
+    > section:not(:first-of-type):not(:last-of-type)
+    > section:last-of-type
+    > section
+    > section:last-child {
+    margin-block-end: var(--spacer16);
+  }
+
+  article.reverse
+    > section:not(:first-of-type):not(:last-of-type)
+    > section:last-of-type
+    > nav:first-of-type {
+    border-inline-end-style: unset;
+  }
+}
+
+@media (min-width: 45.001rem) and (min-aspect-ratio: 2/3),
+  (max-width: 19.999rem) {
+  article
+    > section:not(:first-of-type):not(:last-of-type)
+    > section:last-of-type
+    > nav:first-of-type {
+    display: unset;
+  }
+
+  article
+    > section:not(:first-of-type):not(:last-of-type)
+    > section:last-of-type
+    > nav:last-of-type {
+    display: none;
+  }
+
+  article
+    > section:not(:first-of-type):not(:last-of-type)
+    > section:last-of-type
+    > section
+    > section:last-child {
+    margin-block-end: var(--spacer8);
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  body:not(.dark)
+    article
+    > section:not(:first-of-type):not(:last-of-type)
+    > section:last-of-type
+    > nav:first-child {
+    border-block-end-color: var(--colorAccentHigh);
+    border-inline-end-color: var(--colorAccentHigh);
+    border-inline-start-color: var(--colorAccentLow);
+  }
+}
+
+@media print {
+  article > :not(section:not(:first-of-type):not(:last-of-type)),
+  article
+    > section:not(:first-of-type):not(:last-of-type)
+    > :not(section:not(:first-of-type):not(:last-of-type)),
+  article
+    > section:not(:first-of-type):not(:last-of-type)
+    > section:not(:first-of-type):not(:last-of-type)
+    > :not(#output) {
+    display: none;
+  }
+
+  article > section:not(:last-of-type) {
+    border-block-end-style: unset;
+  }
+}

@@ -1,0 +1,658 @@
+body {
+  --lengthFieldColumnMin: calc(
+    var(--lengthInputRigid) * var(--fontSizeFactorDent)
+  );
+  --lengthFieldColumnSmallMin: calc(
+    var(--lengthInputShortRigid) * var(--fontSizeFactorDent)
+  );
+  --lengthFieldRowMin: calc(
+    var(--lengthLabelMin) + var(--lengthInputRigid) * var(--fontSizeFactorDent)
+  );
+  --lengthFieldRowSmallMin: calc(
+    var(--lengthLabelMin) + var(--lengthInputShortRigid) *
+      var(--fontSizeFactorDent)
+  );
+  --lengthInputRigid: calc(var(--spacer) * 52);
+  --lengthInputShortRigid: calc(var(--spacer) * 26);
+  --lengthLabelMax: calc(var(--spacer) * 42);
+  --lengthLabelMin: var(--lengthInputShortRigid);
+  --lineHeightForm: 1.5;
+  --marginField: var(--spacer2);
+  --paddingFieldset: var(--spacer2);
+  --paddingLabel: var(--spacer);
+  /* Netronic */
+  --widthScrollbar: var(--spacer4);
+  /* Corrected for Firefox and Chromium. */
+  --heightFieldMin: calc(
+    (var(--lineHeightForm) * 1em + var(--paddingEntry) * 2) *
+      var(--fontSizeFactorDent) + var(--widthBorderDentStart) +
+      var(--widthBorderDentEnd) + var(--spacerPx2)
+  );
+  --lengthInputBumpMinForm: calc(
+    var(--lineHeightForm) * 1em + var(--paddingEntry) * 2 +
+      var(--widthBorderBumpStart) + var(--widthBorderBumpEnd) + var(--spacerPx)
+  );
+  --lengthInputDentMinForm: calc(
+    var(--lineHeightForm) * 1em + var(--paddingEntry) * 2 +
+      var(--widthBorderDentStart) + var(--widthBorderDentEnd) + var(--spacerPx2)
+  );
+  --paddingSelectForm: calc(
+    var(--paddingEntry) + (var(--lineHeightForm) - var(--lineHeightDefault)) *
+      0.5em - var(--spacerPx) * 0.8307
+  );
+}
+
+form .field,
+form .field > .input,
+form .field.column > .label,
+form .field.row.space-between > .label,
+form .field.switch > .label,
+form .group {
+  justify-content: flex-start;
+}
+
+form .field.row > .label,
+form .field.row.space-between > .input:not(.column) {
+  justify-content: flex-end;
+}
+
+form .group.space-between {
+  justify-content: space-between;
+}
+
+form .field,
+form .field > .input,
+form .field.row > .label,
+form .field.switch > .label,
+form .group {
+  align-content: flex-start;
+}
+
+form .field > .input.column {
+  align-content: stretch;
+}
+
+form .field.column > .label,
+form .field.row.space-between > .input.column {
+  align-content: flex-end;
+}
+
+form .field > .input,
+form .field > .label,
+form .field.row,
+form .field.switch,
+form .group {
+  flex-direction: row;
+}
+
+form .field > .input.column,
+form .field.column {
+  flex-direction: column;
+}
+
+form .field > .input > .field,
+form .field > .input > button,
+form .field > .input > input,
+form .field > .input > meter,
+form .field > .input > output,
+form .field > .input > progress,
+form .field > .input > select,
+form .field > .input > textarea,
+form .field.row > .label > input,
+form .field.row > .label > output,
+form .field.row > .label > select,
+form .field.row.space-between > .input,
+form .field.row.space-between > .label,
+form .field.row.space-between > label,
+form .field.switch > .label > input,
+form .field.switch > .label > output,
+form .field.switch > .label > select,
+form .group > .field {
+  flex-basis: 0;
+}
+
+form .field > .input > input[type="checkbox"],
+form .field > .input > input[type="radio"],
+form .field > .input.column > .field,
+form .field > .input.column > button,
+form .field > .input.column > input,
+form .field > .input.column > meter,
+form .field > .input.column > output,
+form .field > .input.column > progress,
+form .field > .input.column > select,
+form .field > .input.column > textarea {
+  flex-basis: unset;
+}
+
+form .field.row > .input {
+  flex-basis: var(--lengthInputRigid);
+}
+
+form .field.row > .label,
+form .field.row > label {
+  flex-basis: var(--lengthLabelMin);
+}
+
+form .field > .input > button,
+form .field > .input > input,
+form .field > .input > meter,
+form .field > .input > output,
+form .field > .input > progress,
+form .field > .input > select,
+form .field > .input > textarea,
+form .field > .label > input,
+form .field > .label > output,
+form .field > .label > select,
+form .field.row > .input,
+form .field.row > .label,
+form .field.row > label,
+form .group > .field {
+  flex-shrink: 1;
+}
+
+form .field > .input > input,
+form .field > .input > meter,
+form .field > .input > output,
+form .field > .input > progress,
+form .field > .input > select,
+form .field > .input > textarea,
+form .field.column > .label > input,
+form .field.column > .label > label,
+form .field.column > .label > output,
+form .field.column > .label > select,
+form .field.column > label,
+form .field.row.space-between > .label > input,
+form .field.row.space-between > .label > label,
+form .field.row.space-between > .label > output,
+form .field.row.space-between > .label > select,
+form .field.row.space-between > label,
+form .field.switch > .label:last-child > input,
+form .field.switch > .label:last-child > label,
+form .field.switch > .label:last-child > output,
+form .field.switch > .label:last-child > select,
+form .field.switch > label:last-child {
+  text-align: start;
+}
+
+form .field.row > .label > input,
+form .field.row > .label > label,
+form .field.row > .label > output,
+form .field.row > .label > select,
+form .field.row > label,
+form .field.row.space-between > .input > input,
+form .field.row.space-between > .input > meter,
+form .field.row.space-between > .input > output,
+form .field.row.space-between > .input > progress,
+form .field.row.space-between > .input > select,
+form .field.row.space-between > .input > textarea,
+form .field.switch > .label:first-child > input,
+form .field.switch > .label:first-child > label,
+form .field.switch > .label:first-child > output,
+form .field.switch > .label:first-child > select,
+form .field.switch > label:first-child {
+  text-align: end;
+}
+
+/* Prevents having to set the `size` HTML attribute. */
+form .field > .input.column > input {
+  max-width: 100%;
+}
+
+form .field > .input.rigid > .field,
+form .field > .input.rigid > button,
+form .field > .input.rigid > input,
+form .field > .input.rigid > meter,
+form .field > .input.rigid > output,
+form .field > .input.rigid > progress,
+form .field > .input.rigid > select,
+form .field > .input.rigid > textarea {
+  max-width: var(--lengthInputRigid);
+}
+
+form .field > .input.short > .field,
+form .field > .input.short > button,
+form .field > .input.short > input,
+form .field > .input.short > meter,
+form .field > .input.short > output,
+form .field > .input.short > progress,
+form .field > .input.short > select,
+form .field > .input.short > textarea {
+  max-width: var(--lengthInputShortRigid);
+}
+
+form .field.column > .label > input,
+form .field.column > .label > output,
+form .field.column > .label > select,
+form .field.row > .label,
+form .field.row > label,
+form .field.switch > .label,
+form .field.switch > label {
+  max-width: var(--lengthLabelMax);
+}
+
+form .field.row.space-between > .label,
+form .field.row.space-between > label {
+  max-width: unset;
+}
+
+form .field > .input.fluid > .field,
+form .field > .input.fluid > button,
+form .field > .input.fluid > input,
+form .field > .input.fluid > meter,
+form .field > .input.fluid > output,
+form .field > .input.fluid > progress,
+form .field > .input.fluid > select,
+form .field > .input.fluid > textarea,
+form .field > .input.shorter > .field,
+form .field > .input.shorter > button,
+form .field > .input.shorter > input,
+form .field > .input.shorter > meter,
+form .field > .input.shorter > output,
+form .field > .input.shorter > progress,
+form .field > .input.shorter > select,
+form .field > .input.shorter > textarea,
+form .field.row > .input,
+form .field.row > .label,
+form .field.row > .label > input,
+form .field.row > .label > output,
+form .field.row > .label > select,
+form .field.row > label,
+form .field.switch > .label > input,
+form .field.switch > .label > output,
+form .field.switch > .label > select,
+form .group > .field {
+  flex-grow: 1;
+}
+
+form .field > .input.rigid > .field,
+form .field > .input.rigid > button,
+form .field > .input.rigid > input,
+form .field > .input.rigid > meter,
+form .field > .input.rigid > output,
+form .field > .input.rigid > progress,
+form .field > .input.rigid > select,
+form .field > .input.rigid > textarea,
+form .field > .input.short > .field,
+form .field > .input.short > button,
+form .field > .input.short > input,
+form .field > .input.short > meter,
+form .field > .input.short > output,
+form .field > .input.short > progress,
+form .field > .input.short > select,
+form .field > .input.short > textarea,
+form .field.switch > .label > label,
+form .field.switch > label,
+form .group.space-between > .field {
+  flex-grow: 0;
+}
+
+form .field > .input.fluid > .field,
+form .field > .input.fluid > button,
+form .field > .input.fluid > input,
+form .field > .input.fluid > meter,
+form .field > .input.fluid > output,
+form .field > .input.fluid > progress,
+form .field > .input.fluid > select,
+form .field > .input.fluid > textarea,
+form .field > .input.rigid > .field,
+form .field > .input.rigid > button,
+form .field > .input.rigid > input,
+form .field > .input.rigid > meter,
+form .field > .input.rigid > output,
+form .field > .input.rigid > progress,
+form .field > .input.rigid > select,
+form .field > .input.rigid > textarea,
+form .field.row.space-between > .input.fluid,
+form .field.row.space-between > .input.rigid {
+  min-width: var(--lengthInputRigid);
+}
+
+form .field > .input.short > .field,
+form .field > .input.short > button,
+form .field > .input.short > input,
+form .field > .input.short > meter,
+form .field > .input.short > output,
+form .field > .input.short > progress,
+form .field > .input.short > select,
+form .field > .input.short > textarea,
+form .field > .input.shorter > .field,
+form .field > .input.shorter > button,
+form .field > .input.shorter > input,
+form .field > .input.shorter > meter,
+form .field > .input.shorter > output,
+form .field > .input.shorter > progress,
+form .field > .input.shorter > select,
+form .field > .input.shorter > textarea,
+form .field.row.space-between > .input.short,
+form .field.row.space-between > .input.shorter {
+  min-width: var(--lengthInputShortRigid);
+}
+
+form .field.column {
+  min-width: var(--lengthFieldColumnMin);
+}
+
+form .field.column.small {
+  min-width: var(--lengthFieldColumnSmallMin);
+}
+
+form .field.row {
+  min-width: var(--lengthFieldRowMin);
+}
+
+form .field.row > .label,
+form .field.row > label {
+  min-width: var(--lengthLabelMin);
+}
+
+form .field.row.small {
+  min-width: var(--lengthFieldRowSmallMin);
+}
+
+form .field.switch,
+form .field.switch > .input > input {
+  min-width: max-content;
+}
+
+form .field.column > .label > label,
+form .field.column > label {
+  padding-block-end: var(--paddingLabel);
+}
+
+form .field.row > .label > label,
+form .field.row > label,
+form .field.switch > .label > label,
+form .field.switch > label {
+  padding-block-start: var(--paddingLabel);
+}
+
+form .field.column > .label > label:first-child,
+form .field.column > label,
+form .field.row.space-between > .label > label:first-child,
+form .field.row.space-between > label,
+form .field.switch > .label > label:first-child,
+form .field.switch > label {
+  padding-inline-start: var(--paddingLabel);
+}
+
+form .field.row > .label > :last-child,
+form .field.row > label,
+form .field.switch > .label > label:last-child,
+form .field.switch > label {
+  padding-inline-end: var(--paddingLabel);
+}
+
+form .field.column > .label,
+form .field.column > label,
+form .field.switch > .label:first-child > :last-child {
+  border-inline-end-style: solid;
+  border-inline-end-width: var(--widthBorderDentEnd);
+}
+
+form .field.column > .label,
+form .field.column > label,
+form .field.switch > .label:last-child > :first-child {
+  border-inline-start-color: var(--colorAccentMinBump);
+  border-inline-start-style: solid;
+}
+
+form .field.column > .label,
+form .field.column > label {
+  border-inline-end-color: var(--colorAccentMinDent);
+  border-inline-start-width: var(--widthBorderDentStart);
+}
+
+form .field.switch > .label:first-child > :last-child {
+  border-inline-end-color: var(--colorAccentLow);
+}
+
+form .field.switch > .label:last-child > :first-child {
+  border-inline-start-width: var(--widthBorderDentEnd);
+}
+
+form .field.row > .label,
+form .field.row > label,
+form .field.switch > .label,
+form .field.switch > label {
+  border-block-end-color: var(--colorAccentMinDent);
+  border-block-end-style: solid;
+  border-block-end-width: var(--widthBorderDentEnd);
+  border-block-start-color: var(--colorAccentMinBump);
+  border-block-start-style: solid;
+  border-block-start-width: var(--widthBorderDentStart);
+}
+
+form .field.column > .label > :first-child {
+  border-inline-start-style: none;
+}
+
+form .field.row > .label > *,
+form .field.switch > .label > * {
+  border-block-end-style: none;
+  border-block-start-style: none;
+}
+
+form .field.column:hover > .label,
+form .field.column:hover > label {
+  border-inline-start-color: var(--colorInputHoverBorder);
+}
+
+form .field.column:focus-within > .label,
+form .field.column:focus-within > label {
+  border-inline-start-color: var(--colorInputFocusBorder);
+}
+
+form .field.column:active > .label,
+form .field.column:active > label {
+  border-inline-start-color: var(--colorInputActiveBorder);
+}
+
+form .field.row:hover > .label,
+form .field.row:hover > label,
+form .field.switch:hover > .label,
+form .field.switch:hover > label {
+  border-block-start-color: var(--colorInputHoverBorder);
+}
+
+form .field.row:focus-within > .label,
+form .field.row:focus-within > label,
+form .field.switch:focus-within > .label,
+form .field.switch:focus-within > label {
+  border-block-start-color: var(--colorInputFocusBorder);
+}
+
+form .field.row:active > .label,
+form .field.row:active > label,
+form .field.switch:active > .label,
+form .field.switch:active > label {
+  border-block-start-color: var(--colorInputActiveBorder);
+}
+
+article > section form details[open] > summary,
+form details[open] > summary {
+  margin-block-end: var(--paddingFieldset);
+}
+
+form {
+  line-height: var(--lineHeightForm);
+}
+
+form .field,
+form .field > .input,
+form .field > .label,
+form .group {
+  display: flex;
+}
+
+form .field {
+  flex-wrap: nowrap;
+  margin-block-end: var(--marginField);
+  min-height: var(--heightFieldMin);
+}
+
+form .field > .input,
+form .field > .label,
+form .group {
+  flex-wrap: wrap;
+}
+
+form .field > .input {
+  font-size: var(--fontSizeDent);
+}
+
+form .field > .input > .field,
+form fieldset > :not(legend):last-child {
+  margin-block-end: unset;
+}
+
+form .field > .input > span,
+form .field > .label > span {
+  padding-block-end: calc(var(--paddingEntry) + var(--widthBorderDentEnd));
+  padding-block-start: calc(var(--paddingEntry) + var(--widthBorderDentStart));
+  padding-inline-end: var(--widthBorderDentEnd);
+  padding-inline-start: var(--widthBorderDentStart);
+}
+
+form .field > .input:not(.column) > span,
+form .field > .label > span {
+  align-self: flex-end;
+}
+
+form .field > .label > input,
+form .field > .label > output,
+form .field > .label > select {
+  min-height: calc(
+    (
+        var(--lengthInputDentMinForm) - var(--widthBorderDentStart) -
+          var(--widthBorderDentEnd)
+      ) * var(--fontSizeFactorDent)
+  );
+}
+
+form .field > .label > input[type="checkbox"],
+form .field > .label > input[type="radio"],
+form input[type="checkbox"],
+form input[type="radio"] {
+  min-height: unset;
+  min-width: unset;
+}
+
+form .field:hover {
+  background-color: var(--colorHoverBackground);
+}
+
+form .field.row > .input > input[type="checkbox"],
+form .field.row > .input > input[type="radio"],
+form .field.switch > .input > input[type="checkbox"],
+form .field.switch > .input > input[type="radio"] {
+  margin-block-end: calc(var(--paddingEntry) + var(--widthBorderDentEnd));
+  margin-block-start: calc(
+    var(--lineHeightForm) / var(--fontSizeFactorDent) * 0.5em -
+      var(--lengthInputSwitch) / 2 + var(--paddingEntry) +
+      var(--widthBorderDentStart)
+  );
+  margin-inline-end: var(--paddingEntry);
+  margin-inline-start: var(--paddingEntry);
+}
+
+form .field.row.space-between > .input.column > button,
+form .field.row.space-between > .input.column > input,
+form .field.row.space-between > .input.column > meter,
+form .field.row.space-between > .input.column > output,
+form .field.row.space-between > .input.column > progress,
+form .field.row.space-between > .input.column > select,
+form .field.row.space-between > .input.column > textarea {
+  width: 100%;
+}
+
+form .field.switch > .input > input[type="checkbox"],
+form .field.switch > .input > input[type="radio"] {
+  align-self: flex-start;
+}
+
+form .field.switch > .input:first-child > input[type="checkbox"]:first-child,
+form .field.switch > .input:first-child > input[type="radio"]:first-child {
+  margin-inline-start: var(--paddingEntryGolden);
+}
+
+form .field.switch > .input:last-child > input[type="checkbox"]:last-child,
+form .field.switch > .input:last-child > input[type="radio"]:last-child {
+  margin-inline-end: var(--paddingEntryGolden);
+}
+
+form .group {
+  align-items: flex-start;
+  margin-inline-end: calc(-1 * var(--marginField));
+}
+
+form .group > .field {
+  margin-inline-end: var(--marginField);
+}
+
+form .input > .field.switch > .input > input[type="checkbox"],
+form .input > .field.switch > .input > input[type="radio"] {
+  margin-block-start: calc(
+    var(--lineHeightForm) * 0.5em - var(--lengthInputSwitch) / 2 +
+      var(--paddingEntry) + var(--widthBorderDentStart)
+  );
+}
+
+form button,
+form input[type="color"] {
+  min-width: var(--lengthInputBumpMinForm);
+}
+
+form button,
+form input[type="color"],
+form meter,
+form progress {
+  min-height: var(--lengthInputBumpMinForm);
+}
+
+form details,
+form details > summary {
+  padding-inline-end: var(--paddingFieldset);
+  padding-inline-start: var(--paddingFieldset);
+}
+
+form details,
+form fieldset,
+form section {
+  margin-block-end: var(--spacer4);
+}
+
+form details > .group:last-child,
+form section > .group:last-child {
+  margin-block-end: calc(-1 * var(--marginField));
+}
+
+form details > summary {
+  margin-inline-end: calc(-1 * var(--paddingFieldset));
+  margin-inline-start: calc(-1 * var(--paddingFieldset));
+}
+
+form details[open] {
+  padding-block-end: var(--paddingFieldset);
+}
+
+form fieldset {
+  border-color: var(--colorAccentLow);
+  border-style: solid;
+  border-width: var(--widthBorder);
+  padding: var(--paddingFieldset);
+}
+
+form input,
+form meter,
+form progress,
+form output,
+form select,
+form textarea {
+  min-height: var(--lengthInputDentMinForm);
+  min-width: var(--lengthInputDentMinForm);
+}
+
+form select {
+  padding-block-end: var(--paddingSelectForm);
+  padding-block-start: var(--paddingSelectForm);
+}
