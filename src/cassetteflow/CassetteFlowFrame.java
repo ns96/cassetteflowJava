@@ -18,8 +18,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -4337,9 +4339,27 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
             String base = jcardSiteTextField.getText().trim();
             String tapeID = tapeIDTextField.getText().trim();
 
-            // the bundled J-Card app loads the tape's card straight away. The site
-            // field can still be pointed at another host if required.
-            if (!tapeID.isEmpty() && !base.contains("?")) {
+            if (base.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Enter the J-Card site url first");
+                return;
+            }
+
+            // The card is built from the editable track list text, not the tape
+            // database, so the user's edits are what gets opened. It is passed as a
+            // base64url ?data= payload, exactly like the web library app does, and
+            // the bridge in the bundled J-Card app picks it up.
+            String trackListText = trackListInfoTextArea.getText();
+
+            if (trackListText != null && !trackListText.trim().isEmpty()) {
+                JSONObject card = buildJCardFromTrackList();
+
+                byte[] json = card.toString().getBytes(StandardCharsets.UTF_8);
+                String data = Base64.getUrlEncoder().withoutPadding().encodeToString(json);
+
+                base = base + (base.contains("?") ? "&" : "?") + "data=" + data;
+            } else if (!tapeID.isEmpty() && !base.contains("?")) {
+                // nothing has been loaded into the track list yet, so let the web app
+                // build the card from the tape database instead
                 base = base + "?tape=" + tapeID;
             }
 
@@ -4404,24 +4424,35 @@ public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProce
     }//GEN-LAST:event_loadTemplateButtonActionPerformed
     
     /**
+     * Build the J-Card data from the current dialog fields and the editable track
+     * list text. Used by both "Open J-Card" and "Save Template" so the two can
+     * never drift.
+     *
+     * @return the card data for the current template and track list
+     */
+    private JSONObject buildJCardFromTrackList() {
+        JSONObject template = (jcardJSON != null) ? jcardJSON : cassetteFlow.loadJCardTemplate();
+
+        String title = jcardTitleTextField.getText().trim();
+        if (title.isEmpty()) {
+            title = tapeIDTextField.getText().trim();
+        }
+
+        return cassetteFlow.buildJCardData(template, trackListInfoTextArea.getText(),
+                title, jcardGroupTextField.getText(), CassetteFlow.getJCardTodayNote());
+    }
+
+    /**
      * Export the json file need for creation of jcard
      * 
      * @param evt 
      */
     private void exportTemplateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exportTemplateButtonActionPerformed
         try {
-            jcardJSON.put("titleUpper", jcardTitleTextField.getText());
-            jcardJSON.put("titleLower", jcardGroupTextField.getText());
+            // build the card from the editable track list text, the same way the
+            // "Open J-Card" button does, and keep the working template in sync
+            jcardJSON = buildJCardFromTrackList();
 
-            String date = CassetteFlow.getJCardTodayNote();
-            jcardJSON.put("noteLower", date);
-            
-            String[] sa = trackListInfoTextArea.getText().split("\n\n");
-            String sideA = sa[0].replace("SIDE A", "").trim();
-            String sideB = sa[1].replace("SIDE B", "").trim();
-            jcardJSON.put("sideAContents", sideA);
-            jcardJSON.put("sideBContents", sideB);
-            
             // save the json file now for import into the online site
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setDialogTitle("Specify a file to save");

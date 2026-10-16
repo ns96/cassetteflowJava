@@ -68,7 +68,7 @@ import org.json.JSONObject;
  */
 public class CassetteFlow {
     // static variable that holds the application version
-    public static String VERSION = "CassetteFlow v2.6.0 (09/29/2026)";
+    public static String VERSION = "CassetteFlow v2.6.1 (09/30/2026)";
 
     // The default mp3 directory name
     public static String AUDIO_DIR_NAME = "c:\\mp3files";
@@ -1023,6 +1023,75 @@ public class CassetteFlow {
         }
 
         return card;
+    }
+
+    /**
+     * Build the J-Card data from the SIDE A / SIDE B text the user can edit in the
+     * desktop dialog instead of the tape database. The desktop "Open J-Card" and
+     * "Save Template" buttons both go through this so they can never drift.
+     *
+     * @param template the template to start from, e.g. the loaded template.jcard.json
+     * @param sideText the editable SIDE A / SIDE B track list text, may be null
+     * @param albumTitle optional "titleUpper" override, null keeps the template value
+     * @param albumArtist optional "titleLower" override, null keeps the template value
+     * @param note optional "noteLower" override, null uses today's date
+     * @return the card data ready to be filled into the template
+     */
+    public JSONObject buildJCardData(JSONObject template, String sideText, String albumTitle,
+            String albumArtist, String note) {
+        JSONObject card = loadJCardTemplate();
+
+        try {
+            // work on a copy so the caller's template is never mutated
+            if (template != null) {
+                card = new JSONObject(template.toString());
+            }
+
+            if (albumTitle != null && !albumTitle.trim().isEmpty()) {
+                card.put("titleUpper", albumTitle.trim());
+            }
+
+            if (albumArtist != null && !albumArtist.trim().isEmpty()) {
+                card.put("titleLower", albumArtist.trim());
+            }
+
+            card.put("noteLower", (note != null && !note.trim().isEmpty()) ? note.trim() : getJCardTodayNote());
+            card.put("sideALabel", "Side A");
+            card.put("sideBLabel", "Side B");
+
+            String[] sides = splitJCardSideText(sideText);
+            card.put("sideAContents", sides[0]);
+            card.put("sideBContents", sides[1]);
+        } catch (JSONException ex) {
+            Logger.getLogger(CassetteFlow.class.getName()).log(Level.WARNING,
+                    "Unable to build the J-Card data from the track list text", ex);
+        }
+
+        return card;
+    }
+
+    /**
+     * Split the editable SIDE A / SIDE B track list text into the two side contents.
+     * The sides are separated by a blank line and a standalone "SIDE A" / "SIDE B"
+     * header line is stripped. A single block is treated as side A so a one sided
+     * tape never fails.
+     *
+     * @param sideText the track list text, may be null
+     * @return a two element array with the side A and side B contents
+     */
+    public static String[] splitJCardSideText(String sideText) {
+        String[] sides = {"", ""};
+
+        if (sideText == null || sideText.trim().isEmpty()) {
+            return sides;
+        }
+
+        String[] parts = sideText.trim().split("\\n[ \\t]*\\n");
+        for (int i = 0; i < parts.length && i < sides.length; i++) {
+            sides[i] = parts[i].replaceFirst("(?im)^[ \\t]*SIDE[ \\t]+[AB][ \\t]*$", "").trim();
+        }
+
+        return sides;
     }
 
     /**
