@@ -1253,9 +1253,26 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
         // Close audio monitor speaker
         audioMonitor.closeSpeaker();
 
-        // Stop JMinimodem by closing the line
-        if (microphoneLine != null && microphoneLine.isOpen()) {
-            microphoneLine.close();
+        // Stop JMinimodem by closing the line, then wait for the decoder thread to
+        // retire so a following start cannot overlap a dying thread (and so the
+        // System.err interceptor it installed is guaranteed to be restored first).
+        Thread dyingDecoder = decoderThread;
+        decoderThread = null;
+
+        if (microphoneLine != null) {
+            if (microphoneLine.isOpen()) {
+                microphoneLine.close();
+            }
+            microphoneLine = null;
+        }
+
+        if (dyingDecoder != null && dyingDecoder != Thread.currentThread()) {
+            dyingDecoder.interrupt();
+            try {
+                dyingDecoder.join(500);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
 

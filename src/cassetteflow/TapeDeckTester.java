@@ -549,10 +549,26 @@ public class TapeDeckTester {
      */
     public void stop() {
         decoding = false;
-        // Closing the line causes the blocked JMinimodem.receive() call to throw an
-        // exception and exit.
-        if (microphoneLine != null && microphoneLine.isOpen()) {
-            microphoneLine.close();
+
+        // Closing the line ends the JMinimodem.receive() loop; wait for the decoder
+        // thread to retire so a following start cannot overlap a dying thread.
+        Thread dyingDecoder = decoderThread;
+        decoderThread = null;
+
+        if (microphoneLine != null) {
+            if (microphoneLine.isOpen()) {
+                microphoneLine.close();
+            }
+            microphoneLine = null;
+        }
+
+        if (dyingDecoder != null && dyingDecoder != Thread.currentThread()) {
+            dyingDecoder.interrupt();
+            try {
+                dyingDecoder.join(500);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
 

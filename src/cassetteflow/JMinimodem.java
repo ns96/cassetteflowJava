@@ -438,6 +438,11 @@ public class JMinimodem {
         ByteArrayOutputStream lineBuffer = new ByteArrayOutputStream();
 
         while ((bytesRead = audioSrc.read(buf)) != -1) {
+            // A closed TargetDataLine keeps returning 0 bytes instead of -1, which
+            // would spin this loop forever and burn a CPU core.
+            if (bytesRead <= 0)
+                break;
+
             // Check for Reset Request
             if (cfg.resetDiagnostics) {
                 totalStops = 0;
