@@ -272,6 +272,12 @@ public class DeckCastConnector {
      * @param trackList
      */
     private void addTrackList(AudioInfo audioInfo, JSONArray trackList) {
+        // check that tracklist length is not zero
+        if(trackList.length() == 0) {
+            System.out.println("No tracklist from DeckcastDJ ...");
+            return;
+        }
+        
         int timePerTrack = (int)audioInfo.getLength()/trackList.length();
         
         System.out.println("Time per track(s) " + timePerTrack);
