@@ -54,7 +54,7 @@ import se.michaelthelin.spotify.requests.data.tracks.GetTrackRequest;
  */
 public class SpotifyConnector {
     private HttpServer server;
-    private CassetteFlowFrame cassetteFlowFrame;
+    private StreamDisplay display;
     private CassetteFlow cassetteFlow;
     
     private String code = "";
@@ -81,6 +81,9 @@ public class SpotifyConnector {
             .build();
     
     private boolean connected = false;
+    
+    // true when the local server that receives the Spotify OAuth code is listening
+    private boolean authServerRunning = false;
     
     private String streamId = ""; // the Spotify id
     private int totalPlaytime; // the total playtime of track in seconds
@@ -123,6 +126,8 @@ public class SpotifyConnector {
             server.setExecutor(threadPoolExecutor);
             server.start();
 
+            authServerRunning = true;
+
             System.out.println("Spotify Connector Server Started ...");
         } catch (IOException ioe) {
             System.out.println("Error Starting Spotify Connector Server ...");
@@ -140,12 +145,12 @@ public class SpotifyConnector {
     /**
      * The constructor that take the cassette flow objects
      * 
-     * @param cassetteFlowFrame
+     * @param display
      * @param cassetteFlow
      */
-    public SpotifyConnector(CassetteFlowFrame cassetteFlowFrame, CassetteFlow cassetteFlow) {
+    public SpotifyConnector(StreamDisplay display, CassetteFlow cassetteFlow) {
         this();
-        this.cassetteFlowFrame = cassetteFlowFrame;
+        this.display = display;
         this.cassetteFlow = cassetteFlow;
     }
     
@@ -163,7 +168,9 @@ public class SpotifyConnector {
      * Stop the http server
      */
     public void stop() {
-        server.stop(0);
+        if (server != null) {
+            server.stop(0);
+        }
     }
     
     /**
@@ -255,9 +262,9 @@ public class SpotifyConnector {
             }
             
             // update the connection status to the main UI
-            if(cassetteFlowFrame != null) {
-                cassetteFlowFrame.updateStreamEditorPane(message.toUpperCase());
-                cassetteFlowFrame.setStreamPlayerConnected(connected);
+            if(display != null) {
+                display.updateStreamEditorPane(message.toUpperCase());
+                display.setStreamPlayerConnected(connected);
             }
             
             sendResponse(he, response);
@@ -302,6 +309,16 @@ public class SpotifyConnector {
      */
     public boolean isConnected() {
        return connected; 
+    }
+
+    /**
+     * Check if the local server that receives the Spotify OAuth code is running.
+     * It will not be when the desktop application already owns port 3000.
+     *
+     * @return
+     */
+    public boolean isAuthServerRunning() {
+        return authServerRunning;
     }
     
     /**
@@ -593,11 +610,11 @@ public class SpotifyConnector {
         totalPlaytime = sideADCTList.size();
         
         queListHtml = getQueListHtml(-1);
-        cassetteFlowFrame.updateStreamEditorPane(queListHtml);
+        display.updateStreamEditorPane(queListHtml);
         
         if(storeDCT) {
             cassetteFlow.addToTapeDB("STR0", queList, null, false);
-            cassetteFlowFrame.setPlayingCassetteID("STR0A");
+            display.setPlayingCassetteID("STR0A");
         }
     } 
     
@@ -689,14 +706,14 @@ public class SpotifyConnector {
                     
                     if (muteRecords == 0) {
                         System.out.println(muteInfo);
-                        cassetteFlowFrame.setPlaybackInfo(muteInfo, false);
+                        display.setPlaybackInfo(muteInfo, false);
                         
                         if(incrementOffset) {
-                            cassetteFlowFrame.incrementDCTDecodeOffset();
+                            display.incrementDCTDecodeOffset();
                         }
                     } else {
                         System.out.println(muteInfo);
-                        cassetteFlowFrame.setPlaybackInfo(muteInfo, true);
+                        display.setPlaybackInfo(muteInfo, true);
                     }
 
                     muteRecords++;
@@ -729,14 +746,14 @@ public class SpotifyConnector {
                 }
                 
                 // update the stream play panel
-                cassetteFlowFrame.setStreamInformation(trackId, currentAudioInfo.getLength(), 1);
-                cassetteFlowFrame.setPlayingAudioInfo(message);
-                cassetteFlowFrame.setPlayingAudioTrack(track);
+                display.setStreamInformation(trackId, currentAudioInfo.getLength(), 1);
+                display.setPlayingAudioInfo(message);
+                display.setPlayingAudioTrack(track);
                 
                 startAt = playTime;
             }
 
-            cassetteFlowFrame.updateStreamPlaytime(playTime, "[ " + track + " ]");
+            display.updateStreamPlaytime(playTime, "[ " + track + " ]");
 
             // update the UI indicating playtime
             String message = currentAudioInfo.getName() + " [" + track + "]\n"
@@ -744,7 +761,7 @@ public class SpotifyConnector {
                     + "Tape Counter: " + playTimeTotal + " (" + CassetteFlowUtil.getTimeString(playTimeTotal) + ")\n"
                     + "Data Errors: " + dataErrors + "/" + logLineCount;
 
-            cassetteFlowFrame.setPlaybackInfo(message, false, "");
+            display.setPlaybackInfo(message, false, "");
         } else {
             playing = false;
         }
@@ -795,8 +812,8 @@ public class SpotifyConnector {
                 pauseUsersPlaybackRequest.execute();
                 
                 playing = false;
-                cassetteFlowFrame.updateStreamPlaytime(0, "");
-                cassetteFlowFrame.setPlaybackInfo("", false);
+                display.updateStreamPlaytime(0, "");
+                display.setPlaybackInfo("", false);
                 
                 System.out.println("Stopped Spotify Stream Playback ...");
                 
@@ -815,7 +832,7 @@ public class SpotifyConnector {
         sideADCTList = null;
         queList = null;
         queListHtml = "";
-        cassetteFlowFrame.updateStreamEditorPane("Track List Cleared ...");
+        display.updateStreamEditorPane("Track List Cleared ...");
     }
     
     /**
@@ -859,6 +876,44 @@ public class SpotifyConnector {
      * 
      * @param args 
      */
+    /**
+     * The total playtime in seconds of the loaded track list
+     *
+     * @return
+     */
+    public int getStreamTotalPlaytime() {
+        return totalPlaytime;
+    }
+
+    /**
+     * The title of the playlist/album that was loaded
+     *
+     * @return
+     */
+    public String getStreamTitle() {
+        return streamTitle == null ? "" : streamTitle;
+    }
+
+    /**
+     * The DCT line records for the loaded track list. Each entry is one second of
+     * playback and has the form tapeId_trackNum_hash_playTime_timeTotal
+     *
+     * @return
+     */
+    public ArrayList<String> getDCTList() {
+        return sideADCTList;
+    }
+
+    /**
+     * Reset the playback position so the next playStream call restarts the current
+     * track at the requested time instead of being ignored
+     */
+    public void resetPlaybackPosition() {
+        currentTapeTime = RESET_TIME;
+        queTrackId = "";
+        muteRecords = 0;
+    }
+
     public static void main(String[] args) {
         SpotifyConnector spotifyConnector = new SpotifyConnector();            
         spotifyConnector.getAuthorizationCodeUri();

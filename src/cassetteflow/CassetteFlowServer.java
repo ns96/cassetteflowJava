@@ -125,6 +125,11 @@ public class CassetteFlowServer {
         server.createContext("/api/tapedb", new StoreTapeHandler()); // store a tape record into tapedb.txt
         server.createContext("/jcard/template", new JCardTemplateHandler()); // default j-card template
 
+        // Spotify / DeckCast streaming control for the library web app. The audio
+        // itself is played by the Spotify client and the DeckCast player, the same
+        // way the desktop STREAM PLAY tab works.
+        server.createContext("/api/stream", new StreamApiHandler());
+
         // Vendored J-Card Template web app (upstream ed7n/jcard-template, BSD 2-Clause)
         server.createContext("/jcard", new JCardViewHandler()); // page + res/** assets
         server.createContext("/api/jcard", new JCardDataHandler()); // card json for a tape
@@ -1868,8 +1873,289 @@ public class CassetteFlowServer {
     }
 
     /**
+     * Handler for the /api/stream endpoints which control the Spotify and DeckCast
+     * backends from the library web app.
+     *
+     * GET  /api/stream/status                 connection + playback state
+     * GET  /api/stream/ids                    ids of the loaded stream tracks
+     * GET  /api/stream/html                   the track table the backend produced
+     * POST /api/stream/connect                {url, provider, pin}
+     * POST /api/stream/disconnect
+     * POST /api/stream/load                   {url}
+     * POST /api/stream/play                   {id, index, offsetSec}
+     * POST /api/stream/pause | resume | stop
+     */
+    private class StreamApiHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            addCorsHeaders(exchange);
+
+            if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+                exchange.sendResponseHeaders(204, -1);
+                exchange.close();
+                return;
+            }
+
+            String path = exchange.getRequestURI().getPath();
+            String action = path.substring(path.lastIndexOf('/') + 1).toLowerCase();
+
+            if (cassetteFlow == null) {
+                sendJsonError(exchange, 503, "The streaming backends need the library index to be loaded");
+                return;
+            }
+
+            StreamBackend backend = cassetteFlow.getStreamBackend();
+
+            if ("html".equals(action)) {
+                sendStreamTable(exchange, backend);
+                return;
+            }
+
+            JSONObject body = null;
+            if ("POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+                String text = readExchangeBody(exchange, 64 * 1024).trim();
+                if (text.startsWith("{")) {
+                    try {
+                        body = new JSONObject(text);
+                    } catch (JSONException ignored) {
+                    }
+                }
+            }
+
+            Map<String, String> params = new LinkedHashMap<>();
+            String query = exchange.getRequestURI().getQuery();
+            if (query != null && !query.isEmpty()) {
+                params = splitQuery(query);
+            }
+
+            String result;
+
+            if ("status".equals(action)) {
+                result = backend.status();
+            } else if ("ids".equals(action)) {
+                result = backend.getQueueIds();
+            } else if ("connect".equals(action)) {
+                result = backend.connect(param(body, params, "url", ""),
+                        param(body, params, "provider", ""),
+                        param(body, params, "pin", ""));
+            } else if ("disconnect".equals(action)) {
+                result = backend.disconnect();
+            } else if ("load".equals(action)) {
+                result = backend.load(param(body, params, "url", ""));
+            } else if ("play".equals(action)) {
+                result = backend.play(param(body, params, "id", ""),
+                        intParam(body, params, "index", -1),
+                        intParam(body, params, "offsetSec", 0),
+                        boolParam(body, params, "single", true));
+            } else if ("pause".equals(action)) {
+                result = backend.pause();
+            } else if ("resume".equals(action)) {
+                result = backend.resume();
+            } else if ("stop".equals(action)) {
+                result = backend.stop();
+            } else {
+                sendJsonError(exchange, 404, "Unknown stream action: " + action);
+                return;
+            }
+
+            sendJsonText(exchange, result);
+        }
+
+        /**
+         * Send the html table that the streaming backend produced, wrapped in a
+         * standalone dark themed page
+         */
+        private void sendStreamTable(HttpExchange exchange, StreamBackend backend) throws IOException {
+            String table = backend.getTrackTableHtml();
+
+            if (table == null || table.isEmpty()) {
+                sendJsonError(exchange, 404, "No stream track table is loaded");
+                return;
+            }
+
+            String auto = "";
+            String query = exchange.getRequestURI().getQuery();
+            if (query != null && query.contains("auto=")) {
+                Map<String, String> params = splitQuery(query);
+                String value = params.get("auto");
+                if (value != null && value.matches("\\d+")) {
+                    auto = "<meta http-equiv=\"refresh\" content=\"" + value + "\">";
+                }
+            }
+
+            String provider = backend.getProvider();
+            String streamTitle = backend.getStreamTitle();
+            String summary = backend.getQueueCount() + " tracks · "
+                    + CassetteFlowUtil.getTimeString(backend.getLengthSec());
+
+            StringBuilder page = new StringBuilder();
+            page.append("<!DOCTYPE html><html><head><meta charset=\"utf-8\">")
+                    .append("<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">")
+                    .append(auto)
+                    .append("<title>").append(escapeHtml(provider)).append(" Track Table</title>")
+                    .append("<style>")
+                    .append("*{box-sizing:border-box;}")
+                    .append("body{margin:0;padding:0 16px 32px;background:#0d1117;color:#e6edf3;")
+                    .append("font-family:Inter,-apple-system,Segoe UI,Roboto,sans-serif;font-size:14px;}")
+                    .append(".cf-head{position:sticky;top:0;z-index:2;display:flex;gap:14px;align-items:center;")
+                    .append("padding:12px 0;background:#0d1117;border-bottom:1px solid #21262d;}")
+                    .append(".cf-head .cf-provider{font-weight:700;color:#3fb950;white-space:nowrap;}")
+                    .append(".cf-head .cf-title{color:#8b949e;flex:1;overflow:hidden;")
+                    .append("text-overflow:ellipsis;white-space:nowrap;}")
+                    .append(".cf-head .cf-summary{color:#8b949e;font-size:12px;white-space:nowrap;}")
+                    .append(".cf-head a{color:#58a6ff;text-decoration:none;font-size:13px;white-space:nowrap;}")
+                    .append(".cf-table{width:100%;border-collapse:collapse;table-layout:fixed;}")
+                    .append(".cf-table th{background:#161b22;color:#8b949e;")
+                    .append("font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;")
+                    .append("text-align:left;padding:8px 10px;border-bottom:1px solid #21262d;}")
+                    .append(".cf-table td{padding:6px 10px;border-bottom:1px solid #161b22;vertical-align:middle;}")
+                    .append(".cf-table tbody tr:hover{background:#161b22;}")
+                    .append(".cf-table tr.playing{background:rgba(63,185,80,.12);}")
+                    .append(".cf-table tr.playing .cf-title{font-weight:600;color:#3fb950;}")
+                    .append(".cf-num{width:52px;color:#8b949e;font-variant-numeric:tabular-nums;text-align:right;}")
+                    .append(".cf-art{width:76px;}")
+                    .append(".cf-thumb{width:60px;height:45px;border-radius:4px;background-color:#21262d;")
+                    .append("background-position:center;background-size:cover;background-repeat:no-repeat;}")
+                    .append(".cf-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}")
+                    .append(".cf-dur{width:82px;color:#8b949e;text-align:right;")
+                    .append("font-variant-numeric:tabular-nums;white-space:nowrap;}")
+                    .append("</style></head><body>");
+
+            page.append("<div class=\"cf-head\"><span class=\"cf-provider\">")
+                    .append(escapeHtml(provider.isEmpty() ? "Stream" : provider))
+                    .append("</span><span class=\"cf-title\">")
+                    .append(escapeHtml(streamTitle))
+                    .append("</span><span class=\"cf-summary\">")
+                    .append(escapeHtml(summary))
+                    .append("</span><a href=\"\">&#8635; Refresh</a></div>");
+
+            page.append("<div class=\"cf-body\">").append(table).append("</div>");
+            page.append("</body></html>");
+
+            byte[] bytes = page.toString().getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().set("Content-Type", "text/html; charset=utf-8");
+            exchange.getResponseHeaders().set("Cache-Control", "no-cache, no-store, must-revalidate");
+            exchange.getResponseHeaders().set("X-Content-Type-Options", "nosniff");
+            exchange.getResponseHeaders().set("Content-Security-Policy",
+                    "default-src 'none'; style-src 'unsafe-inline'; img-src https: data:");
+
+            if ("HEAD".equalsIgnoreCase(exchange.getRequestMethod())) {
+                exchange.getResponseHeaders().set("Content-Length", String.valueOf(bytes.length));
+                exchange.sendResponseHeaders(200, -1);
+                exchange.close();
+                return;
+            }
+
+            exchange.sendResponseHeaders(200, bytes.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(bytes);
+            }
+        }
+
+        private void sendJsonText(HttpExchange exchange, String json) throws IOException {
+            byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
+            exchange.getResponseHeaders().set("Cache-Control", "no-cache, no-store, must-revalidate");
+            exchange.sendResponseHeaders(200, bytes.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(bytes);
+            }
+        }
+
+        private String param(JSONObject body, Map<String, String> params, String key, String defaultValue) {
+            if (body != null && body.has(key)) {
+                try {
+                    return body.getString(key);
+                } catch (JSONException ignored) {
+                }
+            }
+
+            String value = params.get(key);
+            return value == null ? defaultValue : value;
+        }
+
+        private int intParam(JSONObject body, Map<String, String> params, String key, int defaultValue) {
+            if (body != null && body.has(key)) {
+                try {
+                    return body.getInt(key);
+                } catch (JSONException ignored) {
+                }
+            }
+
+            String value = params.get(key);
+            if (value == null) {
+                return defaultValue;
+            }
+
+            try {
+                return Integer.parseInt(value);
+            } catch (NumberFormatException ex) {
+                return defaultValue;
+            }
+        }
+
+        private boolean boolParam(JSONObject body, Map<String, String> params, String key, boolean defaultValue) {
+            if (body != null && body.has(key)) {
+                try {
+                    return body.getBoolean(key);
+                } catch (JSONException ignored) {
+                }
+            }
+
+            String value = params.get(key);
+            if (value == null) {
+                return defaultValue;
+            }
+
+            return "1".equals(value) || "true".equalsIgnoreCase(value) || "yes".equalsIgnoreCase(value);
+        }
+    }
+
+    /**
+     * Read a request body as UTF-8 text, capped at maxBytes so a client cannot make
+     * the server allocate an unbounded string
+     *
+     * @param exchange
+     * @param maxBytes
+     * @return the request body
+     * @throws IOException
+     */
+    private static String readExchangeBody(HttpExchange exchange, int maxBytes) throws IOException {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        byte[] chunk = new byte[8192];
+        int total = 0;
+
+        try (InputStream is = exchange.getRequestBody()) {
+            int read;
+            while ((read = is.read(chunk)) != -1) {
+                total += read;
+                if (total > maxBytes) {
+                    break;
+                }
+                buffer.write(chunk, 0, read);
+            }
+        }
+
+        return new String(buffer.toByteArray(), StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Escape a string so it can be embedded in a html attribute or text node
+     */
+    private static String escapeHtml(String value) {
+        if (value == null) {
+            return "";
+        }
+
+        return value.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;");
+    }
+
+    /**
      * Method to run micro server independently of the GUI application
-     * 
+     *
      * @param args
      */
     public static void main(String[] args) {

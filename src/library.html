@@ -136,6 +136,88 @@
       }
     }
 
+    /* ---------- Stream Play (Spotify / DeckCast) ---------- */
+    .stream-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #6e7681;
+      display: inline-block;
+      flex: 0 0 auto;
+    }
+
+    .nav-btn.stream-connected .stream-dot {
+      background: var(--accent-green);
+      box-shadow: 0 0 8px var(--accent-green);
+    }
+
+    .nav-btn.stream-pending .stream-dot {
+      background: #d29922;
+      animation: streamPulse 1.4s ease-in-out infinite;
+    }
+
+    @keyframes streamPulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.25;
+      }
+    }
+
+    /* keeps a fixed slot so the header does not shift when the chip appears */
+    .chip-slot {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      min-width: 34px;
+      justify-content: center;
+    }
+
+    .chip-slot.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .stream-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 10px;
+      background: rgba(139, 148, 158, 0.15);
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .stream-badge.on {
+      background: rgba(63, 185, 80, 0.15);
+      color: var(--accent-green);
+    }
+
+    .stream-badge.wait {
+      background: rgba(210, 153, 34, 0.15);
+      color: #d29922;
+    }
+
+    .stream-note {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .mobile-stream-btn {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      .mobile-stream-btn {
+        display: flex;
+      }
+    }
+
     .nav-btn {
       font-family: var(--font-sans);
       font-size: 13px;
@@ -973,8 +1055,14 @@
         <span id="statusText">Offline</span>
       </div>
       <nav class="desktop-nav">
+        <button id="streamPlayBtn" class="nav-btn" title="Connect to Spotify or DeckCast">
+          <span class="stream-dot"></span> 📡 Stream Play
+        </button>
+        <a id="streamTableChip" class="nav-btn chip-slot" href="/api/stream/html" target="_blank" rel="noopener"
+          title="View the Spotify / DeckCast track table">📋</a>
         <a class="nav-btn active" href="/library"><span>📚</span> Library</a>
       </nav>
+      <button id="streamPlayBtnMobile" class="nav-btn mobile-stream-btn" title="Stream Play">📡</button>
     </div>
   </header>
 
@@ -1232,6 +1320,74 @@
     </div>
   </div>
 
+  <!-- ---------- Stream Play Modal (Spotify / DeckCast) ---------- -->
+  <div class="modal" id="streamModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <span>📡 Stream Play</span>
+        <span class="sub" id="streamSessionLabel">no session</span>
+      </div>
+      <div class="modal-body">
+        <div class="toolbar-row">
+          <span class="field-inline">Stream URL
+            <input type="text" id="streamUrlInput" class="form-input mono" style="width: 250px"
+              list="streamUrlList" placeholder="http://pi86.sytes.net:5054/">
+            <datalist id="streamUrlList"></datalist>
+          </span>
+          <span class="field-inline">Provider
+            <select id="streamProviderSelect" class="form-select compact input-small">
+              <option>Auto</option>
+              <option>DeckCast</option>
+              <option>Spotify</option>
+            </select>
+          </span>
+          <span class="field-inline">PIN
+            <input type="text" id="streamPinInput" class="form-input compact mono input-tiny" value="0001" maxlength="8">
+          </span>
+        </div>
+
+        <div class="toolbar-row">
+          <button id="streamConnectBtn" class="btn-action">🔌 Connect</button>
+          <button id="streamDisconnectBtn" class="btn-secondary">⏏ Disconnect</button>
+          <span id="streamBadge" class="stream-badge">Disconnected</span>
+          <span id="streamTimerLabel" class="play-time" style="margin-left:auto;"></span>
+        </div>
+
+        <div id="streamAuthRow" style="display:none;">
+          <div id="streamAuthText" class="stream-note"></div>
+          <div class="toolbar-row" style="margin-top:6px;">
+            <a id="streamAuthLink" href="#" target="_blank" rel="noopener" class="nav-btn">▸ Open login page</a>
+            <a id="streamAuthCopy" href="#" class="nav-btn">▸ Copy link</a>
+          </div>
+        </div>
+
+        <div class="toolbar-row">
+          <input type="text" id="streamLoadUrl" class="form-input grow mono"
+            placeholder="Playlist / track URL — spotify.com/playlist/… · youtube.com/playlist?list=…">
+          <button id="streamLoadBtn" class="btn-secondary accent">⬇ Load</button>
+        </div>
+        <div class="stream-note">
+          Loaded tracks are added to the Library list below — there is no separate stream queue.
+          Audio is played by the Spotify client and the DeckCast player, so keep those open in another tab.
+        </div>
+
+        <div class="toolbar-row">
+          <button id="streamTableBtn" class="btn-secondary" disabled>👁 Track Table</button>
+          <button id="streamStopBtn" class="btn-secondary">⏹ Stop</button>
+          <span id="streamModalStatus" class="play-time" style="margin-left:auto;"></span>
+        </div>
+
+        <div id="streamLog" class="log-box" style="height:110px;"></div>
+      </div>
+      <div class="modal-foot">
+        <span class="stream-note">
+          Playback is remote: commands go to the streaming backend, audio comes out of its player.
+        </span>
+        <button id="streamCloseBtn" class="btn-secondary" style="margin-left:auto;">Close</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toastBox"></div>
 
   <script>
@@ -1259,7 +1415,7 @@
 
     // Bump when the shape of /api/library changes so browsers holding an older
     // payload in IndexedDB always refetch instead of showing stale counts.
-    const LIBRARY_CACHE_VERSION = 3;
+    const LIBRARY_CACHE_VERSION = 4;
     const LIBRARY_CACHE_KEY = 'library_json_v' + LIBRARY_CACHE_VERSION;
 
     // --- State ---
@@ -1528,7 +1684,7 @@
       return list;
     }
 
-    async function loadLibrary(forceRefresh) {
+    async function loadLibrary(forceRefresh, resetList) {
       // 1. Cached copy first. The key is versioned so a payload cached by an older
       // build (or one built from audiodb.txt without the default directory flags)
       // is never reused.
@@ -1538,7 +1694,7 @@
           try {
             const json = typeof cached === 'string' ? JSON.parse(cached) : cached;
             if (libraryPayloadIsCurrent(json)) {
-              applyLibraryJson(json, true, '/api/library');
+              applyLibraryJson(json, true, '/api/library', resetList);
               return;
             }
             logTerminal('warn', 'Cached library was built by an older version — refetching');
@@ -1558,7 +1714,7 @@
           const text = await res.text();
           const json = JSON.parse(text);
           await idbSet(LIBRARY_CACHE_KEY, text);
-          applyLibraryJson(json, false, '/api/library');
+          applyLibraryJson(json, false, '/api/library', resetList);
           return;
         }
         logTerminal('warn', `/api/library returned HTTP ${res.status}, falling back to audiodb.txt`);
@@ -1571,7 +1727,7 @@
       const result = await fetchWithFallback(audioDbCandidates());
       if (result) {
         const json = libraryFromAudioDb(result.text);
-        applyLibraryJson(json, false, result.source);
+        applyLibraryJson(json, false, result.source, resetList);
       } else {
         logTerminal('err', 'Unable to load the audio library');
         toast('Unable to load the audio library. Start the CassetteFlow server or check the music server URL.', 'err', 9000);
@@ -1611,7 +1767,8 @@
       return { version: 1, count: tracks.length, tracks };
     }
 
-    function applyLibraryJson(json, fromCache, source) {
+    function applyLibraryJson(json, fromCache, source, resetList) {
+      const keepWorkingList = resetList === false;
       const tracks = (json.tracks || []).map(normalizeTrack);
       state.library = tracks;
 
@@ -1634,18 +1791,24 @@
       // directly in the default audio directory. Everything else is pulled into
       // the list with the Find dialog.
       state.defaultTracks = sortTracks(tracks.filter(t => t.inDefaultDir));
-      state.trackList = state.defaultTracks.slice();
-      state.libraryFiltered = false;
-      state.libraryView = state.trackList;
-      state.librarySelection.clear();
+
+      // a refresh that follows a stream load must not put the default directory
+      // back into the working list, that would undo Clear and duplicate tracks
+      if (!keepWorkingList) {
+        state.trackList = state.defaultTracks.slice();
+        state.libraryFiltered = false;
+        state.libraryView = state.trackList;
+        state.librarySelection.clear();
+      }
+
       state.dbFromCache = fromCache;
       renderLibrary();
 
       const playable = tracks.length - state.noFileCount;
       logTerminal(fromCache ? 'map' : 'raw',
-        `${tracks.length.toLocaleString()} rows from ${state.librarySource}${fromCache ? ' (cache ⚡)' : ''} — ${playable.toLocaleString()} playable files, ${state.noFileCount.toLocaleString()} without a file, from ${state.indexKeys.toLocaleString()} index keys. Default directory: ${state.trackList.length}`);
+        `${tracks.length.toLocaleString()} rows from ${state.librarySource}${fromCache ? ' (cache ⚡)' : ''} — ${playable.toLocaleString()} playable files, ${state.noFileCount.toLocaleString()} without a file, from ${state.indexKeys.toLocaleString()} index keys. Default directory: ${state.defaultTracks.length}`);
 
-      if (tracks.length && !state.trackList.length) {
+      if (tracks.length && !state.defaultTracks.length) {
         logTerminal('warn',
           `The audio index has no entries for the default directory (${json.sourceDir || 'audio.directory'}) — check the property, or use 🔎 Find to add tracks`);
       }
@@ -1712,8 +1875,15 @@
     function normalizeTrack(raw) {
       const file = (raw.file || raw.sd || raw.name || '').replace(/\\/g, '/');
       const segs = file.split('/').filter(Boolean);
-      const name = raw.name || (segs.length ? segs[segs.length - 1] : raw.id);
-      const parent = segs.length >= 2 ? segs[segs.length - 2] : 'Root';
+      const rawName = raw.name || (segs.length ? segs[segs.length - 1] : raw.id);
+      const providerName = raw.stream === true ? (raw.provider || '') : '';
+      const providerTag = providerName ? `[${providerName}] ` : '';
+      // stream tracks are listed under their service instead of [Root], and the
+      // service marker already stored in the title is not repeated
+      const name = (providerTag && rawName.indexOf(providerTag) === 0)
+        ? rawName.substring(providerTag.length)
+        : rawName;
+      const parent = providerName || (segs.length >= 2 ? segs[segs.length - 2] : 'Root');
       const length = raw.length || 0;
       const lengthAsTime = raw.lengthAsTime || formatTime(length);
       const rawBitrate = raw.bitrate || 0;
@@ -1742,7 +1912,10 @@
         lengthAsTime,
         bitrate: rawBitrate >= 1000 ? Math.round(rawBitrate / 1000) : rawBitrate,
         noFile: raw.noFile === true,
-        label: `[${parent}] ${name}${raw.noFile === true ? ' [no file]' : ''} (${lengthAsTime})`,
+        stream: raw.stream === true,
+        provider: raw.provider || '',
+        streamId: raw.streamId || '',
+        label: `[${parent}] ${name}${raw.stream === true ? '' : (raw.noFile === true ? ' [no file]' : '')} (${lengthAsTime})`,
         searchName: `${name} (${lengthAsTime})`
       };
     }
@@ -2014,8 +2187,9 @@
       // already playing then selecting another file in the library switches to it
       // straight away. Modifier clicks only build a selection so playback is not
       // interrupted while picking several tracks.
-      const alreadyPlaying = !!audio.src && !audio.paused && !!audio.currentTime;
-      if (plainClick && alreadyPlaying && state.mode !== 'side') {
+      const audioPlaying = !!audio.src && !audio.paused && !!audio.currentTime;
+      const streamPlaying = stream.active && !!stream.status && (stream.status.playing || stream.status.paused);
+      if (plainClick && (audioPlaying || streamPlaying) && state.mode !== 'side') {
         playSelectedLibraryTrack();
       }
 
@@ -2237,6 +2411,364 @@
     }
 
     // =========================================================================
+    // Stream Play (Spotify / DeckCast)
+    //
+    // The audio is played by the Spotify client and the DeckCast player, exactly
+    // like the desktop STREAM PLAY tab, so this page only sends commands to the
+    // server backend and follows the state it reports back.
+    // =========================================================================
+    const stream = {
+      status: null,
+      active: false,
+      pollTimer: null,
+      finishedHandled: false,
+      pendingLoad: false
+    };
+
+    // The exact entries of the desktop STREAM PLAY combo box
+    // (CassetteFlowFrame.java streamComboBox model) so both clients stay in sync
+    const STREAM_URLS = [
+      { url: 'http://pi86.sytes.net:5054/', label: 'DeckCast (remote)' },
+      { url: 'http://127.0.0.1:5054/', label: 'DeckCast (local)' },
+      { url: 'http://127.0.0.1:5154/', label: 'DeckCast (local 5154)' },
+      { url: 'http://127.0.0.1:5254/', label: 'DeckCast (local 5254)' },
+      { url: 'https://www.spotify.com/', label: 'Spotify' }
+    ];
+
+    function initStreamUrlList() {
+      const list = $('streamUrlList');
+      if (!list) return;
+
+      list.innerHTML = '';
+
+      STREAM_URLS.forEach(entry => {
+        const option = document.createElement('option');
+        option.value = entry.url;
+        option.label = entry.label;
+        list.appendChild(option);
+      });
+    }
+
+    function streamIsPlaying() {
+      return stream.active && !!stream.status && (stream.status.playing || stream.status.paused);
+    }
+
+    async function streamApi(action, payload) {
+      const opts = payload
+        ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }
+        : { cache: 'no-store' };
+
+      try {
+        const res = await fetch(`/api/stream/${action}`, opts);
+        const text = await res.text();
+        try {
+          return JSON.parse(text);
+        } catch (e) {
+          return { ok: false, error: text || res.statusText };
+        }
+      } catch (e) {
+        return { ok: false, error: e.message || 'stream request failed' };
+      }
+    }
+
+    function streamLog(text) {
+      const box = $('streamLog');
+      if (!box) return;
+      const line = document.createElement('div');
+      line.textContent = `${new Date().toLocaleTimeString()}  ${text}`;
+      box.appendChild(line);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function scheduleStreamPoll() {
+      clearTimeout(stream.pollTimer);
+      const delay = streamIsPlaying() ? 1000 : 5000;
+      stream.pollTimer = setTimeout(async () => {
+        await refreshStreamStatus();
+        scheduleStreamPoll();
+      }, delay);
+    }
+
+    async function refreshStreamStatus() {
+      const s = await streamApi('status');
+      applyStreamStatus(s && s.ok ? s : null);
+      return s;
+    }
+
+    function applyStreamStatus(s) {
+      stream.status = s;
+
+      const buttons = [$('streamPlayBtn'), $('streamPlayBtnMobile')];
+      buttons.forEach(el => {
+        if (!el) return;
+        el.classList.remove('stream-connected', 'stream-pending');
+
+        if (!s || !s.provider) {
+          el.title = 'Connect to Spotify or DeckCast';
+        } else if (s.authPending && !s.connected) {
+          el.classList.add('stream-pending');
+          el.title = `${s.provider} — waiting for login`;
+        } else if (s.connected) {
+          el.classList.add('stream-connected');
+          el.title = `${s.provider}${s.pin ? ' · pin ' + s.pin : ''} · ${s.queueCount} tracks`;
+        } else {
+          el.title = `${s.provider} — not connected`;
+        }
+      });
+
+      const chip = $('streamTableChip');
+      if (chip) chip.classList.toggle('visible', !!(s && s.connected && s.tableAvailable));
+
+      if ($('streamModal').classList.contains('visible')) renderStreamDialog(s);
+
+      if (stream.active && s) applyStreamProgress(s);
+
+      // a load that was queued while the Spotify login was pending
+      if (stream.pendingLoad && s && s.connected && s.queueCount > 0) {
+        stream.pendingLoad = false;
+        streamApi('ids').then(res => {
+          if (res && res.ok) appendStreamTracks(res.ids || []);
+        });
+      }
+    }
+
+    function renderStreamDialog(s) {
+      const badge = $('streamBadge');
+      const session = $('streamSessionLabel');
+      const authRow = $('streamAuthRow');
+      const tableBtn = $('streamTableBtn');
+
+      if (!s || !s.provider) {
+        badge.className = 'stream-badge';
+        badge.textContent = 'Disconnected';
+        session.textContent = 'no session';
+        authRow.style.display = 'none';
+        $('streamTimerLabel').textContent = '';
+        $('streamModalStatus').textContent = '';
+        tableBtn.disabled = true;
+        return;
+      }
+
+      session.textContent = `${s.provider}${s.pin ? ' · pin ' + s.pin : ''}${s.serverUrl ? ' · ' + s.serverUrl : ''}`;
+
+      if (s.authPending && !s.connected) {
+        badge.className = 'stream-badge wait';
+        badge.textContent = `Waiting for login (${s.authSecondsRemaining || 0}s)`;
+        authRow.style.display = '';
+
+        $('streamAuthText').textContent = s.launched
+          ? 'A Spotify login tab was opened on the server machine. Approve access there and this dialog updates by itself.'
+          : 'The server could not open a browser. Use the login page below, then come back here.';
+
+        if (s.authUrl) {
+          $('streamAuthLink').href = s.authUrl;
+          $('streamAuthLink').style.display = '';
+          $('streamAuthCopy').dataset.url = s.authUrl;
+          $('streamAuthCopy').style.display = '';
+        }
+      } else {
+        authRow.style.display = 'none';
+        badge.className = s.connected ? 'stream-badge on' : 'stream-badge';
+        badge.textContent = s.connected ? 'Connected' : 'Disconnected';
+      }
+
+      tableBtn.disabled = !s.tableAvailable;
+      tableBtn.textContent = s.tableAvailable ? `👁 Track Table (${s.queueCount})` : '👁 Track Table';
+
+      const parts = [];
+      if (s.queueCount) parts.push(`${s.queueCount} tracks`);
+      if (s.lengthSec) parts.push(formatTime(s.lengthSec));
+      if (s.playing || s.paused) parts.push(`${formatTime(s.positionSec)} / ${formatTime(s.lengthSec)}`);
+      $('streamTimerLabel').textContent = parts.join(' · ');
+      $('streamModalStatus').textContent = s.message || '';
+    }
+
+    function applyStreamProgress(s) {
+      const position = s.mute ? 0 : (s.trackPositionSec || 0);
+      const duration = s.trackLength || 0;
+      const pct = duration ? Math.min(100, (position / duration) * 100) : 0;
+
+      progressFill.style.width = `${pct.toFixed(1)}%`;
+      $('nowTimes').textContent = `${formatTime(position)} / ${formatTime(duration)}`;
+      $('miniPlayBtn').textContent = s.playing ? '⏸' : '▶';
+
+      if (s.title) $('nowTitle').textContent = s.title;
+
+      if (s.mute) {
+        $('gapLabel').textContent = '⏳ Mute Section…';
+      } else if ($('gapLabel').textContent.indexOf('Mute Section') >= 0) {
+        $('gapLabel').textContent = '';
+      }
+
+      // keep the queue cursor in step with what the backend is playing
+      if (s.id && state.playQueue.length) {
+        const index = state.playQueue.findIndex(t => t.id === s.id);
+        if (index >= 0) state.playIndex = index;
+      }
+
+      if (s.finished && !stream.finishedHandled) {
+        stream.finishedHandled = true;
+        onStreamTrackFinished();
+      } else if (!s.finished) {
+        stream.finishedHandled = false;
+      }
+    }
+
+    /** The backend reached the end of the track, behave like the audio 'ended' event */
+    function onStreamTrackFinished() {
+      if (state.playIndex + 1 < state.playQueue.length) {
+        if (state.mode === 'side' && state.mutePadding > 0) startGap(state.playIndex + 1);
+        else startTrack(state.playIndex + 1);
+      } else if (state.mode === 'side') {
+        stopPlayback();
+        logTerminal('map', `Finished playing Side ${state.playingSide} ✓`);
+        toast(`Finished playing Side ${state.playingSide}`, 'ok');
+      } else {
+        stopPlayback();
+      }
+    }
+
+    async function streamPlayTrack(track) {
+      stream.active = true;
+      stream.finishedHandled = false;
+
+      const res = await streamApi('play', { id: track.id, single: true });
+
+      if (!res || res.ok === false) {
+        stream.active = false;
+        const error = (res && (res.error || res.message)) || 'no response from the server';
+        streamLog(`play failed: ${error}`);
+        logTerminal('err', `Stream play failed: ${error}`);
+        toast('Could not start the stream track — check the Stream Play connection', 'err', 7000);
+        return;
+      }
+
+      applyStreamStatus(res);
+      nowPlayingNotify(`${track.title}${track.artist ? ' - ' + track.artist : ''}`, true, track.id);
+      scheduleStreamPoll();
+    }
+
+    async function streamStop() {
+      stream.active = false;
+      stream.finishedHandled = false;
+      await streamApi('stop');
+      await refreshStreamStatus();
+    }
+
+    function openStream() {
+      $('streamUrlInput').value = localStorage.getItem('cfg_stream_url') || STREAM_URLS[0].url;
+      $('streamPinInput').value = localStorage.getItem('cfg_stream_pin') || '0001';
+      $('streamLoadUrl').value = localStorage.getItem('cfg_stream_load_url') || '';
+      $('streamModal').classList.add('visible');
+      refreshStreamStatus().then(scheduleStreamPoll);
+    }
+
+    function closeStream() {
+      $('streamModal').classList.remove('visible');
+    }
+
+    async function connectStream() {
+      const url = $('streamUrlInput').value.trim();
+      const provider = $('streamProviderSelect').value;
+      const pin = $('streamPinInput').value.trim();
+
+      if (!url) {
+        toast('Enter the stream url, or "spotify" for the Spotify client', 'warn');
+        return;
+      }
+
+      localStorage.setItem('cfg_stream_url', url);
+      localStorage.setItem('cfg_stream_pin', pin);
+      streamLog(`connect ${provider} · ${url}${pin ? ' · pin ' + pin : ''}`);
+
+      const res = await streamApi('connect', { url, provider, pin });
+
+      if (!res || res.ok === false) {
+        const error = (res && res.error) || 'could not connect';
+        streamLog(error);
+        toast(error, 'err', 7000);
+        await refreshStreamStatus();
+        return;
+      }
+
+      streamLog(res.message || 'connect requested');
+      if (res.authUrl && !res.launched) {
+        streamLog('the browser was not launched — use the login link below');
+      }
+
+      await refreshStreamStatus();
+      scheduleStreamPoll();
+    }
+
+    async function disconnectStream() {
+      streamLog('disconnect');
+      stream.active = false;
+      await streamApi('disconnect');
+      await refreshStreamStatus();
+      scheduleStreamPoll();
+    }
+
+    async function loadStreamTracks() {
+      const url = $('streamLoadUrl').value.trim();
+
+      if (!url) {
+        toast('Paste a Spotify or YouTube playlist / track url', 'warn');
+        return;
+      }
+
+      localStorage.setItem('cfg_stream_load_url', url);
+      $('streamLoadBtn').disabled = true;
+      streamLog(`load ${url}`);
+
+      const res = await streamApi('load', { url });
+      $('streamLoadBtn').disabled = false;
+
+      if (!res || res.ok === false) {
+        const error = (res && (res.error || res.message)) || 'load failed';
+        streamLog(error);
+        toast(error, 'err', 8000);
+        await refreshStreamStatus();
+        return;
+      }
+
+      if (res.queued) {
+        stream.pendingLoad = true;
+        streamLog('queued until the Spotify login completes');
+        toast('Login first — the playlist loads automatically when it completes', 'warn', 7000);
+        await refreshStreamStatus();
+        return;
+      }
+
+      streamLog(`${res.count} ${res.label || ''} track(s) loaded`);
+      await appendStreamTracks(res.ids || []);
+      await refreshStreamStatus();
+    }
+
+    /** Refresh the library index and append the loaded stream tracks to the list */
+    async function appendStreamTracks(ids) {
+      if (!ids.length) return;
+
+      // refresh the index only: the working list may have been cleared, or may
+      // hold tracks the user added on purpose, so it must not be reset here
+      await loadLibrary(true, false);
+
+      const wanted = new Set(ids);
+      const known = new Set(state.trackList.map(t => t.id));
+      const fresh = state.library.filter(t => wanted.has(t.id) && !known.has(t.id));
+
+      state.trackList = state.trackList.concat(fresh);
+      $('filterInput').value = '';
+      state.libraryFiltered = false;
+      state.libraryView = state.trackList;
+      state.librarySelection.clear();
+      state.libraryAnchor = null;
+      renderLibrary();
+
+      logTerminal('map', `Track list: +${fresh.length} stream track(s), ${state.trackList.length} total`);
+      toast(`Added ${fresh.length} stream track(s) to the Library list`, 'ok');
+    }
+
+    // =========================================================================
     // Playback
     // =========================================================================
     function setNowPlaying(track, indexText, queueLength) {
@@ -2249,9 +2781,30 @@
       state.playIndex = index;
       const track = state.playQueue[index];
       if (!track) return;
+
+      $('gapLabel').textContent = '';
+
+      // stream tracks are played by the Spotify client / DeckCast player, the
+      // local audio element is not used at all for them
+      if (track.stream) {
+        audio.pause();
+        setNowPlaying(track, String(index + 1).padStart(2, '0'), state.playQueue.length);
+        logTerminal('raw', `▶ ${track.label} → ${track.provider || 'stream'}`);
+        streamPlayTrack(track);
+        renderSide(state.activeSide);
+        renderLibrary();
+        return;
+      }
+
+      stream.active = false;
+
+      // stop the remote player when we switch back to a local file
+      if (stream.status && (stream.status.playing || stream.status.paused)) {
+        streamApi('stop');
+      }
+
       const url = resolveAudioUrl(track);
       audio.src = url;
-      $('gapLabel').textContent = '';
       setNowPlaying(track, String(index + 1).padStart(2, '0'), state.playQueue.length);
       logTerminal('raw', `▶ ${track.label} → ${url}`);
       audio.play().catch(err => {
@@ -2337,6 +2890,12 @@
       audio.pause();
       audio.removeAttribute('src');
       audio.load();
+
+      // the stream backend keeps playing until it is told to stop
+      if (stream.active) {
+        streamStop();
+      }
+
       $('gapLabel').textContent = '';
       $('miniPlayBtn').textContent = '▶';
       progressFill.style.width = '0%';
@@ -2346,6 +2905,20 @@
     }
 
     function togglePlay() {
+      if (stream.active) {
+        const status = stream.status || {};
+
+        if (status.playing) {
+          streamApi('pause').then(applyStreamStatus);
+        } else if (status.paused) {
+          streamApi('resume').then(applyStreamStatus);
+        } else if (state.playIndex >= 0 && state.playIndex < state.playQueue.length) {
+          startTrack(state.playIndex);
+        }
+
+        return;
+      }
+
       if (!audio.src) {
         playSelectedLibraryTrack();
         return;
@@ -2355,8 +2928,20 @@
     }
 
     function seekBy(delta) {
-      if (!audio.src) return;
+      if (!audio.src && !stream.active) return;
       if (!state.playQueue.length) return;
+
+      if (stream.active) {
+        // the backend plays one track at a time for us, so prev/next just moves
+        // the queue cursor the same way it does for local files
+        if (delta < 0) {
+          playQueueFrom(state.playIndex, state.mode, state.playingSide);
+        } else if (state.playIndex + 1 < state.playQueue.length) {
+          playQueueFrom(state.playIndex + 1, state.mode, state.playingSide);
+        }
+        return;
+      }
+
       if (delta < 0) {
         // restart the track if we are past the first few seconds, otherwise go back
         if (audio.currentTime > 3 || state.playIndex === 0) {
@@ -2372,6 +2957,7 @@
     }
 
     audio.addEventListener('timeupdate', () => {
+      if (stream.active) return; // the poll feeds the progress bar for streams
       const cur = audio.currentTime || 0;
       const dur = audio.duration || (currentTrack() ? currentTrack().length : 0) || 1;
       progressFill.style.width = `${Math.min(100, (cur / dur) * 100)}%`;
@@ -3275,6 +3861,26 @@
       $('jcardSaveBtn').addEventListener('click', saveJCard);
       $('jcardWebBtn').addEventListener('click', openJCardInApp);
 
+      // stream play modal
+      $('streamPlayBtn').addEventListener('click', openStream);
+      $('streamPlayBtnMobile').addEventListener('click', openStream);
+      $('streamCloseBtn').addEventListener('click', closeStream);
+      $('streamConnectBtn').addEventListener('click', connectStream);
+      $('streamDisconnectBtn').addEventListener('click', disconnectStream);
+      $('streamLoadBtn').addEventListener('click', loadStreamTracks);
+      $('streamLoadUrl').addEventListener('keydown', ev => { if (ev.key === 'Enter') loadStreamTracks(); });
+      $('streamStopBtn').addEventListener('click', () => { if (stream.active) streamStop(); });
+      $('streamTableBtn').addEventListener('click', () => {
+        if (!$('streamTableBtn').disabled) window.open('/api/stream/html', '_blank', 'noopener');
+      });
+      $('streamAuthCopy').addEventListener('click', (ev) => {
+        ev.preventDefault();
+        const url = $('streamAuthCopy').dataset.url || '';
+        if (url && navigator.clipboard) {
+          navigator.clipboard.writeText(url).then(() => toast('Spotify login link copied', 'ok'));
+        }
+      });
+
       // bottom tabs
       document.querySelectorAll('.bottom-tab-bar .tab-item').forEach(btn => {
         btn.addEventListener('click', () => switchView(btn.dataset.view));
@@ -3321,6 +3927,7 @@
     // =========================================================================
     (async function init() {
       initTapeLengthSelect();
+      initStreamUrlList();
       $('muteInput').value = state.mutePadding;
       wireEvents();
       selectSide('A');
@@ -3337,6 +3944,8 @@
 
       refreshStatus();
       setInterval(refreshStatus, 15000);
+
+      refreshStreamStatus().then(scheduleStreamPoll);
     })();
   </script>
 </body>

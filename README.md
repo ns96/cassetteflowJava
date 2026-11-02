@@ -14,6 +14,8 @@ The latest release (**v2.0.x**) focuses on using an integrated Minimodem like en
 
 In order to accomplish this, it use to depend on the excellent [Minimodem](https://github.com/kamalmostafa/minimodem) program to encode the generate text input files to wav files for recording onto the analog media, as well has decoding data. Now it makes use of a pure Java FSK implementation (JMinimodem) which removes the need for Minimodem entirely.
 
+The Library & Tape Builder web app (`http://localhost:8192/library`) also has a **Stream Play** button that connects it to a Spotify or DeckCast backend. Playback stays with the Spotify client and the DeckCast player, exactly like the desktop STREAM PLAY tab; loading a Spotify or YouTube playlist inserts the tracks into the library list (prefixed `[Spotify]` / `[YouTube]`) so they can be added to tape sides, stored in `tapedb.txt` and printed on a J-Card like any local file.
+
 Please note, this project is not meant to as a way to get cassettes/R2R to 
 sound good. With the proper deck, tape type, and NR technology the audio 
 can sound pretty good, even matching or coming close CD quality. That's just expensive and time consuming in this day and age to accomplish :)

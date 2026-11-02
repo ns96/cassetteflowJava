@@ -68,7 +68,7 @@ import org.json.JSONObject;
  */
 public class CassetteFlow {
     // static variable that holds the application version
-    public static String VERSION = "CassetteFlow v2.7.1 (10/31/2026)";
+    public static String VERSION = "CassetteFlow v2.8.0 (11/02/2026)";
 
     // The default mp3 directory name
     public static String AUDIO_DIR_NAME = "c:\\mp3files";
@@ -98,6 +98,9 @@ public class CassetteFlow {
 
     // stores the stream audioInfo object keyed by the 10 character hash
     public HashMap<String, AudioInfo> streamAudioInfoDB = new HashMap<>();
+
+    // the streaming backend that the web library app drives (created on first use)
+    private StreamBackend streamBackend;
 
     // also store the AudioInfo object in a list for convinience when
     // displaying in the UI
@@ -1312,6 +1315,19 @@ public class CassetteFlow {
                 // played from the /music endpoint so the web app marks them
                 track.put("noFile", audioInfo.getFile() == null);
 
+                // stream records are owned by the Spotify or DeckCast backend, the web
+                // app uses these fields to send the play request to the right place
+                if (audioInfo.getFile() == null) {
+                    track.put("stream", true);
+
+                    String provider = getStreamProvider(audioInfo);
+                    if (!provider.isEmpty()) {
+                        track.put("provider", provider);
+                    }
+
+                    putUnlessEmpty(track, "streamId", audioInfo.getStreamId());
+                }
+
                 // a file is in the default directory when one of its hashes is the
                 // filename hash of a file listed in the default directory, which is
                 // how the desktop builds its startup list
@@ -1362,6 +1378,45 @@ public class CassetteFlow {
                 + " without a file) from " + audioInfoDB.size() + " index keys");
 
         return root.toString();
+    }
+
+    /**
+     * The streaming backend used by the web library app. It is shared so the
+     * desktop Stream Play tab and the web app do not create two Spotify
+     * connectors fighting over the OAuth callback port.
+     *
+     * @return the streaming backend
+     */
+    public synchronized StreamBackend getStreamBackend() {
+        if (streamBackend == null) {
+            streamBackend = new StreamBackend(this);
+        }
+
+        return streamBackend;
+    }
+
+    /**
+     * Work out which streaming service a record with no file belongs to
+     *
+     * @param audioInfo
+     * @return Spotify, YouTube or an empty string
+     */
+    public static String getStreamProvider(AudioInfo audioInfo) {
+        String url = audioInfo.getUrl();
+
+        if (url == null) {
+            return "";
+        }
+
+        if (url.contains("spotify:")) {
+            return "Spotify";
+        }
+
+        if (url.contains("youtube")) {
+            return "YouTube";
+        }
+
+        return "";
     }
 
     /**

@@ -23,7 +23,7 @@ import org.json.JSONObject;
  * @author Nathan
  */
 public class DeckCastConnector {
-    private final CassetteFlowFrame cassetteFlowFrame;
+    private final StreamDisplay display;
     private final CassetteFlow cassetteFlow;
     
     private Socket socket;
@@ -54,6 +54,9 @@ public class DeckCastConnector {
     private ArrayList<AudioInfo> queList;
     private JSONArray currentQueArray;
     private boolean queListLoaded = false;
+    
+    // called when the DeckCast server sends a que list
+    private java.util.function.Consumer<ArrayList<AudioInfo>> queueListener;
     private String queVideoId = "";
     private String oldQueVideoId = "";
     private String queTrack = "";
@@ -73,8 +76,8 @@ public class DeckCastConnector {
     // used to properly pad 
     private int maxTimeBlock = -1;
     
-    public DeckCastConnector(CassetteFlowFrame cassetteFlowFrame, CassetteFlow cassetteFlow, String url, String pin) throws URISyntaxException {
-        this.cassetteFlowFrame = cassetteFlowFrame;
+    public DeckCastConnector(StreamDisplay display, CassetteFlow cassetteFlow, String url, String pin) throws URISyntaxException {
+        this.display = display;
         this.cassetteFlow = cassetteFlow;
         this.serverUrl = url;
         this.streamPin = pin;
@@ -89,11 +92,11 @@ public class DeckCastConnector {
                 String message = "DeckcastDJ Stream Player Connected: " + connected;
                 message = message.toUpperCase();
                 
-                if(cassetteFlowFrame != null) {
-                   cassetteFlowFrame.updateStreamEditorPane(message);
+                if(display != null) {
+                   display.updateStreamEditorPane(message);
                    
                    if(connected) {
-                       cassetteFlowFrame.setStreamPlayerConnected(connected);
+                       display.setStreamPlayerConnected(connected);
                    }
                 } else {
                     if(connected) {
@@ -156,17 +159,17 @@ public class DeckCastConnector {
                 infoHtml = infoHtml.replace("Track # 1<", "Track # " + trackNum + "<");
             }
             
-            cassetteFlowFrame.setStreamInformation(streamId, totalPlaytime, player);
+            display.setStreamInformation(streamId, totalPlaytime, player);
                         
             if (queListLoaded) {
                 String html = infoHtml + "<br><hr>" + queListHtml;
-                cassetteFlowFrame.updateStreamEditorPane(html);
+                display.updateStreamEditorPane(html);
                 
                 // add track list information here
                 if(obj.has("trackList") && !cassetteFlow.tracklistDB.containsKey("streamId")) {
                     AudioInfo audioInfo = cassetteFlow.audioInfoDB.get(streamId);
                     addTrackList(audioInfo, obj.getJSONArray("trackList"));
-                    cassetteFlowFrame.setPlayingCassetteID("STR0A");
+                    display.setPlayingCassetteID("STR0A");
                 } else {
                     trackListInfo = null;
                 }
@@ -196,8 +199,18 @@ public class DeckCastConnector {
                 currentTapeTime = RESET_TIME;
                 queListLoaded = false;
                 
-                cassetteFlowFrame.updateStreamEditorPane(infoHtml);
-                cassetteFlowFrame.setPlayingCassetteID("STR0A");
+                display.updateStreamEditorPane(infoHtml);
+                display.setPlayingCassetteID("STR0A");
+
+                // a single video was queued rather than a whole playlist
+                if(waitingOnQueList && queueListener != null) {
+                    waitingOnQueList = false;
+                    try {
+                        queueListener.accept(queList);
+                    } catch (RuntimeException ex) {
+                        Logger.getLogger(DeckCastConnector.class.getName()).log(Level.WARNING, "Que list listener failed", ex);
+                    }
+                }
             }
         } else if(obj.has("queListData")) {
             sideADCTList = new ArrayList<>();
@@ -246,8 +259,8 @@ public class DeckCastConnector {
                 queListHtml = queListHtml.substring(trimIndex + trimEndSequence.length());
             }
            
-            cassetteFlowFrame.updateStreamEditorPane(queListHtml);
-            cassetteFlowFrame.setPlayingCassetteID("STR0A");
+            display.updateStreamEditorPane(queListHtml);
+            display.setPlayingCassetteID("STR0A");
             
             // indicate the que list was loaded
             queListLoaded = true;
@@ -255,7 +268,16 @@ public class DeckCastConnector {
             // see if to load the que list that was just loaded
             if(waitingOnQueList) {
                 waitingOnQueList = false;
-                cassetteFlowFrame.loadStreamingTracks("YouTube", queList);
+                display.loadStreamingTracks("YouTube", queList);
+            }
+            
+            // let the web backend know the que list arrived
+            if(queueListener != null) {
+                try {
+                    queueListener.accept(queList);
+                } catch (RuntimeException ex) {
+                    Logger.getLogger(DeckCastConnector.class.getName()).log(Level.WARNING, "Que list listener failed", ex);
+                }
             }
             
             // save the stream audio db as binary file
@@ -346,7 +368,7 @@ public class DeckCastConnector {
             
             // if we are playing then update the counter
             if(playing && !queListLoaded) {
-                //cassetteFlowFrame.updateStreamPlaytime(currentTapeTime, "[1]");
+                //display.updateStreamPlaytime(currentTapeTime, "[1]");
                 
                 // update the decode panel in the main UI
                 String trackName = currentAudioInfo.getName() + " [1]";
@@ -359,9 +381,9 @@ public class DeckCastConnector {
                     + "Tape Counter: " + tapeTime + " (" + CassetteFlowUtil.getTimeString(tapeTime) + ")\n"
                     + "Data Errors: " + dataErrors +  "/" + logLineCount;
                 
-                if(cassetteFlowFrame != null) {
-                    cassetteFlowFrame.updateStreamPlaytime(currentTapeTime, "[1]");
-                    cassetteFlowFrame.setPlaybackInfo(message, false, "");
+                if(display != null) {
+                    display.updateStreamPlaytime(currentTapeTime, "[1]");
+                    display.setPlaybackInfo(message, false, "");
                 }
             }
         }
@@ -390,8 +412,8 @@ public class DeckCastConnector {
                     + currentAudioInfo.getName() + "\n"
                     + "Start Time @ " + tapeTime + " | Track Number: 1";
 
-            cassetteFlowFrame.setPlayingAudioInfo(message);
-            cassetteFlowFrame.setPlayingAudioTrack("1");
+            display.setPlayingAudioInfo(message);
+            display.setPlayingAudioTrack("1");
         } catch (JSONException ex) {
             Logger.getLogger(DeckCastConnector.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -432,16 +454,16 @@ public class DeckCastConnector {
                         
                         if(muteRecords == 0) {
                             System.out.println(muteInfo);
-                            cassetteFlowFrame.setPlaybackInfo(muteInfo, false);
+                            display.setPlaybackInfo(muteInfo, false);
                             muteRecords = 1;
 
                             // check that we have not incremented the offset before
                             if(incrementOffset) {
-                                cassetteFlowFrame.incrementDCTDecodeOffset();
+                                display.incrementDCTDecodeOffset();
                             }
                         } else {
                             System.out.println(muteInfo);
-                            cassetteFlowFrame.setPlaybackInfo(muteInfo, true);
+                            display.setPlaybackInfo(muteInfo, true);
                         }
                         
                         muteRecords++;
@@ -495,13 +517,13 @@ public class DeckCastConnector {
                         currentAudioInfo.getName() + "\n" + 
                         "Start Time @ " + playTime + " | Track Number: " + track;
                     
-                    cassetteFlowFrame.setPlayingAudioInfo(message);
-                    cassetteFlowFrame.setPlayingAudioTrack(track);
+                    display.setPlayingAudioInfo(message);
+                    display.setPlayingAudioTrack(track);
                     
                     playing = true;
                 }
                 
-                cassetteFlowFrame.updateStreamPlaytime(playTime, "[ " + track + " ]");
+                display.updateStreamPlaytime(playTime, "[ " + track + " ]");
                 
                 // update the decode panel in the main UI
                 String trackName = currentAudioInfo.getName() + " [" + track + "]";
@@ -515,7 +537,7 @@ public class DeckCastConnector {
                     + "Tape Counter: " + playTimeTotal + " (" + CassetteFlowUtil.getTimeString(playTimeTotal) + ")\n"
                     + "Data Errors: " + dataErrors +  "/" + logLineCount;
 
-                cassetteFlowFrame.setPlaybackInfo(message, false, "");
+                display.setPlaybackInfo(message, false, "");
             } else {
                 playing = false;
             }
@@ -654,8 +676,8 @@ public class DeckCastConnector {
                 socket.emit("my event", obj);
 
                 playing = false;
-                cassetteFlowFrame.updateStreamPlaytime(0, "");
-                cassetteFlowFrame.setPlaybackInfo("", false);
+                display.updateStreamPlaytime(0, "");
+                display.setPlaybackInfo("", false);
                 
                 System.out.println("Stopped Stream Playback ...");
                 
@@ -729,7 +751,7 @@ public class DeckCastConnector {
         queListLoaded = false;
         queListHtml = "";
         
-        cassetteFlowFrame.updateStreamEditorPane("Que List Cleared ...");
+        display.updateStreamEditorPane("Que List Cleared ...");
     }
     
     /**
@@ -750,6 +772,63 @@ public class DeckCastConnector {
     public boolean isQueListLoaded() {
         return queListLoaded;
     }
+
+    /**
+     * Check if the socket connection to the DeckCast server is up
+     *
+     * @return
+     */
+    public boolean isConnected() {
+        return connected;
+    }
+
+    /**
+     * Check if the DeckCast player is currently playing
+     *
+     * @return
+     */
+    public boolean isPlaying() {
+        return playing;
+    }
+
+    /**
+     * The total playtime in seconds of the loaded que list
+     *
+     * @return
+     */
+    public int getStreamTotalPlaytime() {
+        return sideADCTList == null ? 0 : sideADCTList.size();
+    }
+
+    /**
+     * The DCT line records for the loaded que list. Each entry is one second of
+     * playback and has the form tapeId_trackNum_hash_playTime_timeTotal
+     *
+     * @return
+     */
+    public ArrayList<String> getDCTList() {
+        return sideADCTList;
+    }
+
+    /**
+     * Reset the playback position so the next playStream call re-sends the video
+     * and start time instead of being ignored
+     */
+    public void resetPlaybackPosition() {
+        currentTapeTime = RESET_TIME;
+        queVideoId = "";
+        oldQueVideoId = "";
+        muteRecords = 0;
+    }
+
+    /**
+     * Set the listener that is called when the DeckCast server sends a que list
+     *
+     * @param queueListener
+     */
+    public void setQueueListener(java.util.function.Consumer<ArrayList<AudioInfo>> queueListener) {
+        this.queueListener = queueListener;
+    }
     
     /**
      * Get the current track being played
@@ -757,6 +836,15 @@ public class DeckCastConnector {
      */
     public int getCurrentTrack() {
         return currentTrack;
+    }
+
+    /**
+     * The audio info of the track that is currently playing
+     *
+     * @return
+     */
+    public AudioInfo getCurrentAudioInfo() {
+        return currentAudioInfo;
     }
     
     // test the functionality

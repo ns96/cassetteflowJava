@@ -53,7 +53,7 @@ import org.json.JSONObject;
  * 
  * @author Nathan
  */
-public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProcessorInterface {
+public class CassetteFlowFrame extends javax.swing.JFrame implements RecordProcessorInterface, StreamDisplay {
     private CassetteFlow cassetteFlow;
     
     private CassettePlayer cassettePlayer;
