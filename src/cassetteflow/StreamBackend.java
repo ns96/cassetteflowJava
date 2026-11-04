@@ -36,6 +36,9 @@ public class StreamBackend {
     // AudioInfo returns this placeholder when no artwork was stored
     private static final String DEFAULT_STREAM_IMAGE = "https://img.youtube.com/vi/MwsGULCvMBk/0.jpg";
 
+    // identifies this backend instance so web clients can spot a server restart
+    private static final String SESSION_ID = Long.toHexString(System.nanoTime());
+
     private final CassetteFlow cassetteFlow;
 
     private SpotifyConnector spotifyConnector;
@@ -54,6 +57,12 @@ public class StreamBackend {
     private volatile CountDownLatch queueLatch = null;
     private volatile ArrayList<AudioInfo> lastQueue = null;
 
+    // a que list the DeckCast server pushed on its own (usually because tracks were
+    // loaded in the DeckCast web page) that the library page has not imported yet
+    private ArrayList<AudioInfo> pendingQueue = null;
+    private int pushedCount = 0;
+    private long pushedToken = 0;
+
     private ArrayList<AudioInfo> queue = new ArrayList<>();
     private int totalTapeTime = 0;
 
@@ -71,6 +80,7 @@ public class StreamBackend {
 
     private ScheduledExecutorService scheduler;
     private ScheduledFuture<?> ticker;
+    private boolean useTicker = true;
 
     public StreamBackend(CassetteFlow cassetteFlow) {
         this.cassetteFlow = cassetteFlow;
@@ -128,7 +138,11 @@ public class StreamBackend {
 
                     CountDownLatch latch = queueLatch;
                     if (latch != null) {
+                        // this answers a load request made from the web dialog
                         latch.countDown();
+                    } else {
+                        // DeckCast pushed a list by itself, offer it to the web app
+                        onPushedQueue(new ArrayList<>(queueList));
                     }
                 });
 
@@ -211,6 +225,8 @@ public class StreamBackend {
         pendingLoadUrl = null;
         queueLatch = null;
         lastQueue = null;
+        pendingQueue = null;
+        pushedCount = 0;
         queue = new ArrayList<>();
         totalTapeTime = 0;
         tapeTime = 0;
@@ -375,6 +391,8 @@ public class StreamBackend {
         paused = false;
         finished = false;
         stopAtSec = -1;
+        pendingQueue = null;
+        pushedCount = 0;
         stopTicker();
 
         applyProviderPrefix(label);
@@ -402,6 +420,68 @@ public class StreamBackend {
             return response.toString();
         } catch (JSONException ex) {
             return errorJson("Could not build the load response");
+        }
+    }
+
+    /**
+     * The DeckCast server pushed a que list on its own, usually because tracks were
+     * loaded in the DeckCast web page. It becomes the playback queue straight away
+     * but is only offered to the library list, it is never added automatically.
+     *
+     * @param tracks the pushed tracks
+     */
+    private synchronized void onPushedQueue(ArrayList<AudioInfo> tracks) {
+        if (tracks == null || tracks.isEmpty()) {
+            return;
+        }
+
+        // the connector has already replaced its own que list and dct records, so
+        // stop our ticker rather than let it walk the old list
+        stopTicker();
+        playing = false;
+        paused = false;
+        finished = false;
+        stopAtSec = -1;
+        tapeTime = 0;
+        startTapeTime = 0;
+
+        queue = new ArrayList<>(tracks);
+        totalTapeTime = getDctSize();
+        pendingQueue = new ArrayList<>(tracks);
+        pushedCount = tracks.size();
+        pushedToken++;
+
+        applyProviderPrefix("YouTube");
+        message = "DeckCast loaded " + tracks.size() + " tracks";
+    }
+
+    /**
+     * Hand the pushed track list to the web app and clear the pending marker
+     *
+     * @return json with the ids of the pushed tracks
+     */
+    public synchronized String acceptPushed() {
+        ArrayList<AudioInfo> tracks = pendingQueue == null ? queue : pendingQueue;
+        pendingQueue = null;
+        pushedCount = 0;
+
+        try {
+            JSONObject json = new JSONObject();
+            JSONArray ids = new JSONArray();
+
+            for (AudioInfo audioInfo : tracks) {
+                ids.put(audioInfo.getHash10C());
+            }
+
+            json.put("ok", true);
+            json.put("provider", provider);
+            json.put("count", tracks.size());
+            json.put("ids", ids);
+            json.put("token", pushedToken);
+
+            return json.toString();
+        } catch (JSONException ex) {
+            return errorJson("Could not build the pushed track list");
         }
     }
 
@@ -465,7 +545,7 @@ public class StreamBackend {
      * @return json status
      */
     public synchronized String play(String id, int index, int offsetSec) {
-        return play(id, index, offsetSec, true);
+        return play(id, index, offsetSec, true, true);
     }
 
     /**
@@ -479,6 +559,22 @@ public class StreamBackend {
      * @return json status
      */
     public synchronized String play(String id, int index, int offsetSec, boolean single) {
+        return play(id, index, offsetSec, single, true);
+    }
+
+    /**
+     * Start playing a track from the loaded list
+     *
+     * @param id the library id of the track (may be null)
+     * @param index the 0 based index in the loaded list
+     * @param offsetSec seconds into the track to start at
+     * @param single true to stop at the end of the track instead of carrying on
+     * with the rest of the loaded list
+     * @param ticker false when the caller drives the tape time itself, like the
+     * web player does with its virtual tape
+     * @return json status
+     */
+    public synchronized String play(String id, int index, int offsetSec, boolean single, boolean ticker) {
         if (provider.isEmpty() || (spotifyConnector == null && deckCastConnector == null)) {
             return errorJson("No streaming backend is connected");
         }
@@ -486,6 +582,8 @@ public class StreamBackend {
         if (queue.isEmpty()) {
             return errorJson("No tracks are loaded - paste a playlist url in the Stream Play dialog first");
         }
+
+        useTicker = ticker;
 
         int start = findTrackStart(id);
         AudioInfo track = findQueueItem(id);
@@ -601,8 +699,10 @@ public class StreamBackend {
         advance(tapeTime);
         message = "Streaming";
 
-        ScheduledExecutorService exec = getScheduler();
-        ticker = exec.scheduleAtFixedRate(this::tick, 1000, 250, TimeUnit.MILLISECONDS);
+        if (useTicker) {
+            ScheduledExecutorService exec = getScheduler();
+            ticker = exec.scheduleAtFixedRate(this::tick, 1000, 250, TimeUnit.MILLISECONDS);
+        }
     }
 
     /**
@@ -775,6 +875,12 @@ public class StreamBackend {
         syncConnectionState();
         runPendingLoad();
 
+        // when the caller drives the clock there is no ticker thread, so move the
+        // reported tape time along here to keep the track position and mute flags live
+        if (!useTicker && playing && !paused) {
+            tapeTime = Math.max(tapeTime, getLivePosition());
+        }
+
         try {
             JSONObject json = new JSONObject();
             json.put("ok", true);
@@ -793,6 +899,9 @@ public class StreamBackend {
             json.put("lengthSec", getLengthSec());
             json.put("index", getCurrentTrackNumber());
             json.put("queueCount", queue.size());
+            json.put("pushedCount", pushedCount);
+            json.put("pushedToken", pushedToken);
+            json.put("session", SESSION_ID);
             json.put("mute", isMuteSection());
             json.put("finished", finished);
             json.put("trackPositionSec", getTrackPositionSec());

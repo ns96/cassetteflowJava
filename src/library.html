@@ -168,20 +168,6 @@
       }
     }
 
-    /* keeps a fixed slot so the header does not shift when the chip appears */
-    .chip-slot {
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s;
-      min-width: 34px;
-      justify-content: center;
-    }
-
-    .chip-slot.visible {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
     .stream-badge {
       font-size: 11px;
       font-weight: 600;
@@ -208,12 +194,22 @@
       line-height: 1.5;
     }
 
-    .mobile-stream-btn {
+    .app-version {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-left: 8px;
+      letter-spacing: 0;
+      white-space: nowrap;
+    }
+
+    .nav-btn.mobile-stream-btn {
       display: none;
     }
 
     @media (max-width: 768px) {
-      .mobile-stream-btn {
+      .nav-btn.mobile-stream-btn {
         display: flex;
       }
     }
@@ -1045,7 +1041,7 @@
   <header>
     <div class="brand">
       <span class="brand-icon">📼</span>
-      <h1>CassetteFlow Library</h1>
+      <h1>CassetteFlow Library <span class="app-version" id="appVersion">__CF_VERSION__</span></h1>
     </div>
 
     <div class="header-status">
@@ -1058,9 +1054,6 @@
         <button id="streamPlayBtn" class="nav-btn" title="Connect to Spotify or DeckCast">
           <span class="stream-dot"></span> 📡 Stream Play
         </button>
-        <a id="streamTableChip" class="nav-btn chip-slot" href="/api/stream/html" target="_blank" rel="noopener"
-          title="View the Spotify / DeckCast track table">📋</a>
-        <a class="nav-btn active" href="/library"><span>📚</span> Library</a>
       </nav>
       <button id="streamPlayBtnMobile" class="nav-btn mobile-stream-btn" title="Stream Play">📡</button>
     </div>
@@ -1134,6 +1127,8 @@
 
         <div class="btn-row">
           <button id="playSideBtn" class="btn-action">▶ Play Side A</button>
+          <button id="createDctBtn" class="btn-secondary accent"
+            title="Build the DCT for this side, store the tape and open the player">🛠 Create DCT</button>
         </div>
       </div>
 
@@ -1330,17 +1325,10 @@
       <div class="modal-body">
         <div class="toolbar-row">
           <span class="field-inline">Stream URL
-            <input type="text" id="streamUrlInput" class="form-input mono" style="width: 250px"
-              list="streamUrlList" placeholder="http://pi86.sytes.net:5054/">
-            <datalist id="streamUrlList"></datalist>
+            <select id="streamUrlSelect" class="form-select compact mono" style="min-width: 250px"></select>
           </span>
-          <span class="field-inline">Provider
-            <select id="streamProviderSelect" class="form-select compact input-small">
-              <option>Auto</option>
-              <option>DeckCast</option>
-              <option>Spotify</option>
-            </select>
-          </span>
+          <input type="text" id="streamUrlInput" class="form-input mono" style="display:none; width: 250px"
+            placeholder="http://host:port/">
           <span class="field-inline">PIN
             <input type="text" id="streamPinInput" class="form-input compact mono input-tiny" value="0001" maxlength="8">
           </span>
@@ -1371,10 +1359,18 @@
           Audio is played by the Spotify client and the DeckCast player, so keep those open in another tab.
         </div>
 
+        <div id="streamPushedRow" class="toolbar-row" style="display:none;">
+          <span id="streamPushedBadge" class="stream-badge wait">0 tracks</span>
+          <button id="streamPushedLoadBtn" class="btn-secondary accent">⬇ Load into track list</button>
+        </div>
+
         <div class="toolbar-row">
           <button id="streamTableBtn" class="btn-secondary" disabled>👁 Track Table</button>
           <button id="streamStopBtn" class="btn-secondary">⏹ Stop</button>
-          <span id="streamModalStatus" class="play-time" style="margin-left:auto;"></span>
+          <label class="checkbox-row" style="margin-left:auto;">
+            <input type="checkbox" id="streamAutoLoadCheck"> Auto-load pushed track lists
+          </label>
+          <span id="streamModalStatus" class="play-time" style="margin-left:12px;"></span>
         </div>
 
         <div id="streamLog" class="log-box" style="height:110px;"></div>
@@ -2422,7 +2418,12 @@
       active: false,
       pollTimer: null,
       finishedHandled: false,
-      pendingLoad: false
+      pendingLoad: false,
+      pendingPushed: 0,     // tracks a backend pushed that are not in the list yet
+      pushedToken: 0,       // last pushed token the page has seen
+      session: '',          // backend instance id, changes when the server restarts
+      autoLoadPushed: false,
+      accepting: false
     };
 
     // The exact entries of the desktop STREAM PLAY combo box
@@ -2435,18 +2436,38 @@
       { url: 'https://www.spotify.com/', label: 'Spotify' }
     ];
 
-    function initStreamUrlList() {
-      const list = $('streamUrlList');
-      if (!list) return;
+    const STREAM_URL_CUSTOM = '__custom__';
 
-      list.innerHTML = '';
+    function initStreamUrlSelect() {
+      const select = $('streamUrlSelect');
+      if (!select) return;
+
+      select.innerHTML = '';
 
       STREAM_URLS.forEach(entry => {
-        const option = document.createElement('option');
-        option.value = entry.url;
-        option.label = entry.label;
-        list.appendChild(option);
+        select.appendChild(new Option(entry.label, entry.url));
       });
+
+      // the desktop combo box is editable, so keep a way to use another host
+      select.appendChild(new Option('Custom URL…', STREAM_URL_CUSTOM));
+      select.addEventListener('change', syncStreamUrlInput);
+    }
+
+    /** Show the free text url box only when Custom URL is picked */
+    function syncStreamUrlInput() {
+      const custom = $('streamUrlSelect').value === STREAM_URL_CUSTOM;
+      $('streamUrlInput').style.display = custom ? '' : 'none';
+
+      if (custom) {
+        $('streamUrlInput').focus();
+      }
+    }
+
+    /** The url to connect to, from the dropdown or the custom box */
+    function getStreamUrl() {
+      return $('streamUrlSelect').value === STREAM_URL_CUSTOM
+        ? $('streamUrlInput').value.trim()
+        : $('streamUrlSelect').value;
     }
 
     function streamIsPlaying() {
@@ -2516,8 +2537,26 @@
         }
       });
 
-      const chip = $('streamTableChip');
-      if (chip) chip.classList.toggle('visible', !!(s && s.connected && s.tableAvailable));
+      // a track list the backend pushed by itself (loaded in the DeckCast page)
+      if (!s || !s.provider) {
+        stream.pushedToken = 0;
+        stream.pendingPushed = 0;
+        stream.session = '';
+      } else {
+        if (s.session && stream.session && s.session !== stream.session) {
+          stream.pushedToken = 0; // the server restarted, its token counter started over
+        }
+
+        stream.session = s.session || '';
+
+        if (s.pushedToken && s.pushedToken > stream.pushedToken) {
+          stream.pushedToken = s.pushedToken;
+          stream.pendingPushed = s.pushedCount || 0;
+          onPushedQueue(s);
+        } else if (!s.pushedCount) {
+          stream.pendingPushed = 0;
+        }
+      }
 
       if ($('streamModal').classList.contains('visible')) renderStreamDialog(s);
 
@@ -2546,6 +2585,7 @@
         $('streamTimerLabel').textContent = '';
         $('streamModalStatus').textContent = '';
         tableBtn.disabled = true;
+        updatePushedUi();
         return;
       }
 
@@ -2581,6 +2621,7 @@
       if (s.playing || s.paused) parts.push(`${formatTime(s.positionSec)} / ${formatTime(s.lengthSec)}`);
       $('streamTimerLabel').textContent = parts.join(' · ');
       $('streamModalStatus').textContent = s.message || '';
+      updatePushedUi();
     }
 
     function applyStreamProgress(s) {
@@ -2628,6 +2669,65 @@
       }
     }
 
+    /**
+     * The backend pushed a track list on its own (tracks loaded in the DeckCast web
+     * page). It is never added to the library list automatically unless the user
+     * turned that on.
+     */
+    function onPushedQueue(s) {
+      const count = s.pushedCount || 0;
+      if (!count) return;
+
+      const provider = s.provider || 'The backend';
+
+      streamLog(`${provider} loaded ${count} track(s) into the backend`);
+      toast(`${provider} loaded ${count} track(s) — ${stream.autoLoadPushed ? 'adding to the track list' : 'open 📡 Stream Play to add them'}`,
+        stream.autoLoadPushed ? 'ok' : 'info', 8000);
+
+      if (stream.autoLoadPushed) {
+        acceptPushedTracks();
+      }
+
+      updatePushedUi();
+    }
+
+    /** Show or hide the "records are loaded in the backend" row of the dialog */
+    function updatePushedUi() {
+      const row = $('streamPushedRow');
+      if (!row) return;
+
+      const pending = stream.pendingPushed > 0;
+      row.style.display = pending ? '' : 'none';
+
+      if (pending) {
+        const provider = (stream.status && stream.status.provider) || 'Backend';
+        $('streamPushedBadge').textContent = `${provider} loaded ${stream.pendingPushed} track(s)`;
+        $('streamPushedLoadBtn').textContent = `⬇ Load ${stream.pendingPushed} into track list`;
+      }
+    }
+
+    /** Take the pushed track list and append it to the library list */
+    async function acceptPushedTracks() {
+      if (stream.accepting) return;
+      stream.accepting = true;
+
+      const res = await streamApi('accept');
+      stream.accepting = false;
+
+      if (!res || res.ok === false) {
+        const error = (res && (res.error || res.message)) || 'could not take the pushed track list';
+        streamLog(error);
+        toast(error, 'err', 7000);
+        return;
+      }
+
+      stream.pendingPushed = 0;
+      updatePushedUi();
+      streamLog(`${res.count} pushed track(s) accepted`);
+
+      await appendStreamTracks(res.ids || []);
+    }
+
     async function streamPlayTrack(track) {
       stream.active = true;
       stream.finishedHandled = false;
@@ -2656,9 +2756,15 @@
     }
 
     function openStream() {
-      $('streamUrlInput').value = localStorage.getItem('cfg_stream_url') || STREAM_URLS[0].url;
+      const saved = localStorage.getItem('cfg_stream_url') || STREAM_URLS[0].url;
+      const known = STREAM_URLS.some(entry => entry.url === saved);
+
+      $('streamUrlSelect').value = known ? saved : STREAM_URL_CUSTOM;
+      $('streamUrlInput').value = known ? '' : saved;
+      syncStreamUrlInput();
       $('streamPinInput').value = localStorage.getItem('cfg_stream_pin') || '0001';
       $('streamLoadUrl').value = localStorage.getItem('cfg_stream_load_url') || '';
+      updatePushedUi();
       $('streamModal').classList.add('visible');
       refreshStreamStatus().then(scheduleStreamPoll);
     }
@@ -2668,20 +2774,20 @@
     }
 
     async function connectStream() {
-      const url = $('streamUrlInput').value.trim();
-      const provider = $('streamProviderSelect').value;
+      const url = getStreamUrl();
       const pin = $('streamPinInput').value.trim();
 
       if (!url) {
-        toast('Enter the stream url, or "spotify" for the Spotify client', 'warn');
+        toast('Choose a stream url, or pick Custom URL and type one', 'warn');
         return;
       }
 
       localStorage.setItem('cfg_stream_url', url);
       localStorage.setItem('cfg_stream_pin', pin);
-      streamLog(`connect ${provider} · ${url}${pin ? ' · pin ' + pin : ''}`);
+      streamLog(`connect · ${url}${pin ? ' · pin ' + pin : ''}`);
 
-      const res = await streamApi('connect', { url, provider, pin });
+      // the server works out Spotify vs DeckCast from the url
+      const res = await streamApi('connect', { url, provider: '', pin });
 
       if (!res || res.ok === false) {
         const error = (res && res.error) || 'could not connect';
@@ -2877,6 +2983,77 @@
       selectSide(side);
       state.playQueue = list;
       playQueueFrom(index, 'side', side);
+    }
+
+    /**
+     * The desktop Spotify/DeckCast connectors own the STR0 tape slot for their
+     * streaming DCTs, so the library writes there too (STR0A / STR0B) instead of
+     * over a real cassette id from the tape builder.
+     */
+    const STREAM_DCT_TAPE_ID = 'STR0';
+
+    /**
+     * Store the current tape and open the player with a virtual tape for this side.
+     * The player builds the DCT from the stored record, so no DCT data is sent.
+     */
+    async function createDct() {
+      const side = state.activeSide;
+      const list = sideList(side);
+      const tapeId = STREAM_DCT_TAPE_ID;
+
+      if (!list.length) {
+        toast(`Side ${side} is empty — add tracks before creating the DCT`, 'warn');
+        return;
+      }
+
+      const payload = {
+        tapeId,
+        sideA: state.sideA.map(t => t.id),
+        sideB: state.sideB.map(t => t.id),
+        overwrite: true,
+        backup: true
+      };
+
+      logTerminal('map', `Create DCT (Side ${side}) — storing tape ${tapeId} …`);
+
+      let res;
+      try {
+        const response = await fetch('/api/tapedb', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        res = await response.json();
+      } catch (e) {
+        res = { ok: false, error: e.message };
+      }
+
+      if (!res || res.ok === false) {
+        const error = (res && (res.error || res.message)) || 'could not store the tape';
+        logTerminal('err', `Create DCT failed: ${error}`);
+        toast(error, 'err', 8000);
+        return;
+      }
+
+      const params = new URLSearchParams({
+        tape: tapeId,
+        side,
+        mute: String(state.mutePadding)
+      });
+      const url = `/player?${params.toString()}`;
+      const opened = window.open(url, '_blank');
+
+      const total = sideTotalTime(list);
+      logTerminal('map', `DCT ready: ${list.length} track(s) / ${formatTimeHours(total)} — `
+        + `tape ${tapeId} stored${res.backup ? ` (backup ${res.backup})` : ''}`);
+      toast(`DCT created for Side ${side}: ${list.length} track(s) — player opened`, 'ok', 6000);
+
+      if (!opened) {
+        logTerminal('warn', `Popup blocked — open ${url} manually`);
+        toast('Popup blocked — the player link is in the activity log', 'warn', 9000);
+      }
+
+      loadTapeDb(true);
     }
 
     function stopPlayback() {
@@ -3818,6 +3995,7 @@
       $('moveDownBtn').addEventListener('click', () => moveSelection(state.activeSide, 1));
       $('checkBtn').addEventListener('click', checkTrackList);
       $('playSideBtn').addEventListener('click', () => playSideFrom(state.activeSide, 0));
+      $('createDctBtn').addEventListener('click', createDct);
 
       // player bar
       $('miniPlayBtn').addEventListener('click', togglePlay);
@@ -3881,6 +4059,24 @@
         }
       });
 
+      // a que list pushed by DeckCast is only added when the user asks for it
+      stream.autoLoadPushed = localStorage.getItem('cfg_stream_autoload') === '1';
+      $('streamAutoLoadCheck').checked = stream.autoLoadPushed;
+
+      $('streamAutoLoadCheck').addEventListener('change', () => {
+        stream.autoLoadPushed = $('streamAutoLoadCheck').checked;
+        localStorage.setItem('cfg_stream_autoload', stream.autoLoadPushed ? '1' : '0');
+        streamLog(stream.autoLoadPushed
+          ? 'auto-load pushed track lists enabled'
+          : 'auto-load pushed track lists disabled');
+
+        if (stream.autoLoadPushed && stream.pendingPushed > 0) {
+          acceptPushedTracks();
+        }
+      });
+
+      $('streamPushedLoadBtn').addEventListener('click', acceptPushedTracks);
+
       // bottom tabs
       document.querySelectorAll('.bottom-tab-bar .tab-item').forEach(btn => {
         btn.addEventListener('click', () => switchView(btn.dataset.view));
@@ -3927,7 +4123,7 @@
     // =========================================================================
     (async function init() {
       initTapeLengthSelect();
-      initStreamUrlList();
+      initStreamUrlSelect();
       $('muteInput').value = state.mutePadding;
       wireEvents();
       selectSide('A');

@@ -764,8 +764,29 @@ public class CassetteFlowServer {
                 return;
             }
 
-            sendPage(exchange, "/library.html", "404 Library HTML Resource Not Found",
-                    "src" + File.separator + "library.html", "library.html");
+            byte[] page = loadPageBytes("/library.html", "src" + File.separator + "library.html", "library.html");
+
+            if (page == null) {
+                byte[] errorBytes = "404 Library HTML Resource Not Found".getBytes(StandardCharsets.UTF_8);
+                exchange.getResponseHeaders().set("Content-Type", "text/plain; charset=utf-8");
+                exchange.sendResponseHeaders(404, errorBytes.length);
+                try (OutputStream os = exchange.getResponseBody()) {
+                    os.write(errorBytes);
+                }
+                return;
+            }
+
+            // show the running application version next to the page title
+            String html = new String(page, StandardCharsets.UTF_8);
+            html = html.replace("__CF_VERSION__", CassetteFlow.VERSION.replaceFirst("^CassetteFlow\\s+", ""));
+            byte[] body = html.getBytes(StandardCharsets.UTF_8);
+
+            exchange.getResponseHeaders().set("Content-Type", "text/html; charset=utf-8");
+            exchange.getResponseHeaders().set("Cache-Control", "no-cache, no-store, must-revalidate");
+            exchange.sendResponseHeaders(200, body.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(body);
+            }
         }
     }
 
@@ -1538,6 +1559,11 @@ public class CassetteFlowServer {
         byte[] responseData = loadPageBytes(resourcePath, diskPaths);
 
         if (responseData != null) {
+            // show the running application version in the page header/badges
+            responseData = new String(responseData, StandardCharsets.UTF_8)
+                    .replace("__CF_VERSION__", CassetteFlow.VERSION.replaceFirst("^CassetteFlow\\s+", ""))
+                    .getBytes(StandardCharsets.UTF_8);
+
             exchange.getResponseHeaders().set("Content-Type", "text/html; charset=utf-8");
             exchange.getResponseHeaders().set("Cache-Control", "no-cache, no-store, must-revalidate");
             exchange.sendResponseHeaders(200, responseData.length);
@@ -1882,7 +1908,8 @@ public class CassetteFlowServer {
      * POST /api/stream/connect                {url, provider, pin}
      * POST /api/stream/disconnect
      * POST /api/stream/load                   {url}
-     * POST /api/stream/play                   {id, index, offsetSec}
+     * POST /api/stream/accept                 take a que list DeckCast pushed on its own
+     * POST /api/stream/play                   {id, index, offsetSec, single, ticker}
      * POST /api/stream/pause | resume | stop
      */
     private class StreamApiHandler implements HttpHandler {
@@ -1934,6 +1961,8 @@ public class CassetteFlowServer {
                 result = backend.status();
             } else if ("ids".equals(action)) {
                 result = backend.getQueueIds();
+            } else if ("accept".equals(action)) {
+                result = backend.acceptPushed();
             } else if ("connect".equals(action)) {
                 result = backend.connect(param(body, params, "url", ""),
                         param(body, params, "provider", ""),
@@ -1946,7 +1975,8 @@ public class CassetteFlowServer {
                 result = backend.play(param(body, params, "id", ""),
                         intParam(body, params, "index", -1),
                         intParam(body, params, "offsetSec", 0),
-                        boolParam(body, params, "single", true));
+                        boolParam(body, params, "single", true),
+                        boolParam(body, params, "ticker", true));
             } else if ("pause".equals(action)) {
                 result = backend.pause();
             } else if ("resume".equals(action)) {

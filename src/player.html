@@ -1085,6 +1085,13 @@
               style="font-family: var(--font-mono); color: var(--accent-blue);">00:00:00</span></label>
           <input type="range" id="simTimeSlider" min="0" max="1800" value="0" style="width: 100%;">
         </div>
+        <div class="form-row">
+          <label>Simulated Side</label>
+          <select id="simSideSelect" class="form-select">
+            <option value="A">Side A</option>
+            <option value="B">Side B</option>
+          </select>
+        </div>
         <div style="display: flex; gap: 8px;">
           <button id="simAutoPlayBtn" class="btn-action" style="flex: 1; padding: 8px 12px; font-size: 12px;">▶ Simulate
             Play</button>
@@ -1099,9 +1106,9 @@
       <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
           <h2 style="font-size: 15px; font-weight: 600;">⚙️ Settings &amp; Server Configuration</h2>
-          <!-- Easy to edit version number & release date badge -->
+          <!-- the server replaces __CF_VERSION__ with the running CassetteFlow version -->
           <span id="appVersionBadge" class="status-badge"
-            style="font-family: var(--font-mono); font-size: 11px; color: var(--accent-blue); background: rgba(88, 166, 255, 0.12); border-color: rgba(88, 166, 255, 0.35); font-weight: 600;">CassetteFlow v2.3.0 (09/01/2026)</span>
+            style="font-family: var(--font-mono); font-size: 11px; color: var(--accent-blue); background: rgba(88, 166, 255, 0.12); border-color: rgba(88, 166, 255, 0.35); font-weight: 600;">CassetteFlow __CF_VERSION__</span>
         </div>
 
         <div class="form-row">
@@ -1246,7 +1253,20 @@
       logLineCount: 0,
       dataErrors: 0,
       simInterval: null,
-      simCurrentSec: 0
+      simCurrentSec: 0,
+      simResumeOnPlay: false,
+
+      // --- DCT session (opened from the library "Create DCT" button) ---
+      sessionMode: false,
+      sessionTapeId: null,
+      sessionSide: 'A',
+      virtualTimer: null,
+      virtualPlaying: false,
+      streamTrack: false,
+      streamPollTimer: null,
+      streamStatus: null,
+      lastDctPlaySec: 0,
+      lastStreamResync: 0
     };
 
     // --- DOM Elements ---
@@ -1900,6 +1920,10 @@
       // 4. Activate the requested side
       updateActiveSide(side, true);
 
+      // keep the Tape DB selector and its track preview on the tape that is loaded
+      if (tapeSelectDropdown) tapeSelectDropdown.value = tapeId;
+      updateTapePreview(tapeId);
+
       const padInfo = maxBlockSec > 0 ? ` [Padded: ${formatTime(maxBlockSec)}/block]` : '';
       logTerminal('map', `Tape ${tapeId} Loaded: Side A (${state.tracklistA.length} tracks, ${formatTimeHours(state.sideADCTMap.length)}), Side B (${state.tracklistB.length} tracks, ${formatTimeHours(state.sideBDCTMap.length)})${padInfo}`);
     }
@@ -1919,6 +1943,11 @@
       }
 
       if (sideSelectDropdown) sideSelectDropdown.value = side;
+
+      // keep the simulator aligned with the side that is loaded
+      if ((side === 'A' || side === 'B') && simSideSelect) {
+        simSideSelect.value = side;
+      }
       cassetteTapeLabel.textContent = `TAPE ${state.selectedTapeId || '--'}`;
       cassetteSideLabel.textContent = `SIDE ${side}`;
       metaTapeSide.textContent = `Tape: ${state.selectedTapeId || '--'} (${side})`;
@@ -2297,6 +2326,36 @@
 
     function safeTogglePlay() {
       hideAutoplayBanner();
+
+      if (state.sessionMode) {
+        if (state.virtualPlaying) {
+          stopVirtualTape();
+          if (state.streamTrack) streamPause();
+          audio.pause();
+        } else {
+          startVirtualTape();
+        }
+        return;
+      }
+
+      // stream tracks are played by the Spotify client / DeckCast player, the local
+      // audio element is idle so it cannot pause them
+      if (state.streamTrack) {
+        const streamPlaying = !!(state.streamStatus && state.streamStatus.playing);
+
+        // a paused remote player would be restarted by the next simulated record, so
+        // the simulator has to pause and resume with the transport buttons
+        if (streamPlaying && state.simInterval) {
+          state.simResumeOnPlay = pauseSimulator();
+        } else if (!streamPlaying && state.simResumeOnPlay) {
+          state.simResumeOnPlay = false;
+          startSimulator();
+        }
+
+        toggleStreamPlayback();
+        return;
+      }
+
       if (audio.paused) {
         safePlayAudio();
       } else {
@@ -2321,8 +2380,16 @@
 
     function updateMiniPlayerTime(cur, dur) {
       if (!miniTrackTime) return;
-      const current = cur !== undefined ? cur : (audio ? audio.currentTime : 0);
-      const total = dur !== undefined ? dur : (audio ? (audio.duration || 0) : 0);
+
+      let current = cur !== undefined ? cur : (audio ? audio.currentTime : 0);
+      let total = dur !== undefined ? dur : (audio ? (audio.duration || 0) : 0);
+
+      // a stream track has no local audio element to read the time from
+      if (cur === undefined && state.streamTrack && state.streamStatus) {
+        current = state.streamStatus.trackPositionSec || 0;
+        total = state.streamStatus.trackLength || 0;
+      }
+
       const tapeTimeStr = getTapeTimeStr(current);
       miniTrackTime.textContent = `${formatTime(current)} / ${formatTime(total)} | Tape Time: ${tapeTimeStr}`;
     }
@@ -2368,12 +2435,29 @@
         notifyDeviceNowPlaying(displayTrackName, true, track.hash);
       }
 
-      const url = resolveAudioUrl(track.sourcePath);
-      audio.src = url;
-      console.log(`[CassetteFlow] Selected track #${index + 1}: "${track.title}" -> ${url}`);
+      const streamRow = isStreamTrack(track);
+      state.streamTrack = streamRow;
 
-      if (autoPlay) {
-        safePlayAudio();
+      if (streamRow) {
+        // the audio is produced by the Spotify client / DeckCast player
+        audio.pause();
+        audio.removeAttribute('src');
+        audio.load();
+
+        const source = track.provider || 'stream';
+        trackArtist.textContent = `${source} (played by the ${source === 'Spotify' ? 'Spotify client' : 'DeckCast player'})`;
+
+        if (autoPlay) {
+          streamPlayTrack(track, 0);
+        }
+      } else {
+        const url = resolveAudioUrl(track.sourcePath);
+        audio.src = url;
+        console.log(`[CassetteFlow] Selected track #${index + 1}: "${track.title}" -> ${url}`);
+
+        if (autoPlay) {
+          safePlayAudio();
+        }
       }
 
       renderTracklist();
@@ -2416,6 +2500,9 @@
     });
 
     audio.addEventListener('play', () => {
+      // stream tracks drive the same visuals from the backend status instead
+      if (state.streamTrack) return;
+
       playBtn.textContent = '⏸';
       miniPlayBtn.textContent = '⏸';
       leftReel.classList.add('spinning');
@@ -2430,6 +2517,9 @@
     });
 
     audio.addEventListener('pause', () => {
+      // stream tracks drive the same visuals from the backend status instead
+      if (state.streamTrack) return;
+
       playBtn.textContent = '▶';
       miniPlayBtn.textContent = '▶';
       leftReel.classList.remove('spinning');
@@ -2459,12 +2549,29 @@
         clearTimeout(state.noCarrierTimer);
         state.noCarrierTimer = null;
       }
+
+      if (state.sessionMode) {
+        stopVirtualTape();
+        state.simCurrentSec = 0;
+        state.lastDctPlaySec = 0;
+        updateSimLabels();
+        if (tapeCounterDisplay) tapeCounterDisplay.textContent = '00:00:00';
+      }
+
+      // a stream track plays in the Spotify client / DeckCast player, it has to be
+      // stopped there too or it keeps playing after the tape is stopped
+      if (state.streamTrack) {
+        streamStop();
+        setTransportIcon(false);
+        trackArtist.textContent = 'Stopped';
+      }
+
       audio.pause();
       audio.currentTime = 0;
       notifyDeviceNowPlaying('Stopped');
     });
-    prevBtn.addEventListener('click', () => selectTrack(state.currentTrackIndex - 1, true));
-    nextBtn.addEventListener('click', () => selectTrack(state.currentTrackIndex + 1, true));
+    prevBtn.addEventListener('click', () => sessionSelectTrack(state.currentTrackIndex - 1));
+    nextBtn.addEventListener('click', () => sessionSelectTrack(state.currentTrackIndex + 1));
 
     // --- Native Real-Time Audio Visualizer (Web Audio API + Canvas) ---
     let audioCtx = null;
@@ -2618,8 +2725,9 @@
 
       const [tapeKey, trackNum, hash, elapsed, total] = parts;
 
-      // 4. Validate Tape Key (e.g. 'EX01A', 'DCT0A', 'DCT0B', 'RR01B', 'CS00A')
-      if (!/^[A-Za-z0-9]{3,6}$/.test(tapeKey)) {
+      // 4. Validate Tape Key (e.g. 'EX01A', 'DCT0A', 'DCT0B', 'RR01B', 'CS00A', and
+      // longer library tape ids such as 'ZTEST2A' or 'MIX_01A')
+      if (!/^[A-Za-z0-9_]{3,11}$/.test(tapeKey)) {
         return false;
       }
 
@@ -2653,6 +2761,10 @@
       console.log('[CassetteFlow] Incoming FSK line:', line);
 
       if (line.includes('### NOCARRIER') || line.includes('NOISY')) {
+        // the simulator feeds one record per second, slower than the holdover window,
+        // so carrier loss has to be ignored while it is the record source
+        if (state.simInterval) return;
+
         // Start or maintain Carrier Loss Holdover timer instead of instantly cutting audio
         if (state.noCarrierTimer === null) {
           carrierPill.style.color = 'var(--accent-amber)';
@@ -2666,6 +2778,12 @@
             carrierPill.textContent = 'NO CARRIER';
             logTerminal('stop', `Tape Stopped / Carrier Lost (${state.noCarrierHoldoverMs}ms holdover expired)`);
             if (!audio.paused) audio.pause();
+
+            // the stream keeps playing on the remote player unless it is told to stop
+            if (state.streamTrack && state.streamStatus && state.streamStatus.playing) {
+              streamStop();
+              setTransportIcon(false);
+            }
           }, state.noCarrierHoldoverMs);
         }
         return;
@@ -2726,8 +2844,10 @@
 
       const sa = translated.split('_');
       if (sa.length >= 4) {
-        const lineTapeKey = sa[0];
-        const hash = sa.length >= 5 ? sa[2] : sa[1];
+        // DCT records escape an underscore in the tape id or hash as a dollar sign,
+        // the same way CassettePlayer and StreamBackend unescape them when decoding
+        const lineTapeKey = sa[0].replace(/\$/g, '_');
+        const hash = (sa.length >= 5 ? sa[2] : sa[1]).replace(/\$/g, '_');
         const playSecStr = sa.length >= 5 ? sa[3] : sa[2];
         const totalSec = sa.length >= 5 ? (parseInt(sa[4], 10) || 0) : (parseInt(sa[3], 10) || 0);
 
@@ -2737,10 +2857,12 @@
         if (playSecStr.includes('M')) {
           logTerminal('stop', 'Mute padding between songs...');
           if (!audio.paused) audio.pause();
+          if (state.streamTrack) streamPause();
           return;
         }
 
         const targetPlaySec = parseInt(playSecStr, 10) || 0;
+        state.lastDctPlaySec = targetPlaySec;
 
         // Auto-switch tape if incoming line has a known different Tape ID
         if (lineTapeKey && !lineTapeKey.startsWith('DCT0')) {
@@ -2772,14 +2894,35 @@
 
           if (idx >= 0) {
             selectTrack(idx, false);
-            audio.currentTime = targetPlaySec;
-            safePlayAudio();
+
+            if (state.streamTrack) {
+              streamPlayTrack(state.activeTracklist[idx], targetPlaySec);
+            } else {
+              audio.currentTime = targetPlaySec;
+              safePlayAudio();
+            }
           } else {
             console.warn(`[CassetteFlow] Track hash "${hash}" not found in audiodb.txt`);
             logTerminal('err', `Track hash "${hash}" not found in audiodb.txt`);
           }
         } else {
           // Same track -> verify playback and check drift
+          if (state.streamTrack) {
+            const status = state.streamStatus;
+            const track = state.activeTracklist[state.currentTrackIndex];
+
+            // the stream was never started (the track was only selected when the
+            // tape loaded) or it was paused/stopped: start it at the tape position
+            if (track && (!status || !status.playing)) {
+              if (Date.now() - state.lastStreamResync > 5000) {
+                state.lastStreamResync = Date.now();
+                streamPlayTrack(track, targetPlaySec);
+              }
+            }
+
+            return; // the stream backend polices its own position
+          }
+
           const drift = Math.abs(audio.currentTime - targetPlaySec);
           if (drift > state.driftThreshold) {
             logTerminal('map', `Drift ${drift.toFixed(1)}s -> seeking to ${targetPlaySec}s`);
@@ -2854,6 +2997,9 @@
     // --- Telemetry Polling (Auto-detects CFS vs M5CoreFSK vs R2RWatch) ---
     async function pollStatus() {
       if (state.deviceDisconnected) return;
+
+      // a DCT session has no decoder device to poll, the virtual tape owns the state
+      if (state.sessionMode) return;
       const host = getFormattedHost();
       const statusUrl = host ? `${host}/api/status` : `/api/status`;
       const dcsLiteUrl = host ? `${host}/dcs_lite` : `/dcs_lite`;
@@ -3021,45 +3167,394 @@
       terminalWindow.innerHTML = '';
     });
 
+    // =========================================================================
+    // DCT session mode (virtual tape) + stream backend playback
+    //
+    // The library Create DCT button stores the tape and opens this page with
+    // ?tape=&side=&mute=. The transport buttons then drive a virtual tape that
+    // replays the side's DCT line records one per second, exactly like a deck
+    // feeding records into processFSKLine. Local tracks play here, Spotify and
+    // YouTube tracks are handed to the streaming backend.
+    // =========================================================================
+    function streamApi(action, payload) {
+      const opts = payload
+        ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }
+        : { cache: 'no-store' };
+
+      return fetch(`/api/stream/${action}`, opts)
+        .then(res => res.text().then(text => {
+          try {
+            return JSON.parse(text);
+          } catch (e) {
+            return { ok: false, error: text || res.statusText };
+          }
+        }))
+        .catch(err => ({ ok: false, error: err.message }));
+    }
+
+    function isStreamTrack(track) {
+      return !!track && (track.stream === true || !track.sourcePath);
+    }
+
+    function startStreamPoll() {
+      if (state.streamPollTimer) return;
+      state.streamPollTimer = setInterval(pollStreamStatus, 1000);
+    }
+
+    function stopStreamPoll() {
+      if (state.streamPollTimer) {
+        clearInterval(state.streamPollTimer);
+        state.streamPollTimer = null;
+      }
+    }
+
+    async function streamPlayTrack(track, offsetSec) {
+      if (!track) return;
+
+      const res = await streamApi('play', {
+        id: track.hash,
+        offsetSec: Math.max(0, Math.round(offsetSec || 0)),
+        single: true,
+        ticker: false
+      });
+
+      if (!res || res.ok === false) {
+        const error = (res && (res.error || res.message)) || 'stream backend not available';
+        logTerminal('err', `Stream play failed: ${error}`);
+        trackArtist.textContent = error;
+        return;
+      }
+
+      state.streamStatus = res;
+      applyStreamNowPlaying(res);
+      startStreamPoll();
+    }
+
+    async function streamPause() {
+      const res = await streamApi('pause');
+      if (res && res.ok) state.streamStatus = res;
+      setStreamPlayingVisuals(false);
+    }
+
+    async function streamStop() {
+      stopStreamPoll();
+
+      // state.streamTrack stays true: the selected track is still a stream row, so
+      // pressing play again has to restart it on the backend rather than the local
+      // audio element
+      const res = await streamApi('stop');
+      state.streamStatus = (res && res.ok !== false) ? res : { playing: false };
+      setStreamPlayingVisuals(false);
+    }
+
+    /** Show the pause symbol while the stream backend is playing */
+    function setTransportIcon(playing) {
+      playBtn.textContent = playing ? '⏸' : '▶';
+      if (miniPlayBtn) miniPlayBtn.textContent = playing ? '⏸' : '▶';
+    }
+
+    /**
+     * Pause or resume the stream track currently selected. The Spotify client and
+     * the DeckCast player own the audio, so the local audio element is idle and the
+     * request has to go to the streaming backend.
+     */
+    async function toggleStreamPlayback() {
+      const track = state.activeTracklist[state.currentTrackIndex];
+      const playing = !!(state.streamStatus && state.streamStatus.playing);
+
+      if (playing) {
+        setTransportIcon(false);
+        await streamPause();
+      } else if (track) {
+        setTransportIcon(true);
+        await streamPlayTrack(track, state.lastDctPlaySec > 0 ? state.lastDctPlaySec : 0);
+      }
+    }
+
+    /** Mirror the local audio element events for a track the backend is playing */
+    function setStreamPlayingVisuals(playing) {
+      setTransportIcon(playing);
+
+      if (leftReel) leftReel.classList.toggle('spinning', playing);
+      if (rightReel) rightReel.classList.toggle('spinning', playing);
+      if (tapeStrip) tapeStrip.classList.toggle('active', playing);
+    }
+
+    function applyStreamNowPlaying(status) {
+      if (!status) return;
+
+      const position = status.mute ? 0 : (status.trackPositionSec || 0);
+      const duration = status.trackLength || 0;
+
+      // the remote player owns the audio, so drive the progress bar, elapsed time and
+      // reel animation here instead of relying on the audio element's events
+      if (duration > 0) {
+        const pct = Math.min(1, Math.max(0, position / duration));
+
+        if (progressFill) progressFill.style.width = `${pct * 100}%`;
+        if (timeElapsed) timeElapsed.textContent = formatTime(position);
+        if (leftTapePack && rightTapePack) {
+          const leftSize = Math.round(52 - (pct * 14));
+          const rightSize = Math.round(38 + (pct * 14));
+          leftTapePack.style.width = `${leftSize}px`;
+          leftTapePack.style.height = `${leftSize}px`;
+          rightTapePack.style.width = `${rightSize}px`;
+          rightTapePack.style.height = `${rightSize}px`;
+        }
+      }
+
+      updateMiniPlayerTime(position, duration);
+      if (timeTotal) timeTotal.textContent = formatTime(duration);
+      if (metaDuration) metaDuration.textContent = formatTime(duration);
+
+      setStreamPlayingVisuals(!!status.playing);
+    }
+
+    async function pollStreamStatus() {
+      if (!state.streamTrack) {
+        stopStreamPoll();
+        return;
+      }
+
+      const status = await streamApi('status');
+      if (!status || status.ok === false) {
+        stopStreamPoll();
+        return;
+      }
+
+      state.streamStatus = status;
+      applyStreamNowPlaying(status);
+
+      // keep the remote player aligned with the tape when it drifts
+      if (status.playing && state.lastDctPlaySec >= 0) {
+        const drift = Math.abs((status.trackPositionSec || 0) - state.lastDctPlaySec);
+
+        if (drift > 3 && Date.now() - state.lastStreamResync > 5000) {
+          state.lastStreamResync = Date.now();
+          logTerminal('map', `Stream drift ${drift.toFixed(0)}s -> resyncing to ${formatTime(state.lastDctPlaySec)}`);
+
+          const track = state.activeTracklist[state.currentTrackIndex];
+          if (track) streamPlayTrack(track, state.lastDctPlaySec);
+        }
+      }
+    }
+
+    function updateSimLabels() {
+      if (simTimeSlider) simTimeSlider.value = state.simCurrentSec;
+      if (simTimeDisplay) simTimeDisplay.textContent = `${formatTimeHours(state.simCurrentSec)} (${state.simCurrentSec}s)`;
+    }
+
+    /** Advance the virtual tape one second */
+    function virtualStep() {
+      const map = state.dctMap;
+
+      if (!map || !map.length) {
+        stopVirtualTape();
+        return;
+      }
+
+      if (state.simCurrentSec >= map.length) {
+        stopVirtualTape();
+        if (state.streamTrack) streamStop();
+        audio.pause();
+
+        trackTitle.textContent = `End of Side ${state.sessionSide}`;
+        trackArtist.textContent = `Tape ${state.sessionTapeId} (${formatTimeHours(map.length)})`;
+        logTerminal('map', `End of Side ${state.sessionSide} (${formatTimeHours(map.length)})`);
+        return;
+      }
+
+      const second = state.simCurrentSec;
+      state.simCurrentSec += 1;
+
+      updateSimLabels();
+
+      // feed the same synthetic record the deck simulator uses, the player's line
+      // validator only accepts the short FSK record form, and the side map turns
+      // this into the real DCT record for the current second
+      const side = state.sessionSide === 'B' ? 'B' : 'A';
+      processFSKLine(`DCT0${side}_1_0000_${second}_${second}`);
+    }
+
+    function startVirtualTape() {
+      if (!state.sessionMode || state.virtualTimer) return;
+
+      state.virtualPlaying = true;
+      playBtn.textContent = '⏸';
+      if (miniPlayBtn) miniPlayBtn.textContent = '⏸';
+      logTerminal('map', `Virtual tape started: tape ${state.sessionTapeId} side ${state.sessionSide}`);
+
+      virtualStep();
+      state.virtualTimer = setInterval(virtualStep, 1000);
+    }
+
+    function stopVirtualTape() {
+      if (state.virtualTimer) {
+        clearInterval(state.virtualTimer);
+        state.virtualTimer = null;
+      }
+
+      state.virtualPlaying = false;
+      playBtn.textContent = '▶';
+      if (miniPlayBtn) miniPlayBtn.textContent = '▶';
+    }
+
+    /** Jump the virtual tape to the first second of a track */
+    function sessionSelectTrack(index) {
+      if (!state.sessionMode) {
+        selectTrack(index, true);
+        return;
+      }
+
+      const clamped = Math.max(0, Math.min(state.activeTracklist.length - 1, index));
+      const track = state.activeTracklist[clamped];
+      if (!track) return;
+
+      const cleanHash = (track.hash || '').replace(/_/g, '$');
+      const second = state.dctMap.findIndex(line => {
+        const parts = line.split('_');
+        // skip the mute records, land on the first playable second of the track
+        return parts.length >= 4 && parts[2] === cleanHash && /^\d+$/.test(parts[3]);
+      });
+
+      if (second < 0) {
+        selectTrack(clamped, true);
+        return;
+      }
+
+      state.simCurrentSec = second;
+      virtualStep();
+    }
+
+    /** Merge the Spotify/YouTube records from /api/library into the audio DB */
+    async function mergeStreamTracks() {
+      try {
+        const res = await fetch('/api/library', { cache: 'no-store' });
+        if (!res.ok) return;
+
+        const json = await res.json();
+        let added = 0;
+
+        for (const raw of json.tracks || []) {
+          if (raw.stream !== true || !raw.id || state.audioDB.has(raw.id)) continue;
+
+          const track = {
+            hash: raw.id,
+            duration: raw.length || 0,
+            bitrate: raw.bitrate || 0,
+            devicePath: '',
+            sourcePath: '',
+            title: raw.title || raw.name || raw.id,
+            artist: raw.artist || (raw.provider || 'Stream'),
+            album: raw.album || '',
+            stream: true,
+            provider: raw.provider || ''
+          };
+
+          state.audioDB.set(raw.id, track);
+
+          // tapes recorded with an older hash still have to resolve
+          for (const alias of raw.ids || []) {
+            if (alias && !state.audioDB.has(alias)) {
+              state.audioDB.set(alias, track);
+            }
+          }
+
+          added += 1;
+        }
+
+        if (added) {
+          logTerminal('map', `Merged ${added} stream track(s) from /api/library`);
+        }
+      } catch (e) {
+        console.log('[CassetteFlow] Stream track merge skipped:', e.message);
+      }
+    }
+
     // --- Simulation Controls ---
     const simTimeSlider = document.getElementById('simTimeSlider');
     const simTimeDisplay = document.getElementById('simTimeDisplay');
     const simAutoPlayBtn = document.getElementById('simAutoPlayBtn');
+    const simSideSelect = document.getElementById('simSideSelect');
+
+    /** The tape side the simulator emits DCT records for */
+    function getSimSide() {
+      return simSideSelect && simSideSelect.value === 'B' ? 'B' : 'A';
+    }
+
+    simSideSelect.addEventListener('change', () => {
+      // show the side that is about to be simulated, the first record switches the
+      // player over to its DCT map anyway
+      const side = getSimSide();
+      if (side !== state.selectedSide && state.tapeDB.has(`${state.selectedTapeId}${side}`)) {
+        updateActiveSide(side, true);
+      }
+      logTerminal('map', `Simulator set to Side ${side}`);
+    });
 
     simTimeSlider.addEventListener('input', (e) => {
       state.simCurrentSec = parseInt(e.target.value, 10);
       simTimeDisplay.textContent = `${formatTimeHours(state.simCurrentSec)} (${state.simCurrentSec}s)`;
-      const simSide = state.selectedSide === 'B' ? 'B' : 'A';
+      const simSide = getSimSide();
       processFSKLine(`DCT0${simSide}_1_0000_${state.simCurrentSec}_${state.simCurrentSec}`);
     });
 
+    /** Feed one synthetic DCT record per second, like a deck playing a tape */
+    function startSimulator() {
+      if (state.simInterval) return;
+
+      simAutoPlayBtn.textContent = '⏸ Pause Sim';
+      state.simInterval = setInterval(() => {
+        state.simCurrentSec += 1;
+        simTimeSlider.value = state.simCurrentSec;
+        simTimeDisplay.textContent = `${formatTimeHours(state.simCurrentSec)} (${state.simCurrentSec}s)`;
+        const simSide = getSimSide();
+        processFSKLine(`DCT0${simSide}_1_0000_${state.simCurrentSec}_${state.simCurrentSec}`);
+      }, 1000);
+    }
+
+    /** Stop feeding synthetic records, returns true when the simulator was running */
+    function pauseSimulator() {
+      if (!state.simInterval) return false;
+
+      clearInterval(state.simInterval);
+      state.simInterval = null;
+      simAutoPlayBtn.textContent = '▶ Simulate Play';
+      return true;
+    }
+
     simAutoPlayBtn.addEventListener('click', () => {
       if (state.simInterval) {
-        clearInterval(state.simInterval);
-        state.simInterval = null;
-        simAutoPlayBtn.textContent = '▶ Simulate Play';
+        pauseSimulator();
+        state.simResumeOnPlay = false;
+
+        // pausing the tape feed has to pause the remote player as well
+        if (state.streamTrack) {
+          streamPause();
+          setTransportIcon(false);
+        }
       } else {
-        simAutoPlayBtn.textContent = '⏸ Pause Sim';
-        state.simInterval = setInterval(() => {
-          state.simCurrentSec += 1;
-          simTimeSlider.value = state.simCurrentSec;
-          simTimeDisplay.textContent = `${formatTimeHours(state.simCurrentSec)} (${state.simCurrentSec}s)`;
-          const simSide = state.selectedSide === 'B' ? 'B' : 'A';
-          processFSKLine(`DCT0${simSide}_1_0000_${state.simCurrentSec}_${state.simCurrentSec}`);
-        }, 1000);
+        state.simResumeOnPlay = false;
+        startSimulator();
       }
     });
 
     document.getElementById('simStopBtn').addEventListener('click', () => {
-      if (state.simInterval) {
-        clearInterval(state.simInterval);
-        state.simInterval = null;
-        simAutoPlayBtn.textContent = '▶ Simulate Play';
-      }
+      pauseSimulator();
+      state.simResumeOnPlay = false;
+
       if (state.noCarrierTimer) {
         clearTimeout(state.noCarrierTimer);
         state.noCarrierTimer = null;
       }
+
+      // stop the remote player straight away instead of waiting for the holdover
+      if (state.streamTrack) {
+        streamStop();
+        setTransportIcon(false);
+        trackArtist.textContent = 'Stopped';
+      }
+
       processFSKLine('### NOCARRIER ###');
     });
 
@@ -3070,8 +3565,75 @@
     document.getElementById('cfgMutePadding').value = state.mutePadding;
     document.getElementById('cfgHoldover').value = state.noCarrierHoldoverMs;
 
-    loadDatabases();
-    startStreamClient();
+    bootstrap();
+
+    /**
+     * Normal start: connect to /raw and let a real deck drive the player.
+     * Session start (?tape=&side=): load that tape, wait for the transport button.
+     */
+    async function bootstrap() {
+      const params = new URLSearchParams(window.location.search);
+      const tapeParam = params.get('tape');
+      const sideParam = (params.get('side') || 'A').toUpperCase();
+      const muteParam = params.get('mute');
+      const padParam = params.get('pad');
+      const parseParam = value => (value !== null && !Number.isNaN(parseInt(value, 10)) ? parseInt(value, 10) : null);
+
+      if (tapeParam) {
+        state.sessionMode = true;
+        state.sessionTapeId = tapeParam.trim().toUpperCase();
+        state.sessionSide = sideParam === 'B' ? 'B' : 'A';
+
+        const mute = parseParam(muteParam);
+        if (mute !== null) state.mutePadding = Math.max(0, mute);
+
+        const pad = parseParam(padParam);
+        if (pad !== null && dctPadDropdown) dctPadDropdown.value = String(Math.max(0, pad));
+
+        logTerminal('map', `DCT session: tape ${state.sessionTapeId} side ${state.sessionSide} (mute ${state.mutePadding}s)`);
+
+        if (statusText) statusText.textContent = 'DCT session (virtual tape)';
+        if (statusDot) statusDot.className = 'status-dot connected';
+      }
+
+      // a session must see the tape that was just stored, so bypass the cache
+      await loadDatabases(state.sessionMode);
+
+      // tapes can reference Spotify/YouTube rows, which audiodb.txt does not carry
+      await mergeStreamTracks();
+
+      if (state.sessionMode) {
+        const known = state.tapeDB.has(`${state.sessionTapeId}A`) || state.tapeDB.has(`${state.sessionTapeId}B`);
+
+        if (!known) {
+          logTerminal('err', `Tape ${state.sessionTapeId} was not found in tapedb.txt`);
+          if (statusText) statusText.textContent = 'DCT session — tape not found';
+          return;
+        }
+
+        if (tapeSelectDropdown) tapeSelectDropdown.value = state.sessionTapeId;
+        if (sideSelectDropdown) sideSelectDropdown.value = state.sessionSide;
+
+        activateTape(state.sessionTapeId, state.sessionSide);
+
+        state.simCurrentSec = 0;
+        updateSimLabels();
+        logTerminal('map', 'Press ▶ to start the virtual tape');
+        return;
+      }
+
+      startStreamClient();
+    }
+
+    window.addEventListener('beforeunload', () => {
+      if (state.streamTrack) {
+        try {
+          fetch('/api/stream/stop', { method: 'POST', keepalive: true });
+        } catch (e) {
+          // the page is going away, nothing else to do
+        }
+      }
+    });
   </script>
 </body>
 
