@@ -1064,6 +1064,10 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
           <h3 style="font-size: 13px; font-weight: 600;">Decoded FSK Stream</h3>
           <div style="display: flex; gap: 6px;">
+            <button id="startDecodeBtn" class="btn-action"
+              style="padding: 3px 10px; font-size: 11px;" title="Start JMinimodem on the machine running the server">▶ Start Decode</button>
+            <button id="stopDecodeBtn" class="btn-secondary"
+              style="padding: 3px 10px; font-size: 11px;" title="Stop the server decoder">⏹ Stop Decode</button>
             <button id="pauseScrollBtn"
               style="padding: 2px 8px; font-size: 10px; background: transparent; border: 1px solid var(--border-subtle); color: var(--text-muted); border-radius: 4px; cursor: pointer;">⏸ Auto-scroll: ON</button>
             <button id="clearTermBtn"
@@ -1258,6 +1262,7 @@
       feedBaseMs: 0,
       feedBaseSec: 0,
       syntheticRecord: false,
+      decoding: false,
 
       // --- DCT session (opened from the library "Create DCT" button) ---
       sessionMode: false,
@@ -3055,6 +3060,10 @@
             if (vBadge) vBadge.textContent = d.param_version || d.version;
           }
 
+          // keep the Start/Stop Decode buttons in step with the server (and with the
+          // desktop app, which owns the buttons when it is running)
+          if (typeof d.decoding === 'boolean') applyDecodeButtons(d.decoding);
+
           // Check for CassetteFlow Server (CFS) telemetry
           if ('speedOffset' in d || 'baud' in d) {
             statusDot.className = 'status-dot active';
@@ -3136,6 +3145,93 @@
       } catch (e) { }
     }
     setInterval(pollStatus, 2000);
+
+    // --- Server decoder control (Start / Stop Decode) ---
+    // Any LAN client or the desktop app can start/stop JMinimodem on the server, so
+    // the buttons follow the real state from /api/status instead of local memory.
+    const startDecodeBtn = document.getElementById('startDecodeBtn');
+    const stopDecodeBtn = document.getElementById('stopDecodeBtn');
+
+    function applyDecodeButtons(decoding) {
+      state.decoding = decoding === true;
+
+      if (startDecodeBtn) {
+        startDecodeBtn.disabled = state.decoding;
+        startDecodeBtn.title = state.decoding
+          ? 'The server decoder is already running'
+          : 'Start JMinimodem on the machine running the server';
+      }
+
+      if (stopDecodeBtn) {
+        stopDecodeBtn.disabled = !state.decoding;
+        stopDecodeBtn.title = state.decoding
+          ? 'Stop the server decoder'
+          : 'The server decoder is not running';
+      }
+    }
+
+    async function refreshDecodeState() {
+      try {
+        const res = await fetch('/api/status', { cache: 'no-store' });
+        if (!res.ok) return;
+
+        const d = await res.json();
+        if (typeof d.decoding === 'boolean') applyDecodeButtons(d.decoding);
+      } catch (e) { }
+    }
+
+    async function decodeAction(action) {
+      applyDecodeButtons(action === 'start');
+
+      let res;
+      try {
+        const response = await fetch('/api/decode', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action })
+        });
+        const text = await response.text();
+        try {
+          res = JSON.parse(text);
+        } catch (e) {
+          res = { ok: false, error: text || response.statusText };
+        }
+      } catch (err) {
+        res = { ok: false, error: err.message };
+      }
+
+      if (!res || res.ok === false) {
+        const error = (res && (res.error || res.message)) || 'decode request failed';
+        logTerminal('err', `Decoder ${action} failed: ${error}`);
+        refreshDecodeState();
+        return;
+      }
+
+      if (res.alreadyRunning) {
+        logTerminal('map', 'Decoder was already running');
+      } else if (res.message) {
+        logTerminal('map', res.message);
+      }
+
+      if (action === 'start') {
+        // pick up the records as soon as the decoder is live
+        if (!state.deviceDisconnected) startStreamClient();
+      }
+
+      applyDecodeButtons(res.decoding === true);
+      setTimeout(refreshDecodeState, 1500);
+    }
+
+    if (startDecodeBtn) {
+      startDecodeBtn.addEventListener('click', () => decodeAction('start'));
+    }
+    if (stopDecodeBtn) {
+      stopDecodeBtn.addEventListener('click', () => decodeAction('stop'));
+    }
+
+    // a DCT session skips pollStatus, so poll the decoder state on its own
+    setInterval(refreshDecodeState, 3000);
+    refreshDecodeState();
 
     // --- Disconnect / Connect Device Button ---
     const disconnectDeviceBtn = document.getElementById('disconnectDeviceBtn');

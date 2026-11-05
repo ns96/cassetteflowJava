@@ -68,7 +68,7 @@ import org.json.JSONObject;
  */
 public class CassetteFlow {
     // static variable that holds the application version
-    public static String VERSION = "CassetteFlow v2.8.6 (11/05/2026)";
+    public static String VERSION = "CassetteFlow v2.8.7 (11/05/2026)";
 
     // The default mp3 directory name
     public static String AUDIO_DIR_NAME = "c:\\mp3files";
@@ -288,6 +288,35 @@ public class CassetteFlow {
     }
 
     /**
+     * Check if the desktop frame is attached. When it is, it owns the decode buttons
+     * and decode commands are routed through it so both UIs stay in sync.
+     *
+     * @return true when the Swing frame is running
+     */
+    public boolean hasDesktopFrame() {
+        return cassetteFlowFrame != null;
+    }
+
+    /**
+     * Get the cassette player that is decoding (and playing back) the tape
+     *
+     * @return the player or null when nothing has been created yet
+     */
+    public CassettePlayer getCassettePlayer() {
+        return cassettePlayer;
+    }
+
+    /**
+     * Check if the JMinimodem decoder is running
+     *
+     * @return true when decoding is active
+     */
+    public boolean isDecoding() {
+        CassettePlayer cp = cassettePlayer;
+        return cp != null && cp.isDecoding();
+    }
+
+    /**
      * Return Javascript object from the currently playing information
      *
      * @param currentlyPlaying
@@ -423,6 +452,7 @@ public class CassetteFlow {
             liteState.put("newTracks", false);
             liteState.put("rawLineRecord", getRawLineRecord());
             liteState.put("currentLineRecord", getCurrentLineRecord());
+            liteState.put("decoding", isDecoding());
 
             if (cassettePlayer != null) {
                 liteState.put("speedOffset", cassettePlayer.getSpeedOffset());
@@ -734,11 +764,68 @@ public class CassetteFlow {
      * @param command
      */
     public void runDecodeCommand(String command) {
+        System.out.println("Decode Command Received: " + command);
+
         if (cassetteFlowFrame != null) {
+            // the desktop owns the buttons, let it run the command so its START/STOP
+            // states stay in sync with whatever a web client asked for
             cassetteFlowFrame.runDecodeCommand(command);
+            return;
         }
 
-        System.out.println("Decode Command Received: " + command);
+        // headless (CLI / web server) mode drives the cassette player directly
+        if ("start".equals(command)) {
+            startDecode();
+        } else if ("stop".equals(command)) {
+            stopDecode();
+        }
+    }
+
+    /**
+     * Start the JMinimodem decoder when no desktop frame is driving it. The message
+     * is meant for the web clients that can trigger this from a browser.
+     *
+     * @return empty when the decoder is running, otherwise the reason it could not start
+     */
+    public synchronized String startDecode() {
+        if (isDecoding()) {
+            return "";
+        }
+
+        CassettePlayer cp = cassettePlayer;
+        if (cp == null) {
+            cp = new CassettePlayer(this, null, false);
+        }
+
+        try {
+            cp.startMinimodem(0);
+
+            if (cassetteFlowFrame != null) {
+                cassetteFlowFrame.printToConsole("Decoding started from a web client ...", true);
+            }
+
+            return "";
+        } catch (IOException | RuntimeException ex) {
+            String reason = ex.getMessage() == null ? ex.toString() : ex.getMessage();
+            System.out.println("Unable to start decoding: " + reason);
+            return reason;
+        }
+    }
+
+    /**
+     * Stop the JMinimodem decoder (closes the capture line and releases the device)
+     *
+     * @return true when a running decoder was stopped
+     */
+    public synchronized boolean stopDecode() {
+        CassettePlayer cp = cassettePlayer;
+        if (cp == null || !cp.isDecoding()) {
+            return false;
+        }
+
+        cp.stop();
+        System.out.println("Decoding stopped ...");
+        return true;
     }
 
     /**

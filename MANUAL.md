@@ -225,6 +225,7 @@ CassetteFlow includes a high-performance, multithreaded embedded HTTP server (`C
 | `/tapedb.txt` | `GET` | `text/plain` | Tape collection database (from disk or memory) |
 | `/tracklist.txt` | `GET` | `text/plain` | Current active tracklist |
 | `/dcc?command=<cmd>` | `GET` | `text/plain` | Executes remote decoder commands (`start`, `stop`, `reset`) |
+| `/api/decode` | `GET`, `POST` | `application/json` | Starts/stops JMinimodem on the server machine from any LAN client. `POST {"action":"start"}` or `{"action":"stop"}` (also `POST /api/decode/start`, `/api/decode/stop`, `GET /api/decode?action=stop`); `GET /api/decode` returns the state. Response: `{ok, action, decoding, alreadyRunning, alreadyStopped, desktop, message}`. When the desktop application is running it owns the decoder, so the request is routed through it and both UIs stay in sync. `409` when the capture device cannot be opened |
 | `/playing` | `GET`, `POST` | `application/json` | Client Now Playing synchronization (receives track title/artist/hash on track change) |
 | `/play?track=<num>` | `GET` | `text/plain` | Triggers playback of specified track |
 | `/stop` | `GET` | `text/plain` | Stops playback |
@@ -245,7 +246,7 @@ Access the player by navigating to `http://localhost:8192/player` (or `http://<s
    * **Speed Drift**: Live percentage offset ($\pm\%$).
    * **Modem SNR**: Live carrier SNR in dB.
    * **Decode Errors**: Displays `errors / total_records` (e.g. `0 / 142`).
-6. **Built-in Terminal**: Live scrollable terminal logging every incoming raw FSK line record, side auto-flips, and drift adjustments.
+6. **Built-in Terminal**: Live scrollable terminal logging every incoming raw FSK line record, side auto-flips, and drift adjustments. The **▶ Start Decode** / **⏹ Stop Decode** buttons start and stop JMinimodem on the machine running the server, so decoding can be controlled from any browser on the network; the buttons always mirror the real decoder state (`/api/status` → `decoding`), including when the desktop application starts or stops it.
 
 ### 6.0.1 DCT session (virtual tape)
 

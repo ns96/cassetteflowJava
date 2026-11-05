@@ -96,6 +96,7 @@ public class CassetteFlowServer {
         server.createContext("/dcs", new DecodeStateHandler()); // get the decode state json
         server.createContext("/dcs_lite", new DecodeLiteStateHandler()); // get lightweight decode state json for ESP32
         server.createContext("/dcc", new DecodeCommandHandler()); // send a commend to decorder
+        server.createContext("/api/decode", new DecodeControlHandler()); // start/stop JMinimodem from a web client
         server.createContext("/diag", new DecodeDiagHandler()); // get live FSK speed & tape diagnostic telemetry
         server.createContext("/diagnostics", new DecodeDiagHandler()); // alias
 
@@ -618,6 +619,144 @@ public class CassetteFlowServer {
 
             String response = "Decoding command received " + command;
             sendResponse(he, response);
+        }
+    }
+
+    /**
+     * Start or stop the JMinimodem decoder on the machine running the server.
+     *
+     * POST /api/decode {"action":"start"} or {"action":"stop"} (also
+     * /api/decode/start and /api/decode/stop, or GET /api/decode for the state).
+     *
+     * Any client on the LAN may call this: the desktop app and every browser tab
+     * share the same decoder, so the response always reports the live state.
+     */
+    private class DecodeControlHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            addCorsHeaders(exchange);
+
+            if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+                exchange.sendResponseHeaders(204, -1);
+                exchange.close();
+                return;
+            }
+
+            if (cassetteFlow == null) {
+                sendJsonError(exchange, 503, "CassetteFlow is not attached to the server");
+                return;
+            }
+
+            String action = readDecodeAction(exchange);
+            boolean wasDecoding = cassetteFlow.isDecoding();
+
+            if (action.isEmpty()) {
+                sendDecodeState(exchange, 200, "", false, false, "Decoder state");
+                return;
+            }
+
+            if (!"start".equals(action) && !"stop".equals(action)) {
+                sendJsonError(exchange, 400, "Unknown decode action '" + action + "'");
+                return;
+            }
+
+            String remote = exchange.getRemoteAddress() != null
+                    && exchange.getRemoteAddress().getAddress() != null
+                            ? exchange.getRemoteAddress().getAddress().getHostAddress()
+                            : "unknown";
+            System.out.println("Decode " + action + " requested by " + remote);
+
+            if ("start".equals(action)) {
+                if (wasDecoding) {
+                    sendDecodeState(exchange, 200, action, true, false, "Decoder already running");
+                    return;
+                }
+
+                if (cassetteFlow.hasDesktopFrame()) {
+                    // the desktop owns the START button, route through it so its UI updates
+                    cassetteFlow.runDecodeCommand("start");
+                    sendDecodeState(exchange, 200, action, false, false,
+                            "Decode start sent to the desktop application");
+                    return;
+                }
+
+                String failure = cassetteFlow.startDecode();
+                if (!failure.isEmpty()) {
+                    sendJsonError(exchange, 409, "Unable to start decoding: " + failure);
+                    return;
+                }
+
+                sendDecodeState(exchange, 200, action, false, false, "Listening for data via JMinimodem");
+                return;
+            }
+
+            if (!wasDecoding) {
+                sendDecodeState(exchange, 200, action, false, true, "Decoder is not running");
+                return;
+            }
+
+            if (cassetteFlow.hasDesktopFrame()) {
+                cassetteFlow.runDecodeCommand("stop");
+                sendDecodeState(exchange, 200, action, false, false, "Decode stop sent to the desktop application");
+                return;
+            }
+
+            cassetteFlow.stopDecode();
+            sendDecodeState(exchange, 200, action, false, false, "Decoder stopped");
+        }
+
+        /**
+         * Read the requested action from the body, the query string or the path
+         */
+        private String readDecodeAction(HttpExchange exchange) throws IOException {
+            String action = "";
+
+            String path = exchange.getRequestURI().getPath();
+            if (path != null && path.length() > "/api/decode".length()) {
+                action = path.substring("/api/decode".length()).replace("/", "").trim();
+            }
+
+            String query = exchange.getRequestURI().getQuery();
+            if (action.isEmpty() && query != null && query.contains("action=")) {
+                Object value = splitQuery(query).get("action");
+                action = value == null ? "" : value.toString();
+            }
+
+            if (action.isEmpty() && "POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+                try {
+                    String body = readExchangeBody(exchange, 8 * 1024);
+                    if (body.startsWith("{")) {
+                        action = new JSONObject(body).optString("action", "");
+                    } else if (body.contains("action=")) {
+                        Object value = splitQuery(body).get("action");
+                        action = value == null ? "" : value.toString();
+                    }
+                } catch (Exception ignored) {
+                    action = "";
+                }
+            }
+
+            return action == null ? "" : action.trim().toLowerCase();
+        }
+
+        /**
+         * Send the decoder state back to the client
+         */
+        private void sendDecodeState(HttpExchange exchange, int status, String action,
+                boolean alreadyRunning, boolean alreadyStopped, String message) throws IOException {
+            try {
+                JSONObject json = new JSONObject();
+                json.put("ok", true);
+                json.put("action", action);
+                json.put("decoding", cassetteFlow != null && cassetteFlow.isDecoding());
+                json.put("alreadyRunning", alreadyRunning);
+                json.put("alreadyStopped", alreadyStopped);
+                json.put("desktop", cassetteFlow != null && cassetteFlow.hasDesktopFrame());
+                json.put("message", message);
+
+                sendJson(exchange, status, json);
+            } catch (JSONException ignored) {
+            }
         }
     }
 

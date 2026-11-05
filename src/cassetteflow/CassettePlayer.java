@@ -236,6 +236,15 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
     }
 
     /**
+     * Check if the JMinimodem decoder is currently capturing from the sound card
+     *
+     * @return true when decoding is running
+     */
+    public boolean isDecoding() {
+        return decoding;
+    }
+
+    /**
      * Gets the decoding stats such as total errors
      * 
      * @return
@@ -528,6 +537,11 @@ public class CassettePlayer implements LogFileTailerListener, StreamPlayerListen
      * @throws IOException
      */
     public void startMinimodem(int delay) throws IOException {
+        // a second start would reopen the capture line and drop the session
+        if (decoding) {
+            return;
+        }
+
         // Kill any previous session
         stop();
 
