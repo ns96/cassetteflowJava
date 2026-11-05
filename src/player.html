@@ -1255,6 +1255,9 @@
       simInterval: null,
       simCurrentSec: 0,
       simResumeOnPlay: false,
+      feedBaseMs: 0,
+      feedBaseSec: 0,
+      syntheticRecord: false,
 
       // --- DCT session (opened from the library "Create DCT" button) ---
       sessionMode: false,
@@ -2327,6 +2330,31 @@
     function safeTogglePlay() {
       hideAutoplayBanner();
 
+      // the simulator is a record source of its own: a paused remote player would be
+      // restarted by the next record, so the transport has to pause and resume it
+      // instead of starting the virtual tape on top of it
+      if (state.simInterval) {
+        pauseSimulator();
+        state.simResumeOnPlay = true;
+        if (state.streamTrack) streamPause();
+        audio.pause();
+        setStreamPlayingVisuals(false);
+        return;
+      }
+
+      if (state.simResumeOnPlay) {
+        state.simResumeOnPlay = false;
+
+        // the first record fired by startSimulator would also try to start the stream,
+        // let the explicit play below own that request
+        if (state.streamTrack) state.lastStreamResync = Date.now();
+
+        startSimulator();
+
+        if (state.streamTrack) toggleStreamPlayback();
+        return;
+      }
+
       if (state.sessionMode) {
         if (state.virtualPlaying) {
           stopVirtualTape();
@@ -2341,17 +2369,6 @@
       // stream tracks are played by the Spotify client / DeckCast player, the local
       // audio element is idle so it cannot pause them
       if (state.streamTrack) {
-        const streamPlaying = !!(state.streamStatus && state.streamStatus.playing);
-
-        // a paused remote player would be restarted by the next simulated record, so
-        // the simulator has to pause and resume with the transport buttons
-        if (streamPlaying && state.simInterval) {
-          state.simResumeOnPlay = pauseSimulator();
-        } else if (!streamPlaying && state.simResumeOnPlay) {
-          state.simResumeOnPlay = false;
-          startSimulator();
-        }
-
         toggleStreamPlayback();
         return;
       }
@@ -2445,7 +2462,7 @@
         audio.load();
 
         const source = track.provider || 'stream';
-        trackArtist.textContent = `${source} (played by the ${source === 'Spotify' ? 'Spotify client' : 'DeckCast player'})`;
+        trackArtist.textContent = `${source} (played by the ${source === 'Spotify' ? 'Spotify client' : 'DeckCastDJ'})`;
 
         if (autoPlay) {
           streamPlayTrack(track, 0);
@@ -2557,6 +2574,11 @@
         updateSimLabels();
         if (tapeCounterDisplay) tapeCounterDisplay.textContent = '00:00:00';
       }
+
+      // the simulator is a record source of its own and would restart the stream on
+      // its next record, so stop it with the tape
+      pauseSimulator();
+      state.simResumeOnPlay = false;
 
       // a stream track plays in the Spotify client / DeckCast player, it has to be
       // stopped there too or it keeps playing after the tape is stopped
@@ -2760,10 +2782,26 @@
       state.logLineCount++;
       console.log('[CassetteFlow] Incoming FSK line:', line);
 
+      // a real deck is feeding us records, so it owns the clock from now on. The line
+      // record watchdog sends NOCARRIER markers, those are not deck records.
+      const isCarrierMarker = line.includes('### NOCARRIER') || line.includes('NOISY');
+
+      if (!isCarrierMarker && !state.syntheticRecord && state.sessionMode) {
+        if (state.virtualPlaying || state.simInterval) {
+          stopVirtualTape();
+          pauseSimulator();
+          state.simResumeOnPlay = false;
+          audio.pause();
+          logTerminal('map', 'Live deck records detected - virtual tape stopped');
+        }
+
+        if (statusText) statusText.textContent = 'Live deck (DCT session idle)';
+      }
+
       if (line.includes('### NOCARRIER') || line.includes('NOISY')) {
-        // the simulator feeds one record per second, slower than the holdover window,
-        // so carrier loss has to be ignored while it is the record source
-        if (state.simInterval) return;
+        // this page feeds its own records (simulator or virtual tape) far slower than
+        // the holdover window, so carrier loss has to be ignored while it is the source
+        if (state.simInterval || state.virtualPlaying) return;
 
         // Start or maintain Carrier Loss Holdover timer instead of instantly cutting audio
         if (state.noCarrierTimer === null) {
@@ -3369,23 +3407,33 @@
 
       updateSimLabels();
 
-      // feed the same synthetic record the deck simulator uses, the player's line
-      // validator only accepts the short FSK record form, and the side map turns
-      // this into the real DCT record for the current second
-      const side = state.sessionSide === 'B' ? 'B' : 'A';
-      processFSKLine(`DCT0${side}_1_0000_${second}_${second}`);
+      // feed the same synthetic record the desktop simulator sends, the side map
+      // turns the tape second into the real DCT record for the loaded tape
+      feedSynthetic(simRecord(state.sessionSide, second));
     }
 
     function startVirtualTape() {
       if (!state.sessionMode || state.virtualTimer) return;
+
+      // only one record source at a time, a running simulator would double the
+      // tape speed and make the stream drift
+      pauseSimulator();
+      state.simResumeOnPlay = false;
 
       state.virtualPlaying = true;
       playBtn.textContent = '⏸';
       if (miniPlayBtn) miniPlayBtn.textContent = '⏸';
       logTerminal('map', `Virtual tape started: tape ${state.sessionTapeId} side ${state.sessionSide}`);
 
+      startFeedClock();
       virtualStep();
-      state.virtualTimer = setInterval(virtualStep, 1000);
+      state.virtualTimer = setInterval(() => {
+        let due = dueRecords();
+
+        while (due-- > 0 && state.virtualPlaying) {
+          virtualStep();
+        }
+      }, 250);
     }
 
     function stopVirtualTape() {
@@ -3423,6 +3471,7 @@
       }
 
       state.simCurrentSec = second;
+      if (state.virtualPlaying) startFeedClock();
       virtualStep();
     }
 
@@ -3477,9 +3526,47 @@
     const simAutoPlayBtn = document.getElementById('simAutoPlayBtn');
     const simSideSelect = document.getElementById('simSideSelect');
 
+    /**
+     * Build a synthetic line record in the same format the desktop simulator sends,
+     * e.g. DCT0A_01_aaaaaaaaaa_0000_0000. The hash is a placeholder, the side map
+     * turns the tape second into the real record for the loaded tape.
+     */
+    function simRecord(side, second) {
+      const padded = String(Math.max(0, second)).padStart(4, '0');
+      return `DCT0${side === 'B' ? 'B' : 'A'}_01_aaaaaaaaaa_${padded}_${padded}`;
+    }
+
+    /** Feed a record this page generated itself (simulator or virtual tape) */
+    function feedSynthetic(line) {
+      state.syntheticRecord = true;
+      try {
+        processFSKLine(line);
+      } finally {
+        state.syntheticRecord = false;
+      }
+    }
+
     /** The tape side the simulator emits DCT records for */
     function getSimSide() {
       return simSideSelect && simSideSelect.value === 'B' ? 'B' : 'A';
+    }
+
+    /**
+     * Anchor the record feed to the wall clock. A browser timer is only "at least"
+     * 1s, so counting ticks makes the tape fall behind the streaming backend and the
+     * player keeps resyncing for drift. derive the tape second from elapsed time
+     * instead.
+     */
+    function startFeedClock() {
+      state.feedBaseMs = Date.now();
+      state.feedBaseSec = state.simCurrentSec;
+    }
+
+    /** How many records are due now, capped so a long stall does not flood the tube */
+    function dueRecords() {
+      const elapsed = Math.floor((Date.now() - state.feedBaseMs) / 1000);
+      const due = (state.feedBaseSec + elapsed) - state.simCurrentSec;
+      return Math.max(0, Math.min(5, due));
     }
 
     simSideSelect.addEventListener('change', () => {
@@ -3495,22 +3582,43 @@
     simTimeSlider.addEventListener('input', (e) => {
       state.simCurrentSec = parseInt(e.target.value, 10);
       simTimeDisplay.textContent = `${formatTimeHours(state.simCurrentSec)} (${state.simCurrentSec}s)`;
+
+      // re-anchor the feed so a manual seek does not look like elapsed tape time
+      if (state.simInterval || state.virtualPlaying) startFeedClock();
+
       const simSide = getSimSide();
-      processFSKLine(`DCT0${simSide}_1_0000_${state.simCurrentSec}_${state.simCurrentSec}`);
+      feedSynthetic(simRecord(simSide, state.simCurrentSec));
     });
 
     /** Feed one synthetic DCT record per second, like a deck playing a tape */
     function startSimulator() {
       if (state.simInterval) return;
 
+      // only one record source at a time, a running virtual tape would double the
+      // tape speed and make the stream drift
+      stopVirtualTape();
+      state.simResumeOnPlay = false;
+      startFeedClock();
+
       simAutoPlayBtn.textContent = '⏸ Pause Sim';
       state.simInterval = setInterval(() => {
-        state.simCurrentSec += 1;
-        simTimeSlider.value = state.simCurrentSec;
-        simTimeDisplay.textContent = `${formatTimeHours(state.simCurrentSec)} (${state.simCurrentSec}s)`;
-        const simSide = getSimSide();
-        processFSKLine(`DCT0${simSide}_1_0000_${state.simCurrentSec}_${state.simCurrentSec}`);
-      }, 1000);
+        let due = dueRecords();
+
+        while (due-- > 0 && state.simInterval) {
+          simStep();
+        }
+      }, 250);
+
+      simStep();
+    }
+
+    /** Emit one synthetic DCT record and move the simulator timecode */
+    function simStep() {
+      state.simCurrentSec += 1;
+      simTimeSlider.value = state.simCurrentSec;
+      simTimeDisplay.textContent = `${formatTimeHours(state.simCurrentSec)} (${state.simCurrentSec}s)`;
+      const simSide = getSimSide();
+      feedSynthetic(simRecord(simSide, state.simCurrentSec));
     }
 
     /** Stop feeding synthetic records, returns true when the simulator was running */
@@ -3618,7 +3726,11 @@
 
         state.simCurrentSec = 0;
         updateSimLabels();
-        logTerminal('map', 'Press ▶ to start the virtual tape');
+        logTerminal('map', 'Press ▶ to start the virtual tape, live deck records are also accepted');
+
+        // a DCT session is virtual, but the decoder may start feeding real records at
+        // any time, so keep listening to /raw and let those records take over
+        startStreamClient();
         return;
       }
 

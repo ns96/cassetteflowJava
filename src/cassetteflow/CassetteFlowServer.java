@@ -2015,6 +2015,11 @@ public class CassetteFlowServer {
 
             String provider = backend.getProvider();
             String streamTitle = backend.getStreamTitle();
+
+            // the app is called DeckCastDJ, "DeckCast" is just the provider name the
+            // streaming backend reports
+            String providerLabel = "DeckCast".equals(provider) ? "DeckCastDJ" : provider;
+
             String summary = backend.getQueueCount() + " tracks · "
                     + CassetteFlowUtil.getTimeString(backend.getLengthSec());
 
@@ -2022,7 +2027,7 @@ public class CassetteFlowServer {
             page.append("<!DOCTYPE html><html><head><meta charset=\"utf-8\">")
                     .append("<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">")
                     .append(auto)
-                    .append("<title>").append(escapeHtml(provider)).append(" Track Table</title>")
+                    .append("<title>").append(escapeHtml(providerLabel)).append(" Track Table</title>")
                     .append("<style>")
                     .append("*{box-sizing:border-box;}")
                     .append("body{margin:0;padding:0 16px 32px;background:#0d1117;color:#e6edf3;")
@@ -2052,7 +2057,7 @@ public class CassetteFlowServer {
                     .append("</style></head><body>");
 
             page.append("<div class=\"cf-head\"><span class=\"cf-provider\">")
-                    .append(escapeHtml(provider.isEmpty() ? "Stream" : provider))
+                    .append(escapeHtml(providerLabel.isEmpty() ? "Stream" : providerLabel))
                     .append("</span><span class=\"cf-title\">")
                     .append(escapeHtml(streamTitle))
                     .append("</span><span class=\"cf-summary\">")

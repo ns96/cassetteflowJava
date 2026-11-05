@@ -68,7 +68,7 @@ import org.json.JSONObject;
  */
 public class CassetteFlow {
     // static variable that holds the application version
-    public static String VERSION = "CassetteFlow v2.8.4 (11/03/2026)";
+    public static String VERSION = "CassetteFlow v2.8.6 (11/05/2026)";
 
     // The default mp3 directory name
     public static String AUDIO_DIR_NAME = "c:\\mp3files";
@@ -3316,12 +3316,27 @@ public class CassetteFlow {
                 // start the mp3/flac player
                 CassettePlayer cassettePlayer = new CassettePlayer(cassetteFlow, LOG_FILE_NAME, enableLocalAudio);
                 cassettePlayer.setMixerName(defaultOutputDevice);
-                cassettePlayer.startMinimodem(0);
+
+                // the web library/player apps do not need the decoder, so a missing or
+                // busy capture device must not stop the http server from starting
+                try {
+                    cassettePlayer.startMinimodem(0);
+                } catch (IOException iex) {
+                    System.out.println("Audio capture unavailable: " + iex.getMessage());
+                    System.out.println("Line record decoding is disabled, the web apps still run.");
+                }
 
                 // start the cassette flow server
-                CassetteFlowServer cassetteFlowServer = new CassetteFlowServer();
-                cassetteFlowServer.setCassetteFlow(cassetteFlow);
-            } catch (IOException ex) {
+                try {
+                    CassetteFlowServer cassetteFlowServer = new CassetteFlowServer();
+                    cassetteFlowServer.setCassetteFlow(cassetteFlow);
+                } catch (java.net.BindException bex) {
+                    System.out.println("Port 8192 is already in use - the web apps are served by that instance.");
+                    System.out.println("Stop it first to serve library/player.html from this process.");
+                } catch (IOException iex) {
+                    System.out.println("Unable to start the CassetteFlow web server: " + iex.getMessage());
+                }
+            } catch (Exception ex) {
                 ex.printStackTrace();
             }
         } else {
